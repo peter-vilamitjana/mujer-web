@@ -13,7 +13,7 @@ export default function Home() {
         layout="fill"
         objectFit="cover"
         className="z-0 opacity-20"
-        data-ai-hint="salon background"
+        data-ai-hint="bright salon interior"
       />
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-gradient-to-t from-background via-transparent to-transparent p-4 text-center">
         <header className="absolute top-0 left-0 w-full p-4 md:p-6">
@@ -21,7 +21,7 @@ export default function Home() {
         </header>
 
         <main className="flex flex-col items-center justify-center space-y-6">
-          <h1 className="font-headline text-5xl font-bold tracking-tight text-primary md:text-7xl lg:text-8xl">
+          <h1 className="font-headline text-7xl font-bold tracking-tight text-primary md:text-8xl lg:text-9xl">
             Mujer
           </h1>
           <p className="max-w-xl text-lg text-foreground/80 md:text-xl">
