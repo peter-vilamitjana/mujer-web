@@ -6,6 +6,7 @@ import { es } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function AgendaPage() {
   const sortedTurnos = [...mockTurnos].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
