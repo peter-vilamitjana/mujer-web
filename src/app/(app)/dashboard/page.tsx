@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { format, isToday, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, where, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, orderBy, Timestamp, limit } from 'firebase/firestore';
 import type { Turno, Cliente } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
