@@ -14,7 +14,7 @@ export default {
       fontFamily: {
         sans: ["var(--font-inter)", ...fontFamily.sans],
         body: ['Inter', 'sans-serif'],
-        headline: ["var(--font-dancing-script)", "cursive"],
+        headline: ["var(--font-great-vibes)", "cursive"],
         code: ['monospace'],
       },
       colors: {
