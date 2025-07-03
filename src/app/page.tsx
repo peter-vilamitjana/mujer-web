@@ -1,45 +1,47 @@
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import Image from 'next/image';
 import Logo from '@/components/Logo';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
-      <Image
-        src="https://placehold.co/1920x1080.png"
-        alt="Salón de belleza"
-        layout="fill"
-        objectFit="cover"
-        className="z-0 opacity-20"
-        data-ai-hint="bright salon interior"
-      />
-      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center bg-gradient-to-t from-background via-transparent to-transparent p-4 text-center">
-        <header className="absolute top-0 left-0 w-full p-4 md:p-6">
-          <Logo />
-        </header>
+    <div className="flex flex-col min-h-screen w-full">
+      <header className="absolute top-0 left-0 w-full p-4 md:p-6 z-20">
+        <Logo />
+      </header>
 
-        <main className="flex flex-col items-center justify-center space-y-6">
-          <h1 className="font-headline text-7xl font-bold tracking-tight text-primary md:text-8xl lg:text-9xl">
-            Mujer
-          </h1>
-          <p className="max-w-xl text-lg text-foreground/80 md:text-xl">
-            Estilismo y Belleza. Gestiona tus clientas y turnos de forma
-            sencilla y elegante.
-          </p>
-          <Link href="/dashboard">
-            <Button size="lg" className="group">
-              Acceso del Personal
-              <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-            </Button>
-          </Link>
-        </main>
-        
-        <footer className="absolute bottom-0 w-full p-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Mujer Web. Todos los derechos reservados.
-        </footer>
-      </div>
+      <main className="flex-1 flex items-center justify-center">
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <div
+            className="absolute inset-0 bg-gradient-to-r from-violet-200 via-pink-200 to-blue-200 animate-[move-bg_20s_ease-in-out_infinite]"
+            style={{ backgroundSize: '400% 400%' }}
+          ></div>
+           <div className="absolute inset-0 bg-background/50 backdrop-blur-3xl"></div>
+        </div>
+
+        <div className="relative z-10 flex flex-col items-center justify-center space-y-6 text-center p-4">
+            <div className="inline-flex items-center rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
+                <Sparkles className="w-4 h-4 mr-2" />
+                <span>Gestión de belleza, reinventada.</span>
+            </div>
+            <h1 className="text-5xl font-bold tracking-tighter text-foreground md:text-6xl lg:text-7xl">
+                Eleva la experiencia de tu salón
+            </h1>
+            <p className="max-w-2xl text-lg text-muted-foreground md:text-xl">
+                Organiza citas, gestiona clientes y potencia tu negocio con una herramienta tan elegante como tu trabajo.
+            </p>
+            <Link href="/dashboard">
+                <Button size="lg" className="group shadow-lg shadow-primary/20">
+                    Acceder al Panel
+                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Button>
+            </Link>
+        </div>
+      </main>
+
+      <footer className="relative z-10 w-full p-4 text-center text-sm text-muted-foreground">
+        © {new Date().getFullYear()} Mujer Web. Todos los derechos reservados.
+      </footer>
     </div>
   );
 }

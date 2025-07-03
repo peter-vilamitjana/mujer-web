@@ -1,14 +1,9 @@
 import type {Metadata} from 'next';
-import { Inter, Great_Vibes } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const greatVibes = Great_Vibes({
-  subsets: ['latin'],
-  variable: '--font-great-vibes',
-  weight: '400',
-});
 
 export const metadata: Metadata = {
   title: 'Mujer Web',
@@ -21,8 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${greatVibes.variable}`}>
-      <body className="font-body antialiased">
+    <html lang="es" className={`${inter.variable}`}>
+      <body className="font-sans antialiased">
         {children}
         <Toaster />
       </body>

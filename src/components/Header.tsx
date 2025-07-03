@@ -23,7 +23,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const user = { name: 'Ana', email: 'ana@mujer.com', role: 'admin' };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card px-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card/80 backdrop-blur-lg px-4 sm:px-6">
       <div className="flex items-center gap-4">
         <Button
           variant="outline"
@@ -42,7 +42,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-            <Avatar className="h-10 w-10">
+            <Avatar className="h-10 w-10 border-2 border-primary/20">
               <AvatarImage src="https://placehold.co/100x100.png" alt={user.name} />
               <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
             </Avatar>
