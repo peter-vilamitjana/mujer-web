@@ -10,12 +10,14 @@ import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('admin@mujer.com');
+  const [password, setPassword] = useState('password123');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -29,7 +31,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Error de inicio de sesión",
-        description: "Las credenciales son incorrectas. Por favor, inténtalo de nuevo.",
+        description: "Credenciales incorrectas o el usuario no existe. Asegúrate de haberlo creado en tu consola de Firebase.",
       });
     } finally {
       setIsLoading(false);
@@ -77,6 +79,13 @@ export default function LoginPage() {
               {isLoading ? <Loader2 className="animate-spin" /> : "Ingresar"}
             </Button>
           </form>
+          <Alert className="mt-4">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Nota</AlertTitle>
+            <AlertDescription>
+              Asegúrate de haber creado este usuario en la sección de Authentication de tu proyecto de Firebase.
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     </div>
