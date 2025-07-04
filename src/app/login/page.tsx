@@ -27,17 +27,30 @@ export default function LoginPage() {
       // Redirect will be handled by the auth state listener in the layout
       router.push('/dashboard');
     } catch (error: any) {
-      console.error("Error de inicio de sesión:", error);
+      console.error("Error de inicio de sesión:", error.code);
       
       let title = "Error de inicio de sesión";
-      let description = "Credenciales incorrectas o el usuario no existe. Por favor, verifica tus datos.";
+      let description = "Ha ocurrido un error inesperado. Por favor, intenta de nuevo.";
 
-      if (error.code === 'auth/network-request-failed') {
-        title = "Error de Red con Firebase";
-        description = "No se pudo conectar con Firebase. Verifica tu conexión y la configuración del proyecto.";
-      } else if (error.code === 'auth/api-key-not-valid') {
-        title = "API Key de Firebase Inválida";
-        description = "La clave de API de Firebase no es válida. Revisa el archivo src/lib/firebase.ts.";
+      switch (error.code) {
+        case 'auth/invalid-credential':
+        case 'auth/user-not-found': // Legacy
+        case 'auth/wrong-password': // Legacy
+          title = "Credenciales Inválidas";
+          description = "El email o la contraseña son incorrectos. Por favor, verifica tus datos. Asegúrate de haber creado este usuario en tu Consola de Firebase.";
+          break;
+        case 'auth/network-request-failed':
+          title = "Error de Red";
+          description = "No se pudo conectar con Firebase. Revisa tu conexión y que 'localhost' esté en los dominios autorizados en la configuración de Authentication.";
+          break;
+        case 'auth/api-key-not-valid':
+          title = "API Key de Firebase Inválida";
+          description = "La clave API de Firebase no es válida. Revisa que las credenciales en src/lib/firebase.ts sean las correctas.";
+          break;
+        case 'auth/invalid-email':
+          title = "Email Inválido";
+          description = "El formato del email no es válido. Por favor, corrígelo.";
+          break;
       }
 
       toast({
