@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -11,6 +11,7 @@ import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, orderBy, Timestamp } from "firebase/firestore";
 import type { Cliente, Turno } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import NewClientForm from "@/components/NewClientForm";
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -59,10 +60,7 @@ export default function ClientesPage() {
           </p>
         </div>
         {userRole === 'admin' && (
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Nueva Cliente
-          </Button>
+          <NewClientForm />
         )}
       </div>
       <Card>
