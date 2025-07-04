@@ -28,14 +28,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
         <nav className="flex-1 space-y-2 p-4">
           {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.href);
+            const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary hover:bg-primary/10',
-                  isActive && 'bg-primary text-primary-foreground font-semibold'
+                  isActive && 'bg-primary text-primary-foreground font-semibold hover:bg-primary/90 hover:text-primary-foreground'
                 )}
                 onClick={onClose}
               >
@@ -60,7 +60,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       />
       <div
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-72 transform border-r bg-card transition-transform duration-300 ease-in-out md:hidden',
+          'fixed inset-y-0 left-0 z-50 w-64 transform border-r bg-card transition-transform duration-300 ease-in-out md:hidden',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >

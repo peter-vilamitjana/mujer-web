@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, ArrowRight, Loader2 } from "lucide-react";
+import { PlusCircle, ArrowRight } from "lucide-react";
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -16,14 +16,14 @@ export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [loading, setLoading] = useState(true);
-  const userRole = 'admin';
+  const userRole = 'admin'; // TODO: Get role from user auth state
 
   useEffect(() => {
     const clientesQuery = query(collection(db, 'clientes'), orderBy('nombre'));
     const unsubClientes = onSnapshot(clientesQuery, (snapshot) => {
       const clientesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Cliente[];
       setClientes(clientesData);
-      if(turnos.length > 0) setLoading(false);
+      setLoading(false);
     });
 
     const turnosQuery = query(collection(db, 'turnos'));
@@ -34,7 +34,6 @@ export default function ClientesPage() {
           return { id: doc.id, ...data, fecha: fecha.toISOString() } as Turno;
       });
       setTurnos(turnosData);
-      if(clientes.length > 0 || snapshot.empty) setLoading(false);
     });
 
     return () => {
@@ -69,15 +68,12 @@ export default function ClientesPage() {
       <Card>
         <CardHeader>
           <CardTitle>Listado de Clientes</CardTitle>
-           {loading ? <Skeleton className="h-4 w-48" /> : <CardDescription>Un total de {clientes.length} clientes registradas.</CardDescription>}
+           {loading ? <Skeleton className="h-4 w-48 mt-2" /> : <CardDescription>Un total de {clientes.length} clientes registrados.</CardDescription>}
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="space-y-2">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
             </div>
           ) : (
             <Table>
@@ -91,14 +87,14 @@ export default function ClientesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {clientes.map(cliente => (
+                {clientes.length > 0 ? clientes.map(cliente => (
                   <TableRow key={cliente.id}>
                     <TableCell className="font-medium">{cliente.nombre} {cliente.apellido}</TableCell>
                     <TableCell className="hidden sm:table-cell text-muted-foreground">{cliente.email}</TableCell>
                     <TableCell className="hidden md:table-cell text-muted-foreground">{cliente.telefono}</TableCell>
                     <TableCell className="text-right text-muted-foreground">{getLastVisit(cliente.id)}</TableCell>
                     <TableCell className="text-right">
-                      <Link href={`/clientes/${cliente.id}`}>
+                      <Link href={`/clientes/${cliente.id}`} passHref>
                         <Button variant="outline" size="sm">
                           Ver Ficha
                           <ArrowRight className="ml-2 h-4 w-4" />
@@ -106,7 +102,13 @@ export default function ClientesPage() {
                       </Link>
                     </TableCell>
                   </TableRow>
-                ))}
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-24 text-center">
+                      No hay clientes para mostrar.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           )}

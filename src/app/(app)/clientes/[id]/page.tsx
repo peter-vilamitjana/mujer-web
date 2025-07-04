@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { notFound, useParams } from "next/navigation";
-import { Calendar, Palette, FileText, User, MessageSquare, Plus, ArrowLeft, Loader2 } from "lucide-react";
+import { Calendar, Palette, FileText, User, MessageSquare, Plus, ArrowLeft } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
@@ -25,17 +25,19 @@ export default function ClienteDetailPage() {
   const [comentarios, setComentarios] = useState<ComentarioInterno[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const userRole = 'admin';
+  // TODO: Replace with actual role from user authentication
+  const userRole = 'admin'; 
   const isReadOnly = userRole !== 'admin';
 
   useEffect(() => {
     if (!id) return;
 
+    setLoading(true);
     const unsubCliente = onSnapshot(doc(db, "clientes", id), (doc) => {
       if (doc.exists()) {
         setCliente({ id: doc.id, ...doc.data() } as Cliente);
       } else {
-        notFound();
+        setCliente(null);
       }
       setLoading(false);
     });
@@ -76,7 +78,7 @@ export default function ClienteDetailPage() {
           <Card className="lg:col-span-1">
             <CardHeader>
               <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-4 w-1/2 mt-2" />
             </CardHeader>
             <CardContent className="space-y-4">
               <Skeleton className="h-10 w-full" />
@@ -85,15 +87,9 @@ export default function ClienteDetailPage() {
               <Skeleton className="h-10 w-full" />
             </CardContent>
           </Card>
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-4">
             <Skeleton className="h-10 w-full" />
-            <Card className="mt-4">
-              <CardHeader><Skeleton className="h-6 w-1/2" /></CardHeader>
-              <CardContent className="space-y-4">
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </CardContent>
-            </Card>
+            <Skeleton className="h-64 w-full" />
           </div>
         </div>
       </div>
@@ -140,7 +136,7 @@ export default function ClienteDetailPage() {
               <Input id="telefono" type="tel" defaultValue={cliente.telefono} readOnly={isReadOnly} />
             </div>
             {!isReadOnly && 
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
                 <Button className="w-full">Guardar Cambios</Button>
                 <Button variant="outline" className="w-full">
                   <Plus className="mr-2 h-4 w-4" />
@@ -168,9 +164,9 @@ export default function ClienteDetailPage() {
                       <p className="font-semibold">{format(parseISO(turno.fecha), "d 'de' MMMM yyyy", { locale: es })}</p>
                       <p className="text-primary font-medium flex items-center gap-2 mt-1"><FileText className="h-4 w-4" />Servicio: {turno.servicio}</p>
                       {turno.tonoColor && <p className="text-muted-foreground text-sm flex items-center gap-2"><Palette className="h-4 w-4" />Tono: {turno.tonoColor}</p>}
-                      <p className="text-muted-foreground text-sm mt-2">{turno.observaciones}</p>
+                      {turno.observaciones && <p className="text-muted-foreground text-sm mt-2">Obs: {turno.observaciones}</p>}
                     </div>
-                  )) : <p className="text-muted-foreground">No hay turnos en el historial.</p>}
+                  )) : <p className="text-center text-muted-foreground py-8">No hay turnos en el historial.</p>}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -196,7 +192,7 @@ export default function ClienteDetailPage() {
                         </div>
                         <p className="text-sm">{comentario.comentario}</p>
                       </div>
-                    )) : <p className="text-muted-foreground">No hay notas internas para esta clienta.</p>}
+                    )) : <p className="text-center text-muted-foreground py-8">No hay notas internas para esta clienta.</p>}
                   </div>
                 </CardContent>
               </Card>

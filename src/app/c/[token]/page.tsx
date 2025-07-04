@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Logo from "@/components/Logo";
 import { Calendar, History, Palette } from "lucide-react";
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isAfter } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, where, orderBy, Timestamp } from 'firebase/firestore';
@@ -42,9 +42,13 @@ export default async function ClienteTokenPage({ params }: { params: { token: st
   }
 
   const { cliente, turnos } = data;
+  
+  const now = new Date();
+  const proximoTurno = turnos
+    .filter(t => isAfter(parseISO(t.fecha), now))
+    .sort((a,b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())[0];
 
-  const proximoTurno = turnos.find(t => new Date(t.fecha) > new Date());
-  const historialTurnos = turnos.filter(t => new Date(t.fecha) <= new Date());
+  const historialTurnos = turnos.filter(t => !isAfter(parseISO(t.fecha), now));
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
@@ -63,7 +67,7 @@ export default async function ClienteTokenPage({ params }: { params: { token: st
           </div>
         </div>
 
-        <Card className="border-primary border-2 shadow-lg">
+        <Card className="border-primary/50 border-2 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-6 w-6 text-primary" />
@@ -74,11 +78,11 @@ export default async function ClienteTokenPage({ params }: { params: { token: st
             {proximoTurno ? (
               <div>
                 <p className="text-2xl font-bold text-primary">{proximoTurno.servicio}</p>
-                <p className="text-lg font-semibold mt-2">
+                <p className="text-lg font-semibold mt-2 capitalize">
                   {format(parseISO(proximoTurno.fecha), "eeee d 'de' MMMM 'a las' HH:mm 'hs'", { locale: es })}
                 </p>
                 {proximoTurno.tonoColor && <p className="text-muted-foreground flex items-center gap-2 mt-1"><Palette className="h-4 w-4" />Tono: {proximoTurno.tonoColor}</p>}
-                <p className="text-muted-foreground mt-1">Obs: {proximoTurno.observaciones}</p>
+                {proximoTurno.observaciones && <p className="text-muted-foreground mt-1">Obs: {proximoTurno.observaciones}</p>}
               </div>
             ) : (
               <p className="text-muted-foreground">No tienes próximos turnos agendados.</p>
@@ -101,11 +105,11 @@ export default async function ClienteTokenPage({ params }: { params: { token: st
                   <p className="font-semibold">{format(parseISO(turno.fecha), "d MMMM yyyy", { locale: es })}</p>
                   <p className="font-medium">{turno.servicio}</p>
                   {turno.tonoColor && <p className="text-sm text-muted-foreground flex items-center gap-2"><Palette className="h-4 w-4" />Tono: {turno.tonoColor}</p>}
-                  <p className="text-sm text-muted-foreground mt-1">Obs: {turno.observaciones}</p>
+                  {turno.observaciones && <p className="text-sm text-muted-foreground mt-1">Obs: {turno.observaciones}</p>}
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground">Aún no tienes un historial de turnos.</p>
+              <p className="text-center text-muted-foreground py-8">Aún no tienes un historial de turnos.</p>
             )}
           </CardContent>
         </Card>

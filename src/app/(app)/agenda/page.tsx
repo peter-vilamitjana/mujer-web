@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Clock, Scissors, PlusCircle, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar, Clock, Scissors, PlusCircle } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function AgendaPage() {
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [loading, setLoading] = useState(true);
-  const userRole = 'admin';
+  const userRole = 'admin'; // TODO: Get role from user auth state
 
   useEffect(() => {
     const turnosQuery = query(collection(db, 'turnos'), orderBy('fecha', 'desc'));
@@ -71,7 +71,7 @@ export default function AgendaPage() {
             <Skeleton className="h-24 w-full" />
           </CardContent>
         </Card>
-      ) : (
+      ) : sortedDates.length > 0 ? (
         <div className="space-y-8">
           {sortedDates.map(date => (
             <div key={date}>
@@ -79,7 +79,9 @@ export default function AgendaPage() {
                 {format(parseISO(date), "eeee, d 'de' MMMM", { locale: es })}
               </h2>
               <div className="space-y-4">
-                {groupedTurnos[date].map(turno => {
+                {groupedTurnos[date]
+                  .sort((a,b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+                  .map(turno => {
                   const isPast = new Date(turno.fecha) < new Date();
                   return (
                     <div key={turno.id} className={`p-4 rounded-lg border ${isPast ? 'bg-muted/50' : 'bg-card'}`}>
@@ -94,12 +96,12 @@ export default function AgendaPage() {
                           </div>
                         </div>
                         <div className="mt-2 sm:mt-0 sm:text-right">
-                          <p className="font-medium text-sm flex items-center justify-end gap-2">
+                          <p className="font-medium text-lg flex items-center justify-end gap-2">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             {format(parseISO(turno.fecha), "HH:mm 'hs'", { locale: es })}
                           </p>
                           {turno.tonoColor && (
-                            <p className="text-xs text-muted-foreground flex items-center justify-end gap-2">
+                            <p className="text-xs text-muted-foreground flex items-center justify-end gap-2 mt-1">
                               <Scissors className="h-3 w-3" /> Tono: {turno.tonoColor}
                             </p>
                           )}
@@ -112,6 +114,16 @@ export default function AgendaPage() {
             </div>
           ))}
         </div>
+      ) : (
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center text-muted-foreground">
+              <Calendar className="mx-auto h-12 w-12" />
+              <h3 className="mt-4 text-lg font-semibold">No hay turnos agendados</h3>
+              <p className="mt-1 text-sm">Empieza por agendar un nuevo turno para una clienta.</p>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

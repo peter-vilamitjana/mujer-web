@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Users, ArrowRight, Loader2 } from "lucide-react";
+import { Calendar, Users, ArrowRight } from "lucide-react";
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { format, isToday, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, where, orderBy, Timestamp, limit } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, orderBy, Timestamp, limit, getCountFromServer } from 'firebase/firestore';
 import type { Turno, Cliente } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -21,38 +21,53 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const clientesQuery = query(collection(db, 'clientes'), orderBy('nombre'), limit(5));
-    const unsubClientes = onSnapshot(clientesQuery, (snapshot) => {
-      setTotalClientes(snapshot.size);
-      const clientesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Cliente[];
-      setClientesRecientes(clientesData);
+    const fetchData = async () => {
+      setLoading(true);
+
+      // Get total clients count
+      const clientesColl = collection(db, 'clientes');
+      const clientesSnapshot = await getCountFromServer(clientesColl);
+      setTotalClientes(clientesSnapshot.data().count);
+
+      // Listen for recent clients
+      const clientesQuery = query(collection(db, 'clientes'), orderBy('nombre'), limit(5));
+      const unsubClientes = onSnapshot(clientesQuery, (snapshot) => {
+        const clientesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Cliente[];
+        setClientesRecientes(clientesData);
+      });
+
+      // Listen for upcoming appointments
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const turnosQuery = query(collection(db, 'turnos'), where('fecha', '>=', Timestamp.fromDate(todayStart)), orderBy('fecha'));
+      const unsubTurnos = onSnapshot(turnosQuery, (snapshot) => {
+          const turnosData = snapshot.docs.map(doc => {
+              const data = doc.data();
+              const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate() : new Date(data.fecha);
+              return { id: doc.id, ...data, fecha: fecha.toISOString() } as Turno;
+          });
+
+          const turnosDeHoy = turnosData.filter(t => isToday(parseISO(t.fecha)));
+          setTurnosHoy(turnosDeHoy.length);
+          
+          const proximos = turnosData
+              .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+              .slice(0, 5);
+          setProximosTurnos(proximos);
+      });
+      
       setLoading(false);
-    });
 
-    const turnosQuery = query(collection(db, 'turnos'), where('fecha', '>=', new Date()));
-    const unsubTurnos = onSnapshot(turnosQuery, (snapshot) => {
-        const now = new Date();
-        const turnosData = snapshot.docs.map(doc => {
-            const data = doc.data();
-            // Firestore timestamps need to be converted to JS Dates
-            const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate() : new Date(data.fecha);
-            return { id: doc.id, ...data, fecha: fecha.toISOString() } as Turno;
-        });
-
-        const turnosDeHoy = turnosData.filter(t => isToday(parseISO(t.fecha)));
-        setTurnosHoy(turnosDeHoy.length);
-        
-        const proximos = turnosData
-            .filter(t => new Date(t.fecha) > now)
-            .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
-            .slice(0, 5);
-        setProximosTurnos(proximos);
-        setLoading(false);
-    });
-
+      return () => {
+        unsubClientes();
+        unsubTurnos();
+      };
+    }
+    
+    const unsubscribePromise = fetchData();
     return () => {
-      unsubClientes();
-      unsubTurnos();
+      unsubscribePromise.then(unsub => unsub && unsub());
     };
   }, []);
 
@@ -94,6 +109,7 @@ export default function DashboardPage() {
         <Card className="col-span-1">
           <CardHeader>
             <CardTitle>Próximos Turnos</CardTitle>
+            <CardDescription>Los 5 turnos más cercanos.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {loading ? (
@@ -130,11 +146,13 @@ export default function DashboardPage() {
         <Card className="col-span-1">
           <CardHeader>
             <CardTitle>Clientes Recientes</CardTitle>
+            <CardDescription>Los últimos 5 clientes agregados.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {loading ? (
                Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
-            ) : clientesRecientes.map(cliente => (
+            ) : clientesRecientes.length > 0 ? (
+                clientesRecientes.map(cliente => (
               <Link href={`/clientes/${cliente.id}`} key={cliente.id} className="flex items-center justify-between p-2 -m-2 rounded-lg hover:bg-accent/50">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-10 w-10">
@@ -148,7 +166,12 @@ export default function DashboardPage() {
                 </div>
                 <ArrowRight className="h-4 w-4 text-muted-foreground"/>
               </Link>
-            ))}
+            ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No hay clientes registrados aún.</p>
+            )
+            
+            }
              <Link href="/clientes" className="mt-4 block">
               <Button variant="outline" className="w-full">
                 Ver Todos los Clientes <ArrowRight className="ml-2 h-4 w-4"/>

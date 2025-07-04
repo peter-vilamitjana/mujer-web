@@ -20,12 +20,20 @@ import { getAuth } from "firebase/auth";
 const firebaseConfig = {
   // ==================> PEGA TUS CREDENCIALES AQUÍ <==================
   
-  apiKey: "AQUÍ_VA_TU_API_KEY",
-  authDomain: "AQUÍ_VA_TU_AUTH_DOMAIN",
-  projectId: "AQUÍ_VA_TU_PROJECT_ID",
-  storageBucket: "AQUÍ_VA_TU_STORAGE_BUCKET",
-  messagingSenderId: "AQUÍ_VA_TU_MESSAGING_SENDER_ID",
-  appId: "AQUÍ_VA_TU_APP_ID"
+  apiKey: "AIzaSyCcU9HP6ELT0SKyhVXyxMPebE4c5KqTi7g",
+
+  authDomain: "mujer-app.firebaseapp.com",
+
+  projectId: "mujer-app",
+
+  storageBucket: "mujer-app.firebasestorage.app",
+
+  messagingSenderId: "731843251807",
+
+  appId: "1:731843251807:web:244db05fd41c9fc55815ea",
+
+  measurementId: "G-HZYB137Q23"
+
 
   // ==================> FIN DEL ÁREA PARA PEGAR <==================
 };
