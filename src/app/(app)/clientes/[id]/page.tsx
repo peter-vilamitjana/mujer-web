@@ -1,32 +1,37 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { notFound, useParams } from "next/navigation";
-import { Calendar, Palette, FileText, User, MessageSquare, Plus, ArrowLeft } from "lucide-react";
+import { Calendar, Palette, FileText, User, MessageSquare, Plus, ArrowLeft, Save } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
 import { db } from '@/lib/firebase';
-import { doc, onSnapshot, collection, query, where, orderBy, Timestamp } from 'firebase/firestore';
-import type { Cliente, Turno, ComentarioInterno } from '@/lib/types';
+import { doc, onSnapshot, collection, query, where, orderBy, Timestamp, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import type { Cliente, Turno, ComentarioInterno, UserRole } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ClienteDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const { toast } = useToast();
   
   const [cliente, setCliente] = useState<Cliente | null>(null);
+  const [formData, setFormData] = useState<Partial<Cliente>>({});
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [comentarios, setComentarios] = useState<ComentarioInterno[]>([]);
+  const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // TODO: Replace with actual role from user authentication
-  const userRole = 'admin'; 
+  const userRole: UserRole = 'admin'; 
   const isReadOnly = userRole !== 'admin';
 
   useEffect(() => {
@@ -35,7 +40,9 @@ export default function ClienteDetailPage() {
     setLoading(true);
     const unsubCliente = onSnapshot(doc(db, "clientes", id), (doc) => {
       if (doc.exists()) {
-        setCliente({ id: doc.id, ...doc.data() } as Cliente);
+        const clienteData = { id: doc.id, ...doc.data() } as Cliente;
+        setCliente(clienteData);
+        setFormData(clienteData);
       } else {
         setCliente(null);
       }
@@ -46,8 +53,8 @@ export default function ClienteDetailPage() {
     const unsubTurnos = onSnapshot(qTurnos, (snapshot) => {
       const turnosData = snapshot.docs.map(doc => {
         const data = doc.data();
-        const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate() : new Date(data.fecha);
-        return { id: doc.id, ...data, fecha: fecha.toISOString() } as Turno;
+        const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate().toISOString() : new Date(data.fecha).toISOString();
+        return { id: doc.id, ...data, fecha } as Turno;
       });
       setTurnos(turnosData);
     });
@@ -56,8 +63,8 @@ export default function ClienteDetailPage() {
     const unsubComentarios = onSnapshot(qComentarios, (snapshot) => {
       const comentariosData = snapshot.docs.map(doc => {
         const data = doc.data();
-        const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate() : new Date(data.fecha);
-        return { id: doc.id, ...data, fecha: fecha.toISOString() } as ComentarioInterno;
+        const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate().toISOString() : new Date(data.fecha).toISOString();
+        return { id: doc.id, ...data, fecha } as ComentarioInterno;
       });
       setComentarios(comentariosData);
     });
@@ -68,32 +75,50 @@ export default function ClienteDetailPage() {
       unsubComentarios();
     };
   }, [id]);
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({...prev, [id]: value}));
+  }
+
+  const handleSaveChanges = async () => {
+    if (isReadOnly) return;
+    setIsSaving(true);
+    try {
+      const clienteRef = doc(db, 'clientes', id);
+      await updateDoc(clienteRef, formData);
+      toast({ title: "¡Éxito!", description: "Los datos de la clienta se han actualizado." });
+    } catch (error) {
+      console.error(error);
+      toast({ title: "Error", description: "No se pudo guardar los cambios.", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (isReadOnly || !newComment.trim()) return;
+    setIsSaving(true);
+    try {
+      await addDoc(collection(db, 'comentarios'), {
+        clienteId: id,
+        comentario: newComment,
+        fecha: serverTimestamp(),
+        empleadaNombre: "Admin" // TODO: Get current user name
+      });
+      setNewComment("");
+      toast({ title: "Nota agregada", description: "El comentario interno ha sido guardado." });
+    } catch(error) {
+       console.error(error);
+       toast({ title: "Error", description: "No se pudo agregar la nota.", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-6 w-32" />
-        <Skeleton className="h-10 w-64" />
-        <div className="grid gap-6 lg:grid-cols-3">
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-1/2 mt-2" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </CardContent>
-          </Card>
-          <div className="lg:col-span-2 space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-64 w-full" />
-          </div>
-        </div>
-      </div>
-    );
+    return <p>Cargando...</p>;
   }
 
   if (!cliente) {
@@ -116,35 +141,42 @@ export default function ClienteDetailPage() {
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Información Personal</CardTitle>
-            <CardDescription>Datos de contacto de la clienta.</CardDescription>
+            <CardDescription>Datos y observaciones de la clienta.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="nombre">Nombre</Label>
-              <Input id="nombre" defaultValue={cliente.nombre} readOnly={isReadOnly} />
+              <Input id="nombre" value={formData.nombre || ''} onChange={handleInputChange} readOnly={isReadOnly} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="apellido">Apellido</Label>
-              <Input id="apellido" defaultValue={cliente.apellido} readOnly={isReadOnly} />
+              <Input id="apellido" value={formData.apellido || ''} onChange={handleInputChange} readOnly={isReadOnly} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" defaultValue={cliente.email} readOnly={isReadOnly} />
+              <Input id="email" type="email" value={formData.email || ''} onChange={handleInputChange} readOnly={isReadOnly} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="telefono">Teléfono</Label>
-              <Input id="telefono" type="tel" defaultValue={cliente.telefono} readOnly={isReadOnly} />
+              <Input id="telefono" type="tel" value={formData.telefono || ''} onChange={handleInputChange} readOnly={isReadOnly} />
             </div>
-            {!isReadOnly && 
-              <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                <Button className="w-full">Guardar Cambios</Button>
-                <Button variant="outline" className="w-full">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Agendar Turno
-                </Button>
-              </div>
-            }
+             <div className="space-y-2">
+              <Label htmlFor="observaciones">Observaciones (solo admin)</Label>
+              <Textarea id="observaciones" value={formData.observaciones || ''} onChange={handleInputChange} readOnly={isReadOnly} placeholder="Alergias, preferencias, etc." />
+            </div>
           </CardContent>
+          {!isReadOnly && 
+            <CardFooter className="flex flex-col sm:flex-row gap-2 pt-2">
+              <Button onClick={handleSaveChanges} disabled={isSaving} className="w-full">
+                <Save className="mr-2 h-4 w-4" />
+                {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+              </Button>
+              <Button variant="secondary" className="w-full">
+                <Plus className="mr-2 h-4 w-4" />
+                Agendar Turno
+              </Button>
+            </CardFooter>
+          }
         </Card>
 
         <div className="lg:col-span-2">
@@ -179,11 +211,11 @@ export default function ClienteDetailPage() {
                   {!isReadOnly && (
                     <div className="space-y-2">
                       <Label htmlFor="new-note">Agregar nueva nota</Label>
-                      <Textarea id="new-note" placeholder="Escribe un comentario interno..." />
-                      <Button size="sm"><Plus className="mr-2 h-4 w-4" />Agregar Nota</Button>
+                      <Textarea id="new-note" placeholder="Escribe un comentario interno..." value={newComment} onChange={(e) => setNewComment(e.target.value)} />
+                      <Button size="sm" onClick={handleAddComment} disabled={isSaving}><Plus className="mr-2 h-4 w-4" />Agregar Nota</Button>
                     </div>
                   )}
-                  <div className="space-y-4">
+                  <div className="space-y-4 pt-4">
                     {comentarios.length > 0 ? comentarios.map(comentario => (
                       <div key={comentario.id} className="p-4 border rounded-md bg-muted/50">
                         <div className="flex justify-between items-center text-xs text-muted-foreground mb-1">

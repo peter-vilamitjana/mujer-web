@@ -3,8 +3,8 @@ import { cn } from '@/lib/utils';
 
 const Logo = ({ className }: { className?: string }) => {
   return (
-    <Link href="/">
-      <div className={cn("text-2xl font-bold text-primary tracking-tighter cursor-pointer", className)}>
+    <Link href="/dashboard">
+      <div className={cn("font-serif text-3xl font-bold text-primary tracking-tight cursor-pointer", className)}>
         Mujer
       </div>
     </Link>

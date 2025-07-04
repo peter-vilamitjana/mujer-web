@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, User, Menu } from 'lucide-react';
 import Logo from './Logo';
-import Link from 'next/link';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 
@@ -31,12 +30,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
   
   const userName = user?.displayName || user?.email?.split('@')[0] || 'Usuario';
   const userEmail = user?.email || 'No hay email';
+  const userInitial = (user?.displayName || user?.email || "U").charAt(0).toUpperCase();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card/80 backdrop-blur-lg px-4 sm:px-6">
       <div className="flex items-center gap-4">
         <Button
-          variant="outline"
+          variant="ghost"
           size="icon"
           className="d-block md:hidden"
           onClick={onMenuClick}
@@ -45,7 +45,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           <span className="sr-only">Toggle Menu</span>
         </Button>
         <div className="hidden md:block">
-          <Logo />
+          {/* Logo is now in sidebar */}
         </div>
       </div>
       
@@ -53,8 +53,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
             <Avatar className="h-10 w-10 border-2 border-primary/20">
-              <AvatarImage src={`https://placehold.co/100x100.png`} data-ai-hint="woman portrait" alt={userName} />
-              <AvatarFallback>{userName.charAt(0).toUpperCase()}</AvatarFallback>
+              <AvatarImage src={user?.photoURL || `https://placehold.co/100x100.png`} data-ai-hint="woman portrait" alt={userName} />
+              <AvatarFallback>{userInitial}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
@@ -70,7 +70,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           <DropdownMenuSeparator />
           <DropdownMenuItem disabled>
             <User className="mr-2 h-4 w-4" />
-            <span>Perfil</span>
+            <span>Mi Perfil</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>

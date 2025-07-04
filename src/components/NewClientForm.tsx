@@ -64,7 +64,7 @@ export default function NewClientForm() {
         fechaRegistro: serverTimestamp()
       });
       toast({
-        title: '¡Cliente Creada!',
+        title: '¡Clienta Creada!',
         description: `${values.nombre} ${values.apellido} ha sido añadida a la lista.`,
       });
       form.reset();
@@ -74,7 +74,7 @@ export default function NewClientForm() {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'No se pudo crear la cliente. Intenta de nuevo.',
+        description: 'No se pudo crear la clienta. Intenta de nuevo.',
       });
     } finally {
       setIsSubmitting(false);
@@ -131,7 +131,7 @@ export default function NewClientForm() {
                 <FormItem>
                   <FormLabel>Email (Opcional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="ejemplo@email.com" {...field} disabled={isSubmitting}/>
+                    <Input type="email" placeholder="ejemplo@email.com" {...field} disabled={isSubmitting}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -144,7 +144,7 @@ export default function NewClientForm() {
                 <FormItem>
                   <FormLabel>Teléfono</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ej: 1122334455" {...field} disabled={isSubmitting}/>
+                    <Input type="tel" placeholder="Ej: 1122334455" {...field} disabled={isSubmitting}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -152,7 +152,7 @@ export default function NewClientForm() {
             />
             <DialogFooter>
                 <DialogClose asChild>
-                    <Button type="button" variant="outline">Cancelar</Button>
+                    <Button type="button" variant="outline" disabled={isSubmitting}>Cancelar</Button>
                 </DialogClose>
                 <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting ? <Loader2 className="animate-spin" /> : 'Guardar Cliente'}

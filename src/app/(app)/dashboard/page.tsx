@@ -2,56 +2,59 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Users } from "lucide-react";
+import { Calendar, Users, Scissors } from "lucide-react";
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, Timestamp, getCountFromServer } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, getCountFromServer, Timestamp } from 'firebase/firestore';
 import type { Turno } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { isToday, parseISO } from 'date-fns';
+import { startOfToday, endOfToday } from 'date-fns';
 import WeeklyCalendarView from '@/components/WeeklyCalendarView';
 
 export default function DashboardPage() {
   const [totalClientes, setTotalClientes] = useState(0);
-  const [turnosHoy, setTurnosHoy] = useState(0);
+  const [turnosHoyCount, setTurnosHoyCount] = useState(0);
   const [allTurnos, setAllTurnos] = useState<Turno[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let active = true;
-
-    const fetchCounts = async () => {
+    const fetchData = async () => {
+      setLoading(true);
+      // Fetch total clients
       const clientesColl = collection(db, 'clientes');
       const clientesSnapshot = await getCountFromServer(clientesColl);
-      if (active) {
-        setTotalClientes(clientesSnapshot.data().count);
-      }
+      setTotalClientes(clientesSnapshot.data().count);
+
+      // Fetch today's appointments count
+      const todayStart = Timestamp.fromDate(startOfToday());
+      const todayEnd = Timestamp.fromDate(endOfToday());
+      const turnosHoyQuery = query(
+        collection(db, 'turnos'),
+        where('fecha', '>=', todayStart),
+        where('fecha', '<=', todayEnd)
+      );
+      const turnosHoySnapshot = await getCountFromServer(turnosHoyQuery);
+      setTurnosHoyCount(turnosHoySnapshot.data().count);
+      
+      setLoading(false);
     };
 
-    fetchCounts();
+    fetchData();
 
-    const turnosQuery = query(collection(db, 'turnos'), orderBy('fecha'));
+    // Live subscription for all appointments for the calendar
+    const turnosQuery = query(collection(db, 'turnos'));
     const unsubTurnos = onSnapshot(turnosQuery, (snapshot) => {
         const turnosData = snapshot.docs.map(doc => {
             const data = doc.data();
-            const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate() : new Date(data.fecha);
-            return { id: doc.id, ...data, fecha: fecha.toISOString() } as Turno;
+            // Firestore timestamps need to be converted to serializable strings for components
+            const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate().toISOString() : new Date(data.fecha).toISOString();
+            return { id: doc.id, ...data, fecha } as Turno;
         });
-
-        if (active) {
-            setAllTurnos(turnosData);
-            const turnosDeHoy = turnosData.filter(t => isToday(parseISO(t.fecha)));
-            setTurnosHoy(turnosDeHoy.length);
-            setLoading(false);
-        }
+        setAllTurnos(turnosData);
     }, (error) => {
         console.error("Error fetching turnos:", error);
-        if (active) {
-          setLoading(false);
-        }
     });
     
     return () => {
-      active = false;
       unsubTurnos();
     };
   }, []);
@@ -60,19 +63,19 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Bienvenida de nuevo, aquí tienes un resumen de tu salón.</p>
+        <p className="text-muted-foreground">Bienvenida, aquí tienes un resumen de tu salón.</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Turnos de Hoy</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{turnosHoy}</div>}
+            {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{turnosHoyCount}</div>}
             <p className="text-xs text-muted-foreground">
-              Turnos programados para hoy.
+              Turnos programados para la jornada.
             </p>
           </CardContent>
         </Card>
@@ -85,6 +88,18 @@ export default function DashboardPage() {
              {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{totalClientes}</div>}
             <p className="text-xs text-muted-foreground">
               Clientes registrados en el sistema.
+            </p>
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Servicio Popular</CardTitle>
+            <Scissors className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+             {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">Corte y Color</div>}
+            <p className="text-xs text-muted-foreground">
+              El servicio más agendado este mes.
             </p>
           </CardContent>
         </Card>

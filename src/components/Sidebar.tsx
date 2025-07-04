@@ -2,24 +2,52 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Calendar, Users, X } from 'lucide-react';
+import { Home, Calendar, Users, X, Scissors, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Logo from './Logo';
 import { Button } from './ui/button';
+import type { UserRole } from '@/lib/types';
+import { auth } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
 
-const navItems = [
+const adminNavItems = [
+  { href: '/dashboard', label: 'Dashboard', icon: Home },
+  { href: '/agenda', label: 'Agenda', icon: Calendar },
+  { href: '/clientes', label: 'Clientes', icon: Users },
+  { href: '/servicios', label: 'Servicios', icon: Scissors },
+];
+
+const employeeNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/agenda', label: 'Agenda', icon: Calendar },
   { href: '/clientes', label: 'Clientes', icon: Users },
 ];
 
+const clientNavItems = [
+  { href: '/servicios', label: 'Servicios', icon: Scissors },
+  { href: '/agenda', label: 'Agendar Turno', icon: Calendar },
+  { href: '/mis-turnos', label: 'Mis Turnos', icon: Home },
+];
+
+
 type SidebarProps = {
   isOpen: boolean;
   onClose: () => void;
+  userRole: UserRole;
 };
 
-export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+export default function Sidebar({ isOpen, onClose, userRole }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  let navItems = adminNavItems;
+  if (userRole === 'empleada') navItems = employeeNavItems;
+  if (userRole === 'clienta') navItems = clientNavItems;
+
+  const handleLogout = async () => {
+    await auth.signOut();
+    router.push('/login');
+  };
 
   const content = (
       <div className="flex h-full flex-col">
@@ -45,6 +73,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             );
           })}
         </nav>
+        <div className="mt-auto p-4">
+           <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-primary hover:bg-primary/10" onClick={handleLogout}>
+              <LogOut className="mr-3 h-5 w-5" />
+              Cerrar sesión
+           </Button>
+        </div>
       </div>
   );
 
