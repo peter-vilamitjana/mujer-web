@@ -6,14 +6,16 @@ import { ArrowRight, Tag, Clock, PlusCircle } from "lucide-react";
 import Link from 'next/link';
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
-import type { Servicio, UserRole } from "@/lib/types";
+import type { Servicio } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import NewServiceForm from "@/components/NewServiceForm";
+import { useUser } from "@/contexts/UserContext";
 
 export default function ServiciosPage() {
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [loading, setLoading] = useState(true);
-  const userRole: UserRole = 'admin'; // TODO: Get role from user auth state
+  const user = useUser();
+  const userRole = user?.rol;
 
   useEffect(() => {
     const serviciosQuery = query(collection(db, 'servicios'), orderBy('nombre'));
@@ -87,15 +89,15 @@ export default function ServiciosPage() {
                 {userRole === 'clienta' ? (
                   <Link href={`/agendar?servicio=${servicio.id}`} className="w-full">
                     <Button className="w-full group">
-                      Agendar Turno
+                      Reservar
                       <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </Link>
-                ) : (
+                ) : userRole === 'admin' ? (
                    <Button variant="outline" className="w-full">
                       Editar Servicio
                     </Button>
-                )}
+                ): null}
               </CardFooter>
             </Card>
           ))}

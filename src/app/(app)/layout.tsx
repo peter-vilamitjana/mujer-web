@@ -8,6 +8,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import type { Usuario } from '@/lib/types';
+import { UserProvider } from '@/contexts/UserContext';
 
 export default function AppLayout({
   children,
@@ -48,14 +49,18 @@ export default function AppLayout({
             const userData = { id: userDoc.id, ...userDoc.data() } as Usuario;
             setUser(userData);
             
-            // Role-based redirection
-            const isClientRoute = pathname.startsWith('/servicios') || pathname.startsWith('/mis-turnos') || pathname.startsWith('/agendar');
+            // Role-based redirection logic
+            const { rol } = userData;
+            const isServicesRoute = pathname.startsWith('/servicios');
+            const isClientSpecificRoute = pathname.startsWith('/mis-turnos') || pathname.startsWith('/agendar');
             const isAdminEmployeeRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/agenda') || pathname.startsWith('/clientes');
 
-            if (userData.rol === 'clienta' && !isClientRoute) {
-              router.push('/servicios');
-            } else if ((userData.rol === 'admin' || userData.rol === 'empleada') && !isAdminEmployeeRoute && pathname !== '/servicios') {
-              router.push('/dashboard');
+            if (rol === 'empleada' && !isAdminEmployeeRoute) {
+                router.push('/dashboard');
+            } else if (rol === 'clienta' && !isServicesRoute && !isClientSpecificRoute) {
+                router.push('/servicios');
+            } else if (rol === 'admin' && !isAdminEmployeeRoute && !isServicesRoute) {
+                router.push('/dashboard');
             }
 
           } else {
@@ -86,12 +91,14 @@ export default function AppLayout({
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background">
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={user.rol} />
-      <div className="flex flex-col md:pl-64 transition-all duration-300">
-        <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900/50">{children}</main>
+    <UserProvider user={user}>
+      <div className="flex min-h-screen w-full flex-col bg-background">
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={user.rol} />
+        <div className="flex flex-col md:pl-64 transition-all duration-300">
+          <Header onMenuClick={() => setSidebarOpen(true)} />
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900/50">{children}</main>
+        </div>
       </div>
-    </div>
+    </UserProvider>
   );
 }
