@@ -10,12 +10,12 @@ export default function Home() {
         <div className="relative flex items-center justify-center lg:order-2">
            <div className="absolute inset-0 z-0">
             <Image
-              src="https://placehold.co/1200x1200.png"
-              alt="Mujer elegante en un salón de belleza"
+              src="https://placehold.co/1000x1200.png"
+              alt="Mujer con un peinado elegante en un salón de belleza"
               fill
               style={{ objectFit: 'cover' }}
               className="opacity-90"
-              data-ai-hint="elegant woman beauty salon"
+              data-ai-hint="elegant woman hairstyle"
               priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-transparent lg:bg-gradient-to-r" />
