@@ -81,9 +81,11 @@ export default function LoginPage() {
           </form>
           <Alert className="mt-4">
             <Info className="h-4 w-4" />
-            <AlertTitle>Nota</AlertTitle>
+            <AlertTitle>Pasos para ingresar:</AlertTitle>
             <AlertDescription>
-              Asegúrate de haber creado este usuario en la sección de Authentication de tu proyecto de Firebase.
+              1. Reemplaza las credenciales en el archivo <strong>src/lib/firebase.ts</strong>.
+              <br />
+              2. Crea este usuario en la sección de Authentication de tu proyecto de Firebase.
             </AlertDescription>
           </Alert>
         </CardContent>
