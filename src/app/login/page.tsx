@@ -28,10 +28,22 @@ export default function LoginPage() {
       router.push('/dashboard');
     } catch (error: any) {
       console.error("Error de inicio de sesión:", error);
+      
+      let title = "Error de inicio de sesión";
+      let description = "Credenciales incorrectas o el usuario no existe. Asegúrate de haberlo creado en tu consola de Firebase.";
+
+      if (error.code === 'auth/network-request-failed') {
+        title = "Error de Red";
+        description = "No se pudo conectar a Firebase. Revisa tu conexión, bloqueadores de anuncios, o si 'localhost' está en los dominios autorizados de Firebase.";
+      } else if (error.code === 'auth/api-key-not-valid') {
+        title = "API Key Inválida";
+        description = "La clave de API de Firebase no es válida. Revisa el archivo src/lib/firebase.ts.";
+      }
+
       toast({
         variant: "destructive",
-        title: "Error de inicio de sesión",
-        description: "Credenciales incorrectas o el usuario no existe. Asegúrate de haberlo creado en tu consola de Firebase.",
+        title: title,
+        description: description,
       });
     } finally {
       setIsLoading(false);
@@ -83,9 +95,11 @@ export default function LoginPage() {
             <Info className="h-4 w-4" />
             <AlertTitle>Pasos para ingresar:</AlertTitle>
             <AlertDescription>
-              1. Reemplaza las credenciales en el archivo <strong>src/lib/firebase.ts</strong>.
-              <br />
-              2. Crea este usuario en la sección de Authentication de tu proyecto de Firebase.
+             <ol className="list-decimal list-inside space-y-1 mt-2">
+                <li>Reemplaza las credenciales en <strong>src/lib/firebase.ts</strong>.</li>
+                <li>Crea el usuario en <strong>Authentication</strong> en tu consola de Firebase.</li>
+                <li>Si ves errores de red, añade <strong>localhost</strong> a los dominios autorizados en Authentication.</li>
+             </ol>
             </AlertDescription>
           </Alert>
         </CardContent>

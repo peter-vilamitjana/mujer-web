@@ -1,5 +1,5 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
@@ -30,9 +30,8 @@ const firebaseConfig = {
 
 
 // Initialize Firebase
-// Si ves errores en la consola del navegador sobre "API Key not valid",
-// es porque aún no has reemplazado el `firebaseConfig` de arriba.
-const app = initializeApp(firebaseConfig);
+// Esta lógica previene la re-inicialización en entornos de desarrollo (hot-reloading)
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 const auth = getAuth(app);
 
