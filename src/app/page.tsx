@@ -10,12 +10,12 @@ export default function Home() {
         <div className="relative flex items-center justify-center lg:order-2">
            <div className="absolute inset-0 z-0">
             <Image
-              src="https://placehold.co/1000x1200.png"
-              alt="Imagen abstracta y artística que representa la belleza y el estilo"
+              src="https://cdn.thumbor.leadformance.com/media/clients/5e15eee0ec40d1c7741dd946/501bd8ef-356a-4e1d-97e4-1f2456c30390-loreal-professionnel-6.jpg"
+              alt="Mujer con un peinado elegante en una peluquería"
               fill
               style={{ objectFit: 'cover' }}
               className="opacity-90"
-              data-ai-hint="abstract feminine"
+              data-ai-hint="woman hairstyle"
               priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-transparent lg:bg-gradient-to-r" />
