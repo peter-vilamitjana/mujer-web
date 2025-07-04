@@ -11,11 +11,11 @@ export default function Home() {
            <div className="absolute inset-0 z-0">
             <Image
               src="https://placehold.co/1000x1200.png"
-              alt="Mujer con un peinado elegante en un salón de belleza"
+              alt="Imagen abstracta y artística que representa la belleza y el estilo"
               fill
               style={{ objectFit: 'cover' }}
               className="opacity-90"
-              data-ai-hint="elegant woman hairstyle"
+              data-ai-hint="abstract feminine"
               priority
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background/50 via-transparent to-transparent lg:bg-gradient-to-r" />
