@@ -4,19 +4,26 @@ import { ArrowRight } from 'lucide-react';
 
 export default function Hero() {
   return (
-    <section className="relative py-24 md:py-32 lg:py-48 text-center bg-gradient-to-b from-background to-background/80">
-      <div className="container mx-auto px-4">
+    <section className="relative h-[80vh] min-h-[500px] flex items-center justify-center text-center text-white">
+       <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0"
+        style={{ backgroundImage: "url('https://cdn.thumbor.leadformance.com/media/clients/5e15eee0ec40d1c7741dd946/501bd8ef-356a-4e1d-97e4-1f2456c30390-loreal-professionnel-6.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-black/50" />
+      </div>
+
+      <div className="relative z-10 container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight font-serif text-primary">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight font-serif text-white">
             Estilo, Belleza y Cuidado
           </h1>
-          <p className="mt-6 text-lg md:text-xl text-muted-foreground">
-            El cuidado que mereces, la belleza que buscas. Agendá tu próximo turno en segundos y déjanos realzar tu estilo.
+          <p className="mt-6 text-lg md:text-xl text-gray-200">
+            Gestioná tu turno en segundos. Elegí tu horario desde donde estés.
           </p>
           <div className="mt-10">
             <Link href="/servicios">
-              <Button size="lg" className="group">
-                Reservar Turno
+              <Button size="lg" className="group bg-white text-primary hover:bg-white/90">
+                Reservar ahora
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>

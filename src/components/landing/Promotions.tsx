@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/carousel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const promotions = [
   {
@@ -82,7 +83,9 @@ export default function Promotions() {
                         <p className="mt-2 text-muted-foreground">{promo.description}</p>
                         <div className="flex justify-between items-center mt-6">
                           <span className="text-lg font-semibold text-primary">{promo.price}</span>
-                          <Button variant="outline">Ver más</Button>
+                           <Link href="/servicios">
+                            <Button variant="outline">Ver más</Button>
+                           </Link>
                         </div>
                       </div>
                     </CardContent>

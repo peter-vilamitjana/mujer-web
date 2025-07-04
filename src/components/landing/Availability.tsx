@@ -27,7 +27,7 @@ export default function Availability() {
               <CardContent className="flex-grow">
                 <div className="flex flex-col items-center space-y-3">
                   {dayInfo.slots.map(slot => (
-                     <Badge key={slot} variant="secondary" className="text-base font-mono py-1 px-4 w-32 justify-center">
+                     <Badge key={slot} variant="secondary" className="text-base font-mono py-1 px-4 w-32 justify-center bg-accent/50 text-accent-foreground">
                       {slot} hs
                     </Badge>
                   ))}
