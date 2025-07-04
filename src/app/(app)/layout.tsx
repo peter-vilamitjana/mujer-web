@@ -5,7 +5,7 @@ import Sidebar from '@/components/Sidebar';
 import { auth, db } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import type { Usuario } from '@/lib/types';
 
@@ -23,11 +23,27 @@ export default function AppLayout({
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
+        setLoading(false);
         router.push('/login');
       } else {
         try {
           const userDocRef = doc(db, 'usuarios', firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
+          let userDoc = await getDoc(userDocRef);
+
+          // If the admin user doc doesn't exist, create it on the fly.
+          // This makes the initial setup process smoother for the user.
+          if (!userDoc.exists() && firebaseUser.email === 'admin@mujer.com') {
+            console.log("Admin user document not found, creating it...");
+            const adminData: Omit<Usuario, 'id'> = {
+                nombre: 'Administradora',
+                email: 'admin@mujer.com',
+                rol: 'admin',
+            };
+            await setDoc(userDocRef, adminData);
+            userDoc = await getDoc(userDocRef); // Re-fetch the doc
+            console.log("Admin user document created successfully.");
+          }
+
           if (userDoc.exists()) {
             const userData = { id: userDoc.id, ...userDoc.data() } as Usuario;
             setUser(userData);
