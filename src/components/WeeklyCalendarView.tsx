@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays, subDays, isSameDay, parseISO, isToday } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { useUser } from '@/contexts/UserContext';
+import NewAppointmentDialog from './NewAppointmentDialog';
 
 interface WeeklyCalendarViewProps {
   turnos: Turno[];
@@ -17,6 +19,8 @@ interface WeeklyCalendarViewProps {
 
 export default function WeeklyCalendarView({ turnos }: WeeklyCalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const user = useUser();
+  const userRole = user?.rol;
 
   const start = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday
   const end = endOfWeek(currentDate, { weekStartsOn: 1 });
@@ -51,10 +55,9 @@ export default function WeeklyCalendarView({ turnos }: WeeklyCalendarViewProps) 
           <Button variant="outline" size="icon" onClick={goToNextWeek}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            Agendar
-          </Button>
+          {(userRole === 'admin' || userRole === 'clienta') && (
+            <NewAppointmentDialog />
+          )}
         </div>
       </CardHeader>
       <CardContent className="h-[500px] flex flex-col">

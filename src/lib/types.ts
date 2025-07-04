@@ -42,6 +42,7 @@ export interface Turno {
   empleadaNombre: string;
   estado: 'pendiente' | 'realizado' | 'cancelado' | 'pendiente_pago';
   observaciones?: string; // Observaciones del turno específico
+  precio?: number; // Precio del servicio al momento de agendar
   montoSeña?: number;
   señaPagada?: boolean;
 }

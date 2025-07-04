@@ -11,11 +11,14 @@ import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, orderBy, Timestamp } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { useUser } from "@/contexts/UserContext";
+import NewAppointmentDialog from "@/components/NewAppointmentDialog";
 
 export default function AgendaPage() {
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [loading, setLoading] = useState(true);
-  const userRole = 'admin'; // TODO: Get role from user auth state
+  const user = useUser();
+  const userRole = user?.rol;
 
   useEffect(() => {
     const turnosQuery = query(collection(db, 'turnos'), orderBy('fecha', 'desc'));
@@ -66,11 +69,8 @@ export default function AgendaPage() {
             Visualiza y gestiona todos los turnos agendados.
           </p>
         </div>
-        {userRole === 'admin' && (
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Agendar Turno
-          </Button>
+        {(userRole === 'admin' || userRole === 'clienta') && (
+          <NewAppointmentDialog />
         )}
       </div>
       
