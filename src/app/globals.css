@@ -16,7 +16,7 @@
     --secondary-foreground: 240 6% 10%;
     --muted: 240 5% 93%;
     --muted-foreground: 240 4% 46%;
-    --accent: 316 55% 81%; /* Elegant Pink */
+    --accent: 330 80% 85%; /* Elegant Pink */
     --accent-foreground: 240 6% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -39,7 +39,7 @@
     --secondary-foreground: 0 0% 98%;
     --muted: 240 4% 16%;
     --muted-foreground: 240 4% 64%;
-    --accent: 316 55% 81%;
+    --accent: 330 80% 85%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;

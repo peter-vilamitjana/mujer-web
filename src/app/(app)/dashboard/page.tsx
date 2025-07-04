@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const [totalClientes, setTotalClientes] = useState(0);
   const [turnosHoyCount, setTurnosHoyCount] = useState(0);
   const [allTurnos, setAllTurnos] = useState<Turno[]>([]);
+  const [popularService, setPopularService] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,6 +51,20 @@ export default function DashboardPage() {
             return { id: doc.id, ...data, fecha } as Turno;
         });
         setAllTurnos(turnosData);
+
+        // Calculate popular service
+        if (turnosData.length > 0) {
+          const serviceCounts = turnosData.reduce((acc, turno) => {
+            acc[turno.servicio] = (acc[turno.servicio] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+          
+          const mostPopular = Object.entries(serviceCounts).sort((a, b) => b[1] - a[1])[0];
+          setPopularService(mostPopular[0]);
+        } else {
+          setPopularService('N/A');
+        }
+
     }, (error) => {
         console.error("Error fetching turnos:", error);
     });
@@ -97,7 +112,7 @@ export default function DashboardPage() {
             <Scissors className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-             {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">Corte y Color</div>}
+             {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{popularService || 'Calculando...'}</div>}
             <p className="text-xs text-muted-foreground">
               El servicio más agendado este mes.
             </p>

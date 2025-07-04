@@ -17,15 +17,18 @@ export interface Cliente {
   telefono: string;
   ultimaVisita?: Timestamp;
   observaciones?: string; // Solo visible para admin
-  tonosUsados?: TonoHistorial[];
   fechaRegistro: Timestamp;
   token?: string; // Para acceso de clienta sin login
 }
 
-export interface TonoHistorial {
-  fecha: Timestamp;
+export interface FichaTecnica {
+  id: string;
+  clienteId: string;
+  empleadaNombre: string;
+  fecha: string; // ISO date string
+  servicioRealizado: string;
   tono: string;
-  servicio: string;
+  observaciones: string;
 }
 
 export interface Turno {
@@ -37,9 +40,10 @@ export interface Turno {
   fecha: string; // ISO date string, for easier client-side manipulation
   empleadaAsignadaId: string;
   empleadaNombre: string;
-  estado: 'pendiente' | 'realizado' | 'cancelado';
-  tonoColor?: string;
+  estado: 'pendiente' | 'realizado' | 'cancelado' | 'pendiente_pago';
   observaciones?: string; // Observaciones del turno específico
+  montoSeña?: number;
+  señaPagada?: boolean;
 }
 
 export interface Servicio {
@@ -47,12 +51,4 @@ export interface Servicio {
   nombre: string;
   precio: number;
   duracion: number; // en minutos
-}
-
-export interface ComentarioInterno {
-  id: string;
-  clienteId: string;
-  empleadaNombre: string;
-  fecha: string; // ISO date string
-  comentario: string;
 }

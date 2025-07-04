@@ -49,12 +49,12 @@ export default function AppLayout({
             setUser(userData);
             
             // Role-based redirection
-            const isClientRoute = pathname.startsWith('/servicios') || pathname.startsWith('/mis-turnos');
+            const isClientRoute = pathname.startsWith('/servicios') || pathname.startsWith('/mis-turnos') || pathname.startsWith('/agendar');
             const isAdminEmployeeRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/agenda') || pathname.startsWith('/clientes');
 
             if (userData.rol === 'clienta' && !isClientRoute) {
               router.push('/servicios');
-            } else if ((userData.rol === 'admin' || userData.rol === 'empleada') && !isAdminEmployeeRoute) {
+            } else if ((userData.rol === 'admin' || userData.rol === 'empleada') && !isAdminEmployeeRoute && pathname !== '/servicios') {
               router.push('/dashboard');
             }
 
