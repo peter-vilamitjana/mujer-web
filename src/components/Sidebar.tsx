@@ -52,7 +52,7 @@ export default function Sidebar({ isOpen, onClose, userRole }: SidebarProps) {
   const content = (
       <div className="flex h-full flex-col">
         <div className="flex h-16 items-center border-b px-6">
-          <Logo />
+          <Logo href="/dashboard" />
         </div>
         <nav className="flex-1 space-y-2 p-4">
           {navItems.map((item) => {
