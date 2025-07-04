@@ -7,25 +7,27 @@ import { getAuth } from "firebase/auth";
 // ¡ACCIÓN MUY IMPORTANTE!
 // ---
 // El siguiente objeto `firebaseConfig` CONTIENE DATOS DE EJEMPLO.
-// DEBES REEMPLAZARLOS con las credenciales de tu propio proyecto de Firebase
-// para que la aplicación pueda funcionar.
+// DEBES REEMPLAZARLOS con las credenciales de tu propio proyecto de Firebase.
 //
-// Sigue estos pasos para obtener tus credenciales:
+// Sigue estos pasos:
 // 1. Ve a la consola de Firebase: https://console.firebase.google.com/
-// 2. Selecciona tu proyecto.
-// 3. Haz clic en el ícono de engranaje (Configuración del proyecto).
-// 4. En la pestaña "General", baja hasta "Tus apps".
-// 5. Busca tu aplicación web y haz clic en el ícono "</>" para ver el código.
-// 6. Copia el objeto `firebaseConfig` completo y pégalo aquí abajo,
-//    reemplazando el objeto de ejemplo.
+// 2. Selecciona tu proyecto y ve a "Configuración del proyecto" (el engranaje ⚙️).
+// 3. En la pestaña "General", baja hasta "Tus apps".
+// 4. Busca tu app web, haz clic en el ícono "</>" para ver el código de configuración.
+// 5. Copia los valores del objeto `firebaseConfig` y pégalos aquí abajo.
 // ---
+
 const firebaseConfig = {
-  apiKey: "¡REEMPLAZAR! - Pega tu clave de API aquí",
-  authDomain: "¡REEMPLAZAR! - Pega tu Auth Domain aquí",
-  projectId: "¡REEMPLAZAR! - Pega tu Project ID aquí",
-  storageBucket: "¡REEMPLAZAR! - Pega tu Storage Bucket aquí",
-  messagingSenderId: "¡REEMPLAZAR! - Pega tu Sender ID aquí",
-  appId: "¡REEMPLAZAR! - Pega tu App ID aquí"
+  // ==================> PEGA TUS CREDENCIALES AQUÍ <==================
+  
+  apiKey: "AQUÍ_VA_TU_API_KEY",
+  authDomain: "AQUÍ_VA_TU_AUTH_DOMAIN",
+  projectId: "AQUÍ_VA_TU_PROJECT_ID",
+  storageBucket: "AQUÍ_VA_TU_STORAGE_BUCKET",
+  messagingSenderId: "AQUÍ_VA_TU_MESSAGING_SENDER_ID",
+  appId: "AQUÍ_VA_TU_APP_ID"
+
+  // ==================> FIN DEL ÁREA PARA PEGAR <==================
 };
 
 
