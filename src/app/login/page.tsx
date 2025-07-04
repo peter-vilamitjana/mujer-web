@@ -33,10 +33,10 @@ export default function LoginPage() {
       let description = "Credenciales incorrectas o el usuario no existe. Asegúrate de haberlo creado en tu consola de Firebase.";
 
       if (error.code === 'auth/network-request-failed') {
-        title = "Error de Red";
-        description = "No se pudo conectar a Firebase. Revisa tu conexión, bloqueadores de anuncios, o si 'localhost' está en los dominios autorizados de Firebase.";
+        title = "Error de Red con Firebase";
+        description = "ACCIÓN REQUERIDA: Ve a tu consola de Firebase > Authentication > Settings > Authorized domains y AÑADE 'localhost' a la lista.";
       } else if (error.code === 'auth/api-key-not-valid') {
-        title = "API Key Inválida";
+        title = "API Key de Firebase Inválida";
         description = "La clave de API de Firebase no es válida. Revisa el archivo src/lib/firebase.ts.";
       }
 
@@ -91,14 +91,14 @@ export default function LoginPage() {
               {isLoading ? <Loader2 className="animate-spin" /> : "Ingresar"}
             </Button>
           </form>
-          <Alert className="mt-4">
+          <Alert variant="destructive" className="mt-4">
             <Info className="h-4 w-4" />
-            <AlertTitle>Pasos para ingresar:</AlertTitle>
+            <AlertTitle className="font-bold">¡Configuración Requerida!</AlertTitle>
             <AlertDescription>
-             <ol className="list-decimal list-inside space-y-1 mt-2">
-                <li>Reemplaza las credenciales en <strong>src/lib/firebase.ts</strong>.</li>
-                <li>Crea el usuario en <strong>Authentication</strong> en tu consola de Firebase.</li>
-                <li>Si ves errores de red, añade <strong>localhost</strong> a los dominios autorizados en Authentication.</li>
+             <ol className="list-decimal list-inside space-y-2 mt-2">
+                <li>Reemplaza las credenciales de ejemplo en <strong>src/lib/firebase.ts</strong>.</li>
+                <li>Crea el usuario <strong>admin@mujer.com</strong> en tu consola de Firebase (en la sección de Authentication).</li>
+                <li><strong>Para evitar errores de red:</strong> Ve a Authentication &gt; Settings &gt; Authorized domains y <strong>añade `localhost`</strong> a la lista de dominios.</li>
              </ol>
             </AlertDescription>
           </Alert>
