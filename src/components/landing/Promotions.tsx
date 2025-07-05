@@ -2,27 +2,19 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Servicio } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ArrowRight } from 'lucide-react';
 
 export default function Promotions() {
   const [promotions, setPromotions] = useState<Servicio[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // We fetch services that have a "badge" to feature them as promotions
     const q = query(collection(db, 'servicios'), where('badge', '!=', ''));
     
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -37,89 +29,72 @@ export default function Promotions() {
     return () => unsubscribe();
   }, []);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(price);
-  }
-
   return (
-    <section id="promotions" className="py-16 sm:py-24 bg-muted/50">
+    <section id="promotions" className="py-16 sm:py-24 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Promociones y Servicios Destacados</h2>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Servicios y Promociones</h2>
           <p className="mt-4 text-lg text-muted-foreground">Descubre nuestras ofertas especiales y los tratamientos más elegidos.</p>
         </div>
-        <Carousel
-          opts={{
-            align: 'start',
-            loop: promotions.length > 2,
-          }}
-          className="w-full"
-        >
-          <CarouselContent>
-            {loading ? (
-              [...Array(3)].map((_, index) => (
-                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-                  <div className="p-1">
-                    <Card>
-                      <Skeleton className="aspect-[3/2] w-full" />
-                      <div className="p-6 space-y-3">
-                        <Skeleton className="h-6 w-3/4" />
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-1/2" />
-                        <div className="flex justify-between items-center pt-2">
-                           <Skeleton className="h-6 w-1/4" />
-                           <Skeleton className="h-10 w-1/3" />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {loading ? (
+             [...Array(2)].map((_, index) => (
+                <Card key={index} className="overflow-hidden">
+                    <div className="grid grid-cols-1 md:grid-cols-2">
+                        <div className="p-8 flex flex-col justify-center">
+                             <Skeleton className="h-4 w-1/4 mb-2" />
+                             <Skeleton className="h-8 w-3/4 mb-4" />
+                             <Skeleton className="h-4 w-full mb-6" />
+                             <Skeleton className="h-10 w-1/2" />
                         </div>
-                      </div>
-                    </Card>
-                  </div>
-                </CarouselItem>
-              ))
-            ) : promotions.length > 0 ? (
-               promotions.map((promo) => (
-                <CarouselItem key={promo.id} className="md:basis-1/2 lg:basis-1/3">
-                  <div className="p-1">
-                    <Card className="overflow-hidden group transition-all duration-300 hover:shadow-xl">
-                      <CardContent className="p-0">
-                        <div className="relative">
-                          {promo.badge && <Badge variant="destructive" className="absolute top-4 left-4 z-10">{promo.badge}</Badge>}
-                          <Image
-                            src={promo.imagen || 'https://placehold.co/600x400.png'}
-                            alt={promo.nombre}
-                            width={600}
-                            height={400}
-                            data-ai-hint="hair treatment"
-                            className="object-cover aspect-[3/2] w-full transition-transform duration-500 group-hover:scale-105"
-                          />
+                        <div className="hidden md:block">
+                            <Skeleton className="h-full w-full aspect-square" />
                         </div>
-                        <div className="p-6">
-                          <h3 className="text-xl font-bold">{promo.nombre}</h3>
-                          <p className="mt-2 text-muted-foreground min-h-[40px]">{promo.descripcion}</p>
-                          <div className="flex justify-between items-center mt-6">
-                            <span className="text-lg font-semibold text-primary">
-                              Desde {formatPrice(promo.precio)}
-                            </span>
-                            <Link href="/login">
-                              <Button variant="outline">Ver más</Button>
+                    </div>
+                </Card>
+            ))
+          ) : promotions.length > 0 ? (
+            promotions.slice(0, 2).map((promo, index) => (
+                <Card key={promo.id + index} className="overflow-hidden group transition-all duration-300 hover:shadow-xl flex flex-col bg-muted/30">
+                    <div className="grid grid-cols-1 md:grid-cols-2 flex-grow">
+                        <div className="p-8 flex flex-col justify-center order-2 md:order-1">
+                            <span className="text-sm font-semibold text-primary uppercase tracking-wider">{promo.badge || 'Promoción'}</span>
+                            <h3 className="text-2xl lg:text-3xl font-bold mt-2">{promo.nombre}</h3>
+                            <p className="mt-4 text-muted-foreground min-h-[60px]">{promo.descripcion}</p>
+                            <Link href="/turnos" className="mt-6">
+                                <Button variant="outline">
+                                    Reservar Ahora <ArrowRight className="ml-2 h-4 w-4" />
+                                </Button>
                             </Link>
-                          </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </CarouselItem>
-              ))
-            ) : (
-                <CarouselItem>
-                   <div className="text-center py-10 text-muted-foreground">
-                      No hay promociones destacadas en este momento.
-                   </div>
-                </CarouselItem>
-            )}
-          </CarouselContent>
-          <CarouselPrevious className="hidden sm:flex" />
-          <CarouselNext className="hidden sm:flex" />
-        </Carousel>
+                        <div className="relative min-h-[300px] md:min-h-0 order-1 md:order-2">
+                             <Image
+                                src={promo.imagen || 'https://placehold.co/600x600.png'}
+                                alt={promo.nombre}
+                                fill
+                                data-ai-hint="hair treatment"
+                                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                              />
+                        </div>
+                    </div>
+                </Card>
+            ))
+          ) : (
+            <div className="lg:col-span-2 text-center py-10 text-muted-foreground">
+                No hay promociones destacadas en este momento.
+            </div>
+          )}
+        </div>
+
+        <div className="mt-16 text-center">
+            <h3 className="text-2xl font-bold">¿Lista para tu cambio de look?</h3>
+            <p className="mt-2 text-muted-foreground">Explora todos nuestros servicios y agenda tu cita fácilmente.</p>
+            <Link href="/servicios" className="mt-6 inline-block">
+                <Button size="lg">Ver todos los servicios</Button>
+            </Link>
+        </div>
+
       </div>
     </section>
   );
