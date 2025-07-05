@@ -10,7 +10,7 @@ export interface Usuario {
 }
 
 export interface Cliente {
-  id: string;
+  id:string;
   nombre: string;
   apellido: string;
   email: string;
@@ -50,6 +50,9 @@ export interface Turno {
 export interface Servicio {
   id: string;
   nombre: string;
+  descripcion: string;
   precio: number;
   duracion: number; // en minutos
+  imagen: string;
+  badge: string;
 }
