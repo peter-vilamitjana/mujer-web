@@ -55,4 +55,5 @@ export interface Servicio {
   duracion: number; // en minutos
   imagen: string;
   badge: string;
+  destacado?: boolean;
 }
