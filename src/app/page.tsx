@@ -5,6 +5,7 @@ import Testimonials from '@/components/landing/Testimonials';
 import Footer from '@/components/landing/Footer';
 import InfoBar from '@/components/landing/InfoBar';
 import FeaturedServices from '@/components/landing/FeaturedServices';
+import PromoSection from '@/components/landing/PromoSection';
 
 export default function HomePage() {
   return (
@@ -14,6 +15,7 @@ export default function HomePage() {
         <Hero />
         <InfoBar />
         <FeaturedServices />
+        <PromoSection />
         <Testimonials />
       </main>
       <Footer />
