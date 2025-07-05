@@ -26,7 +26,7 @@ export default function LandingHeader() {
         <Logo />
         <div className="flex items-center gap-4">
             <Link href="/login">
-              <Button variant={scrolled ? "ghost" : "outline" } className={cn(!scrolled && "text-white border-white hover:bg-white hover:text-primary")}>Acceder</Button>
+              <Button variant="ghost" className={cn(!scrolled && "border border-white text-white hover:bg-white hover:text-primary")}>Acceder</Button>
             </Link>
             <Link href="/login">
               <Button>
