@@ -64,20 +64,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-muted/50 p-4">
       <div className="w-full max-w-md space-y-6">
           <div className="text-center">
              <Logo />
           </div>
-          <Card>
-            <CardHeader className="text-center">
+          <Card className="shadow-lg">
+            <CardHeader className="text-center p-8">
               <CardTitle className="text-2xl">Bienvenida de nuevo</CardTitle>
               <CardDescription>
                 Ingresa a tu cuenta para gestionar tu salón.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleLogin} className="space-y-4">
+            <CardContent className="p-8 pt-0">
+              <form onSubmit={handleLogin} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input 
@@ -88,6 +88,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}
+                    className="py-6"
                   />
                 </div>
                 <div className="space-y-2">
@@ -99,15 +100,16 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
+                    className="py-6"
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" size="lg" className="w-full py-6" disabled={isLoading}>
                   {isLoading ? <Loader2 className="animate-spin" /> : "Ingresar"}
                 </Button>
               </form>
-               <p className="mt-4 text-center text-sm text-muted-foreground">
+               <p className="mt-6 text-center text-sm text-muted-foreground">
                 <Link href="/" className="underline hover:text-primary">
-                  Volver al inicio
+                  Volver a la página principal
                 </Link>
               </p>
             </CardContent>

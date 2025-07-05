@@ -26,19 +26,19 @@ export default function Footer() {
                     <h3 className="font-semibold text-foreground">Navegación</h3>
                      <ul className="mt-4 space-y-3 text-sm">
                         <li><Link href="#promotions" className="text-muted-foreground hover:text-primary transition-colors">Promociones</Link></li>
-                        <li><Link href="/login" className="text-muted-foreground hover:text-primary transition-colors">Agendar Turno</Link></li>
+                        <li><Link href="/login" className="text-muted-foreground hover:text-primary transition-colors">Reservar Turno</Link></li>
                         <li><Link href="#testimonios" className="text-muted-foreground hover:text-primary transition-colors">Testimonios</Link></li>
                         <li><Link href="/login" className="text-muted-foreground hover:text-primary transition-colors">Mi Cuenta</Link></li>
                      </ul>
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground">Síguenos</h3>
-                    <div className="flex mt-4 space-x-4">
+                    <div className="flex mt-4 space-x-2">
                       <Link href="#" aria-label="Instagram">
-                        <Button variant="outline" size="icon"><Instagram className="h-5 w-5"/></Button>
+                        <Button variant="outline" size="icon" className="rounded-full"><Instagram className="h-5 w-5"/></Button>
                       </Link>
                       <Link href="#" aria-label="Facebook">
-                        <Button variant="outline" size="icon"><Facebook className="h-5 w-5"/></Button>
+                        <Button variant="outline" size="icon" className="rounded-full"><Facebook className="h-5 w-5"/></Button>
                       </Link>
                     </div>
                   </div>

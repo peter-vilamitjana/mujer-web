@@ -9,8 +9,10 @@ import type { Turno } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { startOfToday, endOfToday } from 'date-fns';
 import WeeklyCalendarView from '@/components/WeeklyCalendarView';
+import { useUser } from '@/contexts/UserContext';
 
 export default function DashboardPage() {
+  const user = useUser();
   const [totalClientes, setTotalClientes] = useState(0);
   const [turnosHoyCount, setTurnosHoyCount] = useState(0);
   const [allTurnos, setAllTurnos] = useState<Turno[]>([]);
@@ -46,7 +48,6 @@ export default function DashboardPage() {
     const unsubTurnos = onSnapshot(turnosQuery, (snapshot) => {
         const turnosData = snapshot.docs.map(doc => {
             const data = doc.data();
-            // Firestore timestamps need to be converted to serializable strings for components
             const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate().toISOString() : new Date(data.fecha).toISOString();
             return { id: doc.id, ...data, fecha } as Turno;
         });
@@ -77,12 +78,12 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Bienvenida, aquí tienes un resumen de tu salón.</p>
+        <h1 className="text-3xl font-bold tracking-tight">Bienvenida, {user?.nombre || 'Administradora'}!</h1>
+        <p className="text-muted-foreground">Aquí tienes un resumen de la actividad de tu salón.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Turnos de Hoy</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -94,7 +95,7 @@ export default function DashboardPage() {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Clientes</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -106,7 +107,7 @@ export default function DashboardPage() {
             </p>
           </CardContent>
         </Card>
-         <Card>
+         <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Servicio Popular</CardTitle>
             <Scissors className="h-4 w-4 text-muted-foreground" />
@@ -114,7 +115,7 @@ export default function DashboardPage() {
           <CardContent>
              {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{popularService || 'Calculando...'}</div>}
             <p className="text-xs text-muted-foreground">
-              El servicio más agendado este mes.
+              El servicio más solicitado.
             </p>
           </CardContent>
         </Card>

@@ -53,7 +53,7 @@ export interface Servicio {
   descripcion: string;
   precio: number;
   duracion: number; // en minutos
-  imagen: string;
-  badge: string;
+  imagen?: string;
+  badge?: string;
   destacado?: boolean;
 }

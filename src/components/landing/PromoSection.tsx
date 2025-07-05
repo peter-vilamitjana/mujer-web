@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Asterisk } from 'lucide-react';
+import { Asterisk, Scissors } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
@@ -57,8 +57,15 @@ const formatPrice = (price: number) => {
 
 export default function PromoSection() {
     return (
-        <section className="py-16 sm:py-24 bg-muted/50">
+        <section id="promotions" className="py-16 sm:py-24 bg-muted/50">
             <div className="container mx-auto px-4">
+                 <div className="text-center mb-12">
+                    <div className="inline-block text-primary">
+                        <Scissors className="h-8 w-8" />
+                    </div>
+                    <h2 className="text-3xl md:text-4xl font-bold tracking-tight mt-4">Nuestros Combos Especiales</h2>
+                    <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">Combos pensados para darte una experiencia completa de renovación y cuidado, a un precio especial.</p>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
                     {promoData.map((promo) => (
                         <Card key={promo.id} className={cn(
@@ -88,7 +95,7 @@ export default function PromoSection() {
                                     </ul>
                                 </div>
                                 <div className="mt-auto pt-8">
-                                    <Link href="/turnos" className="w-full">
+                                    <Link href="/login" className="w-full">
                                         <Button size="lg" variant={promo.highlightButton ? 'default' : 'outline'} className="w-full uppercase tracking-wider py-6">
                                             Seleccionar
                                         </Button>

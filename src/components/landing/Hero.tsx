@@ -14,16 +14,16 @@ export default function Hero() {
 
       <div className="relative z-10 container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight font-serif text-white">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white">
             Estilo, Belleza y Cuidado
           </h1>
           <p className="mt-6 text-lg md:text-xl text-gray-200">
-            Gestioná tu turno en segundos. Elegí tu horario desde donde estés.
+            Registrate y gestioná tu turno fácil y rápido.
           </p>
           <div className="mt-10">
-            <Link href="/servicios">
+            <Link href="/login">
               <Button size="lg" className="group bg-white text-primary hover:bg-white/90">
-                Reservar ahora
+                Reservar Turno
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>

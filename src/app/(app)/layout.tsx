@@ -31,8 +31,6 @@ export default function AppLayout({
           const userDocRef = doc(db, 'usuarios', firebaseUser.uid);
           let userDoc = await getDoc(userDocRef);
 
-          // If the admin user doc doesn't exist, create it on the fly.
-          // This makes the initial setup process smoother for the user.
           if (!userDoc.exists() && firebaseUser.email === 'admin@mujer.com') {
             console.log("Admin user document not found, creating it...");
             const adminData: Omit<Usuario, 'id'> = {
@@ -41,7 +39,7 @@ export default function AppLayout({
                 rol: 'admin',
             };
             await setDoc(userDocRef, adminData);
-            userDoc = await getDoc(userDocRef); // Re-fetch the doc
+            userDoc = await getDoc(userDocRef);
             console.log("Admin user document created successfully.");
           }
 
@@ -51,21 +49,15 @@ export default function AppLayout({
             
             // Role-based redirection logic
             const { rol } = userData;
-            const isServicesRoute = pathname.startsWith('/servicios');
-            const isClientSpecificRoute = pathname.startsWith('/mis-turnos') || pathname.startsWith('/agendar');
-            const isAdminEmployeeRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/agenda') || pathname.startsWith('/clientes');
-
-            if (rol === 'empleada' && !isAdminEmployeeRoute) {
-                router.push('/dashboard');
-            } else if (rol === 'clienta' && !isServicesRoute && !isClientSpecificRoute) {
-                router.push('/servicios');
-            } else if (rol === 'admin' && !isAdminEmployeeRoute && !isServicesRoute) {
+            const isLoginOrRoot = pathname === '/login' || pathname === '/';
+            
+            if (rol === 'clienta' && isLoginOrRoot) {
+                router.push('/mis-turnos');
+            } else if ((rol === 'admin' || rol === 'empleada') && isLoginOrRoot) {
                 router.push('/dashboard');
             }
 
           } else {
-             // If user exists in Auth but not in Firestore, something is wrong.
-             // For now, log out and redirect to login.
              console.error("Usuario no encontrado en Firestore, cerrando sesión.");
              await auth.signOut();
              router.push('/login');
@@ -92,11 +84,11 @@ export default function AppLayout({
 
   return (
     <UserProvider user={user}>
-      <div className="flex min-h-screen w-full flex-col bg-background">
+      <div className="flex min-h-screen w-full flex-col bg-muted/40">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={user.rol} />
         <div className="flex flex-col md:pl-64 transition-all duration-300">
           <Header onMenuClick={() => setSidebarOpen(true)} />
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900/50">{children}</main>
+          <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
         </div>
       </div>
     </UserProvider>

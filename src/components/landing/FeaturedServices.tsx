@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { Servicio } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { Button } from '../ui/button';
 
 const mockServices: Omit<Servicio, 'id' | 'duracion' | 'descripcion'>[] = [
   {
@@ -76,11 +77,7 @@ export default function FeaturedServices() {
           <h2 className="text-3xl md:text-4xl font-bold tracking-widest uppercase text-foreground/80">
             SERVICIOS DESTACADOS
           </h2>
-          <Link href="/servicios">
-            <span className="mt-2 inline-block text-primary hover:text-primary/80 transition-colors cursor-pointer">
-              Ver más
-            </span>
-          </Link>
+           <p className="mt-2 text-muted-foreground max-w-2xl mx-auto">Descubrí nuestros tratamientos estrella, diseñados para realzar tu belleza con las últimas tendencias y la máxima calidad profesional.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -90,36 +87,32 @@ export default function FeaturedServices() {
             ))
           ) : (
             services.map((service) => (
-              <Link href={`/turnos?servicioId=${service.id}`} key={service.id} className="block">
-                <Card className="relative group overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                  <Image
-                    src={service.imagen || 'https://placehold.co/600x800.png'}
-                    alt={service.nombre}
-                    width={600}
-                    height={800}
-                    className="object-cover w-full h-[450px] group-hover:scale-105 transition-transform duration-300"
-                    data-ai-hint="woman hair"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                  <div className="absolute bottom-0 left-0 p-6 text-white w-full">
-                     <div className="flex items-end gap-4">
-                        <Image 
-                            src={service.imagen || 'https://placehold.co/80x80.png'}
-                            alt={service.nombre}
-                            width={80}
-                            height={80}
-                            className="object-cover rounded-md border-2 border-white/50 flex-shrink-0"
-                            data-ai-hint="hair style"
-                        />
-                        <div className="flex-1">
-                            {service.badge && <p className="text-xs font-bold uppercase tracking-wider text-white/90">{service.badge}</p>}
-                            <h3 className="text-xl font-semibold uppercase tracking-wide leading-tight">{service.nombre}</h3>
-                            <p className="text-lg font-bold text-primary mt-1">Desde {formatPrice(service.precio)}</p>
-                        </div>
-                     </div>
+              <Card key={service.id} className="group overflow-hidden rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col">
+                  <div className="relative">
+                     <Image
+                      src={service.imagen || 'https://placehold.co/600x800.png'}
+                      alt={service.nombre}
+                      width={600}
+                      height={400}
+                      className="object-cover w-full h-60 group-hover:scale-105 transition-transform duration-300"
+                      data-ai-hint="woman hair"
+                    />
+                    {service.badge && <div className="absolute top-3 right-3 bg-primary text-primary-foreground text-xs font-bold uppercase px-3 py-1 rounded-full">{service.badge}</div>}
                   </div>
-                </Card>
-              </Link>
+                  <div className="p-6 flex flex-col flex-grow">
+                      <h3 className="text-lg font-semibold uppercase tracking-wide leading-tight flex-grow">{service.nombre}</h3>
+                      <p className="text-sm text-muted-foreground mt-2">{service.descripcion}</p>
+                      <div className="mt-4 pt-4 border-t border-dashed">
+                        <p className="text-sm text-muted-foreground">Desde</p>
+                        <p className="text-2xl font-bold text-primary">{formatPrice(service.precio)}</p>
+                      </div>
+                      <div className="mt-6">
+                        <Link href="/login" className="w-full">
+                           <Button variant="outline" className="w-full">Ver más</Button>
+                        </Link>
+                      </div>
+                  </div>
+              </Card>
             ))
           )}
         </div>

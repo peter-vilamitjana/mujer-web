@@ -4,17 +4,17 @@
 
 @layer base {
   :root {
-    --background: 240 10% 98%; /* Almost white */
+    --background: 210 40% 98%; /* #f9fafb - Very light gray */
     --foreground: 240 6% 10%;
     --card: 0 0% 100%;
     --card-foreground: 240 6% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 6% 10%;
-    --primary: 256 63% 59%; /* Deep Violet */
+    --primary: 256 82% 61%; /* #7C3AED - Violet */
     --primary-foreground: 0 0% 100%;
     --secondary: 240 5% 90%;
     --secondary-foreground: 240 6% 10%;
-    --muted: 240 5% 93%;
+    --muted: 220 13% 91%; /* #E5E7EB - Light gray */
     --muted-foreground: 240 4% 46%;
     --accent: 258 90% 90%; /* Soft Lavender */
     --accent-foreground: 258 30% 20%;
@@ -22,8 +22,8 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 6% 90%;
     --input: 240 6% 93%;
-    --ring: 256 63% 59%;
-    --radius: 0.75rem;
+    --ring: 256 82% 61%;
+    --radius: 1rem;
   }
 
   .dark {
@@ -33,7 +33,7 @@
     --card-foreground: 0 0% 98%;
     --popover: 240 5% 12%;
     --popover-foreground: 0 0% 98%;
-    --primary: 256 63% 65%;
+    --primary: 256 82% 65%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 4% 16%;
     --secondary-foreground: 0 0% 98%;
@@ -45,7 +45,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 4% 16%;
     --input: 240 4% 16%;
-    --ring: 256 63% 65%;
+    --ring: 256 82% 65%;
   }
 }
 

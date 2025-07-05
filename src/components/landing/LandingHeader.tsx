@@ -24,11 +24,11 @@ export default function LandingHeader() {
     )}>
       <div className="container mx-auto flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
         <Logo />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
             <Link href="/login">
               <Button variant={scrolled ? "ghost" : "outline" } className={cn(!scrolled && "text-white border-white hover:bg-white hover:text-primary")}>Acceder</Button>
             </Link>
-            <Link href="/turnos">
+            <Link href="/login">
               <Button>
                 <Calendar className="mr-2 h-4 w-4" />
                 Reservar Turno

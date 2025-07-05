@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Turno } from "@/lib/types";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, orderBy, Timestamp } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, Timestamp, where } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/contexts/UserContext";
@@ -21,7 +21,23 @@ export default function AgendaPage() {
   const userRole = user?.rol;
 
   useEffect(() => {
-    const turnosQuery = query(collection(db, 'turnos'), orderBy('fecha', 'desc'));
+    if (!user) return;
+
+    let turnosQuery;
+    const baseQuery = collection(db, 'turnos');
+    
+    if (user.rol === 'admin') {
+      turnosQuery = query(baseQuery, orderBy('fecha', 'desc'));
+    } else if (user.rol === 'empleada') {
+      // Assuming user.nombre matches 'empleadaNombre' in the 'turnos' collection.
+      // For a more robust solution, an employee ID should be used.
+      turnosQuery = query(baseQuery, where('empleadaNombre', '==', user.nombre), orderBy('fecha', 'desc'));
+    } else {
+      // No access for other roles on this page
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onSnapshot(turnosQuery, (snapshot) => {
       const turnosData = snapshot.docs.map(doc => {
         const data = doc.data();
@@ -33,7 +49,7 @@ export default function AgendaPage() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   const getStatusBadge = (status: Turno['estado']) => {
     switch (status) {
@@ -69,7 +85,7 @@ export default function AgendaPage() {
             Visualiza y gestiona todos los turnos agendados.
           </p>
         </div>
-        {(userRole === 'admin' || userRole === 'clienta') && (
+        {(userRole === 'admin') && (
           <Link href="/turnos">
             <Button><Plus className="mr-2 h-4 w-4"/> Agendar Turno</Button>
           </Link>
