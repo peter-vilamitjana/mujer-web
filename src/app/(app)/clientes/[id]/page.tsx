@@ -176,10 +176,12 @@ export default function ClienteDetailPage() {
                 <Save className="mr-2 h-4 w-4" />
                 {isSaving ? 'Guardando...' : 'Guardar Cambios'}
               </Button>
-              <Button variant="secondary" className="w-full">
-                <Plus className="mr-2 h-4 w-4" />
-                Agendar Turno
-              </Button>
+               <Link href={`/turnos?clienteId=${id}`} passHref className="w-full">
+                <Button variant="secondary" className="w-full">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Agendar Turno
+                </Button>
+              </Link>
             </CardFooter>
           }
         </Card>

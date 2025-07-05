@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Calendar, Clock, Scissors, PlusCircle, User, Check, XCircle } from "lucide-react";
+import { Calendar, Clock, Scissors, PlusCircle, User, Check, XCircle, Plus } from "lucide-react";
 import { format, parseISO, isPast } from "date-fns";
 import { es } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { collection, onSnapshot, query, orderBy, Timestamp } from "firebase/fire
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/contexts/UserContext";
-import NewAppointmentDialog from "@/components/NewAppointmentDialog";
+import Link from "next/link";
 
 export default function AgendaPage() {
   const [turnos, setTurnos] = useState<Turno[]>([]);
@@ -70,7 +70,9 @@ export default function AgendaPage() {
           </p>
         </div>
         {(userRole === 'admin' || userRole === 'clienta') && (
-          <NewAppointmentDialog />
+          <Link href="/turnos">
+            <Button><Plus className="mr-2 h-4 w-4"/> Agendar Turno</Button>
+          </Link>
         )}
       </div>
       

@@ -11,7 +11,6 @@ import { format, startOfWeek, endOfWeek, eachDayOfInterval, addDays, subDays, is
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
-import NewAppointmentDialog from './NewAppointmentDialog';
 
 interface WeeklyCalendarViewProps {
   turnos: Turno[];
@@ -56,7 +55,12 @@ export default function WeeklyCalendarView({ turnos }: WeeklyCalendarViewProps) 
             <ChevronRight className="h-4 w-4" />
           </Button>
           {(userRole === 'admin' || userRole === 'clienta') && (
-            <NewAppointmentDialog />
+            <Link href="/turnos">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Agendar Turno
+              </Button>
+            </Link>
           )}
         </div>
       </CardHeader>

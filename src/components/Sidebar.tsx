@@ -25,7 +25,7 @@ const employeeNavItems = [
 
 const clientNavItems = [
   { href: '/servicios', label: 'Servicios', icon: Scissors },
-  { href: '/agenda', label: 'Agendar Turno', icon: Calendar },
+  { href: '/turnos', label: 'Agendar Turno', icon: Calendar },
   { href: '/mis-turnos', label: 'Mis Turnos', icon: Home },
 ];
 

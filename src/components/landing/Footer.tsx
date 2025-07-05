@@ -26,7 +26,7 @@ export default function Footer() {
                     <h3 className="font-semibold text-foreground">Navegación</h3>
                      <ul className="mt-4 space-y-3 text-sm">
                         <li><Link href="#promotions" className="text-muted-foreground hover:text-primary transition-colors">Promociones</Link></li>
-                        <li><Link href="#horarios" className="text-muted-foreground hover:text-primary transition-colors">Horarios</Link></li>
+                        <li><Link href="/login" className="text-muted-foreground hover:text-primary transition-colors">Agendar Turno</Link></li>
                         <li><Link href="#testimonios" className="text-muted-foreground hover:text-primary transition-colors">Testimonios</Link></li>
                         <li><Link href="/login" className="text-muted-foreground hover:text-primary transition-colors">Mi Cuenta</Link></li>
                      </ul>

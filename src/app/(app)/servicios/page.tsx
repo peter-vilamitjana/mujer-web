@@ -87,7 +87,7 @@ export default function ServiciosPage() {
               </CardContent>
               <CardFooter>
                 {userRole === 'clienta' ? (
-                  <Link href={`/agendar?servicio=${servicio.id}`} className="w-full">
+                  <Link href={`/turnos?servicioId=${servicio.id}`} className="w-full">
                     <Button className="w-full group">
                       Reservar
                       <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
