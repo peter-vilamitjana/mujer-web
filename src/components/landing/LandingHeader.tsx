@@ -23,10 +23,15 @@ export default function LandingHeader() {
       scrolled ? "bg-card/80 backdrop-blur-lg border-b" : "bg-transparent"
     )}>
       <div className="container mx-auto flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Logo />
+        <Logo className={cn("transition-colors", !scrolled && "[&_span]:text-white")} />
         <div className="flex items-center gap-4">
             <Link href="/login">
-              <Button variant="ghost" className={cn(!scrolled && "border border-white text-white hover:bg-white hover:text-primary")}>Acceder</Button>
+              <Button variant="ghost" className={cn(
+                "transition-colors",
+                !scrolled 
+                    ? "border border-white text-white hover:bg-white hover:text-primary" 
+                    : "text-foreground hover:bg-accent"
+              )}>Acceder</Button>
             </Link>
             <Link href="/login">
               <Button>
