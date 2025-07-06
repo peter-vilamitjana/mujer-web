@@ -1,14 +1,12 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Asterisk, Scissors } from 'lucide-react';
+import { Scissors } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 const promoData = [
   {
     id: 1,
-    number: '01',
-    title: 'PROMO',
     subtitle: 'TRADICIONAL',
     price: 29999,
     services: ['CORTE', 'LAVADO ESPECIAL', 'BOTOX CAPILAR', 'PEINADO', 'PLANCHITA'],
@@ -17,8 +15,6 @@ const promoData = [
   },
   {
     id: 2,
-    number: '02',
-    title: 'PROMO',
     subtitle: 'TENDENCIA',
     price: 44999,
     services: ['CORTE', 'LAVADO ESPECIAL', 'COLOR DE RAÍZ', 'BRUSHING', 'PLANCHITA'],
@@ -27,8 +23,6 @@ const promoData = [
   },
   {
     id: 3,
-    number: '03',
-    title: 'PROMO',
     subtitle: 'RENOVADA',
     price: 34999,
     services: ['CORTE', 'LAVADO ESPECIAL', 'SHOCK DE KERATINA', 'BRUSHING', 'PLANCHITA'],
@@ -37,12 +31,10 @@ const promoData = [
   },
   {
     id: 4,
-    number: '04',
-    title: 'PROMO',
     subtitle: 'EXCLUSIVA',
     price: 49999,
     services: ['BALAYAGE', 'BAÑO DE LUZ', 'LAVADO ESPECIAL', 'NUTRICIÓN CAPILAR', 'BRUSHING'],
-    badge: '⭐ EXCLUSIVA',
+    badge: 'EXCLUSIVA',
     type: 'premium',
   },
 ];
@@ -67,20 +59,24 @@ export default function PromoSection() {
                         <Card key={promo.id} className={cn(
                             "relative flex flex-col rounded-2xl text-center transition-all duration-300 transform hover:-translate-y-2 group",
                             {
-                              'bg-card shadow-lg hover:shadow-primary/20': promo.type === 'standard' || promo.type === 'popular',
-                              'bg-[#101014] text-gray-200 shadow-2xl shadow-primary/20 border-2 border-primary/50 hover:shadow-primary/30': promo.type === 'premium'
+                                'bg-card shadow-lg hover:shadow-primary/10': promo.type === 'standard',
+                                'bg-card shadow-lg ring-1 ring-primary/20 hover:shadow-primary/20': promo.type === 'popular',
+                                'relative overflow-hidden bg-[#101014] text-gray-200 shadow-2xl shadow-primary/20 border border-primary/30 hover:shadow-primary/30': promo.type === 'premium'
                             }
                         )}>
-                            {promo.type === 'popular' && (
-                                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                                    <div className="bg-primary text-primary-foreground text-xs font-bold uppercase px-4 py-1.5 rounded-full shadow-lg">
-                                        {promo.badge}
-                                    </div>
-                                </div>
+                            {promo.type === 'premium' && (
+                                <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0,_hsl(var(--primary)/0.15),transparent_60%)]" />
                             )}
-                             {promo.type === 'premium' && (
-                                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                                    <div className="bg-primary/90 backdrop-blur-sm border border-white/10 text-primary-foreground text-xs font-bold uppercase px-4 py-1.5 rounded-full shadow-lg shadow-primary/40">
+                            
+                            {promo.badge && (
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                                    <div className={cn(
+                                        "text-xs font-bold uppercase px-4 py-1.5 rounded-full shadow-lg",
+                                        {
+                                            'bg-accent text-accent-foreground': promo.type === 'popular',
+                                            'bg-primary/90 backdrop-blur-sm border border-white/10 text-primary-foreground shadow-primary/40': promo.type === 'premium'
+                                        }
+                                    )}>
                                         {promo.badge}
                                     </div>
                                 </div>
@@ -98,7 +94,7 @@ export default function PromoSection() {
                                     <ul className="space-y-3 text-left my-8">
                                         {promo.services.map((service, index) => (
                                             <li key={index} className="flex items-center gap-3">
-                                                <Asterisk className={cn("h-4 w-4 flex-shrink-0", promo.type === 'premium' ? 'text-primary' : 'text-primary/80')} />
+                                                <div className={cn("h-1.5 w-1.5 flex-shrink-0 rounded-full", promo.type === 'premium' ? 'bg-gray-300' : 'bg-muted-foreground')} />
                                                 <span className={cn(
                                                     "text-sm uppercase font-medium",
                                                      promo.type === 'premium' ? 'text-gray-300' : 'text-muted-foreground'
