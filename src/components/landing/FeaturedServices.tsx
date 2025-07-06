@@ -75,12 +75,17 @@ export default function FeaturedServices() {
   }
 
   return (
-    <section className="py-16 sm:py-24 bg-slate-900 relative overflow-hidden text-white">
-      <div className="absolute inset-x-0 top-1/4 -z-10 flex justify-center overflow-hidden">
-        <div className="h-[400px] w-full max-w-7xl flex-none bg-[radial-gradient(circle_at_center,_rgba(124,58,237,0.15)_0%,_rgba(124,58,237,0)_50%)] blur-3xl" />
-      </div>
+    <section className="py-16 sm:py-24 relative overflow-hidden text-white">
+      <Image
+        src="https://placehold.co/1920x1080.png"
+        alt="Fondo abstracto de tela violeta"
+        data-ai-hint="violet fabric abstract"
+        fill
+        className="object-cover -z-20"
+      />
+      <div className="absolute inset-0 bg-slate-900/70 -z-10" />
       
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold tracking-widest uppercase text-white/80">
             SERVICIOS DESTACADOS
