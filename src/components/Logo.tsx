@@ -13,7 +13,7 @@ const Logo = ({ className, href = '/' }: { className?: string; href?: string }) 
         className="rounded-full"
         priority
       />
-      <span className="ml-3 font-serif text-2xl font-bold text-primary tracking-tight transition-colors group-hover:text-primary/80">
+      <span className="ml-3 font-serif text-2xl font-bold text-primary tracking-tight transition-colors">
         Mujer
       </span>
     </Link>

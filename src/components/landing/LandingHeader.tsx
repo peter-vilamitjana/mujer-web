@@ -26,10 +26,10 @@ export default function LandingHeader() {
         <Logo className={cn("transition-colors", !scrolled && "[&_span]:text-white")} />
         <div className="flex items-center gap-4">
             <Link href="/login">
-              <Button variant="ghost" className={cn(
+              <Button variant="outline" className={cn(
                 "transition-colors",
                 !scrolled 
-                    ? "border border-white text-white hover:bg-white hover:text-primary" 
+                    ? "border-white bg-transparent text-white hover:bg-white/10" 
                     : "text-foreground hover:bg-accent"
               )}>Acceder</Button>
             </Link>
