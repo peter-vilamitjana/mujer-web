@@ -75,7 +75,7 @@ export default function FeaturedServices() {
   }
 
   return (
-    <section className="py-16 sm:py-24 relative overflow-hidden text-white">
+    <section className="py-16 sm:py-24 relative text-white">
       <Image
         src="https://placehold.co/1920x1080.png"
         alt="Fondo abstracto de tela violeta"
