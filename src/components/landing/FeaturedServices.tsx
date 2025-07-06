@@ -75,7 +75,7 @@ export default function FeaturedServices() {
   }
 
   return (
-    <section className="py-16 sm:py-24 relative text-white">
+    <section className="py-16 sm:py-24 relative z-0">
       <Image
         src="https://firebasestorage.googleapis.com/v0/b/ai-prototyper-scratch.appspot.com/o/1b59c7a7-195c-4d81-8051-5369c4f4d1e2.png?alt=media&token=e93a7d4d-fb84-4ce6-a6c3-98282df581b7"
         alt="Fondo de tela violeta sedosa y ondulada"
@@ -85,7 +85,7 @@ export default function FeaturedServices() {
       />
       <div className="absolute inset-0 bg-slate-900/70 -z-10" />
       
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 relative z-10 text-white">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold tracking-widest uppercase text-white/80">
             SERVICIOS DESTACADOS
