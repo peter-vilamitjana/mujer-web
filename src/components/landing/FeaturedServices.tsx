@@ -75,24 +75,22 @@ export default function FeaturedServices() {
   }
 
   return (
-    <section className="py-20 sm:py-28 relative bg-[#1A1A1D] overflow-hidden">
-      <div className="absolute inset-0 z-0">
-        <div className="absolute -top-1/4 left-0 w-1/2 h-full bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,0.15)_0%,rgba(124,58,237,0)_70%)]" />
-        <div className="absolute -bottom-1/4 right-0 w-1/2 h-full bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,0.15)_0%,rgba(124,58,237,0)_70%)]" />
-      </div>
+    <section className="py-20 sm:py-28 relative bg-background isolate">
+      <div className="absolute -top-1/4 left-0 w-1/2 h-full bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,0.08)_0%,rgba(124,58,237,0)_70%)] -z-10" />
+      <div className="absolute -bottom-1/4 right-0 w-1/2 h-full bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,0.08)_0%,rgba(124,58,237,0)_70%)] -z-10" />
       
-      <div className="container mx-auto px-4 relative z-10 text-white">
+      <div className="container mx-auto px-4 relative">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-widest uppercase text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-widest uppercase text-foreground">
             Servicios Destacados
           </h2>
-           <p className="mt-4 text-gray-400 max-w-2xl mx-auto">Descubrí nuestros tratamientos estrella, diseñados para realzar tu belleza con las últimas tendencias y la máxima calidad profesional.</p>
+           <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">Descubrí nuestros tratamientos estrella, diseñados para realzar tu belleza con las últimas tendencias y la máxima calidad profesional.</p>
         </div>
 
         {loading ? (
            <div className="flex justify-center gap-8">
               {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-[520px] w-full max-w-sm rounded-3xl bg-white/10" />
+                <Skeleton key={i} className="h-[520px] w-full max-w-sm rounded-3xl bg-muted" />
             ))}
            </div>
           ) : (
@@ -107,9 +105,9 @@ export default function FeaturedServices() {
                 {services.map((service) => (
                   <CarouselItem key={service.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
                     <div className="h-full">
-                      <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-6 backdrop-blur-2xl transition-all duration-500 hover:border-white/20 hover:shadow-2xl hover:shadow-primary/20">
+                      <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/30 bg-card/50 p-6 backdrop-blur-xl transition-all duration-500 hover:border-border hover:shadow-2xl hover:shadow-primary/10">
                         <div className="relative mb-6 flex-shrink-0">
-                          <div className="overflow-hidden rounded-xl shadow-2xl shadow-black/30 group-hover:shadow-primary/30 transition-shadow duration-500">
+                          <div className="overflow-hidden rounded-xl shadow-lg shadow-black/10 group-hover:shadow-primary/20 transition-shadow duration-500">
                             <Image
                               src={service.imagen || 'https://placehold.co/600x800.png'}
                               alt={service.nombre}
@@ -126,14 +124,14 @@ export default function FeaturedServices() {
                           }
                         </div>
                         <div className="flex flex-grow flex-col">
-                            <h3 className="flex-grow text-xl font-bold uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300 min-h-[56px]">{service.nombre}</h3>
-                            <div className="mt-4 border-t border-dashed border-white/20 pt-4">
-                              <p className="text-sm text-gray-400">Desde</p>
-                              <p className="text-4xl font-bold text-white">{formatPrice(service.precio)}</p>
+                            <h3 className="flex-grow text-xl font-bold uppercase tracking-wider text-foreground min-h-[56px]">{service.nombre}</h3>
+                            <div className="mt-4 border-t border-dashed border-border/50 pt-4">
+                              <p className="text-sm text-muted-foreground">Desde</p>
+                              <p className="text-4xl font-bold text-primary">{formatPrice(service.precio)}</p>
                             </div>
                             <div className="mt-8">
                               <Link href="/login" className="w-full">
-                                <Button size="lg" className="w-full rounded-full py-6 bg-white/10 hover:bg-white/20 border-0 text-white font-semibold transition-colors">Ver más</Button>
+                                <Button size="lg" variant="secondary" className="w-full rounded-full py-6 font-semibold transition-colors">Ver más</Button>
                               </Link>
                             </div>
                         </div>
@@ -142,8 +140,8 @@ export default function FeaturedServices() {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="left-[-1rem] md:left-[-2rem] bg-white/10 border-white/20 text-white hover:bg-white/20" />
-              <CarouselNext className="right-[-1rem] md:right-[-2rem] bg-white/10 border-white/20 text-white hover:bg-white/20" />
+              <CarouselPrevious className="left-[-1rem] md:left-[-2rem]" />
+              <CarouselNext className="right-[-1rem] md:right-[-2rem]" />
             </Carousel>
           )}
       </div>
