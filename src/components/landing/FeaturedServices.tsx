@@ -75,13 +75,15 @@ export default function FeaturedServices() {
   }
 
   return (
-    <section className="py-20 sm:py-28 relative bg-background isolate">
-      <div className="absolute -top-1/4 left-0 w-1/2 h-full bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,0.08)_0%,rgba(124,58,237,0)_70%)] -z-10" />
-      <div className="absolute -bottom-1/4 right-0 w-1/2 h-full bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,0.08)_0%,rgba(124,58,237,0)_70%)] -z-10" />
-      
+    <section 
+      className="py-20 sm:py-28 relative"
+      style={{
+        background: 'radial-gradient(circle at 50% 50%, #ffffff, #f2f2f7, #e9e6f9)'
+      }}
+    >
       <div className="container mx-auto px-4 relative">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold tracking-widest uppercase text-foreground">
+          <h2 className="font-serif text-4xl md:text-5xl font-bold tracking-tight uppercase text-foreground">
             Servicios Destacados
           </h2>
            <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">Descubrí nuestros tratamientos estrella, diseñados para realzar tu belleza con las últimas tendencias y la máxima calidad profesional.</p>
@@ -105,7 +107,15 @@ export default function FeaturedServices() {
                 {services.map((service) => (
                   <CarouselItem key={service.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
                     <div className="h-full">
-                      <div className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/30 bg-card/50 p-6 backdrop-blur-xl transition-all duration-500 hover:border-border hover:shadow-2xl hover:shadow-primary/10">
+                      <div 
+                        className="group relative flex h-full flex-col overflow-hidden rounded-2xl transition-all duration-300 p-6 hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary/20"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.15)',
+                          backdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          boxShadow: '0 4px 20px rgba(163, 127, 255, 0.1)',
+                        }}
+                      >
                         <div className="relative mb-6 flex-shrink-0">
                           <div className="overflow-hidden rounded-xl shadow-lg shadow-black/10 group-hover:shadow-primary/20 transition-shadow duration-500">
                             <Image
@@ -131,7 +141,7 @@ export default function FeaturedServices() {
                             </div>
                             <div className="mt-8">
                               <Link href="/login" className="w-full">
-                                <Button size="lg" variant="secondary" className="w-full rounded-full py-6 font-semibold transition-colors">Ver más</Button>
+                                <Button size="lg" variant="secondary" className="w-full rounded-full py-6 font-semibold">Ver más</Button>
                               </Link>
                             </div>
                         </div>

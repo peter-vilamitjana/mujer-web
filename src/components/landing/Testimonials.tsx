@@ -28,7 +28,7 @@ export default function Testimonials() {
     <section id="testimonios" className="py-16 sm:py-24 bg-muted/50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Lo que dicen nuestras clientas</h2>
+          <h2 className="font-serif text-3xl md:text-4xl font-bold tracking-tight">Lo que dicen nuestras clientas</h2>
           <p className="mt-4 text-lg text-muted-foreground">Tu confianza es nuestro mayor orgullo.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

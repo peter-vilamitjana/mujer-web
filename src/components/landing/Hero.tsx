@@ -14,7 +14,7 @@ export default function Hero() {
 
       <div className="relative z-10 container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white">
+          <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white">
             Estilo, Belleza y Cuidado
           </h1>
           <p className="mt-6 text-lg md:text-xl text-gray-200">

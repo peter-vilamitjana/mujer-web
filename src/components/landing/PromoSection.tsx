@@ -63,7 +63,7 @@ export default function PromoSection() {
                     <div className="inline-block text-primary">
                         <Scissors className="h-8 w-8" />
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-bold tracking-tight mt-4">Nuestros Combos Especiales</h2>
+                    <h2 className="font-serif text-3xl md:text-4xl font-bold tracking-tight mt-4">Nuestros Combos Especiales</h2>
                     <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">Combos pensados para darte una experiencia completa de renovación y cuidado, a un precio especial.</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
@@ -82,7 +82,7 @@ export default function PromoSection() {
                             <CardContent className="p-6 flex flex-col flex-grow">
                                 <div className="flex-grow">
                                     <h3 className="text-lg font-light tracking-[0.2em] uppercase">{promo.number}. {promo.title}</h3>
-                                    <p className="text-2xl font-normal tracking-wide uppercase mt-1">{promo.subtitle}</p>
+                                    <p className="font-serif text-2xl font-normal tracking-wide uppercase mt-1">{promo.subtitle}</p>
                                     <p className="text-sm text-muted-foreground mt-2">Desde</p>
                                     <p className="font-serif text-5xl font-bold text-primary my-4">{formatPrice(promo.price)}</p>
                                     <ul className="space-y-3 text-left">
