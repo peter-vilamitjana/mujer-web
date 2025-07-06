@@ -19,7 +19,7 @@ export default function Footer() {
                  <div>
                     <h3 className="font-semibold text-white">Contacto</h3>
                     <ul className="mt-4 space-y-3 text-sm">
-                      <li className="flex items-center gap-2 text-gray-400"><MapPin className="h-4 w-4 text-primary" /> Av. Siempre Viva 123, Springfield</li>
+                      <li className="flex items-center gap-2 text-gray-400"><MapPin className="h-4 w-4 text-primary" /> Guillermo Rawson 3688, La Lucila</li>
                       <li className="flex items-center gap-2 text-gray-400"><Phone className="h-4 w-4 text-primary" /> (011) 1234-5678</li>
                       <li className="flex items-center gap-2 text-gray-400"><Mail className="h-4 w-4 text-primary" /> contacto@mujer.com</li>
                     </ul>

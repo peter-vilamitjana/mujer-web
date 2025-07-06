@@ -42,7 +42,7 @@ export default function MapAndReviews() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           <div className="w-full h-[400px] lg:h-full">
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3288.580790176865!2d-58.4849923240212!3d-34.48821944883191!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcb16b9b8a9239%3A0x6293356e2734e56!2sGuillermo%20Rawson%203788%2C%20B1636AET%20La%20Lucila%2C%20Provincia%20de%20Buenos%20Aires!5e0!3m2!1ses-419!2sar!4v1700000000000!5m2!1ses-419!2sar"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3288.620095874415!2d-58.48429482342084!3d-34.48722894877233!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcb16be99e9095%3A0x6191c95e54d35e5d!2sRawson%203688%2C%20B1636AET%20La%20Lucila%2C%20Provincia%20de%20Buenos%20Aires!5e0!3m2!1sen!2sar!4v1718134762514!5m2!1sen!2sar"
               width="100%"
               height="100%"
               style={{ border: 0 }}

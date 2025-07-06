@@ -1,3 +1,4 @@
+'use client';
 import { CreditCard, MapPin, Percent, Phone } from 'lucide-react';
 
 const infoItems = [
@@ -14,7 +15,7 @@ const infoItems = [
   {
     icon: MapPin,
     title: 'Ubicación',
-    description: 'Av. Siempre Viva 123, Springfield',
+    description: 'Guillermo Rawson 3688, La Lucila',
   },
   {
     icon: Phone,
