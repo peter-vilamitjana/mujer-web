@@ -75,11 +75,11 @@ export default function FeaturedServices() {
   }
 
   return (
-    <section className="py-16 sm:py-24 relative text-white z-0">
+    <section className="py-16 sm:py-24 relative text-white">
       <Image
-        src="https://placehold.co/1920x1080.png"
-        alt="Fondo abstracto de tela violeta"
-        data-ai-hint="violet fabric abstract"
+        src="https://firebasestorage.googleapis.com/v0/b/ai-prototyper-scratch.appspot.com/o/1b59c7a7-195c-4d81-8051-5369c4f4d1e2.png?alt=media&token=e93a7d4d-fb84-4ce6-a6c3-98282df581b7"
+        alt="Fondo de tela violeta sedosa y ondulada"
+        data-ai-hint="violet fabric"
         fill
         className="object-cover -z-20"
       />
