@@ -27,7 +27,7 @@ export default function InfoBar() {
   return (
     <section className="bg-background py-8 border-y">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center md:text-left">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center md:text-left justify-items-center">
           {infoItems.map((item, index) => (
             <div key={index} className="flex flex-col md:flex-row items-center gap-4">
               <div className="flex-shrink-0">
