@@ -62,11 +62,11 @@ export default function PromoSection() {
                             {
                                 'bg-card shadow-lg hover:shadow-primary/10': promo.type === 'standard',
                                 'bg-card shadow-lg ring-1 ring-primary/20 hover:shadow-primary/20': promo.type === 'popular',
-                                'bg-gradient-to-br from-[#1A082E] to-[#6A00F4] text-gray-200 shadow-2xl shadow-primary/20 border-0': promo.type === 'premium'
+                                'bg-gradient-to-br from-[#1A082E] to-[#6A00F4] text-white shadow-2xl shadow-primary/20 border-0': promo.type === 'premium'
                             }
                         )}>
                              {promo.type === 'premium' && (
-                                <div className="absolute inset-0 rounded-2xl transition-all duration-300 [box-shadow:inset_0_0_15px_rgba(168,85,247,0.5)] group-hover:[box-shadow:inset_0_0_25px_rgba(168,85,247,0.7)]" />
+                                <div className="absolute inset-0 rounded-2xl transition-all duration-300 [box-shadow:inset_0_0_40px_rgba(168,85,247,0.25)] group-hover:[box-shadow:inset_0_0_50px_rgba(168,85,247,0.4)]" />
                             )}
                             
                             {promo.badge && (
@@ -75,7 +75,7 @@ export default function PromoSection() {
                                         "text-xs font-semibold uppercase px-4 py-1.5 rounded-full shadow-lg",
                                         {
                                             'bg-accent text-accent-foreground': promo.type === 'popular',
-                                            'bg-purple-400/20 backdrop-blur-md text-purple-200 border border-white/10 shadow-purple-500/20 [letter-spacing:0.5px]': promo.type === 'premium'
+                                            'bg-primary text-primary-foreground shadow-[0_0_12px_rgba(167,139,250,0.4)]': promo.type === 'premium'
                                         }
                                     )}>
                                         {promo.badge}
@@ -89,13 +89,13 @@ export default function PromoSection() {
                                         promo.type === 'premium' ? 'text-white font-thin' : 'text-foreground'
                                     )}>{promo.subtitle}</p>
                                     <p className={cn(
-                                        "font-sans text-4xl font-semibold my-6",
-                                        promo.type === 'premium' ? 'text-white' : 'text-primary'
+                                        "font-sans my-6",
+                                        promo.type === 'premium' ? 'text-white font-semibold text-4xl' : 'text-primary font-semibold text-4xl'
                                     )}>{formatPrice(promo.price)}</p>
                                     <ul className="space-y-3 text-left my-8">
                                         {promo.services.map((service, index) => (
                                             <li key={index} className="flex items-center gap-3">
-                                                <div className={cn("h-1.5 w-1.5 flex-shrink-0 rounded-full", promo.type === 'premium' ? 'bg-purple-400' : 'bg-muted-foreground')} />
+                                                <div className={cn("h-1.5 w-1.5 flex-shrink-0 rounded-full", promo.type === 'premium' ? 'bg-[#A78BFA]' : 'bg-muted-foreground')} />
                                                 <span className={cn(
                                                     "text-sm uppercase font-medium",
                                                      promo.type === 'premium' ? 'text-gray-300' : 'text-muted-foreground'
@@ -108,10 +108,13 @@ export default function PromoSection() {
                                     <Link href="/login" className="w-full">
                                         <Button 
                                             size="lg" 
-                                            variant={promo.type === 'popular' || promo.type === 'premium' ? 'default' : 'outline'} 
+                                            variant={promo.type === 'popular' ? 'default' : 'outline'}
                                             className={cn("w-full uppercase tracking-wider rounded-full py-7 font-bold",
-                                            {'bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30 group-hover:shadow-primary/40': promo.type === 'premium'}
-                                            )}>
+                                            {
+                                                'bg-primary hover:bg-primary/90': promo.type === 'popular',
+                                                'bg-primary hover:bg-primary/90 shadow-[0_0_18px_rgba(127,66,246,0.3)] group-hover:shadow-[0_0_25px_rgba(127,66,246,0.4)]': promo.type === 'premium'
+                                            }
+                                        )}>
                                             Seleccionar
                                         </Button>
                                     </Link>
