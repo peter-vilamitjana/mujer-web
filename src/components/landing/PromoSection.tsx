@@ -62,20 +62,20 @@ export default function PromoSection() {
                             {
                                 'bg-card shadow-lg hover:shadow-primary/10': promo.type === 'standard',
                                 'bg-card shadow-lg ring-1 ring-primary/20 hover:shadow-primary/20': promo.type === 'popular',
-                                'bg-gradient-to-br from-purple-950 to-black text-gray-200 shadow-2xl shadow-primary/20 border-0': promo.type === 'premium'
+                                'bg-gradient-to-br from-[#1A082E] to-[#6A00F4] text-gray-200 shadow-2xl shadow-primary/20 border-0': promo.type === 'premium'
                             }
                         )}>
                              {promo.type === 'premium' && (
-                                <div className="absolute inset-0 rounded-2xl border border-transparent group-hover:border-primary/50 transition-all duration-300 [box-shadow:inset_0_0_15px_rgba(121,87,214,0.3)] group-hover:[box-shadow:inset_0_0_25px_rgba(121,87,214,0.5)]" />
+                                <div className="absolute inset-0 rounded-2xl transition-all duration-300 [box-shadow:inset_0_0_15px_rgba(168,85,247,0.5)] group-hover:[box-shadow:inset_0_0_25px_rgba(168,85,247,0.7)]" />
                             )}
                             
                             {promo.badge && (
                                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
                                     <div className={cn(
-                                        "text-xs font-bold uppercase px-4 py-1.5 rounded-full shadow-lg",
+                                        "text-xs font-semibold uppercase px-4 py-1.5 rounded-full shadow-lg",
                                         {
                                             'bg-accent text-accent-foreground': promo.type === 'popular',
-                                            'bg-primary/90 backdrop-blur-sm border border-white/10 text-primary-foreground shadow-primary/40': promo.type === 'premium'
+                                            'bg-purple-400/20 backdrop-blur-md text-purple-200 border border-white/10 shadow-purple-500/20 [letter-spacing:0.5px]': promo.type === 'premium'
                                         }
                                     )}>
                                         {promo.badge}
@@ -86,7 +86,7 @@ export default function PromoSection() {
                                 <div className="flex-grow">
                                     <p className={cn(
                                         "font-serif text-2xl font-normal tracking-wide uppercase mt-1",
-                                        promo.type === 'premium' ? 'text-white' : 'text-foreground'
+                                        promo.type === 'premium' ? 'text-white font-thin' : 'text-foreground'
                                     )}>{promo.subtitle}</p>
                                     <p className={cn(
                                         "font-sans text-4xl font-semibold my-6",
@@ -95,7 +95,7 @@ export default function PromoSection() {
                                     <ul className="space-y-3 text-left my-8">
                                         {promo.services.map((service, index) => (
                                             <li key={index} className="flex items-center gap-3">
-                                                <div className={cn("h-1.5 w-1.5 flex-shrink-0 rounded-full", promo.type === 'premium' ? 'bg-primary/70' : 'bg-muted-foreground')} />
+                                                <div className={cn("h-1.5 w-1.5 flex-shrink-0 rounded-full", promo.type === 'premium' ? 'bg-purple-400' : 'bg-muted-foreground')} />
                                                 <span className={cn(
                                                     "text-sm uppercase font-medium",
                                                      promo.type === 'premium' ? 'text-gray-300' : 'text-muted-foreground'
