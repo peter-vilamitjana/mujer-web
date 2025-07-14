@@ -56,16 +56,16 @@ export default function PromoSection() {
                     <p className="mt-4 text-lg text-muted-foreground max-w-3xl mx-auto">Combos pensados para darte una experiencia completa de renovación y cuidado, a un precio especial que te va a encantar.</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
-                    {promoData.sort((a,b) => a.id - b.id).map((promo) => (
+                    {promoData.map((promo) => (
                         <Card key={promo.id} className={cn(
                             "relative flex flex-col rounded-2xl text-center transition-all duration-300 transform hover:-translate-y-2 group",
                             {
                                 'bg-card shadow-lg hover:shadow-primary/10': promo.type === 'standard',
                                 'bg-card shadow-lg ring-1 ring-primary/20 hover:shadow-primary/20': promo.type === 'popular',
-                                'bg-gradient-to-br from-[#2c1f4a] to-[#1a1a22] text-gray-200 shadow-2xl shadow-primary/20 border border-primary/30 hover:shadow-primary/30': promo.type === 'premium'
+                                'bg-gradient-to-br from-purple-950 to-black text-gray-200 shadow-2xl shadow-primary/20 border-0': promo.type === 'premium'
                             }
                         )}>
-                            {promo.type === 'premium' && (
+                             {promo.type === 'premium' && (
                                 <div className="absolute inset-0 rounded-2xl border border-transparent group-hover:border-primary/50 transition-all duration-300 [box-shadow:inset_0_0_15px_rgba(121,87,214,0.3)] group-hover:[box-shadow:inset_0_0_25px_rgba(121,87,214,0.5)]" />
                             )}
                             
@@ -89,7 +89,7 @@ export default function PromoSection() {
                                         promo.type === 'premium' ? 'text-white' : 'text-foreground'
                                     )}>{promo.subtitle}</p>
                                     <p className={cn(
-                                        "font-serif text-5xl font-bold my-4",
+                                        "font-sans text-4xl font-semibold my-6",
                                         promo.type === 'premium' ? 'text-white' : 'text-primary'
                                     )}>{formatPrice(promo.price)}</p>
                                     <ul className="space-y-3 text-left my-8">
