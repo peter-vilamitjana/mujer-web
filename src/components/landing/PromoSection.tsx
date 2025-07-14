@@ -1,3 +1,4 @@
+'use client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Scissors } from 'lucide-react';
@@ -31,10 +32,10 @@ const promoData = [
   },
   {
     id: 4,
-    subtitle: 'EXCLUSIVA',
+    subtitle: 'PREMIUM',
     price: 49999,
     services: ['BALAYAGE', 'BAÑO DE LUZ', 'LAVADO ESPECIAL', 'NUTRICIÓN CAPILAR', 'BRUSHING'],
-    badge: 'EXCLUSIVA',
+    badge: 'Premium',
     type: 'premium',
   },
 ];
@@ -61,11 +62,11 @@ export default function PromoSection() {
                             {
                                 'bg-card shadow-lg hover:shadow-primary/10': promo.type === 'standard',
                                 'bg-card shadow-lg ring-1 ring-primary/20 hover:shadow-primary/20': promo.type === 'popular',
-                                'relative overflow-hidden bg-[#101014] text-gray-200 shadow-2xl shadow-primary/20 border border-primary/30 hover:shadow-primary/30': promo.type === 'premium'
+                                'bg-gradient-to-br from-[#2c1f4a] to-[#1a1a22] text-gray-200 shadow-2xl shadow-primary/20 border border-primary/30 hover:shadow-primary/30': promo.type === 'premium'
                             }
                         )}>
                             {promo.type === 'premium' && (
-                                <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0,_hsl(var(--primary)/0.15),transparent_60%)]" />
+                                <div className="absolute inset-0 rounded-2xl border border-transparent group-hover:border-primary/50 transition-all duration-300 [box-shadow:inset_0_0_15px_rgba(121,87,214,0.3)] group-hover:[box-shadow:inset_0_0_25px_rgba(121,87,214,0.5)]" />
                             )}
                             
                             {promo.badge && (
@@ -94,7 +95,7 @@ export default function PromoSection() {
                                     <ul className="space-y-3 text-left my-8">
                                         {promo.services.map((service, index) => (
                                             <li key={index} className="flex items-center gap-3">
-                                                <div className={cn("h-1.5 w-1.5 flex-shrink-0 rounded-full", promo.type === 'premium' ? 'bg-gray-300' : 'bg-muted-foreground')} />
+                                                <div className={cn("h-1.5 w-1.5 flex-shrink-0 rounded-full", promo.type === 'premium' ? 'bg-primary/70' : 'bg-muted-foreground')} />
                                                 <span className={cn(
                                                     "text-sm uppercase font-medium",
                                                      promo.type === 'premium' ? 'text-gray-300' : 'text-muted-foreground'
@@ -109,7 +110,7 @@ export default function PromoSection() {
                                             size="lg" 
                                             variant={promo.type === 'popular' || promo.type === 'premium' ? 'default' : 'outline'} 
                                             className={cn("w-full uppercase tracking-wider rounded-full py-7 font-bold",
-                                            {'shadow-lg shadow-primary/30 group-hover:shadow-primary/40': promo.type === 'popular' || promo.type === 'premium'}
+                                            {'bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30 group-hover:shadow-primary/40': promo.type === 'premium'}
                                             )}>
                                             Seleccionar
                                         </Button>
