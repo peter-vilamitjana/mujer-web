@@ -15,7 +15,7 @@ import Link from "next/link";
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [email, setEmail] = useState('admin@mujer.com');
+  const [email, setEmail] = useState('clienta@mujer.com');
   const [password, setPassword] = useState('password123');
   const [isLoading, setIsLoading] = useState(false);
 
