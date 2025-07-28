@@ -24,18 +24,16 @@ export default function AppLayout({
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
-        setLoading(false);
-        // Only redirect if not on a public-facing page that might be part of the app
-        if (!pathname.startsWith('/login')) {
+        if (!pathname.startsWith('/login') && pathname !== '/') {
             router.push('/login');
         }
+        setLoading(false);
       } else {
         try {
           const userDocRef = doc(db, 'usuarios', firebaseUser.uid);
           let userDoc = await getDoc(userDocRef);
 
           if (!userDoc.exists() && firebaseUser.email === 'admin@mujer.com') {
-            console.log("Admin user document not found, creating it...");
             const adminData: Omit<Usuario, 'id'> = {
                 nombre: 'Administradora',
                 email: 'admin@mujer.com',
@@ -43,15 +41,13 @@ export default function AppLayout({
             };
             await setDoc(userDocRef, adminData);
             userDoc = await getDoc(userDocRef);
-            console.log("Admin user document created successfully.");
           }
 
           if (userDoc.exists()) {
             const userData = { id: userDoc.id, ...userDoc.data() } as Usuario;
             setUser(userData);
             
-            const isLoginOrRoot = pathname === '/login' || pathname === '/';
-            if (isLoginOrRoot) {
+            if (pathname === '/login' || pathname === '/') {
                 if (userData.rol === 'clienta') {
                     router.push('/mis-turnos');
                 } else {
@@ -75,8 +71,20 @@ export default function AppLayout({
     return () => unsubscribe();
   }, [router, pathname]);
 
-  if (loading || !user) {
+  if (loading) {
     return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (pathname.startsWith('/login')) {
+      return <>{children}</>;
+  }
+
+  if (!user) {
+     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>

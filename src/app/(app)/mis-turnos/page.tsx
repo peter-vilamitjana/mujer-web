@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Scissors, Plus, XCircle, RefreshCw, User } from "lucide-react";
-import { format, parseISO, isFuture } from "date-fns";
+import { Calendar, Clock, Scissors, Plus, XCircle, RefreshCw, User, CheckCircle, Ban } from "lucide-react";
+import { format, parseISO, isFuture, isPast } from "date-fns";
 import { es } from "date-fns/locale";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, orderBy, Timestamp, where, doc, updateDoc } from "firebase/firestore";
@@ -61,19 +61,19 @@ export default function MisTurnosPage() {
       toast({ title: "Error", description: "No se pudo cancelar el turno.", variant: "destructive" });
     }
   };
-
-  const getStatusBadge = (status: Turno['estado']) => {
+  
+  const getStatusInfo = (status: Turno['estado']) => {
     switch (status) {
       case 'pendiente':
-        return <Badge variant="secondary">Pendiente</Badge>;
+        return { text: 'Pendiente', icon: Clock, className: 'bg-yellow-100 text-yellow-800 border-yellow-200' };
       case 'realizado':
-        return <Badge variant="default" className="bg-green-600 hover:bg-green-700">Realizado</Badge>;
+        return { text: 'Realizado', icon: CheckCircle, className: 'bg-green-100 text-green-800 border-green-200' };
       case 'cancelado':
-        return <Badge variant="destructive">Cancelado</Badge>;
+        return { text: 'Cancelado', icon: Ban, className: 'bg-red-100 text-red-800 border-red-200' };
       case 'pendiente_pago':
-         return <Badge variant="outline">Pendiente de Seña</Badge>;
+         return { text: 'Pendiente de Seña', icon: Clock, className: 'bg-orange-100 text-orange-800 border-orange-200' };
       default:
-        return <Badge variant="outline">Desconocido</Badge>;
+        return { text: 'Desconocido', icon: Clock, className: 'bg-gray-100 text-gray-800 border-gray-200' };
     }
   };
 
@@ -84,49 +84,43 @@ export default function MisTurnosPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Mis Turnos</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Bienvenida, {user?.nombre}</h1>
           <p className="text-muted-foreground">
             Revisá tus próximos turnos y tu historial de visitas.
           </p>
         </div>
         <Link href="/turnos">
-          <Button><Plus className="mr-2 h-4 w-4"/> Agendar Nuevo Turno</Button>
+          <Button><Plus className="mr-2 h-4 w-4"/> Agendar Turno</Button>
         </Link>
       </div>
 
       {loading ? (
-        <Card>
-          <CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader>
-          <CardContent><Skeleton className="h-24 w-full" /></CardContent>
+        <Card className="p-6">
+          <Skeleton className="h-8 w-1/3 mb-4" />
+          <Skeleton className="h-28 w-full" />
         </Card>
       ) : proximosTurnos.length > 0 ? (
-        <Card>
+        <Card className="bg-gradient-to-br from-primary/90 to-primary text-primary-foreground shadow-lg">
           <CardHeader>
-            <CardTitle>Próximo Turno</CardTitle>
-            <CardDescription>Estos son los detalles de tu próxima visita al salón.</CardDescription>
+            <CardTitle className="flex items-center gap-2"><Calendar className="h-5 w-5"/>Próximo Turno</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {proximosTurnos.map(turno => (
-              <div key={turno.id} className="p-4 rounded-lg border bg-card flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="space-y-1">
-                  <h3 className="font-semibold text-lg capitalize flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-primary" />
+              <div key={turno.id} className="p-6 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+                <div className="space-y-2">
+                  <h3 className="font-bold text-2xl capitalize">
                     {format(parseISO(turno.fecha), "eeee, d 'de' MMMM", { locale: es })}
                   </h3>
-                  <p className="font-mono font-semibold text-lg flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  <p className="font-mono text-xl flex items-center gap-2">
+                    <Clock className="h-5 w-5 opacity-80" />
                     {format(parseISO(turno.fecha), "HH:mm 'hs'")}
                   </p>
                 </div>
-                <div className="space-y-1 text-sm">
-                  <p className="flex items-center gap-2 text-muted-foreground"><Scissors className="h-4 w-4 text-primary" />{turno.servicio}</p>
-                  <p className="flex items-center gap-2 text-muted-foreground"><User className="h-4 w-4 text-primary" />Con {turno.empleadaNombre}</p>
-                </div>
-                <div className="flex flex-col items-center gap-2">
-                  {getStatusBadge(turno.estado)}
-                  <div className="flex gap-2 mt-2">
-                      <Button variant="outline" size="sm" disabled><RefreshCw className="h-4 w-4 mr-2"/> Reprogramar</Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleCancelTurno(turno.id)}><XCircle className="h-4 w-4 mr-2"/> Cancelar</Button>
+                <div className="space-y-1 text-right">
+                  <p className="flex items-center justify-end gap-2"><Scissors className="h-4 w-4 opacity-80" />{turno.servicio}</p>
+                  <p className="flex items-center justify-end gap-2"><User className="h-4 w-4 opacity-80" />Con {turno.empleadaNombre}</p>
+                   <div className="pt-2">
+                    <Button variant="ghost" size="sm" onClick={() => handleCancelTurno(turno.id)} className="text-white/80 hover:text-white hover:bg-white/20"><XCircle className="h-4 w-4 mr-2"/> Cancelar Turno</Button>
                   </div>
                 </div>
               </div>
@@ -134,14 +128,14 @@ export default function MisTurnosPage() {
           </CardContent>
         </Card>
       ) : (
-         <Card className="text-center py-12">
+         <Card className="text-center py-16 bg-muted/50 border-dashed">
             <CardContent>
                 <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
                 <h3 className="mt-4 text-xl font-semibold">No tenés próximos turnos</h3>
-                <p className="text-muted-foreground mt-2">
-                   ¿Lista para tu próxima transformación?
+                <p className="text-muted-foreground mt-2 max-w-sm mx-auto">
+                   ¿Lista para tu próxima transformación? Animate a reservar tu cita y viví la experiencia Mujer.
                 </p>
-                <Button asChild className="mt-4">
+                <Button asChild className="mt-6">
                     <Link href="/turnos">Agendar un turno</Link>
                 </Button>
             </CardContent>
@@ -156,19 +150,25 @@ export default function MisTurnosPage() {
         <CardContent>
           {loading ? (
              <div className="space-y-2">
-              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
             </div>
           ) : historialTurnos.length > 0 ? (
             <div className="space-y-3">
-              {historialTurnos.map(turno => (
-                <div key={turno.id} className="flex items-center justify-between p-3 rounded-md bg-muted/50">
-                    <div>
-                        <p className="font-semibold capitalize">{format(parseISO(turno.fecha), "d MMM yyyy", { locale: es })}</p>
-                        <p className="text-sm text-muted-foreground">{turno.servicio}</p>
-                    </div>
-                    {getStatusBadge(turno.estado)}
-                </div>
-              ))}
+              {historialTurnos.map(turno => {
+                const statusInfo = getStatusInfo(turno.estado);
+                return (
+                  <div key={turno.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                      <div className="space-y-1">
+                          <p className="font-semibold capitalize">{format(parseISO(turno.fecha), "d 'de' MMMM yyyy", { locale: es })}</p>
+                          <p className="text-sm text-muted-foreground">{turno.servicio}</p>
+                      </div>
+                       <Badge variant="outline" className={`gap-2 ${statusInfo.className}`}>
+                          <statusInfo.icon className="h-3.5 w-3.5" />
+                          <span>{statusInfo.text}</span>
+                       </Badge>
+                  </div>
+                )
+              })}
             </div>
           ) : (
             <p className="text-center text-muted-foreground py-8">Aún no tenés un historial de turnos.</p>
