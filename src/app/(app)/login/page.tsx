@@ -29,7 +29,7 @@ export default function LoginPage() {
       // Let the layout handle redirection based on role
     } catch (error: any) {
       // If user does not exist and it's the test clienta email, create it.
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' && email === 'clienta@mujer.com') {
+      if ((error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') && email === 'clienta@mujer.com') {
         try {
           const userCredential = await createUserWithEmailAndPassword(auth, email, password);
           const clientaData: Omit<Usuario, 'id'> = {
