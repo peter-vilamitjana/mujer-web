@@ -48,8 +48,7 @@ export default function FeaturedServices() {
       try {
         const servicesQuery = query(
           collection(db, 'servicios'),
-          where('destacado', '==', true),
-          orderBy('nombre')
+          where('destacado', '==', true)
         );
         const querySnapshot = await getDocs(servicesQuery);
         let servicesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Servicio);
