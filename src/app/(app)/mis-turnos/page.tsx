@@ -26,10 +26,10 @@ export default function MisTurnosPage() {
       return;
     }
 
+    // Removed orderBy to prevent index error. Sorting will be done client-side.
     const turnosQuery = query(
       collection(db, 'turnos'), 
-      where('clienteId', '==', user.id), 
-      orderBy('fecha', 'desc')
+      where('clienteId', '==', user.id)
     );
 
     const unsubscribe = onSnapshot(turnosQuery, (snapshot) => {
@@ -38,6 +38,8 @@ export default function MisTurnosPage() {
         const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate().toISOString() : new Date(data.fecha).toISOString();
         return { id: doc.id, ...data, fecha } as Turno;
       });
+      // Sort data client-side
+      turnosData.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
       setTurnos(turnosData);
       setLoading(false);
     }, (error) => {
