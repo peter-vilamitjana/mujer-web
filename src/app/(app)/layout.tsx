@@ -25,7 +25,10 @@ export default function AppLayout({
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         setLoading(false);
-        router.push('/login');
+        // Only redirect if not on a public-facing page that might be part of the app
+        if (!pathname.startsWith('/login')) {
+            router.push('/login');
+        }
       } else {
         try {
           const userDocRef = doc(db, 'usuarios', firebaseUser.uid);
@@ -47,16 +50,14 @@ export default function AppLayout({
             const userData = { id: userDoc.id, ...userDoc.data() } as Usuario;
             setUser(userData);
             
-            // Role-based redirection logic
-            const { rol } = userData;
             const isLoginOrRoot = pathname === '/login' || pathname === '/';
-            
-            if (rol === 'clienta' && isLoginOrRoot) {
-                router.push('/mis-turnos');
-            } else if ((rol === 'admin' || rol === 'empleada') && isLoginOrRoot) {
-                router.push('/dashboard');
+            if (isLoginOrRoot) {
+                if (userData.rol === 'clienta') {
+                    router.push('/mis-turnos');
+                } else {
+                    router.push('/dashboard');
+                }
             }
-
           } else {
              console.error("Usuario no encontrado en Firestore, cerrando sesión.");
              await auth.signOut();

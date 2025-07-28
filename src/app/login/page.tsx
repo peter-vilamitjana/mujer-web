@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Logo from "@/components/Logo";
 import { useRouter } from "next/navigation";
-import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import type { Usuario } from "@/lib/types";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,44 +26,68 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      // Redirect will be handled by the auth state listener in the layout
-      router.push('/dashboard');
+      // Let the layout handle redirection based on role
     } catch (error: any) {
-      console.error("Error de inicio de sesión:", error.code);
-      
-      let title = "Error de inicio de sesión";
-      let description = "Ha ocurrido un error inesperado. Por favor, intenta de nuevo.";
-
-      switch (error.code) {
-        case 'auth/invalid-credential':
-        case 'auth/user-not-found': // Legacy
-        case 'auth/wrong-password': // Legacy
-          title = "Credenciales Inválidas";
-          description = "El email o la contraseña son incorrectos. Por favor, verifica tus datos. Asegúrate de haber creado este usuario en tu Consola de Firebase.";
-          break;
-        case 'auth/network-request-failed':
-          title = "Error de Red";
-          description = "No se pudo conectar con Firebase. Revisa tu conexión y que 'localhost' esté en los dominios autorizados en la configuración de Authentication.";
-          break;
-        case 'auth/api-key-not-valid':
-          title = "API Key de Firebase Inválida";
-          description = "La clave API de Firebase no es válida. Revisa que las credenciales en src/lib/firebase.ts sean las correctas.";
-          break;
-        case 'auth/invalid-email':
-          title = "Email Inválido";
-          description = "El formato del email no es válido. Por favor, corrígelo.";
-          break;
+      // If user does not exist and it's the test clienta email, create it.
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' && email === 'clienta@mujer.com') {
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const clientaData: Omit<Usuario, 'id'> = {
+              nombre: 'Valeria', // Example name
+              email: email,
+              rol: 'clienta',
+          };
+          await setDoc(doc(db, 'usuarios', userCredential.user.uid), clientaData);
+          toast({ title: "Cuenta de prueba creada", description: "Se ha creado una clienta de prueba para que puedas ingresar." });
+          // Let the layout handle redirection
+          return; 
+        } catch (creationError: any) {
+            console.error("Error al crear usuaria de prueba:", creationError);
+            toast({ variant: "destructive", title: "Error", description: "No se pudo crear la usuaria de prueba." });
+        }
+      } else {
+        handleAuthError(error);
       }
-
-      toast({
-        variant: "destructive",
-        title: title,
-        description: description,
-      });
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleAuthError = (error: any) => {
+    let title = "Error de inicio de sesión";
+    let description = "Ha ocurrido un error inesperado. Por favor, intenta de nuevo.";
+
+    switch (error.code) {
+      case 'auth/invalid-credential':
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+        title = "Credenciales Inválidas";
+        description = "El email o la contraseña son incorrectos. Por favor, verifica tus datos.";
+        break;
+      case 'auth/network-request-failed':
+        title = "Error de Red";
+        description = "No se pudo conectar con Firebase. Revisa tu conexión.";
+        break;
+      case 'auth/api-key-not-valid':
+        title = "API Key de Firebase Inválida";
+        description = "La clave API de Firebase no es válida. Revisa tus credenciales.";
+        break;
+      case 'auth/invalid-email':
+        title = "Email Inválido";
+        description = "El formato del email no es válido.";
+        break;
+       case 'auth/email-already-in-use':
+        title = "Email en uso";
+        description = "Este email ya está registrado. Intenta iniciar sesión.";
+        break;
+    }
+
+    toast({
+      variant: "destructive",
+      title: title,
+      description: description,
+    });
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/50 p-4">
@@ -114,6 +140,11 @@ export default function LoginPage() {
               </p>
             </CardContent>
           </Card>
+           <div className="text-center text-xs text-muted-foreground p-4 border rounded-lg">
+                <p className="font-bold">Datos de prueba:</p>
+                <p><span className="font-semibold">Admin:</span> admin@mujer.com / password123</p>
+                <p><span className="font-semibold">Clienta:</span> clienta@mujer.com / password123</p>
+            </div>
       </div>
     </div>
   );
