@@ -30,9 +30,9 @@ export default function LandingHeader() {
                 variant="outline"
                 className={cn(
                   'rounded-full py-1.5 px-4 text-sm font-medium transition-all duration-300 ease-in-out hover:text-white hover:bg-primary hover:shadow-[0_0_10px_rgba(127,70,246,0.4)]',
-                  !scrolled 
-                    ? 'border-white/20 bg-white/10 text-white backdrop-blur-sm'
-                    : 'border-primary text-primary'
+                  scrolled 
+                    ? 'border-primary text-primary'
+                    : 'border-white/20 bg-white/10 text-white backdrop-blur-sm'
                 )}
               >
                 Acceder

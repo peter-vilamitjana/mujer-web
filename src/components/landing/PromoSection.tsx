@@ -58,7 +58,7 @@ export default function PromoSection() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
                     {promoData.map((promo) => (
                         <Card key={promo.id} className={cn(
-                            "relative flex flex-col rounded-2xl text-center transition-all duration-300 transform hover:-translate-y-2 group",
+                            "relative flex flex-col rounded-2xl text-center transition-all duration-300 transform hover:-translate-y-2 group p-8",
                             {
                                 'bg-card shadow-lg hover:shadow-primary/10': promo.type === 'standard',
                                 'bg-card shadow-lg ring-1 ring-primary/20 hover:shadow-primary/20': promo.type === 'popular',
@@ -74,7 +74,7 @@ export default function PromoSection() {
                                     <div className={cn(
                                         "text-xs font-semibold uppercase px-4 py-1.5 rounded-full shadow-lg",
                                         {
-                                            'bg-accent text-accent-foreground': promo.type === 'popular',
+                                            'bg-primary text-primary-foreground': promo.type === 'popular',
                                             'bg-primary text-primary-foreground shadow-[0_0_12px_rgba(167,139,250,0.4)]': promo.type === 'premium'
                                         }
                                     )}>
@@ -82,15 +82,15 @@ export default function PromoSection() {
                                     </div>
                                 </div>
                             )}
-                            <CardContent className="p-8 flex flex-col flex-grow">
+                            <CardContent className="p-0 flex flex-col flex-grow">
                                 <div className="flex-grow">
                                     <p className={cn(
                                         "font-serif text-2xl font-normal tracking-wide uppercase mt-1",
-                                        promo.type === 'premium' ? 'text-white font-thin' : 'text-foreground'
+                                        promo.type === 'premium' ? 'text-white/90 font-thin' : 'text-foreground'
                                     )}>{promo.subtitle}</p>
                                     <p className={cn(
-                                        "font-sans my-6",
-                                        promo.type === 'premium' ? 'text-white font-semibold text-4xl' : 'text-primary font-semibold text-4xl'
+                                        "font-sans my-6 text-primary font-semibold text-4xl",
+                                         promo.type === 'premium' ? 'text-white' : 'text-primary'
                                     )}>{formatPrice(promo.price)}</p>
                                     <ul className="space-y-3 text-left my-8">
                                         {promo.services.map((service, index) => (
@@ -108,7 +108,7 @@ export default function PromoSection() {
                                     <Link href="/login" className="w-full">
                                         <Button 
                                             size="lg" 
-                                            variant={promo.type === 'popular' ? 'default' : 'outline'}
+                                            variant={promo.type === 'premium' ? 'default' : 'outline'}
                                             className={cn("w-full uppercase tracking-wider rounded-full py-7 font-bold",
                                             {
                                                 'bg-primary hover:bg-primary/90': promo.type === 'popular',

@@ -24,9 +24,9 @@ const employeeNavItems = [
 ];
 
 const clientNavItems = [
+  { href: '/mis-turnos', label: 'Mis Turnos', icon: Home },
   { href: '/servicios', label: 'Servicios', icon: Scissors },
   { href: '/turnos', label: 'Agendar Turno', icon: Calendar },
-  { href: '/mis-turnos', label: 'Mis Turnos', icon: Home },
 ];
 
 
@@ -56,7 +56,7 @@ export default function Sidebar({ isOpen, onClose, userRole }: SidebarProps) {
         </div>
         <nav className="flex-1 space-y-2 p-4">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+            const isActive = pathname === item.href || (item.href !== '/dashboard' && item.href !== '/mis-turnos' && pathname.startsWith(item.href));
             return (
               <Link
                 key={item.href}

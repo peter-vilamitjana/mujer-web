@@ -10,12 +10,13 @@ import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { Button } from '../ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { cn } from '@/lib/utils';
 
 const mockServices: Omit<Servicio, 'id' | 'duracion' | 'descripcion'>[] = [
   {
     nombre: 'ALISADO FOTÓNICO LASER',
     precio: 34999,
-    imagen: 'https://placehold.co/600x800.png',
+    imagen: 'https://firebasestorage.googleapis.com/v0/b/ai-prototyper-scratch.appspot.com/o/1b59c7a7-195c-4d81-8051-5369c4f4d1e2.png?alt=media&token=e93a7d4d-fb84-4ce6-a6c3-98282df581b7',
     badge: 'NOVEDAD',
     destacado: true,
   },
@@ -76,12 +77,16 @@ export default function FeaturedServices() {
 
   return (
     <section 
-      className="py-20 sm:py-28 relative"
-      style={{
-        background: 'radial-gradient(circle at 50% 50%, #ffffff, #f2f2f7, #e9e6f9)'
-      }}
+      className="py-20 sm:py-28 relative z-0"
     >
-      <div className="container mx-auto px-4 relative">
+       <div 
+        aria-hidden="true"
+        className="absolute inset-0 z-0"
+        style={{
+          background: 'radial-gradient(circle at 50% 50%, #ffffff, #f2f2f7, #e9e6f9)'
+        }}
+      />
+      <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
           <h2 className="font-serif text-4xl md:text-5xl font-bold tracking-tight uppercase text-foreground">
             Servicios Destacados
