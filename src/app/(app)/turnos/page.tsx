@@ -19,8 +19,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import Image from 'next/image';
 
 const professionals = [
-  { id: 'carolina_espranda', name: 'Carolina Espranda', avatar: 'https://placehold.co/100x100.png', hint: 'woman professional' },
-  { id: 'laura_bortolaso', name: 'Laura Bortolaso', avatar: 'https://placehold.co/100x100.png', hint: 'woman smiling' },
+  { id: 'carolina_spranda', name: 'Carolina Spranda', avatar: 'https://placehold.co/100x100.png', hint: 'woman professional' },
+  { id: 'laura_bortolazo', name: 'Laura Bortolazo', avatar: 'https://placehold.co/100x100.png', hint: 'woman smiling' },
   { id: 'fabiana_estilista', name: 'Fabiana', avatar: 'https://placehold.co/100x100.png', hint: 'woman portrait' },
 ];
 
