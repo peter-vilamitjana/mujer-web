@@ -117,7 +117,7 @@ function TurnosContent() {
   }
 
   const totalAmount = useMemo(() => selectedServices.reduce((acc, s) => acc + getServicePrice(s), 0), [selectedServices]);
-  const depositAmount = useMemo(() => totalAmount * MONTO_SEÑA_PORCENTAJE, [totalAmount]);
+  const depositAmount = useMemo(() => Math.round(totalAmount * MONTO_SEÑA_PORCENTAJE), [totalAmount]);
 
   const onSubmit = async () => {
     if (!selectedClient || selectedServices.length === 0 || !selectedProfessional || !selectedDate || !selectedTime) {
@@ -177,7 +177,7 @@ function TurnosContent() {
       { id: 1, name: 'Elige tus servicios', icon: Scissors, completed: selectedServices.length > 0 },
       { id: 2, name: 'Elige tu profesional', icon: Users, completed: !!selectedProfessional },
       { id: 3, name: 'Elige fecha y hora', icon: CalendarIcon, completed: !!selectedDate && !!selectedTime },
-      { id: 4, name: 'Resumen y señal', icon: CheckCircle, completed: false },
+      { id: 4, name: 'Resumen y seña', icon: CheckCircle, completed: false },
   ]
   
   const currentStepInfo = steps[step - 1];
@@ -282,14 +282,14 @@ function TurnosContent() {
                                 <p className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary"/> Hora: <span className="font-semibold">{selectedTime} hs</span></p>
                                 <div className="border-t pt-3 mt-3">
                                     <h4 className="font-medium mb-2">Servicios:</h4>
-                                    <div className="space-y-2">
+                                    <ul className="space-y-1">
                                         {selectedServices.map(s => (
-                                            <p key={s.id} className="flex items-center gap-2">
+                                            <li key={s.id} className="flex items-center gap-2">
                                                 <Tag className="h-4 w-4 text-primary"/> 
-                                                <span className="font-semibold">{s.nombre} {s.largo ? `(${s.largo})` : ''}</span>
-                                            </p>
+                                                <span>{s.nombre} {s.largo ? `(${s.largo})` : ''}</span>
+                                            </li>
                                         ))}
-                                    </div>
+                                    </ul>
                                 </div>
                             </div>
                          </div>
@@ -310,7 +310,7 @@ function TurnosContent() {
                 {step < 4 ? (
                     <Button onClick={() => setStep(s => s + 1)} disabled={(step === 1 && selectedServices.length === 0) || (step === 2 && !selectedProfessional) || (step === 3 && !selectedTime)}>Siguiente</Button>
                 ) : (
-                    <Button onClick={onSubmit} size="lg" disabled={isSubmitting}>
+                    <Button onClick={onSubmit} size="lg" disabled={isSubmitting || selectedServices.length === 0}>
                         {isSubmitting ? <Loader2 className="animate-spin" /> : 'Confirmar Turno'}
                     </Button>
                 )}
@@ -328,7 +328,5 @@ export default function TurnosPage() {
         </Suspense>
     )
 }
-
-    
 
     
