@@ -39,6 +39,12 @@ const nextConfig: NextConfig = {
         hostname: 'instagram.fros9-1.fna.fbcdn.net',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'instagram.faep14-3.fna.fbcdn.net',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
