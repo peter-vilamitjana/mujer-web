@@ -119,7 +119,7 @@ function TurnosContent() {
         if (isSelected) {
             return prev.filter(s => s.id !== service.id);
         } else {
-            return [...prev, { ...service, largo: service.precios ? undefined : 'corto' }];
+            return [...prev, { ...service, largo: service.precios ? 'corto' : undefined }];
         }
     });
   };
@@ -276,7 +276,7 @@ function TurnosContent() {
                                               <div className="flex justify-between items-baseline">
                                                 <h4 className="font-semibold">{service.nombre}</h4>
                                                 {service.precios && selectedData?.largo && isSelected ?
-                                                  <p className="text-primary font-bold text-sm">≈ {formatPrice(getServicePrice(selectedData))}</p> :
+                                                  <p className="text-primary font-bold text-sm">{formatPrice(getServicePrice(selectedData))}</p> :
                                                   !service.precios && <p className="text-primary font-bold text-sm">{formatPrice(service.precio!)}</p>
                                                 }
                                               </div>
@@ -374,14 +374,14 @@ function TurnosContent() {
                     <CardTitle>Paso 3: Elige fecha y hora</CardTitle>
                     <CardDescription>Selecciona el día y la hora que más te convenga.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col md:flex-row gap-4 md:gap-6 p-0 sm:p-6">
-                    <div className="flex justify-center md:block p-4 sm:p-0 border-b sm:border-b-0 sm:border-r">
+                <CardContent className="flex flex-col md:flex-row gap-4 md:gap-6 md:p-6">
+                    <div className="flex justify-center p-4 sm:p-0 border-b sm:border-b-0 md:border-r">
                       <Calendar
                           mode="single"
                           selected={selectedDate}
                           onSelect={setSelectedDate}
                           disabled={(date) => date < new Date() || date.getDay() === 0}
-                          className="rounded-md self-start mx-auto w-full"
+                          className="rounded-md self-start"
                           locale={es}
                       />
                     </div>
@@ -462,4 +462,5 @@ export default function TurnosPage() {
     
 
     
+
 
