@@ -91,42 +91,38 @@ export default function ServiciosPage() {
         {mockServices.map(servicio => {
           const isSelected = selectedServices.some(s => s.id === servicio.id);
           const selectedData = selectedServices.find(s => s.id === servicio.id);
-          const showVariablePricePlaceholder = servicio.precios && !isSelected;
-
+          
           return (
-            <Card
+            <div
               key={servicio.id}
+              onClick={() => handleServiceToggle(servicio)}
               className={cn(
-                "flex flex-col rounded-2xl shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 h-full",
-                 isSelected && "ring-2 ring-primary"
+                "flex flex-col rounded-2xl bg-card shadow-sm border-2 border-transparent cursor-pointer transition-all duration-200 h-full p-6",
+                 "hover:shadow-md",
+                 isSelected && "border-primary shadow-lg ring-2 ring-primary/20"
               )}
             >
-              <CardContent className="p-6 flex-grow flex flex-col">
                 <div className="flex-grow">
-                   <div className="flex items-start justify-between mb-2">
-                     <div className="flex-1 pr-4">
-                       <h3 className="text-xl font-semibold mb-2">{servicio.nombre}</h3>
-                       <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                         <Clock className="h-4 w-4" />
-                         <span>{servicio.duracion} min.</span>
-                       </p>
-                     </div>
-                      <Button size="icon" variant={isSelected ? "default" : "outline"} onClick={() => handleServiceToggle(servicio)} className="rounded-full flex-shrink-0">
-                          {isSelected ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                      </Button>
-                   </div>
+                   <h3 className="text-xl font-semibold mb-2">{servicio.nombre}</h3>
+                   <p className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                     <Clock className="h-4 w-4" />
+                     <span>{servicio.duracion} min.</span>
+                   </p>
                   
                   <div className="my-4 flex items-center justify-center min-h-[56px]">
-                    {showVariablePricePlaceholder ? (
-                      <p className="text-xl text-center text-muted-foreground/80 italic">Precio variable</p>
-                    ) : (
-                      <p className="text-4xl font-bold text-primary text-center">{formatPrice(getServicePrice(selectedData || servicio))}</p>
-                    )}
+                     {servicio.precios && !isSelected ? (
+                        <p className="text-lg text-center text-muted-foreground/80 italic">Precio variable</p>
+                     ) : (
+                        <p className="text-4xl font-bold text-primary text-center">{formatPrice(getServicePrice(selectedData || servicio))}</p>
+                     )}
                   </div>
                 </div>
                  
                  {servicio.precios && (
-                   <div className="mt-auto space-y-3">
+                   <div 
+                      className="mt-auto space-y-3"
+                      onClick={(e) => e.stopPropagation()}
+                   >
                      <RadioGroup
                         value={selectedData?.largo || 'corto'}
                         onValueChange={(value) => handleLargoChange(servicio.id, value as LargoPelo)}
@@ -137,8 +133,8 @@ export default function ServiciosPage() {
                            <div key={largo}>
                              <RadioGroupItem value={largo} id={`${servicio.id}-${largo}`} className="sr-only" />
                              <Label htmlFor={`${servicio.id}-${largo}`} className={cn(
-                               "block p-2 text-center text-xs border rounded-md cursor-pointer",
-                               selectedData?.largo === largo ? "border-primary bg-primary/10" : "border-border",
+                               "block p-2 text-center text-xs border rounded-md cursor-pointer transition-all",
+                               selectedData?.largo === largo ? "border-primary bg-primary/10 text-primary" : "border-border",
                                !isSelected && "cursor-not-allowed opacity-50"
                              )}>
                                <span className="font-semibold capitalize">{largo}</span>
@@ -150,9 +146,7 @@ export default function ServiciosPage() {
                       <p className="text-xs text-muted-foreground text-center">Precio base. Varía según el largo.</p>
                    </div>
                  )}
-
-              </CardContent>
-            </Card>
+            </div>
           )
         })}
       </div>
@@ -176,7 +170,7 @@ export default function ServiciosPage() {
               size="lg"
               onClick={handleContinue}
               disabled={selectedServices.length === 0}
-              className="w-full max-w-xs rounded-full py-6 text-lg disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full max-w-xs rounded-full py-6 text-lg"
             >
               Continuar
               <ArrowRight className="ml-2 h-5 w-5" />
