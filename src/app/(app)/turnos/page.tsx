@@ -263,7 +263,7 @@ function TurnosContent() {
                             const isSelected = selectedServices.some(s => s.id === service.id);
                             const selectedData = selectedServices.find(s => s.id === service.id);
                             return (
-                                <div key={service.id}>
+                                <div key={service.id} className="h-full">
                                     <div 
                                         onClick={() => handleServiceToggle(service)}
                                         className={cn(
@@ -273,7 +273,13 @@ function TurnosContent() {
                                     >
                                         <div className='flex justify-between items-start'>
                                             <div className="flex-grow pr-2">
-                                              <h4 className="font-semibold">{service.nombre}</h4>
+                                              <div className="flex justify-between items-baseline">
+                                                <h4 className="font-semibold">{service.nombre}</h4>
+                                                {service.precios && selectedData?.largo && isSelected ?
+                                                  <p className="text-primary font-bold text-sm">≈ {formatPrice(getServicePrice(selectedData))}</p> :
+                                                  !service.precios && <p className="text-primary font-bold text-sm">{formatPrice(service.precio!)}</p>
+                                                }
+                                              </div>
                                               <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                                                   <Clock className="h-3 w-3"/>
                                                   <span>{service.duracion} min.</span>
@@ -283,44 +289,33 @@ function TurnosContent() {
                                         </div>
                                         
                                         <div className="mt-4 flex-grow flex flex-col justify-end">
-                                            {service.precios ? (
-                                                <div className="text-right">
-                                                    {selectedData?.largo && isSelected ?
-                                                        <p className="text-primary font-bold text-lg">≈ {formatPrice(getServicePrice(selectedData))}</p> :
-                                                        <p className="text-muted-foreground text-sm">Precio variable</p>
-                                                    }
-                                                </div>
-                                            ) : (
-                                                <p className="text-primary font-bold text-lg text-right">{formatPrice(service.precio!)}</p>
+                                            {isSelected && service.precios && (
+                                              <div className="mt-4 pt-4 border-t border-dashed">
+                                                  <div className="grid grid-cols-3 gap-2">
+                                                      {(Object.keys(service.precios) as LargoPelo[]).map(largo => (
+                                                          <Button
+                                                            key={largo}
+                                                            variant={selectedData?.largo === largo ? 'default' : 'outline'}
+                                                            size="sm"
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              handleLargoChange(service.id, largo)
+                                                            }}
+                                                            className="capitalize flex-col h-auto py-1.5"
+                                                          >
+                                                            {largo}
+                                                          </Button>
+                                                      ))}
+                                                  </div>
+                                                  <p className="text-xs text-muted-foreground text-center mt-2">Precios aproximados según largo de pelo.</p>
+                                              </div>
+                                            )}
+                                            {isSelected && (
+                                              <div className="pt-3 text-center text-primary text-sm font-semibold mt-auto flex items-center justify-center gap-2">
+                                                  <CheckCircle className="h-4 w-4" /> Seleccionado
+                                              </div>
                                             )}
                                         </div>
-
-                                        {isSelected && service.precios && (
-                                            <div className="mt-4 pt-4 border-t border-dashed">
-                                                <div className="grid grid-cols-3 gap-2">
-                                                    {(Object.keys(service.precios) as LargoPelo[]).map(largo => (
-                                                        <Button
-                                                          key={largo}
-                                                          variant={selectedData?.largo === largo ? 'default' : 'outline'}
-                                                          size="sm"
-                                                          onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleLargoChange(service.id, largo)
-                                                          }}
-                                                          className="capitalize flex-col h-auto py-1.5"
-                                                        >
-                                                           {largo}
-                                                        </Button>
-                                                    ))}
-                                                </div>
-                                                <p className="text-xs text-muted-foreground text-center mt-2">Precios aproximados según largo de pelo.</p>
-                                            </div>
-                                        )}
-                                         {isSelected && (
-                                            <div className="pt-3 text-center text-primary text-sm font-semibold mt-auto flex items-center justify-center gap-2">
-                                                <CheckCircle className="h-4 w-4" /> Seleccionado
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             );
@@ -379,16 +374,18 @@ function TurnosContent() {
                     <CardTitle>Paso 3: Elige fecha y hora</CardTitle>
                     <CardDescription>Selecciona el día y la hora que más te convenga.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col md:flex-row gap-6">
-                    <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={setSelectedDate}
-                        disabled={(date) => date < new Date() || date.getDay() === 0}
-                        className="rounded-md border self-start"
-                        locale={es}
-                    />
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 flex-1 max-h-96 overflow-y-auto">
+                <CardContent className="flex flex-col md:flex-row gap-8 md:gap-6">
+                    <div className="flex justify-center md:block">
+                      <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={setSelectedDate}
+                          disabled={(date) => date < new Date() || date.getDay() === 0}
+                          className="rounded-md border self-start"
+                          locale={es}
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 gap-2 flex-1 max-h-96 overflow-y-auto">
                         {timeSlots.map(time => (
                            <Button key={time} variant={selectedTime === time ? "default" : "outline"} onClick={() => setSelectedTime(time)}>
                                {time}
