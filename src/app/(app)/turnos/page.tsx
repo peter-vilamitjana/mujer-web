@@ -407,17 +407,23 @@ function TurnosContent() {
                            </ul>
                         </div>
                     </div>
-                     <div className="p-4 border-2 border-dashed rounded-lg text-center">
-                        <p className="text-muted-foreground text-sm">Total a pagar en el local</p>
-                        <p className="text-3xl font-bold text-primary">{formatPrice(totalAmount)}</p>
-                        {!isAdmin && (
-                            <>
-                                <p className="font-semibold mt-4">Para confirmar, abona la seña de:</p>
-                                <p className="text-2xl font-bold">{formatPrice(depositAmount)}</p>
-                                <p className="text-xs text-muted-foreground">(Se descontará del total en tu visita)</p>
-                            </>
-                        )}
-                    </div>
+                    {isAdmin ? (
+                        <div className="p-4 border-2 border-dashed rounded-lg text-center">
+                            <p className="text-muted-foreground text-sm">Total a pagar en el local</p>
+                            <p className="text-3xl font-bold text-primary">{formatPrice(totalAmount)}</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className="p-6 border rounded-lg text-center bg-muted/25">
+                                <p className="text-sm font-semibold text-muted-foreground">Seña para confirmar ({MONTO_SEÑA_PORCENTAJE * 100}%)</p>
+                                <p className="text-5xl font-bold text-primary my-2">{formatPrice(depositAmount)}</p>
+                                <p className="text-sm text-muted-foreground">La seña se descontará del total de <span className="font-semibold text-foreground">{formatPrice(totalAmount)}</span> en tu visita.</p>
+                            </div>
+                            <p className="text-xs text-center text-muted-foreground px-4">
+                                Para asegurar tu turno se cobrará una seña del {MONTO_SEÑA_PORCENTAJE * 100}% del valor total. Luego se descontará del precio final.
+                            </p>
+                        </div>
+                    )}
                  </CardContent>
                  <CardFooter className="flex justify-between">
                     <Button variant="outline" onClick={() => setStep(3)}>Anterior</Button>
