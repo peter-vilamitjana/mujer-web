@@ -47,11 +47,19 @@ export interface Turno {
   señaPagada?: boolean;
 }
 
+export interface PreciosPorLargo {
+  corto: number;
+  mediano: number;
+  largo: number;
+}
+export type LargoPelo = keyof PreciosPorLargo;
+
 export interface Servicio {
   id: string;
   nombre: string;
   descripcion: string;
-  precio: number;
+  precio?: number; // Para servicios con precio fijo
+  precios?: PreciosPorLargo; // Para servicios con precio variable
   duracion: number; // en minutos
   imagen?: string;
   badge?: string;
