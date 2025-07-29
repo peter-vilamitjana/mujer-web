@@ -58,7 +58,7 @@ function TurnosContent() {
   const [loadingData, setLoadingData] = useState(false);
   
   const [clients, setClients] = useState<Cliente[]>([]);
-  const [services] = useState<Servicio[]>(mockServices);
+  const [services] = useState<Servicio[]>(mockServices.sort((a, b) => a.nombre.localeCompare(b.nombre)));
 
   const [selectedServices, setSelectedServices] = useState<SelectedServiceWithLargo[]>([]);
   const [selectedProfessional, setSelectedProfessional] = useState<(typeof professionals[0]) | null>(null);
@@ -70,7 +70,7 @@ function TurnosContent() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Logic from previous version to pre-select services from params and fetch clients for admin
+      // Logic to pre-select services from params
       if (searchParams.getAll('servicioId').length > 0 && services.length > 0) {
         const serviceIdParams = searchParams.getAll('servicioId');
         const preSelectedServices = services
@@ -109,7 +109,9 @@ function TurnosContent() {
         if (isSelected) {
             return prev.filter(s => s.id !== service.id);
         } else {
-            const largo = service.precios ? 'corto' : undefined;
+            // For variable price services, don't set a default largo.
+            // It must be explicitly chosen by the user.
+            const largo = service.precios ? undefined : undefined;
             return [...prev, { ...service, largo }];
         }
     });
@@ -133,12 +135,7 @@ function TurnosContent() {
   const servicesSummary = useMemo(() => {
     if (selectedServices.length === 0) return 'Ninguno';
     const names = selectedServices.map(s => s.nombre);
-    const limit = 3;
-    let summary = names.slice(0, limit).join(', ');
-    if (names.length > limit) {
-        summary += ` y ${names.length - limit} más`;
-    }
-    return summary;
+    return names.join(', ');
   }, [selectedServices]);
 
   const onSubmit = async () => {
@@ -195,16 +192,12 @@ function TurnosContent() {
   if (loadingData && isAdmin) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
   }
-
-  const steps = [
-      { id: 1, name: 'Elige tus servicios', icon: Scissors, completed: selectedServices.length > 0 && selectedServices.every(s => !s.precios || s.largo) },
-      { id: 2, name: 'Elige tu profesional', icon: Users, completed: !!selectedProfessional },
-      { id: 3, name: 'Elige fecha y hora', icon: CalendarIcon, completed: !!selectedDate && !!selectedTime },
-      { id: 4, name: 'Resumen y seña', icon: CheckCircle, completed: false },
-  ]
   
-  const currentStepInfo = steps[step - 1];
-  const canGoNext = selectedServices.length > 0 && selectedServices.every(s => !s.precios || !!s.largo);
+  const canGoNext = useMemo(() => {
+    if (selectedServices.length === 0) return false;
+    // Check if every selected service that is variable has a 'largo' selected.
+    return selectedServices.every(s => !s.precios || !!s.largo);
+  }, [selectedServices]);
 
   return (
     <div className="space-y-6">
@@ -220,173 +213,93 @@ function TurnosContent() {
          </Link>
       </div>
        <div className="max-w-5xl mx-auto space-y-8">
-          <div className="flex items-center justify-between p-2 border rounded-full">
-            {steps.map((s) => (
-                <button
-                    key={s.id}
-                    onClick={() => goToStep(s.id)}
-                    disabled={!s.completed && step < s.id}
-                    className={cn(
-                        "flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-full text-sm font-semibold transition-all duration-300",
-                        step === s.id ? "bg-primary text-primary-foreground" : (s.completed ? "bg-primary/10 text-primary" : "text-muted-foreground")
-                    )}
-                >
-                    {s.completed && step !== s.id ? <Check className="h-5 w-5"/> : <s.icon className="h-5 w-5" />}
-                    <span className="hidden md:inline">{s.name}</span>
-                </button>
-            ))}
-         </div>
+          
           <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-3">
                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
-                     {step}
+                     1
                    </div>
-                   <span>{currentStepInfo.name}</span>
+                   <span>Elige tus servicios</span>
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                {step === 1 && (
-                    <div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {services.map(service => {
-                            const isSelected = selectedServices.some(s => s.id === service.id);
-                            const selectedData = selectedServices.find(s => s.id === service.id);
-                            
-                            return (
-                                <div key={service.id} onClick={() => handleServiceToggle(service)}
-                                    className={cn("p-4 border rounded-lg cursor-pointer transition-all flex flex-col", 
-                                    isSelected ? "border-primary ring-2 ring-primary/50 shadow-lg" : "hover:border-primary/50",
-                                    !service.precios && 'justify-between'
-                                    )}>
-                                    
-                                    <div className='flex justify-between items-start'>
-                                        <div>
-                                           <h4 className="font-semibold">{service.nombre}</h4>
-                                           <p className="text-sm text-muted-foreground flex items-center gap-2"><Clock className="h-4 w-4"/>{service.duracion} min.</p>
-                                        </div>
-                                        <Checkbox checked={isSelected} className="rounded-full h-5 w-5"/>
-                                    </div>
-                                    
-                                    <div className='mt-4'>
-                                    {service.precios ? (
-                                        isSelected ? (
-                                             <div className="space-y-3">
-                                                 <RadioGroup
-                                                    value={selectedData?.largo}
-                                                    onValueChange={(value) => handleLargoChange(service.id, value as LargoPelo)}
-                                                    className="grid grid-cols-3 gap-2"
-                                                >
-                                                 {(Object.keys(service.precios) as LargoPelo[]).map(largo => (
-                                                     <div key={largo}>
-                                                         <RadioGroupItem value={largo} id={`${service.id}-${largo}`} className="sr-only" />
-                                                         <Label htmlFor={`${service.id}-${largo}`} className={cn(
-                                                            "block p-2 text-center text-xs font-semibold border rounded-md cursor-pointer transition-all capitalize",
-                                                            selectedData?.largo === largo ? "border-primary bg-primary/10 text-primary" : "border-border"
-                                                         )}>
-                                                            {largo}
-                                                         </Label>
-                                                     </div>
-                                                 ))}
-                                                 </RadioGroup>
-                                                 <p className="text-xs text-muted-foreground text-center flex items-center gap-1.5 justify-center"><Info className="h-3 w-3"/>Precios aproximados.</p>
-                                             </div>
-                                        ) : (
-                                            <p className="text-muted-foreground text-sm">Precio variable</p>
-                                        )
-                                    ) : (
-                                        <p className="text-primary font-bold text-lg">{formatPrice(service.precio!)}</p>
-                                    )}
-                                    </div>
-                                </div>
-                            )
-                            })}
-                        </div>
-                    </div>
-                )}
-                 {step === 2 && (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {professionals.map(prof => {
-                            const isSelected = selectedProfessional?.id === prof.id;
-                            return (
-                               <div key={prof.id} onClick={() => setSelectedProfessional(prof)}
-                                className={cn("p-4 border rounded-lg cursor-pointer transition-all text-center", isSelected ? "border-primary ring-2 ring-primary" : "hover:border-primary/50")}>
-                                  <Image src={prof.avatar} alt={prof.name} data-ai-hint={prof.hint} width={80} height={80} className="rounded-full mx-auto mb-4" />
-                                  <h4 className="font-semibold">{prof.name}</h4>
-                               </div>
-                            )
-                        })}
-                    </div>
-                )}
-                {step === 3 && (
-                    <div className="grid md:grid-cols-2 gap-8">
-                        <div className="flex justify-center">
-                            <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate}
-                                disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() - 1)) || date.getDay() === 0}
-                                className="rounded-md border" locale={es}
-                            />
-                        </div>
-                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 self-start max-h-72 overflow-y-auto p-1">
-                            {timeSlots.map(time => (
-                                <Button key={time} variant={selectedTime === time ? "default" : "outline"}
-                                    onClick={() => setSelectedTime(time)} disabled={!selectedDate}>
-                                    {time}
-                                </Button>
-                            ))}
-                        </div>
-                    </div>
-                )}
-                {step === 4 && (
-                     <div className="grid md:grid-cols-2 gap-8">
-                         <div className="space-y-4">
-                            <h3 className="font-semibold">Resumen del Turno</h3>
-                             <div className="p-4 border rounded-lg bg-muted/50 space-y-3 text-sm">
-                                {isAdmin && selectedClient && <p className="flex items-center gap-2"><User className="h-4 w-4 text-primary"/> Clienta: <span className="font-semibold">{selectedClient.nombre} {selectedClient.apellido}</span></p>}
-                                <p className="flex items-center gap-2"><User className="h-4 w-4 text-primary"/> Profesional: <span className="font-semibold">{selectedProfessional?.name}</span></p>
-                                <p className="flex items-center gap-2"><CalendarIcon className="h-4 w-4 text-primary"/> Fecha: <span className="font-semibold">{selectedDate && format(selectedDate, "PPP", { locale: es })}</span></p>
-                                <p className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary"/> Hora: <span className="font-semibold">{selectedTime} hs</span></p>
-                                <div className="border-t pt-3 mt-3">
-                                    <h4 className="font-medium mb-2">Servicios:</h4>
-                                    <ul className="space-y-1">
-                                        {selectedServices.map(s => (
-                                            <li key={s.id} className="flex items-center gap-2">
-                                                <Tag className="h-4 w-4 text-primary"/> 
-                                                <span>{s.nombre} {s.largo ? `(${s.largo})` : ''}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                         </div>
-                         <div className="space-y-4">
-                            <h3 className="font-semibold">Detalle de Pago</h3>
-                            <div className="p-6 border rounded-lg text-center bg-muted/50">
-                                <p className="text-muted-foreground">{isAdmin ? "Precio Total del Servicio" : "Seña para confirmar (15%)"}</p>
-                                <p className="text-4xl font-bold text-primary my-2">{formatPrice(isAdmin ? totalAmount : depositAmount)}</p>
-                                {!isAdmin && <p className="text-sm text-muted-foreground">La seña se descontará del total de <span className="font-bold">{formatPrice(totalAmount)}</span> en tu visita.</p>}
-                            </div>
-                            {!isAdmin && <p className="text-xs text-center text-muted-foreground">Para asegurar tu turno se cobrará una seña del 15% del valor total. Luego se descontará del precio final.</p>}
-                         </div>
-                     </div>
-                )}
+              {step === 1 && (
+                  <div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {services.map(service => {
+                          const isSelected = selectedServices.some(s => s.id === service.id);
+                          const selectedData = selectedServices.find(s => s.id === service.id);
+                          
+                          return (
+                              <div key={service.id} onClick={() => handleServiceToggle(service)}
+                                  className={cn("p-4 border rounded-lg cursor-pointer transition-all flex flex-col", 
+                                  isSelected ? "border-primary ring-2 ring-primary/20 shadow-lg" : "hover:border-primary/50",
+                                  )}>
+                                  
+                                  <div className='flex justify-between items-start'>
+                                      <div>
+                                         <h4 className="font-semibold">{service.nombre}</h4>
+                                         <p className="text-sm text-muted-foreground flex items-center gap-1.5"><Clock className="h-3 w-3"/>{service.duracion} min.</p>
+                                      </div>
+                                      <Checkbox checked={isSelected} className="rounded-full h-5 w-5"/>
+                                  </div>
+                                  
+                                  <div className='mt-4 flex-grow flex flex-col justify-end'>
+                                      {service.precios ? (
+                                        <>
+                                          {isSelected ? (
+                                              <div className="space-y-3" onClick={e => e.stopPropagation()}>
+                                                  <RadioGroup
+                                                      value={selectedData?.largo}
+                                                      onValueChange={(value) => handleLargoChange(service.id, value as LargoPelo)}
+                                                      className="grid grid-cols-3 gap-2"
+                                                  >
+                                                  {(Object.keys(service.precios) as LargoPelo[]).map(largo => (
+                                                      <div key={largo}>
+                                                          <RadioGroupItem value={largo} id={`${service.id}-${largo}`} className="sr-only" />
+                                                          <Label htmlFor={`${service.id}-${largo}`} className={cn(
+                                                              "block p-2 text-center text-xs font-semibold border rounded-md cursor-pointer transition-all capitalize",
+                                                              selectedData?.largo === largo ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-muted"
+                                                          )}>
+                                                              {largo}
+                                                          </Label>
+                                                      </div>
+                                                  ))}
+                                                  </RadioGroup>
+                                                  <div className="h-6 text-center">
+                                                    {selectedData?.largo ? (
+                                                        <p className="text-primary font-bold text-sm">≈ {formatPrice(getServicePrice(selectedData))}</p>
+                                                    ) : (
+                                                       <p className="text-xs text-muted-foreground italic">Elige un largo</p>
+                                                    )}
+                                                  </div>
+                                              </div>
+                                          ) : (
+                                              <p className="text-muted-foreground text-sm text-center">Precio variable</p>
+                                          )}
+                                        </>
+                                      ) : (
+                                          <p className="text-primary font-bold text-lg text-center">{formatPrice(service.precio!)}</p>
+                                      )}
+                                  </div>
+                              </div>
+                          )
+                          })}
+                      </div>
+                  </div>
+              )}
             </CardContent>
             <CardFooter className="flex-col items-stretch gap-4 md:flex-row md:justify-between">
-                { step === 1 && selectedServices.length > 0 &&
+                {selectedServices.length > 0 &&
                     <div className='p-3 border rounded-lg bg-muted/50 text-sm w-full'>
-                        <p><span className="font-semibold">Total estimado:</span> {formatPrice(totalAmount)}</p>
+                        <p><span className="font-semibold">Total estimado:</span> {canGoNext ? formatPrice(totalAmount) : '...'}</p>
                         <p><span className="font-semibold">Tiempo total:</span> {totalDuration} min.</p>
                         <p className="truncate"><span className="font-semibold">Servicios:</span> {servicesSummary}</p>
                     </div>
                 }
-                <div className='flex justify-between w-full'>
-                    <Button variant="ghost" onClick={() => setStep(s => s - 1)} disabled={step === 1}><ArrowLeft className="mr-2"/> Anterior</Button>
-                    {step < 4 ? (
-                        <Button onClick={() => setStep(s => s + 1)} disabled={(step === 1 && !canGoNext) || (step === 2 && !selectedProfessional) || (step === 3 && !selectedTime)}>Siguiente</Button>
-                    ) : (
-                        <Button onClick={onSubmit} size="lg" disabled={isSubmitting || selectedServices.length === 0}>
-                            {isSubmitting ? <Loader2 className="animate-spin" /> : 'Confirmar Turno'}
-                        </Button>
-                    )}
+                <div className='flex justify-end w-full'>
+                    <Button onClick={() => setStep(2)} disabled={!canGoNext}>Siguiente</Button>
                 </div>
             </CardFooter>
           </Card>
@@ -402,5 +315,3 @@ export default function TurnosPage() {
         </Suspense>
     )
 }
-
-    
