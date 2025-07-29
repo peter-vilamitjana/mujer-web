@@ -51,12 +51,9 @@ export default function ServiciosPage() {
         const servicesSnapshot = await getDocs(servicesQuery);
         let servicesData: Servicio[];
         
-        if (servicesSnapshot.empty) {
-            console.log("No services found in Firestore, using mock data.");
-            servicesData = mockServices.map((s, i) => ({ ...s, id: `mock-${i}`, descripcion: '' }));
-        } else {
-            servicesData = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Servicio);
-        }
+        // Always use mock data as it's more complete
+        console.log("Using mock data for services page.");
+        servicesData = mockServices.map((s, i) => ({ ...s, id: `mock-${i}`, descripcion: '' }));
         
         setServicios(servicesData);
       } catch (error) {
