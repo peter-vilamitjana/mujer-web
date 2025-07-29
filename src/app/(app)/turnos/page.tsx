@@ -275,18 +275,28 @@ function TurnosContent() {
                      <div className="grid md:grid-cols-2 gap-8">
                          <div className="space-y-4">
                             <h3 className="font-semibold">Resumen del Turno</h3>
-                             <div className="p-4 border rounded-lg bg-muted/50 space-y-3">
-                                {isAdmin && selectedClient && <p className="flex items-center gap-2 text-sm"><User className="h-4 w-4 text-primary"/> Clienta: <span className="font-semibold">{selectedClient.nombre} {selectedClient.apellido}</span></p>}
-                                <p className="flex items-start gap-2 text-sm"><Tag className="h-4 w-4 text-primary mt-0.5"/> Servicios: <span className="font-semibold flex flex-col">{selectedServices.map(s => <span key={s.id}>{s.nombre} {s.largo ? `(${s.largo})` : ''}</span>)}</span></p>
-                                <p className="flex items-center gap-2 text-sm"><User className="h-4 w-4 text-primary"/> Profesional: <span className="font-semibold">{selectedProfessional?.name}</span></p>
-                                <p className="flex items-center gap-2 text-sm"><CalendarIcon className="h-4 w-4 text-primary"/> Fecha: <span className="font-semibold">{selectedDate && format(selectedDate, "PPP", { locale: es })}</span></p>
-                                <p className="flex items-center gap-2 text-sm"><Clock className="h-4 w-4 text-primary"/> Hora: <span className="font-semibold">{selectedTime} hs</span></p>
+                             <div className="p-4 border rounded-lg bg-muted/50 space-y-3 text-sm">
+                                {isAdmin && selectedClient && <p className="flex items-center gap-2"><User className="h-4 w-4 text-primary"/> Clienta: <span className="font-semibold">{selectedClient.nombre} {selectedClient.apellido}</span></p>}
+                                <p className="flex items-center gap-2"><User className="h-4 w-4 text-primary"/> Profesional: <span className="font-semibold">{selectedProfessional?.name}</span></p>
+                                <p className="flex items-center gap-2"><CalendarIcon className="h-4 w-4 text-primary"/> Fecha: <span className="font-semibold">{selectedDate && format(selectedDate, "PPP", { locale: es })}</span></p>
+                                <p className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary"/> Hora: <span className="font-semibold">{selectedTime} hs</span></p>
+                                <div className="border-t pt-3 mt-3">
+                                    <h4 className="font-medium mb-2">Servicios:</h4>
+                                    <div className="space-y-2">
+                                        {selectedServices.map(s => (
+                                            <p key={s.id} className="flex items-center gap-2">
+                                                <Tag className="h-4 w-4 text-primary"/> 
+                                                <span className="font-semibold">{s.nombre} {s.largo ? `(${s.largo})` : ''}</span>
+                                            </p>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                          </div>
                          <div className="space-y-4">
                             <h3 className="font-semibold">Detalle de Pago</h3>
                             <div className="p-6 border rounded-lg text-center bg-muted/50">
-                                <p className="text-muted-foreground">{isAdmin ? "Precio Total del Servicio" : "Seña para confirmar"}</p>
+                                <p className="text-muted-foreground">{isAdmin ? "Precio Total del Servicio" : "Seña para confirmar (15%)"}</p>
                                 <p className="text-4xl font-bold text-primary my-2">{formatPrice(isAdmin ? totalAmount : depositAmount)}</p>
                                 {!isAdmin && <p className="text-sm text-muted-foreground">La seña se descontará del total de <span className="font-bold">{formatPrice(totalAmount)}</span> en tu visita.</p>}
                             </div>
@@ -318,5 +328,7 @@ export default function TurnosPage() {
         </Suspense>
     )
 }
+
+    
 
     
