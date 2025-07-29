@@ -17,18 +17,17 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-// Mock data as a fallback or for development
 const mockServices: Omit<Servicio, 'id' | 'descripcion'>[] = [
     { nombre: 'Corte', precio: 8000, duracion: 60 },
     { nombre: 'Lavado', precio: 5000, duracion: 30 },
     { nombre: 'Peinado', precios: { corto: 7000, mediano: 9000, largo: 11000 }, duracion: 45 },
+    { nombre: 'Color', precios: { corto: 15000, mediano: 18000, largo: 21000 }, duracion: 120 },
     { nombre: 'Mechas', precios: { corto: 20000, mediano: 25000, largo: 30000 }, duracion: 180 },
     { nombre: 'Reflejos', precios: { corto: 18000, mediano: 22000, largo: 26000 }, duracion: 150 },
-    { nombre: 'Color', precios: { corto: 15000, mediano: 18000, largo: 21000 }, duracion: 120 },
     { nombre: 'Baño de Crema', precios: { corto: 10000, mediano: 12000, largo: 14000 }, duracion: 60 },
+    { nombre: 'Nutrición Capilar', precios: { corto: 12000, mediano: 15000, largo: 18000 }, duracion: 75 },
     { nombre: 'Botox Capilar', precios: { corto: 16000, mediano: 20000, largo: 24000 }, duracion: 90 },
     { nombre: 'Alisados', precios: { corto: 25000, mediano: 30000, largo: 35000 }, duracion: 240 },
-    { nombre: 'Nutrición Capilar', precios: { corto: 12000, mediano: 15000, largo: 18000 }, duracion: 75 },
 ];
 
 
@@ -98,10 +97,11 @@ export default function ServiciosPage() {
     router.push(`/turnos?${params.toString()}`);
   }
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price);
+  const formatPrice = (price: number, approx: boolean = false) => {
+    const prefix = approx ? '≈ ' : '';
+    return prefix + new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price);
   }
-
+  
   const getServicePrice = (service: SelectedService): number => {
     const serviceData = servicios.find(s => s.id === service.id);
     if (!serviceData) return 0;
@@ -181,7 +181,7 @@ export default function ServiciosPage() {
                     <div className="flex-grow space-y-4">
                       {servicio.precios ? (
                         <>
-                          <p className="text-3xl font-bold text-primary">{formatPrice(currentPrice || 0)}</p>
+                          <p className="text-3xl font-bold text-primary text-center my-4">{formatPrice(currentPrice || 0)}</p>
                           <RadioGroup
                               value={currentLargo}
                               onValueChange={(value) => handleLargoChange(servicio.id, value as LargoPelo)}
@@ -192,7 +192,7 @@ export default function ServiciosPage() {
                                   <Label key={largo} className="flex items-center justify-between cursor-pointer text-sm p-3 rounded-lg border has-[:checked]:bg-primary/10 has-[:checked]:border-primary transition-colors">
                                       <span className="capitalize font-medium">{largo}</span>
                                       <div className="flex items-center gap-3">
-                                        <span className="font-semibold text-muted-foreground">≈ {formatPrice(servicio.precios![largo])}</span>
+                                        <span className="font-semibold text-muted-foreground">{formatPrice(servicio.precios![largo], true)}</span>
                                         <RadioGroupItem value={largo} id={`${servicio.id}-${largo}`} />
                                       </div>
                                   </Label>
@@ -201,7 +201,7 @@ export default function ServiciosPage() {
                           <p className="text-xs text-muted-foreground text-center pt-2">Precios aproximados según largo de pelo.</p>
                         </>
                       ) : (
-                        <p className="text-3xl font-bold text-primary">{formatPrice(servicio.precio || 0)}</p>
+                        <p className="text-3xl font-bold text-primary text-center my-4">{formatPrice(servicio.precio || 0)}</p>
                       )}
                     </div>
                  </div>
@@ -220,7 +220,7 @@ export default function ServiciosPage() {
         </div>
          {userRole === 'clienta' && selectedServices.length > 0 && (
             <div className="sticky bottom-6 mt-8 flex justify-center z-20">
-              <Card className="p-4 shadow-2xl shadow-primary/20 flex items-center gap-6 rounded-full">
+              <Card className="p-4 shadow-2xl shadow-primary/20 flex items-center gap-6 rounded-full bg-card/80 backdrop-blur-lg">
                 <div>
                   <p className="text-sm font-medium">Total estimado</p>
                   <p className="text-xl font-bold text-primary">{formatPrice(totalAmount)}</p>
