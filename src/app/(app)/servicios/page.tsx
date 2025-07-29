@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Clock, Check } from "lucide-react";
 import Link from 'next/link';
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, orderBy, getDocs } from "firebase/firestore";
+import { collection, query, getDocs, orderBy } from "firebase/firestore";
 import type { Servicio, LargoPelo } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import NewServiceForm from "@/components/NewServiceForm";
@@ -18,17 +18,17 @@ import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 // Mock data as a fallback or for development
-const mockServices: Servicio[] = [
-    { id: '1', nombre: 'Corte', precio: 8000, duracion: 60, descripcion: '' },
-    { id: '2', nombre: 'Lavado', precio: 5000, duracion: 30, descripcion: '' },
-    { id: '3', nombre: 'Peinado', precios: { corto: 7000, mediano: 9000, largo: 11000 }, duracion: 45, descripcion: '' },
-    { id: '4', nombre: 'Mechas', precios: { corto: 20000, mediano: 25000, largo: 30000 }, duracion: 180, descripcion: '' },
-    { id: '5', nombre: 'Reflejos', precios: { corto: 18000, mediano: 22000, largo: 26000 }, duracion: 150, descripcion: '' },
-    { id: '6', nombre: 'Color', precios: { corto: 15000, mediano: 18000, largo: 21000 }, duracion: 120, descripcion: '' },
-    { id: '7', nombre: 'Baño de Crema', precios: { corto: 10000, mediano: 12000, largo: 14000 }, duracion: 60, descripcion: '' },
-    { id: '8', nombre: 'Botox Capilar', precios: { corto: 16000, mediano: 20000, largo: 24000 }, duracion: 90, descripcion: '' },
-    { id: '9', nombre: 'Alisados', precios: { corto: 25000, mediano: 30000, largo: 35000 }, duracion: 240, descripcion: '' },
-    { id: '10', nombre: 'Nutrición Capilar', precios: { corto: 12000, mediano: 15000, largo: 18000 }, duracion: 75, descripcion: '' },
+const mockServices: Omit<Servicio, 'id' | 'descripcion'>[] = [
+    { nombre: 'Corte', precio: 8000, duracion: 60 },
+    { nombre: 'Lavado', precio: 5000, duracion: 30 },
+    { nombre: 'Peinado', precios: { corto: 7000, mediano: 9000, largo: 11000 }, duracion: 45 },
+    { nombre: 'Mechas', precios: { corto: 20000, mediano: 25000, largo: 30000 }, duracion: 180 },
+    { nombre: 'Reflejos', precios: { corto: 18000, mediano: 22000, largo: 26000 }, duracion: 150 },
+    { nombre: 'Color', precios: { corto: 15000, mediano: 18000, largo: 21000 }, duracion: 120 },
+    { nombre: 'Baño de Crema', precios: { corto: 10000, mediano: 12000, largo: 14000 }, duracion: 60 },
+    { nombre: 'Botox Capilar', precios: { corto: 16000, mediano: 20000, largo: 24000 }, duracion: 90 },
+    { nombre: 'Alisados', precios: { corto: 25000, mediano: 30000, largo: 35000 }, duracion: 240 },
+    { nombre: 'Nutrición Capilar', precios: { corto: 12000, mediano: 15000, largo: 18000 }, duracion: 75 },
 ];
 
 
@@ -51,16 +51,18 @@ export default function ServiciosPage() {
       try {
         const servicesQuery = query(collection(db, 'servicios'), orderBy('nombre'));
         const servicesSnapshot = await getDocs(servicesQuery);
-        let servicesData = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Servicio);
+        let servicesData: Servicio[];
         
-        if (servicesData.length === 0) {
-            servicesData = mockServices;
+        if (servicesSnapshot.empty) {
+            servicesData = mockServices.map((s, i) => ({ ...s, id: `mock-${i}`, descripcion: '' }));
+        } else {
+            servicesData = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Servicio);
         }
         
         setServicios(servicesData);
       } catch (error) {
         console.error("Error fetching services:", error);
-        setServicios(mockServices); // Fallback to mock data on error
+        setServicios(mockServices.map((s, i) => ({ ...s, id: `mock-${i}`, descripcion: '' })));
       } finally {
         setLoading(false);
       }
@@ -131,7 +133,7 @@ export default function ServiciosPage() {
       </div>
       
       {loading ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {[...Array(8)].map((_, i) => (
             <Card key={i} className="p-6 rounded-2xl">
               <Skeleton className="h-6 w-3/4 mb-4" />
@@ -161,7 +163,7 @@ export default function ServiciosPage() {
                  <div className="p-6 flex-grow flex flex-col">
                      <div className="flex items-start justify-between mb-4">
                         <div>
-                            <h3 className="text-lg font-bold">{servicio.nombre}</h3>
+                            <h3 className="text-xl font-bold">{servicio.nombre}</h3>
                             <p className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                               <Clock className="h-4 w-4" />
                               <span>{servicio.duracion} min.</span>
@@ -179,36 +181,36 @@ export default function ServiciosPage() {
                     <div className="flex-grow space-y-4">
                       {servicio.precios ? (
                         <>
-                         <RadioGroup
-                            value={currentLargo}
-                            onValueChange={(value) => handleLargoChange(servicio.id, value as LargoPelo)}
-                            className="space-y-2"
-                            disabled={!isSelected}
-                         >
-                            {(Object.keys(servicio.precios) as LargoPelo[]).map(largo => (
-                                <Label key={largo} className="flex items-center justify-between cursor-pointer text-sm p-3 rounded-lg border has-[:checked]:bg-primary/10 has-[:checked]:border-primary transition-colors">
-                                    <span className="capitalize font-medium">{largo}</span>
-                                    <div className="flex items-center gap-3">
-                                      <span className="font-semibold text-muted-foreground">≈ {formatPrice(servicio.precios![largo])}</span>
-                                      <RadioGroupItem value={largo} id={`${servicio.id}-${largo}`} />
-                                    </div>
-                                </Label>
-                            ))}
-                         </RadioGroup>
-                         <p className="text-xs text-muted-foreground text-center pt-2">Precios aproximados según largo de pelo.</p>
+                          <p className="text-3xl font-bold text-primary">{formatPrice(currentPrice || 0)}</p>
+                          <RadioGroup
+                              value={currentLargo}
+                              onValueChange={(value) => handleLargoChange(servicio.id, value as LargoPelo)}
+                              className="space-y-2"
+                              disabled={!isSelected}
+                          >
+                              {(Object.keys(servicio.precios) as LargoPelo[]).map(largo => (
+                                  <Label key={largo} className="flex items-center justify-between cursor-pointer text-sm p-3 rounded-lg border has-[:checked]:bg-primary/10 has-[:checked]:border-primary transition-colors">
+                                      <span className="capitalize font-medium">{largo}</span>
+                                      <div className="flex items-center gap-3">
+                                        <span className="font-semibold text-muted-foreground">≈ {formatPrice(servicio.precios![largo])}</span>
+                                        <RadioGroupItem value={largo} id={`${servicio.id}-${largo}`} />
+                                      </div>
+                                  </Label>
+                              ))}
+                          </RadioGroup>
+                          <p className="text-xs text-muted-foreground text-center pt-2">Precios aproximados según largo de pelo.</p>
                         </>
                       ) : (
                         <p className="text-3xl font-bold text-primary">{formatPrice(servicio.precio || 0)}</p>
                       )}
                     </div>
                  </div>
-
                  <CardFooter className="p-6 pt-0 mt-auto">
                     {userRole === 'admin' ? (
                         <Button variant="outline" className="w-full">Editar Servicio</Button>
                     ) : (
-                        <Button className="w-full" onClick={() => handleServiceToggle(servicio.id)} disabled={isSelected}>
-                           {isSelected ? <><Check className="mr-2"/> Agregado</> : 'Agregar'}
+                       <Button className="w-full" onClick={() => !isSelected && handleServiceToggle(servicio.id)}>
+                           {isSelected ? <><Check className="mr-2"/> Seleccionado</> : 'Seleccionar'}
                         </Button>
                     )}
                  </CardFooter>
@@ -224,7 +226,7 @@ export default function ServiciosPage() {
                   <p className="text-xl font-bold text-primary">{formatPrice(totalAmount)}</p>
                 </div>
                 <Button size="lg" onClick={handleContinue} className="rounded-full">
-                  Continuar con {selectedServices.length} servicio{selectedServices.length > 1 && 's'}
+                  Pedir Turno ({selectedServices.length})
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Card>
