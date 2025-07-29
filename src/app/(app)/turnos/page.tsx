@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -9,7 +10,7 @@ import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from 'fi
 import { db } from '@/lib/firebase';
 import { Loader2, Calendar as CalendarIcon, Clock, User, Tag, ArrowLeft, Check, CheckCircle, Users, Scissors } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
-import type { Cliente, Servicio } from '@/lib/types';
+import type { Cliente, Servicio, LargoPelo } from '@/lib/types';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -28,6 +29,8 @@ const MONTO_SEÑA_PORCENTAJE = 0.15; // 15%
 
 const timeSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00"];
 
+type SelectedServiceWithLargo = Servicio & { largo?: LargoPelo };
+
 function TurnosContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -41,7 +44,7 @@ function TurnosContent() {
   const [clients, setClients] = useState<Cliente[]>([]);
   const [services, setServices] = useState<Servicio[]>([]);
 
-  const [selectedServices, setSelectedServices] = useState<Servicio[]>([]);
+  const [selectedServices, setSelectedServices] = useState<SelectedServiceWithLargo[]>([]);
   const [selectedProfessional, setSelectedProfessional] = useState<(typeof professionals[0]) | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -60,7 +63,12 @@ function TurnosContent() {
 
         const serviceIdParams = searchParams.getAll('servicioId');
         if (serviceIdParams.length > 0) {
-          const preSelectedServices = servicesData.filter(s => serviceIdParams.includes(s.id));
+          const preSelectedServices = servicesData
+            .filter(s => serviceIdParams.includes(s.id))
+            .map(s => {
+                const largo = searchParams.get(`largo_${s.id}`) as LargoPelo | null;
+                return { ...s, largo: largo || undefined };
+            });
           setSelectedServices(preSelectedServices);
           setStep(2); 
         }
@@ -91,14 +99,24 @@ function TurnosContent() {
   };
 
   const handleServiceToggle = (service: Servicio) => {
-    setSelectedServices(prev => 
-      prev.some(s => s.id === service.id)
-        ? prev.filter(s => s.id !== service.id)
-        : [...prev, service]
-    );
+    setSelectedServices(prev => {
+        if (prev.some(s => s.id === service.id)) {
+            return prev.filter(s => s.id !== service.id);
+        } else {
+            const largo = service.precios ? 'corto' : undefined;
+            return [...prev, { ...service, largo }];
+        }
+    });
   };
   
-  const totalAmount = useMemo(() => selectedServices.reduce((acc, s) => acc + s.precio, 0), [selectedServices]);
+  const getServicePrice = (service: SelectedServiceWithLargo): number => {
+    if (service.precios && service.largo) {
+        return service.precios[service.largo];
+    }
+    return service.precio || 0;
+  }
+
+  const totalAmount = useMemo(() => selectedServices.reduce((acc, s) => acc + getServicePrice(s), 0), [selectedServices]);
   const depositAmount = useMemo(() => totalAmount * MONTO_SEÑA_PORCENTAJE, [totalAmount]);
 
   const onSubmit = async () => {
@@ -113,10 +131,18 @@ function TurnosContent() {
         const appointmentDateTime = new Date(selectedDate);
         appointmentDateTime.setHours(hour, minute, 0, 0);
 
+        const servicioNombres = selectedServices.map(s => {
+          let name = s.nombre;
+          if (s.largo) {
+            name += ` (${s.largo})`
+          }
+          return name;
+        }).join(', ');
+
         await addDoc(collection(db, 'turnos'), {
           clienteId: selectedClient.id,
           clienteNombre: `${selectedClient.nombre} ${selectedClient.apellido || ''}`.trim(),
-          servicio: selectedServices.map(s => s.nombre).join(', '),
+          servicio: servicioNombres,
           servicioId: selectedServices.map(s => s.id).join(','),
           precio: totalAmount,
           empleadaNombre: selectedProfessional.name,
@@ -165,6 +191,9 @@ function TurnosContent() {
             Sigue los pasos para confirmar tu cita en nuestro salón.
           </p>
         </div>
+         <Link href="/servicios">
+             <Button variant="outline"><ArrowLeft className="mr-2"/> Volver a Servicios</Button>
+         </Link>
       </div>
        <div className="max-w-5xl mx-auto space-y-8">
           <div className="flex items-center justify-between p-2 border rounded-full">
@@ -204,7 +233,7 @@ function TurnosContent() {
                                     <h4 className="font-semibold">{service.nombre}</h4>
                                     <Checkbox checked={isSelected} className="rounded-full h-5 w-5"/>
                                 </div>
-                                <p className="text-sm text-muted-foreground">{formatPrice(service.precio)} - {service.duracion} min</p>
+                                <p className="text-sm text-muted-foreground">{service.precios ? 'Precio según largo' : formatPrice(service.precio || 0)} - {service.duracion} min</p>
                             </div>
                            )
                         })}
@@ -248,7 +277,7 @@ function TurnosContent() {
                             <h3 className="font-semibold">Resumen del Turno</h3>
                              <div className="p-4 border rounded-lg bg-muted/50 space-y-3">
                                 {isAdmin && selectedClient && <p className="flex items-center gap-2 text-sm"><User className="h-4 w-4 text-primary"/> Clienta: <span className="font-semibold">{selectedClient.nombre} {selectedClient.apellido}</span></p>}
-                                <p className="flex items-start gap-2 text-sm"><Tag className="h-4 w-4 text-primary mt-0.5"/> Servicios: <span className="font-semibold flex flex-col">{selectedServices.map(s => s.nombre).map(name => <span key={name}>{name}</span>)}</span></p>
+                                <p className="flex items-start gap-2 text-sm"><Tag className="h-4 w-4 text-primary mt-0.5"/> Servicios: <span className="font-semibold flex flex-col">{selectedServices.map(s => <span key={s.id}>{s.nombre} {s.largo ? `(${s.largo})` : ''}</span>)}</span></p>
                                 <p className="flex items-center gap-2 text-sm"><User className="h-4 w-4 text-primary"/> Profesional: <span className="font-semibold">{selectedProfessional?.name}</span></p>
                                 <p className="flex items-center gap-2 text-sm"><CalendarIcon className="h-4 w-4 text-primary"/> Fecha: <span className="font-semibold">{selectedDate && format(selectedDate, "PPP", { locale: es })}</span></p>
                                 <p className="flex items-center gap-2 text-sm"><Clock className="h-4 w-4 text-primary"/> Hora: <span className="font-semibold">{selectedTime} hs</span></p>
@@ -289,3 +318,5 @@ export default function TurnosPage() {
         </Suspense>
     )
 }
+
+    

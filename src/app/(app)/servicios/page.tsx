@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Tag, Clock, PlusCircle, Check } from "lucide-react";
+import { ArrowRight, Clock, Check } from "lucide-react";
 import Link from 'next/link';
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, orderBy, getDocs } from "firebase/firestore";
@@ -207,7 +207,9 @@ export default function ServiciosPage() {
                     {userRole === 'admin' ? (
                         <Button variant="outline" className="w-full">Editar Servicio</Button>
                     ) : (
-                        !isSelected && <Button className="w-full" onClick={() => handleServiceToggle(servicio.id)}>Agregar</Button>
+                        <Button className="w-full" onClick={() => handleServiceToggle(servicio.id)} disabled={isSelected}>
+                           {isSelected ? <><Check className="mr-2"/> Agregado</> : 'Agregar'}
+                        </Button>
                     )}
                  </CardFooter>
               </Card>
@@ -245,3 +247,5 @@ export default function ServiciosPage() {
     </div>
   );
 }
+
+    
