@@ -271,14 +271,16 @@ function TurnosContent() {
                                         )}
                                     >
                                         <div className='flex justify-between items-start'>
-                                            <h4 className="font-semibold flex-grow pr-2">{service.nombre}</h4>
+                                            <div className="flex-grow pr-2">
+                                              <h4 className="font-semibold">{service.nombre}</h4>
+                                              <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                                                  <Clock className="h-3 w-3"/>
+                                                  <span>{service.duracion} min.</span>
+                                              </div>
+                                            </div>
                                             <Checkbox checked={isSelected} className="rounded-full h-5 w-5"/>
                                         </div>
-                                        <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
-                                            <Clock className="h-3 w-3"/>
-                                            <span>{service.duracion} min.</span>
-                                        </div>
-
+                                        
                                         <div className="mt-4 flex-grow flex flex-col justify-end">
                                             {service.precios ? (
                                                 <div className="text-right">
@@ -294,32 +296,29 @@ function TurnosContent() {
 
                                         {isSelected && service.precios && (
                                             <div className="mt-4 pt-4 border-t border-dashed">
-                                                <RadioGroup
-                                                    value={selectedData?.largo}
-                                                    onValueChange={(value) => handleLargoChange(service.id, value as LargoPelo)}
-                                                    className="grid grid-cols-3 gap-2"
-                                                >
+                                                <div className="grid grid-cols-3 gap-2">
                                                     {(Object.keys(service.precios) as LargoPelo[]).map(largo => (
-                                                        <div key={largo}>
-                                                            <RadioGroupItem value={largo} id={`${service.id}-${largo}`} className="sr-only" />
-                                                            <Label htmlFor={`${service.id}-${largo}`} className={cn(
-                                                                "block p-2 text-center text-xs font-semibold border rounded-md cursor-pointer transition-all capitalize flex flex-col items-center justify-center gap-1",
-                                                                selectedData?.largo === largo ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-muted"
-                                                            )}>
-                                                                {/* Icons can be added here if available */}
-                                                                {largo}
-                                                            </Label>
-                                                        </div>
+                                                        <Button
+                                                          key={largo}
+                                                          variant={selectedData?.largo === largo ? 'default' : 'outline'}
+                                                          size="sm"
+                                                          onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleLargoChange(service.id, largo)
+                                                          }}
+                                                          className="capitalize flex-col h-auto py-1.5"
+                                                        >
+                                                           {largo}
+                                                        </Button>
                                                     ))}
-                                                </RadioGroup>
+                                                </div>
                                                 <p className="text-xs text-muted-foreground text-center mt-2">Precios aproximados según largo de pelo.</p>
                                             </div>
                                         )}
-
-                                        {isSelected && (
-                                          <div className="pt-2 text-center text-primary text-sm font-semibold mt-auto">
-                                            Seleccionado
-                                          </div>
+                                         {isSelected && (
+                                            <div className="pt-3 text-center text-primary text-sm font-semibold mt-auto flex items-center justify-center gap-2">
+                                                <CheckCircle className="h-4 w-4" /> Seleccionado
+                                            </div>
                                         )}
                                     </div>
                                 </div>
@@ -330,7 +329,7 @@ function TurnosContent() {
                 <CardFooter className="flex-col items-stretch gap-4 md:flex-row md:justify-between">
                     {selectedServices.length > 0 ? (
                         <div className='p-3 border rounded-lg bg-muted/50 text-sm w-full'>
-                            <p><span className="font-semibold">Total estimado:</span> {canGoNextFromStep1 ? formatPrice(totalAmount) : '...'}</p>
+                            <p><span className="font-semibold">Total estimado:</span> {canGoNextFromStep1 ? formatPrice(totalAmount) : 'Selecciona el largo...'}</p>
                             <p><span className="font-semibold">Tiempo total:</span> {totalDuration} min.</p>
                             <p className="truncate"><span className="font-semibold">Servicios:</span> {servicesSummary}</p>
                         </div>
@@ -461,5 +460,7 @@ export default function TurnosPage() {
         </Suspense>
     )
 }
+
+    
 
     
