@@ -34,17 +34,17 @@ const timeSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00"
 type SelectedServiceWithLargo = Servicio & { largo?: LargoPelo };
 
 const mockServices: Servicio[] = [
-    { id: 'alisados', nombre: 'Alisados', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 60 },
-    { id: 'bano_crema', nombre: 'Baño de Crema', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 30 },
-    { id: 'botox', nombre: 'Botox Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 40 },
-    { id: 'color', nombre: 'Color', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 45 },
     { id: 'corte', nombre: 'Corte', descripcion: '', precio: 30000, duracion: 15 },
     { id: 'lavado', nombre: 'Lavado', descripcion: '', precio: 9000, duracion: 10 },
-    { id: 'mechas', nombre: 'Mechas', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 25 },
-    { id: 'nutricion', nombre: 'Nutrición Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 35 },
     { id: 'peinado', nombre: 'Peinado', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 12 },
+    { id: 'mechas', nombre: 'Mechas', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 25 },
     { id: 'reflejos', nombre: 'Reflejos', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 20 },
-];
+    { id: 'color', nombre: 'Color', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 45 },
+    { id: 'bano_crema', nombre: 'Baño de Crema', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 30 },
+    { id: 'botox', nombre: 'Botox Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 40 },
+    { id: 'alisados', nombre: 'Alisados', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 60 },
+    { id: 'nutricion', nombre: 'Nutrición Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 35 },
+].sort((a, b) => a.nombre.localeCompare(b.nombre));
 
 
 function TurnosContent() {
@@ -58,7 +58,7 @@ function TurnosContent() {
   const [loadingData, setLoadingData] = useState(false);
   
   const [clients, setClients] = useState<Cliente[]>([]);
-  const [services] = useState<Servicio[]>(mockServices.sort((a, b) => a.nombre.localeCompare(b.nombre)));
+  const [services] = useState<Servicio[]>(mockServices);
 
   const [selectedServices, setSelectedServices] = useState<SelectedServiceWithLargo[]>([]);
   const [selectedProfessional, setSelectedProfessional] = useState<(typeof professionals[0]) | null>(null);
@@ -70,38 +70,43 @@ function TurnosContent() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Logic to pre-select services from params
-      if (searchParams.getAll('servicioId').length > 0 && services.length > 0) {
-        const serviceIdParams = searchParams.getAll('servicioId');
+      // Logic to pre-select services from params, if any
+      const serviceIdParams = searchParams.getAll('servicioId');
+      if (serviceIdParams.length > 0 && services.length > 0) {
         const preSelectedServices = services
           .filter(s => serviceIdParams.includes(s.id))
           .map(s => {
               const largo = searchParams.get(`largo_${s.id}`) as LargoPelo | null;
-              return { ...s, largo: (s.precios && largo) ? largo : (s.precios ? 'corto' : undefined) };
+              // Pre-select a default length if needed, or ensure it's valid
+              const defaultLargo = s.precios ? (largo || 'corto') : undefined;
+              return { ...s, largo: defaultLargo };
           });
         setSelectedServices(preSelectedServices);
-        // Do not auto-advance step for admin
       }
 
       if (isAdmin) {
         setLoadingData(true);
         const clientsQuery = query(collection(db, 'clientes'), orderBy('nombre'));
         const clientsSnapshot = await getDocs(clientsQuery);
-        setClients(clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Cliente)));
+        const clientsData = clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Cliente))
+        setClients(clientsData);
         
         const clientIdParam = searchParams.get('clienteId');
         if (clientIdParam) {
-            const client = clients.find(c => c.id === clientIdParam);
+            const client = clientsData.find(c => c.id === clientIdParam);
             if (client) setSelectedClient(client);
         }
         setLoadingData(false);
       } else if (user) {
+        // For logged-in clients, their info is the client
         const userAsClient: Cliente = { id: user.id, nombre: user.nombre, apellido: '', email: user.email, telefono: '', fechaRegistro: new Date() as any };
         setSelectedClient(userAsClient);
       }
     };
     fetchData();
-  }, [searchParams, isAdmin, user, services]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, user, services]);
+
 
   const goToStep = (stepNumber: number) => {
     if (step > stepNumber) {
@@ -115,8 +120,8 @@ function TurnosContent() {
         if (isSelected) {
             return prev.filter(s => s.id !== service.id);
         } else {
-            const largo = service.precios ? undefined : undefined;
-            return [...prev, { ...service, largo }];
+            // Add service without a default length, forcing user selection
+            return [...prev, { ...service, largo: undefined }];
         }
     });
   };
@@ -132,14 +137,21 @@ function TurnosContent() {
     return service.precio || 0;
   }
 
+  const formatPrice = (price: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price);
+  
+  const canGoNextFromStep1 = useMemo(() => {
+    if (selectedServices.length === 0) return false;
+    // Check if every selected variable service has a length selected
+    return selectedServices.every(s => !s.precios || (s.precios && !!s.largo));
+  }, [selectedServices]);
+
   const totalAmount = useMemo(() => selectedServices.reduce((acc, s) => acc + getServicePrice(s), 0), [selectedServices]);
   const totalDuration = useMemo(() => selectedServices.reduce((acc, s) => acc + s.duracion, 0), [selectedServices]);
   const depositAmount = useMemo(() => Math.round(totalAmount * MONTO_SEÑA_PORCENTAJE), [totalAmount]);
 
   const servicesSummary = useMemo(() => {
     if (selectedServices.length === 0) return 'Ninguno';
-    const names = selectedServices.map(s => s.nombre);
-    return names.join(', ');
+    return selectedServices.map(s => s.nombre).join(', ');
   }, [selectedServices]);
 
   const onSubmit = async () => {
@@ -191,17 +203,10 @@ function TurnosContent() {
     }
   }
 
-  const formatPrice = (price: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price);
-
   if (loadingData && isAdmin) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
   }
   
-  const canGoNextFromStep1 = useMemo(() => {
-    if (selectedServices.length === 0) return false;
-    return selectedServices.every(s => !s.precios || !!s.largo);
-  }, [selectedServices]);
-
   const steps = [
       { id: 1, name: 'Elige tus servicios', icon: Scissors },
       { id: 2, name: 'Elige tu profesional', icon: Users },
@@ -218,16 +223,9 @@ function TurnosContent() {
             Sigue los pasos para confirmar tu cita en nuestro salón.
           </p>
         </div>
-        {isAdmin && (
-            <Link href="/agenda">
-                <Button variant="outline"><ArrowLeft className="mr-2"/> Volver a la Agenda</Button>
-            </Link>
-        )}
-        {!isAdmin && (
-             <Link href="/servicios">
-                <Button variant="outline"><ArrowLeft className="mr-2"/> Volver a Servicios</Button>
-            </Link>
-        )}
+         <Link href={isAdmin ? "/agenda" : "/servicios"} passHref>
+            <Button variant="outline"><ArrowLeft className="mr-2"/> Volver</Button>
+        </Link>
       </div>
 
        <div className="max-w-5xl mx-auto space-y-8">
@@ -259,77 +257,91 @@ function TurnosContent() {
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {services.map(service => {
-                        const isSelected = selectedServices.some(s => s.id === service.id);
-                        const selectedData = selectedServices.find(s => s.id === service.id);
-                        return (
-                            <div key={service.id} onClick={() => handleServiceToggle(service)}
-                                className={cn("p-4 border rounded-lg cursor-pointer transition-all flex flex-col", 
-                                isSelected ? "border-primary ring-2 ring-primary/20 shadow-lg" : "hover:border-primary/50",
-                                )}>
-                                <div className='flex justify-between items-start'>
-                                    <div>
-                                       <h4 className="font-semibold">{service.nombre}</h4>
-                                       <p className="text-sm text-muted-foreground flex items-center gap-1.5"><Clock className="h-3 w-3"/>{service.duracion} min.</p>
+                            const isSelected = selectedServices.some(s => s.id === service.id);
+                            const selectedData = selectedServices.find(s => s.id === service.id);
+                            return (
+                                <div key={service.id}>
+                                    <div 
+                                        onClick={() => handleServiceToggle(service)}
+                                        className={cn(
+                                            "p-4 border rounded-lg cursor-pointer transition-all flex flex-col h-full", 
+                                            isSelected ? "border-primary ring-2 ring-primary/20 shadow-lg" : "hover:border-primary/50",
+                                        )}
+                                    >
+                                        <div className='flex justify-between items-start'>
+                                            <div className="flex-grow">
+                                                <h4 className="font-semibold">{service.nombre}</h4>
+                                                <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                                    <Clock className="h-3 w-3"/>
+                                                    <span>{service.duracion} min.</span>
+                                                    {service.precios && isSelected && selectedData?.largo && (
+                                                        <span className='text-primary font-semibold'> ≈ {formatPrice(getServicePrice(selectedData))}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <Checkbox checked={isSelected} className="rounded-full h-5 w-5"/>
+                                        </div>
+                                        
+                                        <div className='mt-auto pt-4 flex-grow flex flex-col justify-end'>
+                                            {service.precios ? (
+                                                <p className="text-muted-foreground text-sm">Precio variable</p>
+                                            ) : (
+                                                <p className="text-primary font-bold text-lg">{formatPrice(service.precio!)}</p>
+                                            )}
+                                        </div>
+                                        {isSelected && (
+                                          <div className="pt-2 text-center text-primary text-sm font-semibold">
+                                            Seleccionado
+                                          </div>
+                                        )}
                                     </div>
-                                    <Checkbox checked={isSelected} className="rounded-full h-5 w-5"/>
-                                </div>
-                                
-                                <div className='mt-4 flex-grow flex flex-col justify-end'>
-                                    {service.precios ? (
-                                      <>
-                                        {isSelected ? (
-                                            <div className="space-y-3" onClick={e => e.stopPropagation()}>
-                                                <RadioGroup
-                                                    value={selectedData?.largo}
-                                                    onValueChange={(value) => handleLargoChange(service.id, value as LargoPelo)}
-                                                    className="grid grid-cols-3 gap-2"
-                                                >
+
+                                    {service.precios && isSelected && (
+                                        <div className="mt-2 p-3 border rounded-lg bg-muted/30" onClick={e => e.stopPropagation()}>
+                                            <RadioGroup
+                                                value={selectedData?.largo}
+                                                onValueChange={(value) => handleLargoChange(service.id, value as LargoPelo)}
+                                                className="grid grid-cols-3 gap-2"
+                                            >
                                                 {(Object.keys(service.precios) as LargoPelo[]).map(largo => (
                                                     <div key={largo}>
                                                         <RadioGroupItem value={largo} id={`${service.id}-${largo}`} className="sr-only" />
                                                         <Label htmlFor={`${service.id}-${largo}`} className={cn(
-                                                            "block p-2 text-center text-xs font-semibold border rounded-md cursor-pointer transition-all capitalize",
+                                                            "block p-2 text-center text-xs font-semibold border rounded-md cursor-pointer transition-all capitalize flex items-center justify-center gap-1",
                                                             selectedData?.largo === largo ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-muted"
                                                         )}>
-                                                            {largo}
+                                                          <Scissors className="h-3 w-3" /> {largo}
                                                         </Label>
                                                     </div>
                                                 ))}
-                                                </RadioGroup>
-                                                <div className="h-6 text-center">
-                                                  {selectedData?.largo ? (
-                                                      <p className="text-primary font-bold text-sm">≈ {formatPrice(getServicePrice(selectedData))}</p>
-                                                  ) : (
-                                                     <p className="text-xs text-muted-foreground italic">Elige un largo</p>
-                                                  )}
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <p className="text-muted-foreground text-sm text-center">Precio variable</p>
-                                        )}
-                                      </>
-                                    ) : (
-                                        <p className="text-primary font-bold text-lg text-center">{formatPrice(service.precio!)}</p>
+                                            </RadioGroup>
+                                            <p className="text-xs text-muted-foreground text-center mt-2">Precios aproximados según largo de pelo.</p>
+                                        </div>
                                     )}
                                 </div>
-                            </div>
-                        )})}
+                            );
+                        })}
                     </div>
                 </CardContent>
                 <CardFooter className="flex-col items-stretch gap-4 md:flex-row md:justify-between">
-                    {selectedServices.length > 0 &&
+                    {selectedServices.length > 0 ? (
                         <div className='p-3 border rounded-lg bg-muted/50 text-sm w-full'>
                             <p><span className="font-semibold">Total estimado:</span> {canGoNextFromStep1 ? formatPrice(totalAmount) : '...'}</p>
                             <p><span className="font-semibold">Tiempo total:</span> {totalDuration} min.</p>
                             <p className="truncate"><span className="font-semibold">Servicios:</span> {servicesSummary}</p>
                         </div>
-                    }
-                    <div className='flex justify-end w-full md:w-auto'>
+                    ) : (
+                         <div className='p-3 border rounded-lg bg-muted/50 text-sm text-center text-muted-foreground w-full'>
+                            Selecciona un servicio para comenzar.
+                        </div>
+                    )}
+                    <div className='flex justify-end w-full md:w-auto mt-4 md:mt-0'>
                         <Button onClick={() => setStep(2)} disabled={!canGoNextFromStep1}>Siguiente</Button>
                     </div>
                 </CardFooter>
               </Card>
           )}
+
 
           {/* STEP 2: Professional */}
           {step === 2 && (
@@ -445,3 +457,5 @@ export default function TurnosPage() {
         </Suspense>
     )
 }
+
+    
