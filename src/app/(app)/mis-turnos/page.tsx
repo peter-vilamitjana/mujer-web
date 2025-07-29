@@ -13,6 +13,17 @@ import { useUser } from "@/contexts/UserContext";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function MisTurnosPage() {
   const [turnos, setTurnos] = useState<Turno[]>([]);
@@ -26,7 +37,6 @@ export default function MisTurnosPage() {
       return;
     }
 
-    // Removed orderBy to prevent index error. Sorting will be done client-side.
     const turnosQuery = query(
       collection(db, 'turnos'), 
       where('clienteId', '==', user.id)
@@ -38,7 +48,6 @@ export default function MisTurnosPage() {
         const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate().toISOString() : new Date(data.fecha).toISOString();
         return { id: doc.id, ...data, fecha } as Turno;
       });
-      // Sort data client-side
       turnosData.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
       setTurnos(turnosData);
       setLoading(false);
@@ -52,8 +61,6 @@ export default function MisTurnosPage() {
   }, [user, toast]);
 
   const handleCancelTurno = async (turnoId: string) => {
-    if (!confirm("¿Estás segura de que quieres cancelar este turno?")) return;
-
     try {
       const turnoRef = doc(db, 'turnos', turnoId);
       await updateDoc(turnoRef, { estado: 'cancelado' });
@@ -122,7 +129,23 @@ export default function MisTurnosPage() {
                   <p className="flex items-center justify-end gap-2"><Scissors className="h-4 w-4 opacity-80" />{turno.servicio}</p>
                   <p className="flex items-center justify-end gap-2"><User className="h-4 w-4 opacity-80" />Con {turno.empleadaNombre}</p>
                    <div className="pt-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleCancelTurno(turno.id)} className="text-white/80 hover:text-white hover:bg-white/20"><XCircle className="h-4 w-4 mr-2"/> Cancelar Turno</Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                           <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/20"><XCircle className="h-4 w-4 mr-2"/> Cancelar Turno</Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>¿Estás segura?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta acción no se puede deshacer. El turno será cancelado permanentemente.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Volver</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleCancelTurno(turno.id)}>Sí, cancelar turno</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                   </div>
                 </div>
               </div>
