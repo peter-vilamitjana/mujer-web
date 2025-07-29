@@ -87,10 +87,11 @@ export default function ServiciosPage() {
         {userRole === 'admin' && <NewServiceForm />}
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))'}}>
         {mockServices.map(servicio => {
           const isSelected = selectedServices.some(s => s.id === servicio.id);
           const selectedData = selectedServices.find(s => s.id === servicio.id);
+          const showVariablePricePlaceholder = servicio.precios && !isSelected;
 
           return (
             <Card
@@ -101,21 +102,27 @@ export default function ServiciosPage() {
               )}
             >
               <CardContent className="p-6 flex-grow flex flex-col">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1 pr-4">
-                    <h3 className="text-xl font-semibold">{servicio.nombre}</h3>
-                    <p className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                      <Clock className="h-4 w-4" />
-                      <span>{servicio.duracion} min.</span>
-                    </p>
+                <div className="flex-grow">
+                   <div className="flex items-start justify-between mb-2">
+                     <div className="flex-1 pr-4">
+                       <h3 className="text-xl font-semibold mb-2">{servicio.nombre}</h3>
+                       <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                         <Clock className="h-4 w-4" />
+                         <span>{servicio.duracion} min.</span>
+                       </p>
+                     </div>
+                      <Button size="icon" variant={isSelected ? "default" : "outline"} onClick={() => handleServiceToggle(servicio)} className="rounded-full flex-shrink-0">
+                          {isSelected ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                      </Button>
+                   </div>
+                  
+                  <div className="my-4 flex items-center justify-center min-h-[56px]">
+                    {showVariablePricePlaceholder ? (
+                      <p className="text-xl text-center text-muted-foreground/80 italic">Precio variable</p>
+                    ) : (
+                      <p className="text-4xl font-bold text-primary text-center">{formatPrice(getServicePrice(selectedData || servicio))}</p>
+                    )}
                   </div>
-                   <Button size="icon" variant={isSelected ? "default" : "outline"} onClick={() => handleServiceToggle(servicio)} className="rounded-full flex-shrink-0">
-                       {isSelected ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                   </Button>
-                </div>
-
-                <div className="flex-grow space-y-4 my-4 flex items-center justify-center">
-                   <p className="text-4xl font-bold text-primary text-center my-4">{formatPrice(getServicePrice(selectedData || servicio))}</p>
                 </div>
                  
                  {servicio.precios && (
@@ -150,19 +157,26 @@ export default function ServiciosPage() {
         })}
       </div>
       
-      {userRole === 'clienta' && selectedServices.length > 0 && (
+      {userRole === 'clienta' && (
         <div className="fixed bottom-0 left-0 right-0 z-20 p-4 bg-background/80 backdrop-blur-lg border-t">
           <div className="container mx-auto flex items-center justify-between">
-            <div>
-                <p className="font-bold">Total Estimado:</p>
-                <p className="text-2xl font-bold text-primary">{formatPrice(totalAmount)}</p>
-                <p className="text-sm text-muted-foreground">{selectedServices.length} servicio(s) seleccionado(s) - {totalDuration} min.</p>
-            </div>
+            {selectedServices.length > 0 ? (
+                 <div>
+                    <p className="font-bold">Total Estimado:</p>
+                    <p className="text-2xl font-bold text-primary">{formatPrice(totalAmount)}</p>
+                    <p className="text-sm text-muted-foreground">{selectedServices.length} servicio(s) seleccionado(s) - {totalDuration} min.</p>
+                </div>
+            ) : (
+                <div>
+                     <p className="font-bold">Selecciona un servicio</p>
+                     <p className="text-sm text-muted-foreground">Elige uno o más servicios para continuar.</p>
+                </div>
+            )}
             <Button
               size="lg"
               onClick={handleContinue}
               disabled={selectedServices.length === 0}
-              className="w-full max-w-xs rounded-full py-6 text-lg"
+              className="w-full max-w-xs rounded-full py-6 text-lg disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Continuar
               <ArrowRight className="ml-2 h-5 w-5" />
