@@ -80,7 +80,7 @@ function TurnosContent() {
               return { ...s, largo: (s.precios && largo) ? largo : (s.precios ? 'corto' : undefined) };
           });
         setSelectedServices(preSelectedServices);
-        if(!isAdmin) setStep(2); 
+        // Do not auto-advance step for admin
       }
 
       if (isAdmin) {
@@ -88,6 +88,12 @@ function TurnosContent() {
         const clientsQuery = query(collection(db, 'clientes'), orderBy('nombre'));
         const clientsSnapshot = await getDocs(clientsQuery);
         setClients(clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Cliente)));
+        
+        const clientIdParam = searchParams.get('clienteId');
+        if (clientIdParam) {
+            const client = clients.find(c => c.id === clientIdParam);
+            if (client) setSelectedClient(client);
+        }
         setLoadingData(false);
       } else if (user) {
         const userAsClient: Cliente = { id: user.id, nombre: user.nombre, apellido: '', email: user.email, telefono: '', fechaRegistro: new Date() as any };
@@ -109,8 +115,6 @@ function TurnosContent() {
         if (isSelected) {
             return prev.filter(s => s.id !== service.id);
         } else {
-            // For variable price services, don't set a default largo.
-            // It must be explicitly chosen by the user.
             const largo = service.precios ? undefined : undefined;
             return [...prev, { ...service, largo }];
         }
@@ -193,116 +197,236 @@ function TurnosContent() {
     return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
   }
   
-  const canGoNext = useMemo(() => {
+  const canGoNextFromStep1 = useMemo(() => {
     if (selectedServices.length === 0) return false;
-    // Check if every selected service that is variable has a 'largo' selected.
     return selectedServices.every(s => !s.precios || !!s.largo);
   }, [selectedServices]);
 
+  const steps = [
+      { id: 1, name: 'Elige tus servicios', icon: Scissors },
+      { id: 2, name: 'Elige tu profesional', icon: Users },
+      { id: 3, name: 'Elige fecha y hora', icon: CalendarIcon },
+      { id: 4, name: 'Resumen y seña', icon: CheckCircle },
+  ];
+
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
+       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Agendar Turno</h1>
           <p className="text-muted-foreground">
             Sigue los pasos para confirmar tu cita en nuestro salón.
           </p>
         </div>
-         <Link href="/servicios">
-             <Button variant="outline"><ArrowLeft className="mr-2"/> Volver a Servicios</Button>
-         </Link>
+        {isAdmin && (
+            <Link href="/agenda">
+                <Button variant="outline"><ArrowLeft className="mr-2"/> Volver a la Agenda</Button>
+            </Link>
+        )}
+        {!isAdmin && (
+             <Link href="/servicios">
+                <Button variant="outline"><ArrowLeft className="mr-2"/> Volver a Servicios</Button>
+            </Link>
+        )}
       </div>
+
        <div className="max-w-5xl mx-auto space-y-8">
-          
-          <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
-                     1
-                   </div>
-                   <span>Elige tus servicios</span>
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {step === 1 && (
-                  <div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {services.map(service => {
-                          const isSelected = selectedServices.some(s => s.id === service.id);
-                          const selectedData = selectedServices.find(s => s.id === service.id);
-                          
-                          return (
-                              <div key={service.id} onClick={() => handleServiceToggle(service)}
-                                  className={cn("p-4 border rounded-lg cursor-pointer transition-all flex flex-col", 
-                                  isSelected ? "border-primary ring-2 ring-primary/20 shadow-lg" : "hover:border-primary/50",
-                                  )}>
-                                  
-                                  <div className='flex justify-between items-start'>
-                                      <div>
-                                         <h4 className="font-semibold">{service.nombre}</h4>
-                                         <p className="text-sm text-muted-foreground flex items-center gap-1.5"><Clock className="h-3 w-3"/>{service.duracion} min.</p>
-                                      </div>
-                                      <Checkbox checked={isSelected} className="rounded-full h-5 w-5"/>
-                                  </div>
-                                  
-                                  <div className='mt-4 flex-grow flex flex-col justify-end'>
-                                      {service.precios ? (
-                                        <>
-                                          {isSelected ? (
-                                              <div className="space-y-3" onClick={e => e.stopPropagation()}>
-                                                  <RadioGroup
-                                                      value={selectedData?.largo}
-                                                      onValueChange={(value) => handleLargoChange(service.id, value as LargoPelo)}
-                                                      className="grid grid-cols-3 gap-2"
-                                                  >
-                                                  {(Object.keys(service.precios) as LargoPelo[]).map(largo => (
-                                                      <div key={largo}>
-                                                          <RadioGroupItem value={largo} id={`${service.id}-${largo}`} className="sr-only" />
-                                                          <Label htmlFor={`${service.id}-${largo}`} className={cn(
-                                                              "block p-2 text-center text-xs font-semibold border rounded-md cursor-pointer transition-all capitalize",
-                                                              selectedData?.largo === largo ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-muted"
-                                                          )}>
-                                                              {largo}
-                                                          </Label>
-                                                      </div>
-                                                  ))}
-                                                  </RadioGroup>
-                                                  <div className="h-6 text-center">
-                                                    {selectedData?.largo ? (
-                                                        <p className="text-primary font-bold text-sm">≈ {formatPrice(getServicePrice(selectedData))}</p>
-                                                    ) : (
-                                                       <p className="text-xs text-muted-foreground italic">Elige un largo</p>
-                                                    )}
-                                                  </div>
-                                              </div>
-                                          ) : (
-                                              <p className="text-muted-foreground text-sm text-center">Precio variable</p>
-                                          )}
-                                        </>
-                                      ) : (
-                                          <p className="text-primary font-bold text-lg text-center">{formatPrice(service.precio!)}</p>
-                                      )}
-                                  </div>
-                              </div>
-                          )
-                          })}
-                      </div>
-                  </div>
-              )}
-            </CardContent>
-            <CardFooter className="flex-col items-stretch gap-4 md:flex-row md:justify-between">
-                {selectedServices.length > 0 &&
-                    <div className='p-3 border rounded-lg bg-muted/50 text-sm w-full'>
-                        <p><span className="font-semibold">Total estimado:</span> {canGoNext ? formatPrice(totalAmount) : '...'}</p>
-                        <p><span className="font-semibold">Tiempo total:</span> {totalDuration} min.</p>
-                        <p className="truncate"><span className="font-semibold">Servicios:</span> {servicesSummary}</p>
+          <div className="p-2 bg-muted rounded-full flex items-center justify-between">
+             {steps.map(s => (
+                <button
+                    key={s.id}
+                    onClick={() => { if(step > s.id) setStep(s.id) }}
+                    disabled={step < s.id}
+                    className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-full text-sm font-semibold transition-all duration-300",
+                        step === s.id ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground",
+                        step > s.id && "hover:bg-primary/10"
+                    )}
+                >
+                    <s.icon className="h-5 w-5" />
+                    <span className="hidden md:inline">{s.name}</span>
+                </button>
+             ))}
+          </div>
+
+          {/* STEP 1: Services */}
+          {step === 1 && (
+              <Card>
+                <CardHeader>
+                    <CardTitle>Paso 1: Elige tus servicios</CardTitle>
+                    <CardDescription>Puedes seleccionar uno o más tratamientos.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {services.map(service => {
+                        const isSelected = selectedServices.some(s => s.id === service.id);
+                        const selectedData = selectedServices.find(s => s.id === service.id);
+                        return (
+                            <div key={service.id} onClick={() => handleServiceToggle(service)}
+                                className={cn("p-4 border rounded-lg cursor-pointer transition-all flex flex-col", 
+                                isSelected ? "border-primary ring-2 ring-primary/20 shadow-lg" : "hover:border-primary/50",
+                                )}>
+                                <div className='flex justify-between items-start'>
+                                    <div>
+                                       <h4 className="font-semibold">{service.nombre}</h4>
+                                       <p className="text-sm text-muted-foreground flex items-center gap-1.5"><Clock className="h-3 w-3"/>{service.duracion} min.</p>
+                                    </div>
+                                    <Checkbox checked={isSelected} className="rounded-full h-5 w-5"/>
+                                </div>
+                                
+                                <div className='mt-4 flex-grow flex flex-col justify-end'>
+                                    {service.precios ? (
+                                      <>
+                                        {isSelected ? (
+                                            <div className="space-y-3" onClick={e => e.stopPropagation()}>
+                                                <RadioGroup
+                                                    value={selectedData?.largo}
+                                                    onValueChange={(value) => handleLargoChange(service.id, value as LargoPelo)}
+                                                    className="grid grid-cols-3 gap-2"
+                                                >
+                                                {(Object.keys(service.precios) as LargoPelo[]).map(largo => (
+                                                    <div key={largo}>
+                                                        <RadioGroupItem value={largo} id={`${service.id}-${largo}`} className="sr-only" />
+                                                        <Label htmlFor={`${service.id}-${largo}`} className={cn(
+                                                            "block p-2 text-center text-xs font-semibold border rounded-md cursor-pointer transition-all capitalize",
+                                                            selectedData?.largo === largo ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-muted"
+                                                        )}>
+                                                            {largo}
+                                                        </Label>
+                                                    </div>
+                                                ))}
+                                                </RadioGroup>
+                                                <div className="h-6 text-center">
+                                                  {selectedData?.largo ? (
+                                                      <p className="text-primary font-bold text-sm">≈ {formatPrice(getServicePrice(selectedData))}</p>
+                                                  ) : (
+                                                     <p className="text-xs text-muted-foreground italic">Elige un largo</p>
+                                                  )}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className="text-muted-foreground text-sm text-center">Precio variable</p>
+                                        )}
+                                      </>
+                                    ) : (
+                                        <p className="text-primary font-bold text-lg text-center">{formatPrice(service.precio!)}</p>
+                                    )}
+                                </div>
+                            </div>
+                        )})}
                     </div>
-                }
-                <div className='flex justify-end w-full'>
-                    <Button onClick={() => setStep(2)} disabled={!canGoNext}>Siguiente</Button>
-                </div>
-            </CardFooter>
-          </Card>
+                </CardContent>
+                <CardFooter className="flex-col items-stretch gap-4 md:flex-row md:justify-between">
+                    {selectedServices.length > 0 &&
+                        <div className='p-3 border rounded-lg bg-muted/50 text-sm w-full'>
+                            <p><span className="font-semibold">Total estimado:</span> {canGoNextFromStep1 ? formatPrice(totalAmount) : '...'}</p>
+                            <p><span className="font-semibold">Tiempo total:</span> {totalDuration} min.</p>
+                            <p className="truncate"><span className="font-semibold">Servicios:</span> {servicesSummary}</p>
+                        </div>
+                    }
+                    <div className='flex justify-end w-full md:w-auto'>
+                        <Button onClick={() => setStep(2)} disabled={!canGoNextFromStep1}>Siguiente</Button>
+                    </div>
+                </CardFooter>
+              </Card>
+          )}
+
+          {/* STEP 2: Professional */}
+          {step === 2 && (
+              <Card>
+                <CardHeader>
+                    <CardTitle>Paso 2: Elige tu profesional</CardTitle>
+                    <CardDescription>Nuestras expertas están listas para atenderte.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {professionals.map(prof => (
+                        <div key={prof.id} onClick={() => setSelectedProfessional(prof)}
+                            className={cn("p-4 border rounded-lg cursor-pointer transition-all flex flex-col items-center gap-4 text-center",
+                            selectedProfessional?.id === prof.id ? "border-primary ring-2 ring-primary/20 shadow-lg" : "hover:border-primary/50"
+                            )}>
+                            <Image src={prof.avatar} alt={prof.name} data-ai-hint={prof.hint} width={80} height={80} className="rounded-full border-2 border-muted" />
+                            <h4 className="font-semibold">{prof.name}</h4>
+                        </div>
+                    ))}
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                    <Button variant="outline" onClick={() => setStep(1)}>Anterior</Button>
+                    <Button onClick={() => setStep(3)} disabled={!selectedProfessional}>Siguiente</Button>
+                </CardFooter>
+              </Card>
+          )}
+
+          {/* STEP 3: Date and Time */}
+          {step === 3 && (
+              <Card>
+                 <CardHeader>
+                    <CardTitle>Paso 3: Elige fecha y hora</CardTitle>
+                    <CardDescription>Selecciona el día y la hora que más te convenga.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col md:flex-row gap-6">
+                    <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        disabled={(date) => date < new Date() || date.getDay() === 0}
+                        className="rounded-md border self-start"
+                        locale={es}
+                    />
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 flex-1 max-h-96 overflow-y-auto">
+                        {timeSlots.map(time => (
+                           <Button key={time} variant={selectedTime === time ? "default" : "outline"} onClick={() => setSelectedTime(time)}>
+                               {time}
+                           </Button>
+                        ))}
+                    </div>
+                </CardContent>
+                 <CardFooter className="flex justify-between">
+                    <Button variant="outline" onClick={() => setStep(2)}>Anterior</Button>
+                    <Button onClick={() => setStep(4)} disabled={!selectedDate || !selectedTime}>Siguiente</Button>
+                </CardFooter>
+              </Card>
+          )}
+
+           {/* STEP 4: Confirmation */}
+           {step === 4 && (
+              <Card>
+                <CardHeader>
+                    <CardTitle>Paso 4: Resumen y seña</CardTitle>
+                    <CardDescription>Revisa los detalles de tu turno antes de confirmar.</CardDescription>
+                </CardHeader>
+                 <CardContent className="space-y-6">
+                    <div className="p-4 border rounded-lg bg-muted/50 space-y-3 text-sm">
+                        <p className="flex items-center gap-2"><User className="h-4 w-4 text-primary"/> Clienta: <span className="font-semibold">{selectedClient?.nombre}</span></p>
+                        <p className="flex items-center gap-2"><Users className="h-4 w-4 text-primary"/> Profesional: <span className="font-semibold">{selectedProfessional?.name}</span></p>
+                        <p className="flex items-center gap-2"><CalendarIcon className="h-4 w-4 text-primary"/> Fecha: <span className="font-semibold">{selectedDate && format(selectedDate, "PPP", { locale: es })}</span></p>
+                        <p className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary"/> Hora: <span className="font-semibold">{selectedTime} hs</span></p>
+                        <div className="border-t pt-3 mt-3">
+                           <p className="flex items-center gap-2"><Scissors className="h-4 w-4 text-primary"/> Servicios:</p>
+                           <ul className="list-disc list-inside pl-2 font-semibold">
+                             {selectedServices.map(s => <li key={s.id}>{s.nombre}{s.largo ? ` (${s.largo})` : ''}</li>)}
+                           </ul>
+                        </div>
+                    </div>
+                     <div className="p-4 border-2 border-dashed rounded-lg text-center">
+                        <p className="text-muted-foreground text-sm">Total a pagar en el local</p>
+                        <p className="text-3xl font-bold text-primary">{formatPrice(totalAmount)}</p>
+                        {!isAdmin && (
+                            <>
+                                <p className="font-semibold mt-4">Para confirmar, abona la seña de:</p>
+                                <p className="text-2xl font-bold">{formatPrice(depositAmount)}</p>
+                                <p className="text-xs text-muted-foreground">(Se descontará del total en tu visita)</p>
+                            </>
+                        )}
+                    </div>
+                 </CardContent>
+                 <CardFooter className="flex justify-between">
+                    <Button variant="outline" onClick={() => setStep(3)}>Anterior</Button>
+                    <Button onClick={onSubmit} disabled={isSubmitting}>
+                        {isSubmitting ? <Loader2 className="animate-spin" /> : (isAdmin ? 'Confirmar Turno' : 'Confirmar y Pagar Seña')}
+                    </Button>
+                 </CardFooter>
+              </Card>
+           )}
       </div>
     </div>
   );
