@@ -60,7 +60,7 @@ export default function MisTurnosPage() {
       toast({ title: "Turno cancelado", description: "Tu turno ha sido cancelado con éxito." });
     } catch (error) {
       console.error("Error al cancelar turno:", error);
-      toast({ title: "Error", description: "No se pudo cancelar el turno.", variant: "destructive" });
+      toast({ title: "Error", description: "No se pudo cancelar el turno. Intenta de nuevo.", variant: "destructive" });
     }
   };
   
