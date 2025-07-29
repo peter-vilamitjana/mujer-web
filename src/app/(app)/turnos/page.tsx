@@ -70,18 +70,17 @@ function TurnosContent() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Logic to pre-select services from params, if any
       const serviceIdParams = searchParams.getAll('servicioId');
       if (serviceIdParams.length > 0 && services.length > 0) {
         const preSelectedServices = services
           .filter(s => serviceIdParams.includes(s.id))
           .map(s => {
               const largo = searchParams.get(`largo_${s.id}`) as LargoPelo | null;
-              // Pre-select a default length if needed, or ensure it's valid
               const defaultLargo = s.precios ? (largo || 'corto') : undefined;
               return { ...s, largo: defaultLargo };
           });
         setSelectedServices(preSelectedServices);
+        setStep(2);
       }
 
       if (isAdmin) {
@@ -98,7 +97,6 @@ function TurnosContent() {
         }
         setLoadingData(false);
       } else if (user) {
-        // For logged-in clients, their info is the client
         const userAsClient: Cliente = { id: user.id, nombre: user.nombre, apellido: '', email: user.email, telefono: '', fechaRegistro: new Date() as any };
         setSelectedClient(userAsClient);
       }
@@ -120,8 +118,7 @@ function TurnosContent() {
         if (isSelected) {
             return prev.filter(s => s.id !== service.id);
         } else {
-            // Add service without a default length, forcing user selection
-            return [...prev, { ...service, largo: undefined }];
+            return [...prev, { ...service, largo: service.precios ? undefined : 'corto' }];
         }
     });
   };
@@ -141,7 +138,6 @@ function TurnosContent() {
   
   const canGoNextFromStep1 = useMemo(() => {
     if (selectedServices.length === 0) return false;
-    // Check if every selected variable service has a length selected
     return selectedServices.every(s => !s.precios || (s.precios && !!s.largo));
   }, [selectedServices]);
 
@@ -151,7 +147,13 @@ function TurnosContent() {
 
   const servicesSummary = useMemo(() => {
     if (selectedServices.length === 0) return 'Ninguno';
-    return selectedServices.map(s => s.nombre).join(', ');
+     const names = selectedServices.map(s => s.nombre);
+    const limit = 3;
+    let summary = names.slice(0, limit).join(', ');
+    if (names.length > limit) {
+        summary += ` +${names.length - limit} más`;
+    }
+    return summary;
   }, [selectedServices]);
 
   const onSubmit = async () => {
@@ -269,55 +271,57 @@ function TurnosContent() {
                                         )}
                                     >
                                         <div className='flex justify-between items-start'>
-                                            <div className="flex-grow">
-                                                <h4 className="font-semibold">{service.nombre}</h4>
-                                                <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                                    <Clock className="h-3 w-3"/>
-                                                    <span>{service.duracion} min.</span>
-                                                    {service.precios && isSelected && selectedData?.largo && (
-                                                        <span className='text-primary font-semibold'> ≈ {formatPrice(getServicePrice(selectedData))}</span>
-                                                    )}
-                                                </div>
-                                            </div>
+                                            <h4 className="font-semibold flex-grow pr-2">{service.nombre}</h4>
                                             <Checkbox checked={isSelected} className="rounded-full h-5 w-5"/>
                                         </div>
-                                        
-                                        <div className='mt-auto pt-4 flex-grow flex flex-col justify-end'>
+                                        <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                                            <Clock className="h-3 w-3"/>
+                                            <span>{service.duracion} min.</span>
+                                        </div>
+
+                                        <div className="mt-4 flex-grow flex flex-col justify-end">
                                             {service.precios ? (
-                                                <p className="text-muted-foreground text-sm">Precio variable</p>
+                                                <div className="text-right">
+                                                    {selectedData?.largo && isSelected ?
+                                                        <p className="text-primary font-bold text-lg">≈ {formatPrice(getServicePrice(selectedData))}</p> :
+                                                        <p className="text-muted-foreground text-sm">Precio variable</p>
+                                                    }
+                                                </div>
                                             ) : (
-                                                <p className="text-primary font-bold text-lg">{formatPrice(service.precio!)}</p>
+                                                <p className="text-primary font-bold text-lg text-right">{formatPrice(service.precio!)}</p>
                                             )}
                                         </div>
+
+                                        {isSelected && service.precios && (
+                                            <div className="mt-4 pt-4 border-t border-dashed">
+                                                <RadioGroup
+                                                    value={selectedData?.largo}
+                                                    onValueChange={(value) => handleLargoChange(service.id, value as LargoPelo)}
+                                                    className="grid grid-cols-3 gap-2"
+                                                >
+                                                    {(Object.keys(service.precios) as LargoPelo[]).map(largo => (
+                                                        <div key={largo}>
+                                                            <RadioGroupItem value={largo} id={`${service.id}-${largo}`} className="sr-only" />
+                                                            <Label htmlFor={`${service.id}-${largo}`} className={cn(
+                                                                "block p-2 text-center text-xs font-semibold border rounded-md cursor-pointer transition-all capitalize flex flex-col items-center justify-center gap-1",
+                                                                selectedData?.largo === largo ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-muted"
+                                                            )}>
+                                                                {/* Icons can be added here if available */}
+                                                                {largo}
+                                                            </Label>
+                                                        </div>
+                                                    ))}
+                                                </RadioGroup>
+                                                <p className="text-xs text-muted-foreground text-center mt-2">Precios aproximados según largo de pelo.</p>
+                                            </div>
+                                        )}
+
                                         {isSelected && (
-                                          <div className="pt-2 text-center text-primary text-sm font-semibold">
+                                          <div className="pt-2 text-center text-primary text-sm font-semibold mt-auto">
                                             Seleccionado
                                           </div>
                                         )}
                                     </div>
-
-                                    {service.precios && isSelected && (
-                                        <div className="mt-2 p-3 border rounded-lg bg-muted/30" onClick={e => e.stopPropagation()}>
-                                            <RadioGroup
-                                                value={selectedData?.largo}
-                                                onValueChange={(value) => handleLargoChange(service.id, value as LargoPelo)}
-                                                className="grid grid-cols-3 gap-2"
-                                            >
-                                                {(Object.keys(service.precios) as LargoPelo[]).map(largo => (
-                                                    <div key={largo}>
-                                                        <RadioGroupItem value={largo} id={`${service.id}-${largo}`} className="sr-only" />
-                                                        <Label htmlFor={`${service.id}-${largo}`} className={cn(
-                                                            "block p-2 text-center text-xs font-semibold border rounded-md cursor-pointer transition-all capitalize flex items-center justify-center gap-1",
-                                                            selectedData?.largo === largo ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-muted"
-                                                        )}>
-                                                          <Scissors className="h-3 w-3" /> {largo}
-                                                        </Label>
-                                                    </div>
-                                                ))}
-                                            </RadioGroup>
-                                            <p className="text-xs text-muted-foreground text-center mt-2">Precios aproximados según largo de pelo.</p>
-                                        </div>
-                                    )}
                                 </div>
                             );
                         })}
