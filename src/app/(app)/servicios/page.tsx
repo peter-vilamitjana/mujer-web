@@ -74,6 +74,18 @@ export default function ServiciosPage() {
 
   const totalAmount = useMemo(() => selectedServices.reduce((acc, s) => acc + getServicePrice(s), 0), [selectedServices]);
   const totalDuration = useMemo(() => selectedServices.reduce((acc, s) => acc + s.duracion, 0), [selectedServices]);
+  
+  const servicesSummary = useMemo(() => {
+    if (selectedServices.length === 0) return '';
+    const names = selectedServices.map(s => s.nombre);
+    const limit = 3;
+    let summary = names.slice(0, limit).join(', ');
+    if (names.length > limit) {
+        summary += ` +${names.length - limit} más`;
+    }
+    return summary;
+  }, [selectedServices]);
+
 
   return (
     <div className="space-y-6 pb-24">
@@ -154,18 +166,22 @@ export default function ServiciosPage() {
       {userRole === 'clienta' && (
         <div className="fixed bottom-0 left-0 right-0 z-20 p-4 bg-background/80 backdrop-blur-lg border-t">
           <div className="container mx-auto flex items-center justify-between">
-            {selectedServices.length > 0 ? (
-                 <div>
-                    <p className="font-bold">Total Estimado:</p>
-                    <p className="text-2xl font-bold text-primary">{formatPrice(totalAmount)}</p>
-                    <p className="text-sm text-muted-foreground">{selectedServices.length} servicio(s) seleccionado(s) - {totalDuration} min.</p>
-                </div>
-            ) : (
-                <div>
-                     <p className="font-bold">Selecciona un servicio</p>
-                     <p className="text-sm text-muted-foreground">Elige uno o más servicios para continuar.</p>
-                </div>
-            )}
+            <div className="max-w-md">
+              {selectedServices.length > 0 ? (
+                  <div>
+                      <p className="text-sm font-semibold">Total Estimado: <span className="text-2xl font-bold text-primary">{formatPrice(totalAmount)}</span></p>
+                      <p className="text-xs text-muted-foreground">{selectedServices.length} servicio(s) seleccionado(s) - {totalDuration} min.</p>
+                       <p className="text-sm text-foreground mt-2 truncate">
+                          <span className="font-semibold">Serv:</span> {servicesSummary}
+                       </p>
+                  </div>
+              ) : (
+                  <div>
+                      <p className="font-bold">Selecciona un servicio</p>
+                      <p className="text-sm text-muted-foreground">Elige uno o más servicios para continuar.</p>
+                  </div>
+              )}
+            </div>
             <Button
               size="lg"
               onClick={handleContinue}
