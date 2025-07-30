@@ -203,7 +203,7 @@ function TurnosContent() {
           empleadaNombre: selectedProfessional.name,
           empleadaAsignadaId: selectedProfessional.id,
           fecha: appointmentDateTime,
-          estado: isAdmin ? 'pendiente' : 'pendiente_pago',
+          estado: 'pendiente_pago',
           señaPagada: false,
           montoSeña: depositAmount,
           fechaCreacion: serverTimestamp(),
@@ -457,7 +457,7 @@ function TurnosContent() {
                     <CardTitle>Paso 3: Elige fecha y hora</CardTitle>
                     <CardDescription>Selecciona el día y la hora que más te convenga.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col md:flex-row gap-4 md:gap-6 md:p-6 md:items-start items-center px-3">
+                <CardContent className="flex flex-col md:flex-row gap-4 md:gap-6 md:p-6 items-center md:items-start px-3">
                     <div className="flex justify-center w-full max-w-xs">
                       <Calendar
                           mode="single"
@@ -503,28 +503,21 @@ function TurnosContent() {
                            </ul>
                         </div>
                     </div>
-                    {isAdmin ? (
-                        <div className="p-4 border-2 border-dashed rounded-lg text-center">
-                            <p className="text-muted-foreground text-sm">Total a pagar en el local</p>
-                            <p className="text-3xl font-bold text-primary">{formatPrice(totalAmount)}</p>
+                    <div className="space-y-4">
+                        <div className="p-6 border rounded-lg text-center bg-muted/25">
+                            <p className="text-sm font-semibold text-muted-foreground">Seña para confirmar ({MONTO_SEÑA_PORCENTAJE * 100}%)</p>
+                            <p className="text-5xl font-bold text-primary my-2">{formatPrice(depositAmount)}</p>
+                            <p className="text-sm text-muted-foreground">La seña se descontará del total de <span className="font-semibold text-foreground">{formatPrice(totalAmount)}</span> en tu visita.</p>
                         </div>
-                    ) : (
-                        <div className="space-y-4">
-                            <div className="p-6 border rounded-lg text-center bg-muted/25">
-                                <p className="text-sm font-semibold text-muted-foreground">Seña para confirmar ({MONTO_SEÑA_PORCENTAJE * 100}%)</p>
-                                <p className="text-5xl font-bold text-primary my-2">{formatPrice(depositAmount)}</p>
-                                <p className="text-sm text-muted-foreground">La seña se descontará del total de <span className="font-semibold text-foreground">{formatPrice(totalAmount)}</span> en tu visita.</p>
-                            </div>
-                            <p className="text-xs text-center text-muted-foreground px-4">
-                                Para asegurar tu turno se cobrará una seña del {MONTO_SEÑA_PORCENTAJE * 100}% del valor total. Luego se descontará del precio final.
-                            </p>
-                        </div>
-                    )}
+                        <p className="text-xs text-center text-muted-foreground px-4">
+                            Para asegurar tu turno se cobrará una seña del {MONTO_SEÑA_PORCENTAJE * 100}% del valor total. Luego se descontará del precio final.
+                        </p>
+                    </div>
                  </CardContent>
                  <CardFooter className="flex justify-between">
                     <Button variant="outline" onClick={() => setStep(3)}>Anterior</Button>
                     <Button onClick={onSubmit} disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="animate-spin" /> : (isAdmin ? 'Confirmar Turno' : 'Confirmar y Pagar Seña')}
+                        {isSubmitting ? <Loader2 className="animate-spin" /> : 'Confirmar y Pagar Seña'}
                     </Button>
                  </CardFooter>
               </Card>
@@ -545,6 +538,7 @@ export default function TurnosPage() {
     
 
     
+
 
 
 
