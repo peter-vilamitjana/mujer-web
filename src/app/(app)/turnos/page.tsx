@@ -385,7 +385,7 @@ function TurnosContent() {
                           locale={es}
                       />
                     </div>
-                    <div className="grid grid-cols-4 gap-2 flex-1 max-h-96 overflow-y-auto p-4">
+                    <div className="grid grid-cols-3 md:grid-cols-4 gap-2 flex-1 max-h-96 overflow-y-auto p-4">
                         {timeSlots.map(time => (
                            <Button key={time} variant={selectedTime === time ? "default" : "outline"} onClick={() => setSelectedTime(time)}>
                                {time}
@@ -462,5 +462,6 @@ export default function TurnosPage() {
     
 
     
+
 
 
