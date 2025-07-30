@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { useToast } from '@/hooks/use-toast';
 import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Loader2, Calendar as CalendarIcon, Clock, User, Tag, ArrowLeft, Check, CheckCircle, Users, Scissors, Info } from 'lucide-react';
+import { Loader2, Calendar as CalendarIcon, Clock, User, Tag, ArrowLeft, Check, CheckCircle, Users, Scissors, Info, Search } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import type { Cliente, Servicio, LargoPelo } from '@/lib/types';
 import { Calendar } from '@/components/ui/calendar';
@@ -19,8 +19,21 @@ import { es } from 'date-fns/locale';
 import Link from 'next/link';
 import { Checkbox } from '@/components/ui/checkbox';
 import Image from 'next/image';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import NewClientForm from '@/components/NewClientForm';
+
 
 const professionals = [
   { id: 'carolina_spranda', name: 'Carolina Spranda', avatar: 'https://instagram.fros9-1.fna.fbcdn.net/v/t51.2885-19/165164532_268634798069001_7058218041199102261_n.jpg?efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby42NDkuYzIifQ&_nc_ht=instagram.fros9-1.fna.fbcdn.net&_nc_cat=109&_nc_oc=Q6cZ2QHbZkJIT2ni_QHK7SHyg4Gy_4tCbgZSsqMJmoixogGcXhJclAR9u-I1wzGr67hsroM&_nc_ohc=Q-nUGHJTEZcQ7kNvwG6mQx5&_nc_gid=v7HbfF8jYUVra_8ldm7xMw&edm=APoiHPcBAAAA&ccb=7-5&oh=00_AfQnRXEppnKHoiFYgnPK24Mf7SJpzCnG4U6MXWJoEWvNIQ&oe=688EAAEF&_nc_sid=22de04', hint: 'woman professional' },
@@ -53,10 +66,12 @@ function TurnosContent() {
   const searchParams = useSearchParams();
   const user = useUser();
   const { toast } = useToast();
-
-  const [step, setStep] = useState(1);
+  
+  const isAdmin = user?.rol === 'admin';
+  const initialStep = isAdmin ? 0 : 1;
+  const [step, setStep] = useState(initialStep);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loadingData, setLoadingData] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
   
   const [clients, setClients] = useState<Cliente[]>([]);
   const [services] = useState<Servicio[]>(mockServices);
@@ -66,11 +81,11 @@ function TurnosContent() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
-  
-  const isAdmin = user?.rol === 'admin';
+  const [clientSearchOpen, setClientSearchOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoadingData(true);
       const serviceIdParams = searchParams.getAll('servicioId');
       if (serviceIdParams.length > 0 && services.length > 0) {
         const preSelectedServices = services
@@ -81,11 +96,10 @@ function TurnosContent() {
               return { ...s, largo: defaultLargo };
           });
         setSelectedServices(preSelectedServices);
-        setStep(2);
+        setStep(isAdmin ? 1 : 2); // Adjust step based on role
       }
 
       if (isAdmin) {
-        setLoadingData(true);
         const clientsQuery = query(collection(db, 'clientes'), orderBy('nombre'));
         const clientsSnapshot = await getDocs(clientsQuery);
         const clientsData = clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Cliente))
@@ -94,13 +108,16 @@ function TurnosContent() {
         const clientIdParam = searchParams.get('clienteId');
         if (clientIdParam) {
             const client = clientsData.find(c => c.id === clientIdParam);
-            if (client) setSelectedClient(client);
+            if (client) {
+              setSelectedClient(client);
+              setStep(1); // Go to next step if client is pre-selected
+            }
         }
-        setLoadingData(false);
       } else if (user) {
         const userAsClient: Cliente = { id: user.id, nombre: user.nombre, apellido: '', email: user.email, telefono: '', fechaRegistro: new Date() as any };
         setSelectedClient(userAsClient);
       }
+      setLoadingData(false);
     };
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -206,24 +223,30 @@ function TurnosContent() {
     }
   }
 
-  if (loadingData && isAdmin) {
+  if (loadingData) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
   }
   
-  const steps = [
+  const adminSteps = [
+      { id: 0, name: 'Busca o crea la clienta', icon: User },
       { id: 1, name: 'Elige tus servicios', icon: Scissors },
       { id: 2, name: 'Elige tu profesional', icon: Users },
       { id: 3, name: 'Elige fecha y hora', icon: CalendarIcon },
       { id: 4, name: 'Resumen y seña', icon: CheckCircle },
   ];
-
+  
+  const clientSteps = adminSteps.slice(1);
+  const steps = isAdmin ? adminSteps : clientSteps;
+  
+  const currentStepConfig = steps.find(s => s.id === step);
+  
   return (
     <div className="space-y-6">
        <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Agendar Turno</h1>
           <p className="text-muted-foreground">
-            Sigue los pasos para confirmar tu cita en nuestro salón.
+            {currentStepConfig?.name ?? 'Sigue los pasos para confirmar tu cita.'}
           </p>
         </div>
          <Link href={isAdmin ? "/agenda" : "/servicios"} passHref>
@@ -249,6 +272,66 @@ function TurnosContent() {
                 </button>
              ))}
           </div>
+          
+          {/* STEP 0: Client (Admin only) */}
+          {isAdmin && step === 0 && (
+              <Card>
+                  <CardHeader>
+                      <CardTitle>Paso 0: Busca o crea la clienta</CardTitle>
+                      <CardDescription>Selecciona una clienta existente o registra una nueva para continuar.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                      <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
+                          <PopoverTrigger asChild>
+                              <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  aria-expanded={clientSearchOpen}
+                                  className="w-full justify-between"
+                              >
+                                  {selectedClient
+                                      ? `${selectedClient.nombre} ${selectedClient.apellido}`
+                                      : "Seleccionar clienta existente..."}
+                                  <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                              <Command>
+                                  <CommandInput placeholder="Buscar por nombre o apellido..." />
+                                  <CommandList>
+                                      <CommandEmpty>No se encontró ninguna clienta.</CommandEmpty>
+                                      <CommandGroup>
+                                          {clients.map((client) => (
+                                              <CommandItem
+                                                  key={client.id}
+                                                  value={`${client.nombre} ${client.apellido}`}
+                                                  onSelect={() => {
+                                                      setSelectedClient(client);
+                                                      setClientSearchOpen(false);
+                                                  }}
+                                              >
+                                                  <Check className={cn("mr-2 h-4 w-4", selectedClient?.id === client.id ? "opacity-100" : "opacity-0")}/>
+                                                  {client.nombre} {client.apellido}
+                                              </CommandItem>
+                                          ))}
+                                      </CommandGroup>
+                                  </CommandList>
+                              </Command>
+                          </PopoverContent>
+                      </Popover>
+                      <div className="flex items-center gap-4">
+                          <div className="flex-1 border-t"></div>
+                          <span className="text-xs text-muted-foreground">O</span>
+                          <div className="flex-1 border-t"></div>
+                      </div>
+                      <NewClientForm />
+                  </CardContent>
+                  <CardFooter className="flex justify-end">
+                      <Button onClick={() => setStep(1)} disabled={!selectedClient}>Siguiente</Button>
+                  </CardFooter>
+              </Card>
+          )}
+
 
           {/* STEP 1: Services */}
           {step === 1 && (
@@ -409,7 +492,7 @@ function TurnosContent() {
                 </CardHeader>
                  <CardContent className="space-y-6">
                     <div className="p-4 border rounded-lg bg-muted/50 space-y-3 text-sm">
-                        <p className="flex items-center gap-2"><User className="h-4 w-4 text-primary"/> Clienta: <span className="font-semibold">{selectedClient?.nombre}</span></p>
+                        <p className="flex items-center gap-2"><User className="h-4 w-4 text-primary"/> Clienta: <span className="font-semibold">{selectedClient?.nombre} {selectedClient?.apellido}</span></p>
                         <p className="flex items-center gap-2"><Users className="h-4 w-4 text-primary"/> Profesional: <span className="font-semibold">{selectedProfessional?.name}</span></p>
                         <p className="flex items-center gap-2"><CalendarIcon className="h-4 w-4 text-primary"/> Fecha: <span className="font-semibold">{selectedDate && format(selectedDate, "PPP", { locale: es })}</span></p>
                         <p className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary"/> Hora: <span className="font-semibold">{selectedTime} hs</span></p>
@@ -462,6 +545,7 @@ export default function TurnosPage() {
     
 
     
+
 
 
 
