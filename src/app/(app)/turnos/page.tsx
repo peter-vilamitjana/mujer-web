@@ -119,7 +119,7 @@ function TurnosContent() {
         if (isSelected) {
             return prev.filter(s => s.id !== service.id);
         } else {
-            return [...prev, { ...service, largo: service.precios ? 'corto' : undefined }];
+            return [...prev, { ...service, largo: service.precios ? undefined : undefined }];
         }
     });
   };
@@ -374,8 +374,8 @@ function TurnosContent() {
                     <CardTitle>Paso 3: Elige fecha y hora</CardTitle>
                     <CardDescription>Selecciona el día y la hora que más te convenga.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col md:flex-row gap-4 md:gap-6 md:p-6">
-                    <div className="flex justify-center p-4 sm:p-0 border-b sm:border-b-0 md:border-r">
+                <CardContent className="flex flex-col md:flex-row gap-4 md:gap-6 md:p-6 md:items-start items-center px-3">
+                    <div className="flex justify-center w-full max-w-xs">
                       <Calendar
                           mode="single"
                           selected={selectedDate}
@@ -385,7 +385,7 @@ function TurnosContent() {
                           locale={es}
                       />
                     </div>
-                    <div className="grid grid-cols-3 md:grid-cols-4 gap-2 flex-1 max-h-96 overflow-y-auto p-4">
+                    <div className="grid grid-cols-4 md:grid-cols-4 gap-2 flex-1 max-h-96 overflow-y-auto p-1 w-full mt-4 md:mt-0">
                         {timeSlots.map(time => (
                            <Button key={time} variant={selectedTime === time ? "default" : "outline"} onClick={() => setSelectedTime(time)}>
                                {time}
@@ -462,6 +462,7 @@ export default function TurnosPage() {
     
 
     
+
 
 
 
