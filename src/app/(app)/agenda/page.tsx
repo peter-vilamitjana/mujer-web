@@ -29,9 +29,8 @@ export default function AgendaPage() {
     if (user.rol === 'admin') {
       turnosQuery = query(baseQuery, orderBy('fecha', 'desc'));
     } else if (user.rol === 'empleada') {
-      // Assuming user.nombre matches 'empleadaNombre' in the 'turnos' collection.
-      // For a more robust solution, an employee ID should be used.
-      turnosQuery = query(baseQuery, where('empleadaNombre', '==', user.nombre), orderBy('fecha', 'desc'));
+      // Querying by employee name and then sorting client-side
+      turnosQuery = query(baseQuery, where('empleadaNombre', '==', user.nombre));
     } else {
       // No access for other roles on this page
       setLoading(false);
@@ -44,8 +43,17 @@ export default function AgendaPage() {
         const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate().toISOString() : new Date(data.fecha).toISOString();
         return { id: doc.id, ...data, fecha } as Turno;
       });
+      
+      // Sort client-side for employee role to avoid composite index requirement
+      if(user.rol === 'empleada') {
+          turnosData.sort((a,b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
+      }
+
       setTurnos(turnosData);
       setLoading(false);
+    }, (error) => {
+        console.error("Error al obtener los turnos:", error);
+        setLoading(false);
     });
 
     return () => unsubscribe();
