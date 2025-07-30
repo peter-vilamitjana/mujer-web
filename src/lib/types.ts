@@ -45,6 +45,7 @@ export interface Turno {
   precio?: number; // Precio del servicio al momento de agendar
   montoSeña?: number;
   señaPagada?: boolean;
+  duracion: number; // en minutos
 }
 
 export interface PreciosPorLargo {

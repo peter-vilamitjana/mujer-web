@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardHeader } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Turno } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -32,6 +32,10 @@ export default function WeeklyCalendarView({ turnos }: WeeklyCalendarViewProps) 
   const goToNextWeek = () => {
     setCurrentDate(addDays(currentDate, 7));
   };
+  
+  const goToToday = () => {
+    setCurrentDate(new Date());
+  }
 
   const turnosByDay = (day: Date) => {
     return turnos
@@ -40,34 +44,33 @@ export default function WeeklyCalendarView({ turnos }: WeeklyCalendarViewProps) 
   };
 
   return (
-    <Card className="shadow-md">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle>Agenda Semanal</CardTitle>
-        <div className="flex items-center gap-2">
-           <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>Hoy</Button>
+    <>
+      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0">
+         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={goToToday}>Hoy</Button>
           <Button variant="outline" size="icon" onClick={goToPreviousWeek}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="text-sm font-medium w-36 text-center capitalize">
-            {format(start, "d MMM", { locale: es })} - {format(end, "d MMM, yyyy", { locale: es })}
-          </span>
           <Button variant="outline" size="icon" onClick={goToNextWeek}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          {(userRole === 'admin' || userRole === 'clienta') && (
-            <Link href="/turnos">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Agendar Turno
-              </Button>
-            </Link>
-          )}
+           <span className="text-sm font-medium w-36 text-center capitalize">
+            {format(start, "d MMM", { locale: es })} - {format(end, "d MMM, yyyy", { locale: es })}
+          </span>
         </div>
+        {(userRole === 'admin' || userRole === 'clienta') && (
+          <Link href="/turnos">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Agendar Turno
+            </Button>
+          </Link>
+        )}
       </CardHeader>
-      <CardContent className="h-[500px] flex flex-col">
-        <div className="grid grid-cols-7 flex-grow gap-1">
+      <CardContent className="h-auto md:h-[500px] flex flex-col">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 flex-grow gap-1">
           {weekDays.map(day => (
-            <div key={day.toString()} className="flex flex-col rounded-lg border bg-card">
+            <div key={day.toString()} className="flex flex-col rounded-lg border bg-card min-h-[150px]">
               <div className={cn(
                 "text-center py-2 border-b rounded-t-lg transition-colors",
                 isToday(day) ? "bg-primary text-primary-foreground font-bold" : "bg-muted/50"
@@ -102,6 +105,6 @@ export default function WeeklyCalendarView({ turnos }: WeeklyCalendarViewProps) 
           ))}
         </div>
       </CardContent>
-    </Card>
+    </>
   );
 }

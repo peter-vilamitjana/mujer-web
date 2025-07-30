@@ -10,6 +10,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { startOfToday, endOfToday } from 'date-fns';
 import WeeklyCalendarView from '@/components/WeeklyCalendarView';
 import { useUser } from '@/contexts/UserContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import DailyCalendarView from '@/components/DailyCalendarView';
 
 export default function DashboardPage() {
   const user = useUser();
@@ -48,8 +50,10 @@ export default function DashboardPage() {
     const unsubTurnos = onSnapshot(turnosQuery, (snapshot) => {
         const turnosData = snapshot.docs.map(doc => {
             const data = doc.data();
+            // Ensure `duracion` has a default value if it's missing
+            const duracion = data.duracion || 30; // Default to 30 mins if not set
             const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate().toISOString() : new Date(data.fecha).toISOString();
-            return { id: doc.id, ...data, fecha } as Turno;
+            return { id: doc.id, ...data, fecha, duracion } as Turno;
         });
         setAllTurnos(turnosData);
 
@@ -132,7 +136,25 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         ) : (
-          <WeeklyCalendarView turnos={allTurnos} />
+          <Tabs defaultValue="semanal" className="w-full">
+            <Card>
+              <CardHeader className="flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <CardTitle>Agenda</CardTitle>
+                <div className="flex items-center gap-4 w-full md:w-auto justify-between">
+                  <TabsList>
+                    <TabsTrigger value="semanal">Semanal</TabsTrigger>
+                    <TabsTrigger value="diario">Diario</TabsTrigger>
+                  </TabsList>
+                </div>
+              </CardHeader>
+              <TabsContent value="semanal">
+                  <WeeklyCalendarView turnos={allTurnos} />
+              </TabsContent>
+              <TabsContent value="diario">
+                  <DailyCalendarView turnos={allTurnos} />
+              </TabsContent>
+            </Card>
+          </Tabs>
         )}
       </div>
     </div>
