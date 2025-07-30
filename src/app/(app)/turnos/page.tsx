@@ -276,7 +276,7 @@ function TurnosContent() {
                                               <div className="flex justify-between items-baseline">
                                                 <h4 className="font-semibold">{service.nombre}</h4>
                                                 {service.precios && selectedData?.largo && isSelected ?
-                                                  <p className="text-primary font-bold text-sm">{formatPrice(getServicePrice(selectedData))}</p> :
+                                                  <p className="text-primary font-bold text-sm">≈ {formatPrice(getServicePrice(selectedData))}</p> :
                                                   !service.precios && <p className="text-primary font-bold text-sm">{formatPrice(service.precio!)}</p>
                                                 }
                                               </div>
@@ -385,7 +385,7 @@ function TurnosContent() {
                           locale={es}
                       />
                     </div>
-                    <div className="grid grid-cols-4 md:grid-cols-4 gap-2 flex-1 max-h-96 overflow-y-auto p-1 w-full mt-4 md:mt-0">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 flex-1 max-h-96 overflow-y-auto p-1 w-full mt-4 md:mt-0">
                         {timeSlots.map(time => (
                            <Button key={time} variant={selectedTime === time ? "default" : "outline"} onClick={() => setSelectedTime(time)}>
                                {time}
@@ -462,6 +462,7 @@ export default function TurnosPage() {
     
 
     
+
 
 
 
