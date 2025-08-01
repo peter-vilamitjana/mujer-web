@@ -24,12 +24,12 @@ import {
 } from "@/components/ui/accordion"
 import { useToast } from "@/hooks/use-toast";
 
-// New TurnCard component based on your provided code
 function TurnCard({ turno }: { turno: Turno }) {
   const { toast } = useToast();
   const [status, setStatus] = useState(turno.estado);
 
   const handleUpdateStatus = async (newStatus: 'realizado' | 'cancelado') => {
+    if (!turno.id) return;
     const turnoRef = doc(db, 'turnos', turno.id);
     try {
       await updateDoc(turnoRef, { estado: newStatus });
@@ -49,17 +49,17 @@ function TurnCard({ turno }: { turno: Turno }) {
   };
 
   const stateStyles = {
-    pendiente: 'bg-muted/50 border-transparent',
-    realizado: 'bg-green-100 border-green-300',
-    cancelado: 'bg-red-100 border-red-300',
-    pendiente_pago: 'bg-yellow-100 border-yellow-300'
+    pendiente: 'bg-card border-border',
+    realizado: 'bg-green-100 dark:bg-green-900/20 border-green-300 dark:border-green-700',
+    cancelado: 'bg-red-100 dark:bg-red-900/20 border-red-300 dark:border-red-700',
+    pendiente_pago: 'bg-yellow-100 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700'
   } as const;
 
   const statusBadgeStyles = {
-      pendiente: 'bg-gray-200 text-gray-700',
-      realizado: 'bg-green-200 text-green-800',
-      cancelado: 'bg-red-200 text-red-800',
-      pendiente_pago: 'bg-yellow-200 text-yellow-800'
+      pendiente: 'bg-muted text-muted-foreground',
+      realizado: 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-100',
+      cancelado: 'bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-100',
+      pendiente_pago: 'bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
   }
 
   return (
@@ -73,16 +73,16 @@ function TurnCard({ turno }: { turno: Turno }) {
         <Calendar className="w-8 h-8 text-primary flex-shrink-0" />
         <div className="ml-2 flex-1 min-w-0">
             <h4 className="font-medium text-base truncate">{turno.clienteNombre}</h4>
-            <p className="text-gray-600 text-sm line-clamp-1 flex items-center gap-1.5 sm:hidden mt-1">
-              <Scissors className="inline w-4 h-4 text-gray-500" />
+            <p className="text-muted-foreground text-sm line-clamp-1 flex items-center gap-1.5 sm:hidden mt-1">
+              <Scissors className="inline w-4 h-4 text-muted-foreground" />
               {turno.servicio}
             </p>
         </div>
       </div>
       
       <div className="flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 w-full">
-        <div className="flex-1 text-gray-600 text-sm line-clamp-1 hidden sm:flex items-center gap-1.5">
-          <Scissors className="inline w-4 h-4 mr-1 text-gray-500 flex-shrink-0" />
+        <div className="flex-1 text-muted-foreground text-sm line-clamp-1 hidden sm:flex items-center gap-1.5">
+          <Scissors className="inline w-4 h-4 mr-1 text-muted-foreground flex-shrink-0" />
           {turno.servicio}
         </div>
 
@@ -94,12 +94,12 @@ function TurnCard({ turno }: { turno: Turno }) {
                     : 'Pendiente Pago'}
             </span>
           <div className="flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-gray-500" />
+            <Clock className="w-4 h-4 text-muted-foreground" />
             <span className="font-semibold">{format(parseISO(turno.fecha), "HH:mm 'hs'")}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <User className="w-4 h-4 text-gray-500" />
-            <span className="text-gray-600 truncate">{turno.empleadaNombre}</span>
+            <User className="w-4 h-4 text-muted-foreground" />
+            <span className="text-muted-foreground truncate">{turno.empleadaNombre}</span>
           </div>
         </div>
 
@@ -108,7 +108,7 @@ function TurnCard({ turno }: { turno: Turno }) {
             onClick={() => handleUpdateStatus('realizado')}
             variant="outline"
             size="icon"
-            className="bg-white hover:bg-green-50 border-gray-200"
+            className="bg-card hover:bg-green-50 dark:hover:bg-green-900/30 border-border"
             aria-label="Marcar realizado"
             disabled={status === 'realizado'}
           >
@@ -118,7 +118,7 @@ function TurnCard({ turno }: { turno: Turno }) {
             onClick={() => handleUpdateStatus('cancelado')}
             variant="outline"
             size="icon"
-            className="bg-white hover:bg-red-50 border-gray-200"
+            className="bg-card hover:bg-red-50 dark:hover:bg-red-900/30 border-border"
             aria-label="Cancelar turno"
             disabled={status === 'cancelado'}
           >
