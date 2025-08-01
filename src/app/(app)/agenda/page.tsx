@@ -200,7 +200,10 @@ export default function AgendaPage() {
                                           <Calendar className={cn("h-6 w-6", isPast(parseISO(turno.fecha)) ? 'text-muted-foreground' : 'text-primary')} />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                          <h4 className="font-semibold text-lg truncate">{turno.clienteNombre}</h4>
+                                          <div className="flex items-center sm:hidden mb-1">
+                                            <h4 className="font-semibold text-lg truncate">{turno.clienteNombre}</h4>
+                                          </div>
+                                          <h4 className="hidden sm:block font-semibold text-lg truncate">{turno.clienteNombre}</h4>
                                           <p className="text-sm text-muted-foreground flex items-center gap-2 truncate"><Scissors className="h-4 w-4 flex-shrink-0" />{turno.servicio}</p>
                                         </div>
                                       </div>
