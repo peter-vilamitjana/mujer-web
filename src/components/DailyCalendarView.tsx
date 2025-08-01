@@ -63,7 +63,7 @@ export default function DailyCalendarView({ turnos }: DailyCalendarViewProps) {
 
   return (
     <>
-      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0">
+      <CardHeader className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={goToToday}>Hoy</Button>
           <Button variant="outline" size="icon" onClick={goToPreviousDay}>
@@ -85,9 +85,9 @@ export default function DailyCalendarView({ turnos }: DailyCalendarViewProps) {
             </Link>
           )}
       </CardHeader>
-      <CardContent className="h-auto md:h-[500px]">
+      <CardContent className="h-[500px] p-0 md:p-6">
         <ScrollArea className="w-full h-full">
-         <div className="flex w-fit md:w-full">
+         <div className="flex w-full">
             <div className="sticky left-0 bg-background z-10">
                 <div className="h-10 border-b flex items-center justify-center font-semibold text-sm">Hora</div>
                 {timeSlots.map(time => (

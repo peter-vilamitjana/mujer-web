@@ -118,123 +118,126 @@ export default function AgendaPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="text-center sm:text-left">
           <h1 className="text-3xl font-bold tracking-tight">Agenda</h1>
           <p className="text-muted-foreground">
             Visualiza y gestiona todos los turnos agendados.
           </p>
         </div>
         {(userRole === 'admin') && (
-          <Link href="/turnos">
-            <Button><Plus className="mr-2 h-4 w-4"/> Agendar Turno</Button>
+          <Link href="/turnos" className="w-full sm:w-auto">
+            <Button className="w-full"><Plus className="mr-2 h-4 w-4"/> Agendar Turno</Button>
           </Link>
         )}
       </div>
 
-      <Accordion type="multiple" defaultValue={["calendar-view", "list-view"]} className="w-full space-y-4">
-        <AccordionItem value="calendar-view">
-           <Card>
-             <AccordionTrigger className="p-6 text-lg font-semibold">
-                Vista Calendario
-             </AccordionTrigger>
-             <AccordionContent>
-                {loadingCalendar ? (
-                  <div className="p-6 pt-0">
-                    <Skeleton className="h-[400px] w-full" />
-                  </div>
-                ) : (
-                  <Tabs defaultValue="semanal" className="w-full border-t">
-                     <CardHeader className="flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                      <TabsList className="ml-auto">
-                        <TabsTrigger value="semanal">Semanal</TabsTrigger>
-                        <TabsTrigger value="diario">Diario</TabsTrigger>
-                      </TabsList>
-                    </CardHeader>
-                    <TabsContent value="semanal">
-                        <WeeklyCalendarView turnos={allTurnos} />
-                    </TabsContent>
-                    <TabsContent value="diario">
-                        <DailyCalendarView turnos={allTurnos} />
-                    </TabsContent>
-                  </Tabs>
-                )}
-            </AccordionContent>
-          </Card>
-        </AccordionItem>
-        
-        <AccordionItem value="list-view">
-           <Card>
-              <AccordionTrigger className="p-6 text-lg font-semibold">
-                Listado de Turnos
-              </AccordionTrigger>
+       <div className="max-w-full overflow-hidden">
+        <Accordion type="multiple" defaultValue={["calendar-view", "list-view"]} className="w-full space-y-4">
+          <AccordionItem value="calendar-view">
+             <Card>
+               <AccordionTrigger className="p-6 text-lg font-semibold">
+                  Vista Calendario
+               </AccordionTrigger>
                <AccordionContent>
-                 <div className="p-6 pt-0 border-t">
-                  {loading ? (
-                    <div className="pt-6 space-y-4">
-                      <Skeleton className="h-24 w-full" />
-                      <Skeleton className="h-24 w-full" />
-                      <Skeleton className="h-24 w-full" />
-                    </div>
-                  ) : sortedDates.length > 0 ? (
-                    <div className="space-y-8 pt-6">
-                      {sortedDates.map(date => (
-                        <div key={date}>
-                          <h3 className="text-xl font-semibold mb-4 capitalize">
-                            {format(parseISO(date), "eeee, d 'de' MMMM", { locale: es })}
-                          </h3>
-                          <Card className="bg-muted/50">
-                            <CardContent className="p-0">
-                              <div className="divide-y">
-                              {groupedTurnos[date]
-                                .sort((a,b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
-                                .map(turno => (
-                                  <div key={turno.id} className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                    <div className="flex items-center gap-4">
-                                      <div className={cn("flex h-12 w-12 items-center justify-center rounded-lg", isPast(parseISO(turno.fecha)) ? 'bg-muted' : 'bg-primary/10')}>
-                                        <Calendar className={cn("h-6 w-6", isPast(parseISO(turno.fecha)) ? 'text-muted-foreground' : 'text-primary')} />
-                                      </div>
-                                      <div>
-                                        <h4 className="font-semibold text-lg">{turno.clienteNombre}</h4>
-                                        <p className="text-sm text-muted-foreground flex items-center gap-2"><Scissors className="h-4 w-4" />{turno.servicio}</p>
-                                      </div>
-                                    </div>
-                                    <div className="flex flex-col sm:items-end gap-2">
-                                      <div className="flex items-center gap-4">
-                                        {getStatusBadge(turno.estado)}
-                                        <p className="font-mono font-semibold text-lg flex items-center gap-2">
-                                          <Clock className="h-4 w-4 text-muted-foreground" />
-                                          {format(parseISO(turno.fecha), "HH:mm 'hs'")}
-                                        </p>
-                                      </div>
-                                      <p className="text-sm text-muted-foreground flex items-center gap-2"><User className="h-4 w-4" />{turno.empleadaNombre}</p>
-                                    </div>
-                                    { userRole === 'admin' &&
-                                      <div className="flex gap-2">
-                                        <Button variant="outline" size="sm"><Check className="h-4 w-4"/> Marcar Realizado</Button>
-                                        <Button variant="destructive" size="sm"><XCircle className="h-4 w-4"/> Cancelar</Button>
-                                      </div>
-                                    }
-                                  </div>
-                                ))}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      ))}
+                  {loadingCalendar ? (
+                    <div className="p-6 pt-0">
+                      <Skeleton className="h-[400px] w-full" />
                     </div>
                   ) : (
-                    <div className="text-center text-muted-foreground pt-12">
-                      <Calendar className="mx-auto h-12 w-12" />
-                      <h3 className="mt-4 text-lg font-semibold">No hay turnos agendados</h3>
-                      <p className="mt-1 text-sm">Empieza por agendar un nuevo turno para una clienta.</p>
-                    </div>
+                    <Tabs defaultValue="semanal" className="w-full border-t">
+                       <CardHeader className="flex-col items-start md:flex-row md:items-center justify-between gap-4">
+                         <div className="flex-grow"></div>
+                        <TabsList>
+                          <TabsTrigger value="semanal">Semanal</TabsTrigger>
+                          <TabsTrigger value="diario">Diario</TabsTrigger>
+                        </TabsList>
+                      </CardHeader>
+                      <TabsContent value="semanal">
+                          <WeeklyCalendarView turnos={allTurnos} />
+                      </TabsContent>
+                      <TabsContent value="diario">
+                          <DailyCalendarView turnos={allTurnos} />
+                      </TabsContent>
+                    </Tabs>
                   )}
-                 </div>
               </AccordionContent>
-          </Card>
-        </AccordionItem>
-      </Accordion>
+            </Card>
+          </AccordionItem>
+          
+          <AccordionItem value="list-view">
+             <Card>
+                <AccordionTrigger className="p-6 text-lg font-semibold">
+                  Listado de Turnos
+                </AccordionTrigger>
+                 <AccordionContent>
+                   <div className="p-6 pt-0 border-t">
+                    {loading ? (
+                      <div className="pt-6 space-y-4">
+                        <Skeleton className="h-24 w-full" />
+                        <Skeleton className="h-24 w-full" />
+                        <Skeleton className="h-24 w-full" />
+                      </div>
+                    ) : sortedDates.length > 0 ? (
+                      <div className="pt-6">
+                        {sortedDates.map(date => (
+                          <div key={date} className="mb-8">
+                            <h3 className="text-xl font-semibold mb-4 capitalize">
+                              {format(parseISO(date), "eeee, d 'de' MMMM", { locale: es })}
+                            </h3>
+                            <Card className="bg-muted/50">
+                              <CardContent className="p-0">
+                                <div className="divide-y">
+                                {groupedTurnos[date]
+                                  .sort((a,b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+                                  .map(turno => (
+                                    <div key={turno.id} className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                      <div className="flex items-center gap-4">
+                                        <div className={cn("flex h-12 w-12 items-center justify-center rounded-lg", isPast(parseISO(turno.fecha)) ? 'bg-muted' : 'bg-primary/10')}>
+                                          <Calendar className={cn("h-6 w-6", isPast(parseISO(turno.fecha)) ? 'text-muted-foreground' : 'text-primary')} />
+                                        </div>
+                                        <div>
+                                          <h4 className="font-semibold text-lg">{turno.clienteNombre}</h4>
+                                          <p className="text-sm text-muted-foreground flex items-center gap-2"><Scissors className="h-4 w-4" />{turno.servicio}</p>
+                                        </div>
+                                      </div>
+                                      <div className="flex flex-col sm:items-end gap-2">
+                                        <div className="flex items-center gap-4">
+                                          {getStatusBadge(turno.estado)}
+                                          <p className="font-mono font-semibold text-lg flex items-center gap-2">
+                                            <Clock className="h-4 w-4 text-muted-foreground" />
+                                            {format(parseISO(turno.fecha), "HH:mm 'hs'")}
+                                          </p>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground flex items-center gap-2"><User className="h-4 w-4" />{turno.empleadaNombre}</p>
+                                      </div>
+                                      { userRole === 'admin' &&
+                                        <div className="flex gap-2">
+                                          <Button variant="outline" size="sm"><Check className="h-4 w-4"/> Marcar Realizado</Button>
+                                          <Button variant="destructive" size="sm"><XCircle className="h-4 w-4"/> Cancelar</Button>
+                                        </div>
+                                      }
+                                    </div>
+                                  ))}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center text-muted-foreground pt-12">
+                        <Calendar className="mx-auto h-12 w-12" />
+                        <h3 className="mt-4 text-lg font-semibold">No hay turnos agendados</h3>
+                        <p className="mt-1 text-sm">Empieza por agendar un nuevo turno para una clienta.</p>
+                      </div>
+                    )}
+                   </div>
+                </AccordionContent>
+            </Card>
+          </AccordionItem>
+        </Accordion>
+      </div>
     </div>
   );
 }

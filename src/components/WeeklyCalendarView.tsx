@@ -45,7 +45,7 @@ export default function WeeklyCalendarView({ turnos }: WeeklyCalendarViewProps) 
 
   return (
     <>
-      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-2 md:space-y-0">
+      <CardHeader className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
          <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={goToToday}>Hoy</Button>
           <Button variant="outline" size="icon" onClick={goToPreviousWeek}>
@@ -67,7 +67,7 @@ export default function WeeklyCalendarView({ turnos }: WeeklyCalendarViewProps) 
           </Link>
         )}
       </CardHeader>
-      <CardContent className="h-auto md:h-[500px] flex flex-col">
+      <CardContent className="h-[500px] flex flex-col p-0 md:p-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 flex-grow gap-1">
           {weekDays.map(day => (
             <div key={day.toString()} className="flex flex-col rounded-lg border bg-card min-h-[150px]">
