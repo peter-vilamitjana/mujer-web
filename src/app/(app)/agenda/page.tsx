@@ -205,21 +205,23 @@ export default function AgendaPage() {
                                         </div>
                                       </div>
                                       <div className="flex-1 flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0 lg:ml-4">
-                                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                                            {getStatusBadge(turno.estado)}
-                                            <p className="font-mono font-semibold flex items-center gap-2">
-                                              <Clock className="h-4 w-4 text-muted-foreground" />
-                                              {format(parseISO(turno.fecha), "HH:mm 'hs'")}
-                                            </p>
-                                            <p className="text-sm text-muted-foreground flex items-center gap-2"><User className="h-4 w-4" />{turno.empleadaNombre}</p>
-                                          </div>
-                                          
-                                          { userRole === 'admin' &&
-                                            <div className="flex flex-row gap-2 justify-start lg:justify-end">
-                                              <Button variant="outline" size="icon"><Check className="h-4 w-4"/></Button>
-                                              <Button variant="destructive" size="icon"><XCircle className="h-4 w-4"/></Button>
+                                          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm w-full">
+                                            <div className="flex items-center gap-x-4 gap-y-2">
+                                              {getStatusBadge(turno.estado)}
+                                              <p className="font-mono font-semibold flex items-center gap-2">
+                                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                                {format(parseISO(turno.fecha), "HH:mm 'hs'")}
+                                              </p>
+                                              <p className="text-sm text-muted-foreground flex items-center gap-2 truncate"><User className="h-4 w-4" />{turno.empleadaNombre}</p>
                                             </div>
-                                          }
+                                            
+                                            { userRole === 'admin' &&
+                                              <div className="flex flex-row gap-2 justify-start lg:justify-end">
+                                                <Button variant="outline" size="icon"><Check className="h-4 w-4"/></Button>
+                                                <Button variant="destructive" size="icon"><XCircle className="h-4 w-4"/></Button>
+                                              </div>
+                                            }
+                                          </div>
                                       </div>
                                     </div>
                                   ))}
