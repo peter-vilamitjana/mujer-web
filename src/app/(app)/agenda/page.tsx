@@ -1,14 +1,14 @@
 'use client';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Calendar, Clock, Scissors, PlusCircle, User, Check, XCircle, Plus } from "lucide-react";
+import { Calendar, Clock, Scissors, PlusCircle, User, Check, XCircle, Plus, CheckIcon } from "lucide-react";
 import { format, parseISO, isPast } from "date-fns";
 import { es } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Turno } from "@/lib/types";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, orderBy, Timestamp, where } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, Timestamp, where, updateDoc, doc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/contexts/UserContext";
@@ -22,6 +22,114 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import { useToast } from "@/hooks/use-toast";
+
+// New TurnCard component based on your provided code
+function TurnCard({ turno }: { turno: Turno }) {
+  const { toast } = useToast();
+  const [status, setStatus] = useState(turno.estado);
+
+  const handleUpdateStatus = async (newStatus: 'realizado' | 'cancelado') => {
+    const turnoRef = doc(db, 'turnos', turno.id);
+    try {
+      await updateDoc(turnoRef, { estado: newStatus });
+      setStatus(newStatus);
+      toast({
+        title: "Estado actualizado",
+        description: `El turno de ${turno.clienteNombre} ha sido marcado como ${newStatus}.`
+      });
+    } catch (error) {
+      console.error("Error updating status: ", error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado del turno.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const stateStyles = {
+    pendiente: 'bg-muted/50 border-transparent',
+    realizado: 'bg-green-100 border-green-300',
+    cancelado: 'bg-red-100 border-red-300',
+    pendiente_pago: 'bg-yellow-100 border-yellow-300'
+  } as const;
+
+  const statusBadgeStyles = {
+      pendiente: 'bg-gray-200 text-gray-700',
+      realizado: 'bg-green-200 text-green-800',
+      cancelado: 'bg-red-200 text-red-800',
+      pendiente_pago: 'bg-yellow-200 text-yellow-800'
+  }
+
+  return (
+    <div
+      className={cn(
+        'flex flex-col sm:flex-row items-start sm:items-center border rounded-lg p-4 transition-colors',
+        stateStyles[status]
+      )}
+    >
+      <div className="flex items-center mb-2 sm:mb-0 w-full sm:w-auto">
+        <Calendar className="w-8 h-8 text-primary flex-shrink-0" />
+        <div className="ml-2 flex-1 min-w-0">
+            <h4 className="font-medium text-base truncate">{turno.clienteNombre}</h4>
+            <p className="text-gray-600 text-sm line-clamp-1 flex items-center gap-1.5 sm:hidden mt-1">
+              <Scissors className="inline w-4 h-4 text-gray-500" />
+              {turno.servicio}
+            </p>
+        </div>
+      </div>
+      
+      <div className="flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 w-full">
+        <div className="flex-1 text-gray-600 text-sm line-clamp-1 hidden sm:flex items-center gap-1.5">
+          <Scissors className="inline w-4 h-4 mr-1 text-gray-500 flex-shrink-0" />
+          {turno.servicio}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+           <span className={cn('rounded-full px-2.5 py-0.5 font-semibold', statusBadgeStyles[status])}>
+                {status === 'pendiente' ? 'Pendiente' 
+                    : status === 'realizado' ? 'Realizado' 
+                    : status === 'cancelado' ? 'Cancelado' 
+                    : 'Pendiente Pago'}
+            </span>
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-4 h-4 text-gray-500" />
+            <span className="font-semibold">{format(parseISO(turno.fecha), "HH:mm 'hs'")}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <User className="w-4 h-4 text-gray-500" />
+            <span className="text-gray-600 truncate">{turno.empleadaNombre}</span>
+          </div>
+        </div>
+
+        <div className="flex gap-2 mt-2 sm:mt-0 justify-end">
+          <Button
+            onClick={() => handleUpdateStatus('realizado')}
+            variant="outline"
+            size="icon"
+            className="bg-white hover:bg-green-50 border-gray-200"
+            aria-label="Marcar realizado"
+            disabled={status === 'realizado'}
+          >
+            <CheckIcon className="w-5 h-5 text-green-600" />
+          </Button>
+          <Button
+            onClick={() => handleUpdateStatus('cancelado')}
+            variant="outline"
+            size="icon"
+            className="bg-white hover:bg-red-50 border-gray-200"
+            aria-label="Cancelar turno"
+            disabled={status === 'cancelado'}
+          >
+            <XCircle className="w-5 h-5 text-red-600" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 export default function AgendaPage() {
   const [turnos, setTurnos] = useState<Turno[]>([]);
@@ -44,8 +152,6 @@ export default function AgendaPage() {
     if (user.rol === 'admin') {
       turnosQuery = query(baseQuery, orderBy('fecha', 'desc'));
     } else if (user.rol === 'empleada') {
-      // Firestore limitation: cannot have inequality filter on one field and order by another.
-      // We will filter and sort client-side for employees.
       turnosQuery = query(baseQuery, where('empleadaNombre', '==', user.nombre));
     } else {
       setLoading(false);
@@ -60,7 +166,6 @@ export default function AgendaPage() {
         return { id: doc.id, ...data, fecha } as Turno;
       });
       
-      // Client-side sorting for 'empleada' to avoid composite index requirement
       if(user.rol === 'empleada') {
           turnosData.sort((a,b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
       }
@@ -72,7 +177,6 @@ export default function AgendaPage() {
         setLoading(false);
     });
 
-    // Live subscription for all appointments for the calendar views
     const allTurnosQuery = query(collection(db, 'turnos'));
     const unsubAllTurnos = onSnapshot(allTurnosQuery, (snapshot) => {
         const turnosData = snapshot.docs.map(doc => {
@@ -94,19 +198,6 @@ export default function AgendaPage() {
       unsubAllTurnos();
     }
   }, [user]);
-
-  const getStatusBadge = (status: Turno['estado']) => {
-    switch (status) {
-      case 'pendiente':
-        return <Badge variant="secondary">Pendiente</Badge>;
-      case 'realizado':
-        return <Badge variant="default" className="bg-green-600 hover:bg-green-700">Realizado</Badge>;
-      case 'cancelado':
-        return <Badge variant="destructive">Cancelado</Badge>;
-      default:
-        return <Badge variant="outline">Desconocido</Badge>;
-    }
-  };
 
   const groupedTurnos = turnos.reduce((acc, turno) => {
     const dateKey = format(parseISO(turno.fecha), 'yyyy-MM-dd');
@@ -188,46 +279,13 @@ export default function AgendaPage() {
                             <h3 className="text-xl font-semibold mb-4 capitalize">
                               {format(parseISO(date), "eeee, d 'de' MMMM", { locale: es })}
                             </h3>
-                            <Card className="bg-muted/50">
-                              <CardContent className="p-0">
-                                <div className="divide-y">
-                                {groupedTurnos[date]
-                                  .sort((a,b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
-                                  .map(turno => (
-                                    <div key={turno.id} className="p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                                      <div className="flex items-center gap-4 flex-shrink-0">
-                                        <div className={cn("flex h-12 w-12 items-center justify-center rounded-lg flex-shrink-0", isPast(parseISO(turno.fecha)) ? 'bg-muted' : 'bg-primary/10')}>
-                                          <Calendar className={cn("h-6 w-6", isPast(parseISO(turno.fecha)) ? 'text-muted-foreground' : 'text-primary')} />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="font-semibold text-lg truncate">{turno.clienteNombre}</h4>
-                                            <p className="text-sm text-muted-foreground flex items-center gap-2 sm:truncate"><Scissors className="h-4 w-4 flex-shrink-0" />{turno.servicio}</p>
-                                        </div>
-                                      </div>
-                                      <div className="flex-1 flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0 lg:ml-4">
-                                          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm w-full">
-                                            <div className="flex items-center gap-x-4 gap-y-2">
-                                              {getStatusBadge(turno.estado)}
-                                              <p className="font-mono font-semibold flex items-center gap-2">
-                                                <Clock className="h-4 w-4 text-muted-foreground" />
-                                                {format(parseISO(turno.fecha), "HH:mm 'hs'")}
-                                              </p>
-                                              <p className="text-sm text-muted-foreground flex items-center gap-2 truncate"><User className="h-4 w-4" />{turno.empleadaNombre}</p>
-                                            </div>
-                                            
-                                            { userRole === 'admin' &&
-                                              <div className="flex flex-row gap-2 justify-start lg:justify-end">
-                                                <Button variant="outline" size="icon"><Check className="h-4 w-4"/></Button>
-                                                <Button variant="destructive" size="icon"><XCircle className="h-4 w-4"/></Button>
-                                              </div>
-                                            }
-                                          </div>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </CardContent>
-                            </Card>
+                            <div className="space-y-3">
+                              {groupedTurnos[date]
+                                .sort((a,b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+                                .map(turno => (
+                                  <TurnCard key={turno.id} turno={turno} />
+                                ))}
+                            </div>
                           </div>
                         ))}
                       </div>
