@@ -200,11 +200,8 @@ export default function AgendaPage() {
                                           <Calendar className={cn("h-6 w-6", isPast(parseISO(turno.fecha)) ? 'text-muted-foreground' : 'text-primary')} />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                          <div className="flex items-center sm:hidden mb-1">
-                                            <h4 className="font-semibold text-lg truncate">{turno.clienteNombre}</h4>
-                                          </div>
-                                          <h4 className="hidden sm:block font-semibold text-lg truncate">{turno.clienteNombre}</h4>
-                                          <p className="text-sm text-muted-foreground flex items-center gap-2 truncate"><Scissors className="h-4 w-4 flex-shrink-0" />{turno.servicio}</p>
+                                            <h4 className="font-semibold text-lg break-words sm:truncate">{turno.clienteNombre}</h4>
+                                            <p className="text-sm text-muted-foreground flex items-center gap-2 truncate"><Scissors className="h-4 w-4 flex-shrink-0" />{turno.servicio}</p>
                                         </div>
                                       </div>
                                       <div className="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
@@ -218,7 +215,7 @@ export default function AgendaPage() {
                                         <p className="text-sm text-muted-foreground flex items-center sm:justify-end gap-2"><User className="h-4 w-4" />{turno.empleadaNombre}</p>
                                       </div>
                                       { userRole === 'admin' &&
-                                        <div className="flex gap-2 w-full sm:w-auto justify-end">
+                                        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto justify-end pt-4 sm:pt-0">
                                           <Button variant="outline" size="sm"><Check className="h-4 w-4"/> Marcar Realizado</Button>
                                           <Button variant="destructive" size="sm"><XCircle className="h-4 w-4"/> Cancelar</Button>
                                         </div>
