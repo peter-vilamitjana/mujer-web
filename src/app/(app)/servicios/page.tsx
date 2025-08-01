@@ -109,13 +109,15 @@ export default function ServiciosPage() {
               key={servicio.id}
               onClick={() => handleServiceToggle(servicio)}
               className={cn(
-                "flex flex-col rounded-2xl bg-card shadow-sm border-2 border-transparent cursor-pointer transition-all duration-200 h-full p-6",
+                "flex flex-col rounded-2xl bg-card shadow-sm border-2 cursor-pointer transition-all duration-200 h-full p-6",
                  "hover:shadow-md",
-                 isSelected && "border-primary shadow-lg ring-2 ring-primary/20"
+                 isSelected 
+                    ? "border-primary shadow-lg ring-2 ring-primary/20 dark:ring-primary/40 dark:border-primary/50" 
+                    : "border-transparent"
               )}
             >
                 <div className="flex-grow">
-                   <h3 className="text-xl font-semibold mb-2">{servicio.nombre}</h3>
+                   <h3 className="text-xl font-semibold mb-2 text-foreground">{servicio.nombre}</h3>
                    <p className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
                      <Clock className="h-4 w-4" />
                      <span>{servicio.duracion} min.</span>
@@ -146,7 +148,7 @@ export default function ServiciosPage() {
                              <RadioGroupItem value={largo} id={`${servicio.id}-${largo}`} className="sr-only" />
                              <Label htmlFor={`${servicio.id}-${largo}`} className={cn(
                                "block p-2 text-center text-xs border rounded-md cursor-pointer transition-all",
-                               selectedData?.largo === largo ? "border-primary bg-primary/10 text-primary" : "border-border",
+                               selectedData?.largo === largo ? "border-primary bg-primary/10 text-primary dark:bg-primary/20" : "border-border",
                                !isSelected && "cursor-not-allowed opacity-50"
                              )}>
                                <span className="font-semibold capitalize">{largo}</span>
