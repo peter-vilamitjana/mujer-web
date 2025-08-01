@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%; /* Gris claro, casi blanco */
-    --foreground: 224 71% 4%; /* Negro azulado muy oscuro */
+    --background: 240 5% 96%; /* Gris muy claro (casi blanco) - bg.light: #F9FAFB */
+    --foreground: 225 25% 9%; /* Negro azulado - text.light: #111827 */
     
-    --card: 0 0% 100%; /* Blanco puro */
-    --card-foreground: 224 71% 4%;
+    --card: 0 0% 100%; /* Blanco puro - surface.light: #FFFFFF */
+    --card-foreground: 225 25% 9%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
+    --popover-foreground: 225 25% 9%;
     
     --primary: 262 82% 57%; /* #7957D6 */
     --primary-foreground: 0 0% 100%;
     
     --secondary: 220 13% 91%;
-    --secondary-foreground: 224 71% 4%;
+    --secondary-foreground: 225 25% 9%;
     
     --muted: 220 13% 91%;
     --muted-foreground: 220 9% 46%;
     
-    --accent: 259 81% 94%; /* #A584E5 soft lavender */
-    --accent-foreground: 224 71% 4%;
+    --accent: 262 82% 96%; /* Un lavanda muy pálido para acentos sutiles */
+    --accent-foreground: 262 82% 57%;
     
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -36,16 +36,16 @@
   }
 
   .dark {
-    --background: 240 6% 10%; /* #121214 - Gris oscuro profundo */
-    --foreground: 210 20% 98%; /* #E5E7EB - Gris muy claro */
+    --background: 240 6% 10%; /* #121214 - bg.dark */
+    --foreground: 220 14% 90%; /* #E5E7EB - text.dark */
 
-    --card: 240 5% 12%; /* #1C1C1E - Superficie ligeramente más clara */
-    --card-foreground: 210 20% 98%;
+    --card: 240 5% 11%; /* #1C1C1E - surface.dark */
+    --card-foreground: 220 14% 90%;
 
-    --popover: 240 5% 12%;
-    --popover-foreground: 210 20% 98%;
+    --popover: 240 5% 11%;
+    --popover-foreground: 220 14% 90%;
 
-    --primary: 262 82% 67%; /* Violeta más brillante para dark mode */
+    --primary: 262 82% 67%; /* #9D6EFE - Un violeta más brillante para dark mode */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 240 4% 16%;

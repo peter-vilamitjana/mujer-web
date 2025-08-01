@@ -113,7 +113,7 @@ export default function ServiciosPage() {
                  "hover:shadow-md",
                  isSelected 
                     ? "border-primary shadow-lg ring-2 ring-primary/20 dark:ring-primary/40 dark:border-primary/50" 
-                    : "border-transparent"
+                    : "dark:border-gray-700"
               )}
             >
                 <div className="flex-grow">
