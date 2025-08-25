@@ -59,6 +59,30 @@ const mockServices: Servicio[] = [
     { id: 'nutricion', nombre: 'Nutrición Capilar', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 35, requiereLargo: true, variable: false, descripcion: '' },
 ].sort((a, b) => a.nombre.localeCompare(b.nombre));
 
+const LengthPopoverContent = () => (
+  <PopoverContent className="w-64 text-sm" onClick={(e) => e.stopPropagation()}>
+    <h4 className="font-bold mb-2">Cómo definimos el largo</h4>
+    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+      <li><span className="font-semibold text-foreground">Corto:</span> hasta el mentón</li>
+      <li><span className="font-semibold text-foreground">Mediano:</span> hasta los hombros</li>
+      <li><span className="font-semibold text-foreground">Largo:</span> por debajo de los hombros</li>
+    </ul>
+    <p className="mt-4 text-xs text-muted-foreground">
+      <span className="font-bold">Nota:</span> El precio mostrado es a partir de según diagnóstico al llegar.
+    </p>
+  </PopoverContent>
+);
+
+const LengthPopoverTrigger = () => (
+  <Popover>
+    <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
+      <Button variant="ghost" size="icon" className="h-4 w-4 text-muted-foreground ml-1" aria-label="Información sobre largo">
+        <Info className="h-4 w-4"/>
+      </Button>
+    </PopoverTrigger>
+    <LengthPopoverContent />
+  </Popover>
+);
 
 function TurnosContent() {
   const router = useRouter();
@@ -416,7 +440,10 @@ function TurnosContent() {
                                                           </Button>
                                                       ))}
                                                   </div>
-                                                  <p className="text-xs text-muted-foreground text-center mt-2">Precio desde. Se confirma en el local según diagnóstico.</p>
+                                                  <p className="text-xs text-muted-foreground text-center mt-2 flex items-center justify-center">
+                                                    Precio desde. Se confirma en el local.
+                                                    <LengthPopoverTrigger />
+                                                  </p>
                                                   {showLengthError && !selectedData?.largo && <p className="text-xs text-red-500 font-semibold text-center mt-1">Elegí un largo para continuar.</p>}
                                               </div>
                                             )}

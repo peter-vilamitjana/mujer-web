@@ -32,6 +32,31 @@ const mockServices: Servicio[] = [
     { id: 'nutricion', nombre: 'Nutrición Capilar', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 35, requiereLargo: true, variable: false, descripcion: '' },
 ];
 
+const LengthPopoverContent = () => (
+  <PopoverContent className="w-64 text-sm" onClick={(e) => e.stopPropagation()}>
+    <h4 className="font-bold mb-2">Cómo definimos el largo</h4>
+    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+      <li><span className="font-semibold text-foreground">Corto:</span> hasta el mentón</li>
+      <li><span className="font-semibold text-foreground">Mediano:</span> hasta los hombros</li>
+      <li><span className="font-semibold text-foreground">Largo:</span> por debajo de los hombros</li>
+    </ul>
+    <p className="mt-4 text-xs text-muted-foreground">
+      <span className="font-bold">Nota:</span> El precio mostrado es a partir de según diagnóstico al llegar.
+    </p>
+  </PopoverContent>
+);
+
+const LengthPopoverTrigger = () => (
+  <Popover>
+    <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
+      <Button variant="ghost" size="icon" className="h-4 w-4 text-muted-foreground ml-1" aria-label="Información sobre largo">
+        <Info className="h-4 w-4"/>
+      </Button>
+    </PopoverTrigger>
+    <LengthPopoverContent />
+  </Popover>
+);
+
 
 export default function ServiciosPage() {
   const [selectedServices, setSelectedServices] = useState<SelectedServiceWithLargo[]>([]);
@@ -125,28 +150,6 @@ export default function ServiciosPage() {
     return summary;
   }, [selectedServices]);
 
-  const LengthPopover = () => (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-4 w-4 text-muted-foreground" aria-label="Información sobre largo">
-          <Info className="h-4 w-4"/>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-64 text-sm">
-        <h4 className="font-bold mb-2">Cómo definimos el largo</h4>
-        <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-          <li><span className="font-semibold text-foreground">Corto:</span> hasta el mentón</li>
-          <li><span className="font-semibold text-foreground">Mediano:</span> hasta los hombros</li>
-          <li><span className="font-semibold text-foreground">Largo:</span> por debajo de los hombros</li>
-        </ul>
-        <p className="mt-4 text-xs text-muted-foreground">
-          <span className="font-bold">Nota:</span> El precio mostrado es a partir de según diagnóstico al llegar.
-        </p>
-      </PopoverContent>
-    </Popover>
-  );
-
-
   return (
     <div className="space-y-6 pb-24">
       <div className="flex items-center justify-between gap-4">
@@ -188,7 +191,7 @@ export default function ServiciosPage() {
                      {servicio.requiereLargo && !isSelected ? (
                         <div className="flex items-center gap-1 text-lg text-center text-muted-foreground/80 italic">
                           <span>Precio variable</span>
-                          <LengthPopover />
+                          <LengthPopoverTrigger />
                         </div>
                      ) : (
                         <p className="text-4xl font-bold text-primary text-center">{formatPrice(price.from)}</p>
@@ -221,7 +224,10 @@ export default function ServiciosPage() {
                            </div>
                         ))}
                       </RadioGroup>
-                      <p className="text-xs text-muted-foreground text-center">Precio desde. Se confirma en el local según diagnóstico.</p>
+                      <p className="text-xs text-muted-foreground text-center flex items-center justify-center">
+                        Precio desde. Se confirma en el local según diagnóstico.
+                        <LengthPopoverTrigger />
+                      </p>
                       {showLengthError && isSelected && !selectedData?.largo && <p className="text-xs text-red-500 font-semibold text-center mt-1">Elegí un largo para continuar.</p>}
                    </div>
                  )}
