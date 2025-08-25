@@ -2,7 +2,7 @@
 import { Progress } from '@/components/ui/progress';
 
 interface PopularServicesChartProps {
-    data: { name: string; value: number; fill: string }[];
+    data: { name: string; value: number; icon: string }[];
 }
 
 export function PopularServicesChart({ data }: PopularServicesChartProps) {
@@ -12,11 +12,14 @@ export function PopularServicesChart({ data }: PopularServicesChartProps) {
     return (
       <div className="h-full w-full flex flex-col justify-center gap-4 px-2">
         {sortedData.map((service, index) => (
-            <div key={index} className="grid grid-cols-5 items-center gap-4 text-sm">
-                <p className="col-span-2 truncate text-muted-foreground">{service.name}</p>
-                <div className="col-span-3 flex items-center gap-2">
-                    <Progress value={service.value} className="h-3" indicatorClassName="bg-primary" />
-                    <span className="font-semibold tabular-nums w-10 text-right">{service.value}%</span>
+            <div key={index} className="grid grid-cols-6 items-center gap-4 text-sm">
+                <div className="col-span-1 text-2xl text-center">{service.icon}</div>
+                <div className="col-span-3">
+                   <p className="font-bold text-base text-foreground truncate">{service.name}</p>
+                   <Progress value={service.value} className="h-2 mt-1" indicatorClassName="bg-gradient-to-r from-primary to-violet-400" />
+                </div>
+                <div className="col-span-2">
+                  <span className="font-semibold tabular-nums w-10 text-right text-muted-foreground">{service.value}%</span>
                 </div>
             </div>
         ))}
