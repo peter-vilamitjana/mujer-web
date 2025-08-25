@@ -1,6 +1,6 @@
 'use client';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from 'recharts';
-import { ChartTooltipContent } from '@/components/ui/chart';
+import { ChartTooltipContent, ChartContainer, type ChartConfig } from '@/components/ui/chart';
 
 interface MonthlyVolumeChartProps {
     data: { mes: string; total: number }[];
@@ -11,9 +11,15 @@ const chartData = [
     { name: 'Mes Actual', total: 205 },
 ];
 
+const chartConfig = {
+    total: {
+      label: "Turnos",
+    },
+} satisfies ChartConfig;
 
 export function MonthlyVolumeChart({ data }: any) {
     return (
+      <ChartContainer config={chartConfig} className="h-full w-full">
         <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} barGap={100} barSize={60}>
                  <XAxis 
@@ -33,10 +39,9 @@ export function MonthlyVolumeChart({ data }: any) {
                     cursor={{ fill: 'hsl(var(--accent))' }}
                     content={<ChartTooltipContent indicator="dot" />}
                  />
-                <Bar dataKey="total" radius={[4, 4, 0, 0]}>
-                    <Bar dataKey="total" fill="hsl(var(--primary))" />
-                </Bar>
+                <Bar dataKey="total" radius={[4, 4, 0, 0]} fill="hsl(var(--primary))" />
             </BarChart>
         </ResponsiveContainer>
+      </ChartContainer>
     );
 }
