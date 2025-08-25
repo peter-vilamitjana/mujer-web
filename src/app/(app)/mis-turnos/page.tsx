@@ -1,10 +1,10 @@
 
 'use client';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Scissors, Plus, XCircle, RefreshCw, User, CheckCircle, Ban, ChevronDown } from "lucide-react";
-import { format, parseISO, isFuture, isPast } from "date-fns";
+import { format, parseISO, isFuture, isPast, subDays, startOfDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, orderBy, Timestamp, where, doc, updateDoc } from "firebase/firestore";
@@ -14,6 +14,7 @@ import { useUser } from "@/contexts/UserContext";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +37,7 @@ import { cn } from "@/lib/utils";
 function ProximoTurnoCard({ turno, onCancel }: { turno: Turno, onCancel: (id: string) => void }) {
   const services = turno.servicio.split(',').map(s => s.trim());
   const [isExpanded, setIsExpanded] = useState(false);
+  
   const displayServices = isExpanded ? services : services.slice(0, 3);
   const hasMoreServices = services.length > 3;
 
@@ -101,6 +103,20 @@ export default function MisTurnosPage() {
   const user = useUser();
   const { toast } = useToast();
 
+  const [filter, setFilter] = useState('month');
+  const [visibleCount, setVisibleCount] = useState(10);
+
+  useEffect(() => {
+    const savedFilter = localStorage.getItem('historialFiltro');
+    if (savedFilter && ['week', 'month', 'quarter', 'all'].includes(savedFilter)) {
+      setFilter(savedFilter);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('historialFiltro', filter);
+  }, [filter]);
+
   useEffect(() => {
     if (!user) {
       setLoading(false);
@@ -157,7 +173,26 @@ export default function MisTurnosPage() {
   };
 
   const proximosTurnos = turnos.filter(t => isFuture(parseISO(t.fecha)) && (t.estado === 'pendiente' || t.estado === 'pendiente_pago'));
-  const historialTurnos = turnos.filter(t => !proximosTurnos.some(pt => pt.id === t.id));
+  
+  const historialTurnos = useMemo(() => {
+    const allPastTurnos = turnos.filter(t => !proximosTurnos.some(pt => pt.id === t.id));
+    if (filter === 'all') {
+      return allPastTurnos;
+    }
+    const now = new Date();
+    const daysToSubtract = {
+      week: 7,
+      month: 30,
+      quarter: 90
+    }[filter] || 30;
+
+    const startDate = startOfDay(subDays(now, daysToSubtract));
+    
+    return allPastTurnos.filter(t => new Date(t.fecha) >= startDate);
+
+  }, [turnos, proximosTurnos, filter]);
+  
+  const visibleHistorial = historialTurnos.slice(0, visibleCount);
 
   return (
     <div className="space-y-8">
@@ -209,14 +244,22 @@ export default function MisTurnosPage() {
           <CardTitle className="text-lg">Historial de Visitas</CardTitle>
           <CardDescription>Aquí podés ver todos tus turnos anteriores.</CardDescription>
         </CardHeader>
-        <CardContent>
+         <Tabs value={filter} onValueChange={(value) => { setFilter(value); setVisibleCount(10); }} className="w-full px-6">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="week">Última semana</TabsTrigger>
+              <TabsTrigger value="month">Último mes</TabsTrigger>
+              <TabsTrigger value="quarter">Últimos 3 meses</TabsTrigger>
+              <TabsTrigger value="all">Todos</TabsTrigger>
+            </TabsList>
+        </Tabs>
+        <CardContent className="pt-6" aria-live="polite">
           {loading ? (
              <div className="space-y-2">
               {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
             </div>
-          ) : historialTurnos.length > 0 ? (
+          ) : visibleHistorial.length > 0 ? (
             <div className="space-y-4">
-              {historialTurnos.map(turno => {
+              {visibleHistorial.map(turno => {
                 const statusInfo = getStatusInfo(turno.estado);
                 return (
                   <Card key={turno.id} className="bg-muted/40 dark:bg-muted/10 border dark:border-border/50 rounded-xl">
@@ -235,12 +278,19 @@ export default function MisTurnosPage() {
                   </Card>
                 )
               })}
+              {historialTurnos.length > visibleCount && (
+                <div className="text-center pt-4">
+                    <Button variant="secondary" onClick={() => setVisibleCount(prev => prev + 10)}>
+                        Ver más visitas
+                    </Button>
+                </div>
+              )}
                <p className="text-xs text-muted-foreground text-center pt-4">
                 Los valores finales de cada visita se ajustaron según diagnóstico en el local.
               </p>
             </div>
           ) : (
-            <p className="text-center text-muted-foreground py-8">Aún no tenés un historial de turnos.</p>
+            <p className="text-center text-muted-foreground py-8">No hay visitas en este período.</p>
           )}
         </CardContent>
       </Card>
