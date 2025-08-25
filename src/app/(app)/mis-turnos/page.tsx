@@ -93,8 +93,8 @@ export default function MisTurnosPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Bienvenida, {user?.nombre}</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight">Bienvenida, {user?.nombre}</h1>
+          <p className="text-muted-foreground mt-1">
             Revisá tus próximos turnos y tu historial de visitas.
           </p>
         </div>
@@ -106,7 +106,7 @@ export default function MisTurnosPage() {
       {loading ? (
         <Card className="p-6">
           <Skeleton className="h-8 w-1/3 mb-4" />
-          <Skeleton className="h-28 w-full" />
+          <Skeleton className="h-40 w-full" />
         </Card>
       ) : proximosTurnos.length > 0 ? (
         <Card className="bg-gradient-to-br from-primary/90 to-primary text-primary-foreground shadow-lg">
@@ -115,20 +115,33 @@ export default function MisTurnosPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {proximosTurnos.map(turno => (
-              <div key={turno.id} className="p-6 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-                <div className="space-y-2">
+              <div key={turno.id} className="p-6 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 flex flex-col sm:flex-row sm:items-stretch gap-6">
+                
+                {/* Left Side: Date/Time */}
+                <div className="flex flex-col justify-center items-center text-center p-4 rounded-lg bg-white/10">
                   <h3 className="font-bold text-2xl capitalize">
-                    {format(parseISO(turno.fecha), "eeee, d 'de' MMMM", { locale: es })}
+                    {format(parseISO(turno.fecha), "eeee", { locale: es })}
                   </h3>
-                  <p className="font-mono text-xl flex items-center gap-2">
+                   <p className="font-bold text-4xl my-1">{format(parseISO(turno.fecha), "d", { locale: es })}</p>
+                   <h3 className="font-semibold text-lg capitalize">
+                    {format(parseISO(turno.fecha), "MMMM", { locale: es })}
+                  </h3>
+                  <p className="font-mono text-xl mt-3 flex items-center gap-2 bg-black/20 px-3 py-1 rounded-full">
                     <Clock className="h-5 w-5 opacity-80" />
                     {format(parseISO(turno.fecha), "HH:mm 'hs'")}
                   </p>
                 </div>
-                <div className="space-y-1 text-right">
-                  <p className="flex items-center justify-end gap-2"><Scissors className="h-4 w-4 opacity-80" />{turno.servicio}</p>
-                  <p className="flex items-center justify-end gap-2"><User className="h-4 w-4 opacity-80" />Con {turno.empleadaNombre}</p>
-                   <div className="pt-2">
+                
+                {/* Right Side: Details */}
+                <div className="flex-1 flex flex-col justify-between">
+                    <div>
+                        <p className="flex items-center gap-2 text-sm opacity-90"><User className="h-4 w-4" />Con {turno.empleadaNombre}</p>
+                        <p className="font-semibold mt-4 mb-1">Servicios:</p>
+                        <ul className="space-y-1 text-sm list-disc list-inside">
+                           {turno.servicio.split(',').map((s, i) => <li key={i}>{s.trim()}</li>)}
+                        </ul>
+                    </div>
+                     <div className="pt-4 mt-4 border-t border-white/20 flex justify-end">
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                            <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/20"><XCircle className="h-4 w-4 mr-2"/> Cancelar Turno</Button>
@@ -175,25 +188,32 @@ export default function MisTurnosPage() {
         <CardContent>
           {loading ? (
              <div className="space-y-2">
-              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
+              {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
             </div>
           ) : historialTurnos.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {historialTurnos.map(turno => {
                 const statusInfo = getStatusInfo(turno.estado);
                 return (
-                  <div key={turno.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                  <Card key={turno.id} className="bg-muted/40">
+                    <CardContent className="p-4 flex items-center justify-between">
                       <div className="space-y-1">
                           <p className="font-semibold capitalize">{format(parseISO(turno.fecha), "d 'de' MMMM yyyy", { locale: es })}</p>
-                          <p className="text-sm text-muted-foreground">{turno.servicio}</p>
+                          <ul className="text-sm text-muted-foreground list-disc list-inside">
+                             {turno.servicio.split(',').map((s, i) => <li key={i}>{s.trim()}</li>)}
+                          </ul>
                       </div>
-                       <Badge variant="outline" className={`gap-2 ${statusInfo.className}`}>
+                       <Badge variant="outline" className={`gap-2 text-sm font-bold ${statusInfo.className}`}>
                           <statusInfo.icon className="h-3.5 w-3.5" />
                           <span>{statusInfo.text}</span>
                        </Badge>
-                  </div>
+                    </CardContent>
+                  </Card>
                 )
               })}
+               <p className="text-xs text-muted-foreground text-center pt-4">
+                Los valores finales de cada visita se ajustaron según diagnóstico en el local.
+              </p>
             </div>
           ) : (
             <p className="text-center text-muted-foreground py-8">Aún no tenés un historial de turnos.</p>
