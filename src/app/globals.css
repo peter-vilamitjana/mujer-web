@@ -32,37 +32,37 @@
     --input: 220 13% 94%;
     --ring: 262 82% 57%;
     
-    --radius: 1rem;
+    --radius: 1.25rem;
   }
 
   .dark {
-    --background: 240 6% 10%; /* #121214 - bg.dark */
-    --foreground: 220 14% 90%; /* #E5E7EB - text.dark */
+    --background: 0 0% 7%; /* #121212 */
+    --foreground: 0 0% 100%; /* #FFFFFF */
 
-    --card: 240 5% 11%; /* #1C1C1E - surface.dark */
-    --card-foreground: 220 14% 90%;
+    --card: 240 2% 12%; /* #1C1C1E */
+    --card-foreground: 0 0% 90%; /* #E5E5EA */
 
-    --popover: 240 5% 11%;
-    --popover-foreground: 220 14% 90%;
+    --popover: 240 2% 12%;
+    --popover-foreground: 0 0% 90%;
 
-    --primary: 262 82% 67%; /* #9D6EFE - Un violeta más brillante para dark mode */
+    --primary: 256 100% 74%; /* #9D7DFF - Acento violeta */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 4% 16%;
+    --secondary: 240 2% 18%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 4% 64%;
+    --muted: 240 2% 18%; /* Gris para fondos sutiles */
+    --muted-foreground: 240 1% 56%; /* #8E8E93 - Texto secundario */
 
-    --accent: 262 82% 57%;
+    --accent: 256 100% 74%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 240 4% 20%;
-    --input: 240 4% 16%;
-    --ring: 262 82% 67%;
+    --border: 240 2% 18%; /* #2C2C2E */
+    --input: 240 2% 18%;
+    --ring: 256 100% 74%;
   }
 }
 

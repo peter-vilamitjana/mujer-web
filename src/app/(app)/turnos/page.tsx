@@ -338,7 +338,7 @@ function TurnosContent() {
           
           {/* STEP 0: Client (Admin only) */}
           {isAdmin && step === 0 && (
-              <Card>
+              <Card className="rounded-2xl">
                   <CardHeader>
                       <CardTitle>Paso 0: Busca o crea la clienta</CardTitle>
                       <CardDescription>Selecciona una clienta existente o registra una nueva para continuar.</CardDescription>
@@ -398,7 +398,7 @@ function TurnosContent() {
 
           {/* STEP 1: Services */}
           {step === 1 && (
-              <Card>
+              <Card className="rounded-2xl">
                 <CardHeader>
                     <CardTitle>Paso 1: Elige tus servicios</CardTitle>
                     <CardDescription>Puedes seleccionar uno o más tratamientos.</CardDescription>
@@ -413,8 +413,8 @@ function TurnosContent() {
                                     <div 
                                         onClick={() => handleServiceToggle(service)}
                                         className={cn(
-                                            "p-4 border rounded-lg cursor-pointer transition-all flex flex-col h-full", 
-                                            isSelected ? "border-primary ring-2 ring-primary/20 shadow-lg" : "hover:border-primary/50",
+                                            "p-4 border rounded-xl cursor-pointer transition-all flex flex-col h-full", 
+                                            isSelected ? "border-primary ring-2 ring-primary/20 shadow-lg" : "hover:border-primary/50 dark:border-border/50",
                                         )}
                                     >
                                         <div className='flex justify-between items-start'>
@@ -495,7 +495,7 @@ function TurnosContent() {
 
           {/* STEP 2: Professional */}
           {step === 2 && (
-              <Card>
+              <Card className="rounded-2xl">
                 <CardHeader>
                     <CardTitle>Paso 2: Elige tu profesional</CardTitle>
                     <CardDescription>Nuestras expertas están listas para atenderte.</CardDescription>
@@ -503,8 +503,8 @@ function TurnosContent() {
                 <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {professionals.map(prof => (
                         <div key={prof.id} onClick={() => setSelectedProfessional(prof)}
-                            className={cn("p-4 border rounded-lg cursor-pointer transition-all flex flex-col items-center gap-4 text-center",
-                            selectedProfessional?.id === prof.id ? "border-primary ring-2 ring-primary/20 shadow-lg" : "hover:border-primary/50"
+                            className={cn("p-4 border rounded-xl cursor-pointer transition-all flex flex-col items-center gap-4 text-center",
+                            selectedProfessional?.id === prof.id ? "border-primary ring-2 ring-primary/20 shadow-lg" : "hover:border-primary/50 dark:border-border/50"
                             )}>
                             <Image src={prof.avatar} alt={prof.name} data-ai-hint={prof.hint} width={80} height={80} className="rounded-full border-2 border-muted" />
                             <h4 className="font-semibold">{prof.name}</h4>
@@ -520,7 +520,7 @@ function TurnosContent() {
 
           {/* STEP 3: Date and Time */}
           {step === 3 && (
-              <Card>
+              <Card className="rounded-2xl">
                  <CardHeader>
                     <CardTitle>Paso 3: Elige fecha y hora</CardTitle>
                     <CardDescription>Selecciona el día y la hora que más te convenga.</CardDescription>
@@ -553,32 +553,32 @@ function TurnosContent() {
 
            {/* STEP 4: Confirmation */}
            {step === 4 && (
-              <Card>
+              <Card className="rounded-2xl">
                 <CardHeader>
                     <CardTitle>Paso 4: Resumen y seña</CardTitle>
                     <CardDescription>Revisa los detalles de tu turno antes de confirmar.</CardDescription>
                 </CardHeader>
                  <CardContent className="space-y-6">
-                    <div className="p-4 border rounded-lg bg-muted/50 space-y-3 text-sm">
+                    <div className="p-4 border dark:border-border/50 rounded-xl bg-muted/50 dark:bg-muted/20 space-y-3 text-sm">
                         <p className="flex items-center gap-2"><User className="h-4 w-4 text-primary"/> Clienta: <span className="font-semibold">{selectedClient?.nombre} {selectedClient?.apellido}</span></p>
                         <p className="flex items-center gap-2"><Users className="h-4 w-4 text-primary"/> Profesional: <span className="font-semibold">{selectedProfessional?.name}</span></p>
                         <p className="flex items-center gap-2"><CalendarIcon className="h-4 w-4 text-primary"/> Fecha: <span className="font-semibold">{selectedDate && format(selectedDate, "PPP", { locale: es })}</span></p>
                         <p className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary"/> Hora: <span className="font-semibold">{selectedTime} hs</span></p>
                         <p className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary"/> Duración estimada total: <span className="font-semibold">{formatDuration(totalDuration)}</span></p>
-                        <div className="border-t pt-3 mt-3">
-                           <p className="flex items-center gap-2 font-semibold"><Scissors className="h-4 w-4 text-primary"/> Servicios seleccionados (con largo declarado por cliente):</p>
-                           <ul className="list-disc list-inside pl-2 font-medium">
+                        <div className="border-t dark:border-border/50 pt-3 mt-3">
+                           <p className="flex items-center gap-2 font-semibold text-base"><Scissors className="h-4 w-4 text-primary"/> Servicios seleccionados (con largo declarado por cliente):</p>
+                           <ul className="list-disc list-inside pl-2 font-medium text-muted-foreground">
                              {selectedServices.map(s => <li key={s.id}>{s.nombre}{s.largo ? ` (${s.largo})` : ''}</li>)}
                            </ul>
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <div className="p-6 border rounded-lg text-center bg-muted/25">
+                        <div className="p-6 border dark:border-border/50 rounded-xl text-center bg-muted/25 dark:bg-muted/10">
                             <p className="text-sm font-semibold text-muted-foreground">Seña para confirmar ({MONTO_SEÑA_PORCENTAJE * 100}%)</p>
                             <p className="text-5xl font-bold text-primary my-2">{formatPrice(depositAmount)}</p>
                             <p className="text-sm text-muted-foreground">La seña se descontará del total estimado de <span className="font-semibold text-foreground">{hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)}</span> al momento de tu visita. El valor final se confirmará según diagnóstico en el local.</p>
                         </div>
-                        <div className="items-top flex space-x-2 p-1">
+                        <div className="items-top flex space-x-3 p-1">
                           <Checkbox id="terms1" checked={finalConfirmation} onCheckedChange={(checked) => setFinalConfirmation(checked as boolean)} />
                           <div className="grid gap-1.5 leading-none">
                             <label

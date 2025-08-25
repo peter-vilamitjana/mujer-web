@@ -74,15 +74,15 @@ export default function MisTurnosPage() {
   const getStatusInfo = (status: Turno['estado']) => {
     switch (status) {
       case 'pendiente':
-        return { text: 'Pendiente', icon: Clock, className: 'bg-yellow-100 text-yellow-800 border-yellow-200' };
+        return { text: 'Pendiente', icon: Clock, className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' };
       case 'realizado':
-        return { text: 'Realizado', icon: CheckCircle, className: 'bg-green-100 text-green-800 border-green-200' };
+        return { text: 'Realizado', icon: CheckCircle, className: 'bg-green-500/20 text-green-400 border-green-500/30' };
       case 'cancelado':
-        return { text: 'Cancelado', icon: Ban, className: 'bg-red-100 text-red-800 border-red-200' };
+        return { text: 'Cancelado', icon: Ban, className: 'bg-red-500/20 text-red-400 border-red-500/30' };
       case 'pendiente_pago':
-         return { text: 'Pendiente de Seña', icon: Clock, className: 'bg-orange-100 text-orange-800 border-orange-200' };
+         return { text: 'Pendiente de Seña', icon: Clock, className: 'bg-orange-500/20 text-orange-400 border-orange-500/30' };
       default:
-        return { text: 'Desconocido', icon: Clock, className: 'bg-gray-100 text-gray-800 border-gray-200' };
+        return { text: 'Desconocido', icon: Clock, className: 'bg-gray-500/20 text-gray-400 border-gray-500/30' };
     }
   };
 
@@ -91,10 +91,10 @@ export default function MisTurnosPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Bienvenida, {user?.nombre}</h1>
-          <p className="text-muted-foreground mt-1">
+      <div className="flex items-start justify-between">
+        <div className="mb-4">
+          <h1 className="text-xl font-semibold tracking-tight">Bienvenida, {user?.nombre}</h1>
+          <p className="text-muted-foreground mt-1 text-base">
             Revisá tus próximos turnos y tu historial de visitas.
           </p>
         </div>
@@ -109,20 +109,16 @@ export default function MisTurnosPage() {
           <Skeleton className="h-40 w-full" />
         </Card>
       ) : proximosTurnos.length > 0 ? (
-        <Card className="bg-gradient-to-br from-primary/90 to-primary text-primary-foreground shadow-lg">
+        <Card className="bg-gradient-to-br from-primary/90 to-primary text-primary-foreground shadow-2xl shadow-primary/20 rounded-2xl">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Calendar className="h-5 w-5"/>Próximo Turno</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-lg"><Calendar className="h-5 w-5"/>Próximo Turno</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {proximosTurnos.map(turno => (
-              <div key={turno.id} className="p-6 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 flex flex-col sm:flex-row sm:items-stretch gap-6">
+              <div key={turno.id} className="p-6 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 flex flex-col sm:flex-row sm:items-stretch gap-6">
                 
-                {/* Left Side: Date/Time */}
-                <div className="flex flex-col justify-center items-center text-center p-4 rounded-lg bg-white/10">
-                  <h3 className="font-bold text-2xl capitalize">
-                    {format(parseISO(turno.fecha), "eeee", { locale: es })}
-                  </h3>
-                   <p className="font-bold text-4xl my-1">{format(parseISO(turno.fecha), "d", { locale: es })}</p>
+                <div className="flex flex-col justify-center items-center text-center p-4 rounded-lg bg-black/10 flex-shrink-0">
+                   <p className="font-bold text-4xl">{format(parseISO(turno.fecha), "d", { locale: es })}</p>
                    <h3 className="font-semibold text-lg capitalize">
                     {format(parseISO(turno.fecha), "MMMM", { locale: es })}
                   </h3>
@@ -132,11 +128,10 @@ export default function MisTurnosPage() {
                   </p>
                 </div>
                 
-                {/* Right Side: Details */}
                 <div className="flex-1 flex flex-col justify-between">
                     <div>
                         <p className="flex items-center gap-2 text-sm opacity-90"><User className="h-4 w-4" />Con {turno.empleadaNombre}</p>
-                        <p className="font-semibold mt-4 mb-1">Servicios:</p>
+                        <p className="font-semibold mt-4 mb-2 text-base">Servicios:</p>
                         <ul className="space-y-1 text-sm list-disc list-inside">
                            {turno.servicio.split(',').map((s, i) => <li key={i}>{s.trim()}</li>)}
                         </ul>
@@ -166,7 +161,7 @@ export default function MisTurnosPage() {
           </CardContent>
         </Card>
       ) : (
-         <Card className="text-center py-16 bg-muted/50 border-dashed">
+         <Card className="text-center py-16 bg-card border-dashed border-border/80 rounded-2xl">
             <CardContent>
                 <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
                 <h3 className="mt-4 text-xl font-semibold">No tenés próximos turnos</h3>
@@ -180,9 +175,9 @@ export default function MisTurnosPage() {
         </Card>
       )}
 
-      <Card>
+      <Card className="bg-card shadow-lg dark:shadow-none border dark:border-border/50 rounded-2xl">
         <CardHeader>
-          <CardTitle>Historial de Visitas</CardTitle>
+          <CardTitle className="text-lg">Historial de Visitas</CardTitle>
           <CardDescription>Aquí podés ver todos tus turnos anteriores.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -195,15 +190,15 @@ export default function MisTurnosPage() {
               {historialTurnos.map(turno => {
                 const statusInfo = getStatusInfo(turno.estado);
                 return (
-                  <Card key={turno.id} className="bg-muted/40">
+                  <Card key={turno.id} className="bg-muted/40 dark:bg-muted/10 border dark:border-border/50 rounded-xl">
                     <CardContent className="p-4 flex items-center justify-between">
                       <div className="space-y-1">
-                          <p className="font-semibold capitalize">{format(parseISO(turno.fecha), "d 'de' MMMM yyyy", { locale: es })}</p>
+                          <p className="font-semibold capitalize text-base">{format(parseISO(turno.fecha), "d 'de' MMMM yyyy", { locale: es })}</p>
                           <ul className="text-sm text-muted-foreground list-disc list-inside">
                              {turno.servicio.split(',').map((s, i) => <li key={i}>{s.trim()}</li>)}
                           </ul>
                       </div>
-                       <Badge variant="outline" className={`gap-2 text-sm font-bold ${statusInfo.className}`}>
+                       <Badge variant="outline" className={`gap-2 text-xs font-bold ${statusInfo.className}`}>
                           <statusInfo.icon className="h-3.5 w-3.5" />
                           <span>{statusInfo.text}</span>
                        </Badge>

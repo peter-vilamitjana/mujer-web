@@ -173,11 +173,11 @@ export default function ServiciosPage() {
               key={servicio.id}
               onClick={() => handleServiceToggle(servicio)}
               className={cn(
-                "flex flex-col rounded-2xl bg-card shadow-sm border-2 cursor-pointer transition-all duration-200 h-full p-6",
-                 "hover:shadow-md",
+                "flex flex-col rounded-2xl bg-card shadow-sm border-2 cursor-pointer transition-all duration-300 h-full p-6",
+                 "hover:shadow-lg dark:hover:shadow-primary/10",
                  isSelected 
                     ? "border-primary shadow-lg ring-2 ring-primary/20 dark:ring-primary/40 dark:border-primary/50" 
-                    : "dark:border-gray-700"
+                    : "border-border/50 dark:border-border/30"
               )}
             >
                 <div className="flex-grow">
@@ -237,7 +237,7 @@ export default function ServiciosPage() {
       </div>
       
       {userRole !== 'admin' && (
-        <div className="fixed bottom-0 left-0 right-0 z-20 p-4 bg-background/80 backdrop-blur-lg border-t">
+        <div className="fixed bottom-0 left-0 right-0 z-20 p-4 bg-background/80 backdrop-blur-lg border-t dark:border-border/50">
           <div className="container mx-auto flex items-center justify-between">
             <div className="max-w-md">
               {selectedServices.length > 0 ? (
