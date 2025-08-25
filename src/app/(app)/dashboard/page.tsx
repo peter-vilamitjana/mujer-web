@@ -1,143 +1,144 @@
 'use client';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { ArrowUp, BarChart, Calendar, PieChart, Users } from "lucide-react";
+import { WeeklyTurnosChart } from "@/components/charts/WeeklyTurnosChart";
+import { MonthlyVolumeChart } from "@/components/charts/MonthlyVolumeChart";
+import { PopularServicesChart } from "@/components/charts/PopularServicesChart";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Users, Scissors } from "lucide-react";
-import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, where, getCountFromServer, Timestamp } from 'firebase/firestore';
-import type { Turno } from '@/lib/types';
-import { Skeleton } from '@/components/ui/skeleton';
-import { startOfToday, endOfToday } from 'date-fns';
-import { useUser } from '@/contexts/UserContext';
+// Mock data based on the requested structure
+const mockDashboardData = {
+  turnosSemana: [
+    { dia: 'Mar', cantidad: 8 },
+    { dia: 'Mié', cantidad: 12 },
+    { dia: 'Jue', cantidad: 15 },
+    { dia: 'Vie', cantidad: 22 },
+    { dia: 'Sáb', cantidad: 25 },
+  ],
+  volumenMensual: [
+    { mes: 'anterior', total: 180 },
+    { mes: 'actual', total: 205 },
+  ],
+  serviciosTop: [
+    { name: 'Alisado', value: 40, fill: 'hsl(var(--primary))' },
+    { name: 'Mechas', value: 25, fill: 'hsl(var(--primary) / 0.8)' },
+    { name: 'Color', value: 18, fill: 'hsl(var(--primary) / 0.6)' },
+    { name: 'Otros', value: 17, fill: 'hsl(var(--primary) / 0.4)' },
+  ],
+  clientes: { nuevas: 32, recurrentes: 68 },
+  ingresosSemana: {
+    total: 1250000,
+    tendencia: 12,
+  },
+  turnosHoy: 18,
+  totalClientes: 257,
+};
 
+const formatCurrency = (value: number) => 
+  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(value);
 
 export default function DashboardPage() {
-  const user = useUser();
-  const [totalClientes, setTotalClientes] = useState(0);
-  const [turnosHoyCount, setTurnosHoyCount] = useState(0);
-  const [popularService, setPopularService] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      // Fetch total clients
-      const clientesColl = collection(db, 'clientes');
-      const clientesSnapshot = await getCountFromServer(clientesColl);
-      setTotalClientes(clientesSnapshot.data().count);
-
-      // Fetch today's appointments count
-      const todayStart = Timestamp.fromDate(startOfToday());
-      const todayEnd = Timestamp.fromDate(endOfToday());
-      
-      let turnosHoyQuery;
-      const baseTurnosQuery = collection(db, 'turnos');
-      
-      // Build query based on user role
-      if (user?.rol === 'empleada') {
-        turnosHoyQuery = query(
-          baseTurnosQuery,
-          where('fecha', '>=', todayStart),
-          where('fecha', '<=', todayEnd),
-          where('empleadaNombre', '==', user.nombre)
-        );
-      } else { // Admin sees all
-         turnosHoyQuery = query(
-          baseTurnosQuery,
-          where('fecha', '>=', todayStart),
-          where('fecha', '<=', todayEnd)
-        );
-      }
-      
-      const turnosHoySnapshot = await getCountFromServer(turnosHoyQuery);
-      setTurnosHoyCount(turnosHoySnapshot.data().count);
-      
-      setLoading(false);
-    };
-
-    if(user) {
-        fetchData();
-    }
-
-    // Live subscription for popular service calculation (admin only)
-    if(user?.rol === 'admin') {
-        const turnosQuery = query(collection(db, 'turnos'));
-        const unsubTurnos = onSnapshot(turnosQuery, (snapshot) => {
-            const turnosData = snapshot.docs.map(doc => doc.data() as Turno);
-
-            if (turnosData.length > 0) {
-              const serviceCounts = turnosData.reduce((acc, turno) => {
-                acc[turno.servicio] = (acc[turno.servicio] || 0) + 1;
-                return acc;
-              }, {} as Record<string, number>);
-              
-              const mostPopular = Object.entries(serviceCounts).sort((a, b) => b[1] - a[1])[0];
-              setPopularService(mostPopular[0]);
-            } else {
-              setPopularService('N/A');
-            }
-
-        }, (error) => {
-            console.error("Error fetching turnos for popular service:", error);
-        });
-        
-        return () => unsubTurnos();
-    } else {
-        setPopularService('N/A')
-    }
-  }, [user]);
+  const { 
+    turnosSemana, 
+    volumenMensual, 
+    serviciosTop, 
+    clientes,
+    ingresosSemana,
+    turnosHoy,
+    totalClientes
+  } = mockDashboardData;
+  
+  const totalTurnosSemana = turnosSemana.reduce((acc, day) => acc + day.cantidad, 0);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Bienvenida, {user?.nombre || 'Administradora'}!</h1>
-        <p className="text-muted-foreground">Aquí tienes un resumen de la actividad de tu salón.</p>
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground">Resumen de la actividad y rendimiento de tu salón.</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Widget: Turnos de Hoy */}
         <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Turnos de Hoy</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle className="text-base font-medium flex items-center justify-between">
+              <span>Turnos de Hoy</span>
+              <Calendar className="h-5 w-5 text-muted-foreground" />
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{turnosHoyCount}</div>}
-            <p className="text-xs text-muted-foreground">
-              Turnos programados para tu jornada.
-            </p>
+            <p className="text-4xl font-bold">{turnosHoy}</p>
+            <p className="text-sm text-muted-foreground">Turnos programados para la jornada.</p>
           </CardContent>
         </Card>
-        { user?.rol === 'admin' &&
-          <>
-            <Card className="shadow-sm hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total de Clientes</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                 {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{totalClientes}</div>}
-                <p className="text-xs text-muted-foreground">
-                  Clientes registrados en el sistema.
-                </p>
-              </CardContent>
-            </Card>
-             <Card className="shadow-sm hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Servicio Popular</CardTitle>
-                <Scissors className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                 {loading ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{popularService || 'Calculando...'}</div>}
-                <p className="text-xs text-muted-foreground">
-                  El servicio más solicitado.
-                </p>
-              </CardContent>
-            </Card>
-          </>
-        }
+
+        {/* Widget: Total Clientes */}
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader>
+            <CardTitle className="text-base font-medium flex items-center justify-between">
+              <span>Total de Clientes</span>
+              <Users className="h-5 w-5 text-muted-foreground" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold">{totalClientes}</p>
+            <p className="text-sm text-muted-foreground">Clientes registrados en el sistema.</p>
+          </CardContent>
+        </Card>
+
+        {/* Widget: Ingresos Estimados */}
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader>
+            <CardTitle className="text-base font-medium flex items-center justify-between">
+              <span>Ingresos Semanales</span>
+              <span className="text-green-500 flex items-center text-sm font-bold">
+                  <ArrowUp className="h-4 w-4"/> {ingresosSemana.tendencia}%
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-4xl font-bold">{formatCurrency(ingresosSemana.total)}</p>
+            <p className="text-sm text-muted-foreground">Ingresos brutos estimados de la semana.</p>
+          </CardContent>
+        </Card>
       </div>
 
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Widget: Turnos de la Semana */}
+        <Card className="lg:col-span-1 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader>
+            <CardTitle>Turnos de la Semana</CardTitle>
+            <CardDescription>Total semana: {totalTurnosSemana} turnos</CardDescription>
+          </CardHeader>
+          <CardContent className="h-64">
+            <WeeklyTurnosChart data={turnosSemana} />
+          </CardContent>
+        </Card>
+        
+        {/* Widget: Servicios Populares */}
+        <Card className="lg:col-span-1 shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader>
+            <CardTitle>Servicios Populares</CardTitle>
+            <CardDescription>Distribución de los servicios más solicitados.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-64 flex items-center justify-center">
+            <PopularServicesChart data={serviciosTop} />
+          </CardContent>
+        </Card>
+      </div>
       
+       <div className="grid gap-6">
+        {/* Widget: Volumen Mensual */}
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
+          <CardHeader>
+            <CardTitle>Volumen Mensual</CardTitle>
+            <CardDescription>Comparación de turnos del mes actual vs. el anterior.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-80">
+            <MonthlyVolumeChart data={volumenMensual} />
+          </CardContent>
+        </Card>
+      </div>
+
     </div>
   );
 }
