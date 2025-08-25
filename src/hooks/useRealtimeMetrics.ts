@@ -23,7 +23,7 @@ export function useRealtimeMetrics(
 
   useEffect(() => {
     if (!db || !sucursalId) return;
-    const ref = doc(db, `sucursales/${sucursalId}/metrics/realtime/dashboard`);
+    const ref = doc(db, `sucursales/${sucursalId}/metrics/realtime`);
     const unsub = onSnapshot(ref, (snap) => {
       if (!snap.exists()) {
         setNowCount(0); // Default to 0 instead of null
