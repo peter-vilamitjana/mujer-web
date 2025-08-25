@@ -73,16 +73,29 @@ const LengthPopoverContent = () => (
   </PopoverContent>
 );
 
-const LengthPopoverTrigger = () => (
+const LengthPopoverTrigger = ({ asChild = false }: { asChild?: boolean }) => (
   <Popover>
-    <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
-      <Button variant="ghost" size="icon" className="h-4 w-4 text-muted-foreground ml-1" aria-label="Información sobre largo">
-        <Info className="h-4 w-4"/>
-      </Button>
+    <PopoverTrigger asChild={asChild} onClick={(e) => e.stopPropagation()}>
+      {asChild ? (
+         <button className="text-xs text-muted-foreground underline hover:text-primary">Ver cómo definimos el largo</button>
+      ) : (
+        <Button variant="ghost" size="icon" className="h-4 w-4 text-muted-foreground ml-1" aria-label="Información sobre largo">
+          <Info className="h-4 w-4"/>
+        </Button>
+      )}
     </PopoverTrigger>
     <LengthPopoverContent />
   </Popover>
 );
+
+function formatDuration(minutes: number) {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if(hours > 0) {
+        return `${hours}h ${remainingMinutes}min (${minutes} min)`;
+    }
+    return `${minutes} min`;
+}
 
 function TurnosContent() {
   const router = useRouter();
@@ -551,9 +564,10 @@ function TurnosContent() {
                         <p className="flex items-center gap-2"><Users className="h-4 w-4 text-primary"/> Profesional: <span className="font-semibold">{selectedProfessional?.name}</span></p>
                         <p className="flex items-center gap-2"><CalendarIcon className="h-4 w-4 text-primary"/> Fecha: <span className="font-semibold">{selectedDate && format(selectedDate, "PPP", { locale: es })}</span></p>
                         <p className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary"/> Hora: <span className="font-semibold">{selectedTime} hs</span></p>
+                        <p className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary"/> Duración estimada total: <span className="font-semibold">{formatDuration(totalDuration)}</span></p>
                         <div className="border-t pt-3 mt-3">
-                           <p className="flex items-center gap-2"><Scissors className="h-4 w-4 text-primary"/> Servicios:</p>
-                           <ul className="list-disc list-inside pl-2 font-semibold">
+                           <p className="flex items-center gap-2 font-semibold"><Scissors className="h-4 w-4 text-primary"/> Servicios seleccionados (con largo declarado por cliente):</p>
+                           <ul className="list-disc list-inside pl-2 font-medium">
                              {selectedServices.map(s => <li key={s.id}>{s.nombre}{s.largo ? ` (${s.largo})` : ''}</li>)}
                            </ul>
                         </div>
@@ -562,7 +576,7 @@ function TurnosContent() {
                         <div className="p-6 border rounded-lg text-center bg-muted/25">
                             <p className="text-sm font-semibold text-muted-foreground">Seña para confirmar ({MONTO_SEÑA_PORCENTAJE * 100}%)</p>
                             <p className="text-5xl font-bold text-primary my-2">{formatPrice(depositAmount)}</p>
-                            <p className="text-sm text-muted-foreground">La seña se descontará del total de <span className="font-semibold text-foreground">{hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)}</span> en tu visita.</p>
+                            <p className="text-sm text-muted-foreground">La seña se descontará del total estimado de <span className="font-semibold text-foreground">{hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)}</span> al momento de tu visita. El valor final se confirmará según diagnóstico en el local.</p>
                         </div>
                         <div className="items-top flex space-x-2 p-1">
                           <Checkbox id="terms1" checked={finalConfirmation} onCheckedChange={(checked) => setFinalConfirmation(checked as boolean)} />
@@ -573,6 +587,8 @@ function TurnosContent() {
                             >
                               Confirmo que el largo seleccionado coincide con mi cabello actual y acepto que el precio puede variar según diagnóstico.
                             </label>
+                            <p className="text-xs text-muted-foreground mt-2">Este acuerdo evita ajustes posteriores en caja.</p>
+                            <LengthPopoverTrigger asChild />
                           </div>
                         </div>
                     </div>
