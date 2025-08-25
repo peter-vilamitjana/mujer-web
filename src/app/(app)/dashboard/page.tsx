@@ -1,10 +1,13 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowUp, BarChart, Calendar, PieChart, Users, Clock, Star, Activity, Scissors, Users2 } from "lucide-react";
+import { ArrowUp, BarChart, Calendar, PieChart, Users, Clock, Star, Activity, Users2 } from "lucide-react";
 import { MonthlyVolumeChart } from "@/components/charts/MonthlyVolumeChart";
 import { PopularServicesChart } from "@/components/charts/PopularServicesChart";
 import { Badge } from "@/components/ui/badge";
 import { WeeklyTurnosChart } from "@/components/charts/WeeklyTurnosChart";
+import { db } from "@/lib/firebase";
+import RealtimeWaveformWidget from "@/components/RealtimeWaveformWidget";
+
 
 // Mock data based on the requested structure to emulate Apple Health style widgets
 const mockDashboardData = {
@@ -143,16 +146,8 @@ export default function DashboardPage() {
             <CardTitle>Volumen en Tiempo Real</CardTitle>
             <CardDescription>Pulso de actividad del salón ahora mismo.</CardDescription>
           </CardHeader>
-          <CardContent className="flex-grow flex flex-col items-center justify-center text-center">
-            <div className="relative w-full h-24 overflow-hidden">
-                 <div className="absolute inset-0 bg-grid-pattern opacity-10 dark:opacity-5"></div>
-                 <div className="waveform-container">
-                     <div className="waveform"></div>
-                </div>
-            </div>
-            <p className="text-5xl font-bold text-primary mt-4">{live.clientasAhora}</p>
-            <p className="font-semibold text-foreground">clientas en este momento</p>
-            <p className="text-xs text-muted-foreground mt-2">Última hora: {live.turnosUltimaHora} turnos</p>
+          <CardContent className="flex-grow flex flex-col items-center justify-center text-center p-0">
+             <RealtimeWaveformWidget db={db} sucursalId="main" />
           </CardContent>
         </Card>
         
