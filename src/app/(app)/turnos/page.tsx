@@ -31,6 +31,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import NewClientForm from '@/components/NewClientForm';
+import { Label } from '@/components/ui/label';
 
 
 const professionals = [
@@ -81,6 +82,7 @@ function TurnosContent() {
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
   const [showLengthError, setShowLengthError] = useState(false);
+  const [finalConfirmation, setFinalConfirmation] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -149,7 +151,7 @@ function TurnosContent() {
   const getServicePrice = (service: SelectedServiceWithLargo): { from: number; to?: number } => {
     if (service.precios && service.largo) {
         const fromPrice = service.precios[service.largo];
-        const toPrice = service.preciosHasta ? service.preciosHasta[service.largo] : undefined;
+        const toPrice = service.variable && service.preciosHasta ? service.preciosHasta[service.largo] : undefined;
         return { from: fromPrice, to: toPrice };
     }
     return { from: service.precio || 0 };
@@ -177,7 +179,7 @@ function TurnosContent() {
             to += price.from;
         }
     });
-    return { totalFrom: from, totalTo: to, hasRange: range };
+    return { totalFrom: from, totalTo: to, hasRange: range && to > from };
   }, [selectedServices]);
 
   const totalDuration = useMemo(() => selectedServices.reduce((acc, s) => {
@@ -536,14 +538,22 @@ function TurnosContent() {
                             <p className="text-5xl font-bold text-primary my-2">{formatPrice(depositAmount)}</p>
                             <p className="text-sm text-muted-foreground">La seña se descontará del total de <span className="font-semibold text-foreground">{hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)}</span> en tu visita.</p>
                         </div>
-                        <p className="text-xs text-center text-muted-foreground px-4">
-                            Para asegurar tu turno se cobrará una seña del {MONTO_SEÑA_PORCENTAJE * 100}% del valor total. Luego se descontará del precio final.
-                        </p>
+                        <div className="items-top flex space-x-2 p-1">
+                          <Checkbox id="terms1" checked={finalConfirmation} onCheckedChange={(checked) => setFinalConfirmation(checked as boolean)} />
+                          <div className="grid gap-1.5 leading-none">
+                            <label
+                              htmlFor="terms1"
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              Confirmo que el largo seleccionado coincide con mi cabello actual y acepto que el precio puede variar según diagnóstico.
+                            </label>
+                          </div>
+                        </div>
                     </div>
                  </CardContent>
                  <CardFooter className="flex justify-between">
                     <Button variant="outline" onClick={() => setStep(3)}>Anterior</Button>
-                    <Button onClick={onSubmit} disabled={isSubmitting}>
+                    <Button onClick={onSubmit} disabled={isSubmitting || !finalConfirmation}>
                         {isSubmitting ? <Loader2 className="animate-spin" /> : 'Confirmar y Pagar Seña'}
                     </Button>
                  </CardFooter>

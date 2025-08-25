@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type SelectedServiceWithLargo = Servicio & { largo?: LargoPelo };
 
@@ -60,7 +61,7 @@ export default function ServiciosPage() {
   const getServicePrice = (service: SelectedServiceWithLargo): { from: number; to?: number } => {
     if (service.precios && service.largo) {
         const fromPrice = service.precios[service.largo];
-        const toPrice = service.preciosHasta ? service.preciosHasta[service.largo] : undefined;
+        const toPrice = service.variable && service.preciosHasta ? service.preciosHasta[service.largo] : undefined;
         return { from: fromPrice, to: toPrice };
     }
     return { from: service.precio || 0 };
@@ -105,7 +106,7 @@ export default function ServiciosPage() {
             to += price.from;
         }
     });
-    return { totalFrom: from, totalTo: to, hasRange: range };
+    return { totalFrom: from, totalTo: to, hasRange: range && to > from };
   }, [selectedServices]);
 
   const totalDuration = useMemo(() => selectedServices.reduce((acc, s) => {
@@ -221,6 +222,7 @@ export default function ServiciosPage() {
                         ))}
                       </RadioGroup>
                       <p className="text-xs text-muted-foreground text-center">Precio desde. Se confirma en el local según diagnóstico.</p>
+                      {showLengthError && isSelected && !selectedData?.largo && <p className="text-xs text-red-500 font-semibold text-center mt-1">Elegí un largo para continuar.</p>}
                    </div>
                  )}
             </div>
@@ -228,7 +230,7 @@ export default function ServiciosPage() {
         })}
       </div>
       
-      {userRole === 'clienta' && (
+      {userRole !== 'admin' && (
         <div className="fixed bottom-0 left-0 right-0 z-20 p-4 bg-background/80 backdrop-blur-lg border-t">
           <div className="container mx-auto flex items-center justify-between">
             <div className="max-w-md">
