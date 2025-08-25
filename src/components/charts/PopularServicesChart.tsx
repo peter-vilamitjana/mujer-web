@@ -1,68 +1,25 @@
 'use client';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Pie, PieChart, Cell } from 'recharts';
-import { ChartTooltipContent, ChartContainer, type ChartConfig } from '@/components/ui/chart';
+import { Progress } from '@/components/ui/progress';
 
 interface PopularServicesChartProps {
     data: { name: string; value: number; fill: string }[];
 }
 
-const chartConfig = {
-    value: {
-        label: "Servicios",
-    },
-} satisfies ChartConfig;
-
 export function PopularServicesChart({ data }: PopularServicesChartProps) {
-    return (
-      <ChartContainer config={chartConfig} className="h-full w-full">
-        <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-                <Tooltip
-                    cursor={{ fill: 'hsl(var(--accent))' }}
-                    content={<ChartTooltipContent hideLabel />}
-                 />
-                <Pie
-                    data={data}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    labelLine={false}
-                    label={({
-                      cx,
-                      cy,
-                      midAngle,
-                      innerRadius,
-                      outerRadius,
-                      percent,
-                      index,
-                    }) => {
-                      const RADIAN = Math.PI / 180;
-                      const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                      const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                      const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    // Sort data descending by value
+    const sortedData = [...data].sort((a, b) => b.value - a.value);
 
-                      return (
-                        <text
-                          x={x}
-                          y={y}
-                          fill="white"
-                          textAnchor={x > cx ? 'start' : 'end'}
-                          dominantBaseline="central"
-                          className="text-xs font-bold"
-                        >
-                          {`${(percent * 100).toFixed(0)}%`}
-                        </text>
-                      );
-                    }}
-                >
-                    {data.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                </Pie>
-            </PieChart>
-        </ResponsiveContainer>
-       </ChartContainer>
-    )
+    return (
+      <div className="h-full w-full flex flex-col justify-center gap-4 px-2">
+        {sortedData.map((service, index) => (
+            <div key={index} className="grid grid-cols-5 items-center gap-4 text-sm">
+                <p className="col-span-2 truncate text-muted-foreground">{service.name}</p>
+                <div className="col-span-3 flex items-center gap-2">
+                    <Progress value={service.value} className="h-3" indicatorClassName="bg-primary" />
+                    <span className="font-semibold tabular-nums w-10 text-right">{service.value}%</span>
+                </div>
+            </div>
+        ))}
+      </div>
+    );
 }

@@ -5,6 +5,7 @@ import { WeeklyTurnosChart } from "@/components/charts/WeeklyTurnosChart";
 import { MonthlyVolumeChart } from "@/components/charts/MonthlyVolumeChart";
 import { PopularServicesChart } from "@/components/charts/PopularServicesChart";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 // Mock data based on the requested structure to emulate Apple Health style widgets
 const mockDashboardData = {
