@@ -89,6 +89,7 @@ const LengthPopoverTrigger = ({ asChild = false }: { asChild?: boolean }) => (
 );
 
 function formatDuration(minutes: number) {
+    if (!minutes) return `0 min`;
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     if(hours > 0) {
@@ -588,7 +589,7 @@ function TurnosContent() {
                               Confirmo que el largo seleccionado coincide con mi cabello actual y acepto que el precio puede variar según diagnóstico.
                             </label>
                             <p className="text-xs text-muted-foreground mt-2">Este acuerdo evita ajustes posteriores en caja.</p>
-                            <LengthPopoverTrigger asChild />
+                            <LengthPopoverTrigger asChild={true} />
                           </div>
                         </div>
                     </div>
@@ -613,3 +614,4 @@ export default function TurnosPage() {
         </Suspense>
     )
 }
+
