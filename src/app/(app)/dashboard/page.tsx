@@ -4,6 +4,7 @@ import { ArrowUp, BarChart, Calendar, PieChart, Users, Clock, Star, Activity, Sc
 import { MonthlyVolumeChart } from "@/components/charts/MonthlyVolumeChart";
 import { PopularServicesChart } from "@/components/charts/PopularServicesChart";
 import { Badge } from "@/components/ui/badge";
+import { WeeklyTurnosChart } from "@/components/charts/WeeklyTurnosChart";
 
 // Mock data based on the requested structure to emulate Apple Health style widgets
 const mockDashboardData = {
@@ -35,6 +36,20 @@ const mockDashboardData = {
     { name: 'Botox Cap.', value: 12 },
     { name: 'Reflejos', value: 5 },
   ],
+   horaPico: [
+    { hora: '09:00', turnos: 2 },
+    { hora: '10:00', turnos: 5 },
+    { hora: '11:00', turnos: 8 },
+    { hora: '12:00', turnos: 6 },
+    { hora: '13:00', turnos: 3 },
+    { hora: '14:00', turnos: 7 },
+    { hora: '15:00', turnos: 12 },
+    { hora: '16:00', turnos: 11 },
+    { hora: '17:00', turnos: 9 },
+    { hora: '18:00', turnos: 10 },
+    { hora: '19:00', turnos: 4 },
+    { hora: '20:00', turnos: 1 },
+  ]
 };
 
 const formatCurrency = (value: number) => 
@@ -47,7 +62,8 @@ export default function DashboardPage() {
     totalClientes,
     volumenMensual, 
     serviciosTop,
-    live
+    live,
+    turnosSemana
   } = mockDashboardData;
   
   return (
@@ -56,8 +72,7 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">Resumen de la actividad y rendimiento de tu salón.</p>
       </div>
-
-      {/* Main KPIs */}
+      
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
           <CardHeader>
@@ -101,9 +116,29 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-5">
-        {/* Live Volume */}
-        <Card className="lg:col-span-2 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between rounded-2xl">
+       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <Card className="lg:col-span-3 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+          <CardHeader>
+              <CardTitle>Turnos de la Semana</CardTitle>
+              <CardDescription>Volumen de trabajo de martes a sábado.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-80">
+              <WeeklyTurnosChart data={turnosSemana} />
+          </CardContent>
+        </Card>
+        <Card className="lg:col-span-2 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+           <CardHeader>
+            <CardTitle>Servicios Populares</CardTitle>
+            <CardDescription>Top 5 más solicitados.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-80 flex flex-col justify-center">
+            <PopularServicesChart data={serviciosTop} />
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+         <Card className="lg:col-span-2 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between rounded-2xl">
            <CardHeader>
             <CardTitle>Volumen en Tiempo Real</CardTitle>
             <CardDescription>Pulso de actividad del salón ahora mismo.</CardDescription>
@@ -121,31 +156,16 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
         
-        {/* Popular Services */}
         <Card className="lg:col-span-3 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
           <CardHeader>
-            <CardTitle>Servicios Populares</CardTitle>
-            <CardDescription>Ranking de los servicios más solicitados.</CardDescription>
-          </CardHeader>
-          <CardContent className="h-80 flex flex-col justify-center">
-            <PopularServicesChart data={serviciosTop} />
-          </CardContent>
-        </Card>
-      </div>
-      
-       <div className="grid gap-6">
-        {/* Monthly/Weekly/Daily Volume */}
-        <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
-          <CardHeader>
-            <CardTitle>Volumen de Turnos</CardTitle>
+             <CardTitle>Volumen Mensual</CardTitle>
             <CardDescription>Comparación de turnos del mes actual vs. el anterior.</CardDescription>
           </CardHeader>
-          <CardContent className="h-80">
+          <CardContent className="h-80 flex flex-col justify-center">
             <MonthlyVolumeChart data={volumenMensual} />
           </CardContent>
         </Card>
       </div>
-
     </div>
   );
 }

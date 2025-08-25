@@ -13,7 +13,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 225 25% 9%;
     
-    --primary: 262 82% 57%; /* #7957D6 */
+    --primary: 258 98% 71%; /* #9D6EFE */
     --primary-foreground: 0 0% 100%;
     
     --secondary: 220 13% 91%;
@@ -22,15 +22,15 @@
     --muted: 220 13% 91%;
     --muted-foreground: 220 9% 46%;
     
-    --accent: 262 82% 96%; /* Un lavanda muy pálido para acentos sutiles */
-    --accent-foreground: 262 82% 57%;
+    --accent: 258 98% 97%; /* Un lavanda muy pálido para acentos sutiles */
+    --accent-foreground: 258 82% 57%;
     
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     
     --border: 220 13% 88%;
     --input: 220 13% 94%;
-    --ring: 262 82% 57%;
+    --ring: 258 82% 57%;
     
     --radius: 1.25rem;
   }
