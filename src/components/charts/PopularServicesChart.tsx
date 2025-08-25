@@ -1,6 +1,6 @@
 'use client';
-import { Pie, PieChart, ResponsiveContainer, Tooltip, Legend, Cell } from 'recharts';
-import { ChartTooltipContent, ChartContainer, ChartLegend, ChartLegendContent, type ChartConfig } from '@/components/ui/chart';
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import { ChartTooltipContent, ChartContainer, type ChartConfig } from '@/components/ui/chart';
 
 interface PopularServicesChartProps {
     data: { name: string; value: number; fill: string }[];
@@ -10,49 +10,55 @@ const chartConfig = {
     value: {
         label: "Servicios",
     },
-    alisado: {
-        label: "Alisado",
-    },
-    mechas: {
-        label: "Mechas",
-    },
-    color: {
-        label: "Color",
-    },
-    otros: {
-        label: "Otros",
-    },
 } satisfies ChartConfig;
 
 export function PopularServicesChart({ data }: PopularServicesChartProps) {
+    // Calculate total to convert values to percentages
+    const totalValue = data.reduce((acc, entry) => acc + entry.value, 0);
+    const chartData = data.map(entry => ({
+      ...entry,
+      percentage: Math.round((entry.value / totalValue) * 100),
+    }));
+
     return (
       <ChartContainer config={chartConfig} className="h-full w-full">
         <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+            <BarChart
+                layout="vertical"
+                data={chartData}
+                margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
+            >
+                <XAxis type="number" hide />
+                <YAxis
+                    dataKey="name"
+                    type="category"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    width={80}
+                />
                 <Tooltip
                     cursor={{ fill: 'hsl(var(--accent))' }}
-                    content={<ChartTooltipContent hideLabel nameKey="name" />}
-                />
-                <Pie
-                    data={data}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    strokeWidth={2}
-                    stroke="hsl(var(--background))"
+                    content={<ChartTooltipContent hideLabel indicator="dot" />}
+                 />
+                <Bar
+                    dataKey="percentage"
+                    layout="vertical"
+                    radius={[4, 4, 4, 4]}
+                    barSize={12}
+                    label={{ 
+                        position: 'right', 
+                        offset: 5,
+                        fill: 'hsl(var(--foreground))',
+                        fontSize: 12,
+                        formatter: (value: number) => `${value}%`
+                    }}
                 >
-                   {data.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                    {chartData.map((entry) => (
+                      <cell key={`cell-${entry.name}`} fill={entry.fill} />
                     ))}
-                </Pie>
-                <ChartLegend
-                    content={<ChartLegendContent nameKey="name" />}
-                    verticalAlign="bottom"
-                    height={48}
-                />
-            </PieChart>
+                </Bar>
+            </BarChart>
         </ResponsiveContainer>
        </ChartContainer>
     )

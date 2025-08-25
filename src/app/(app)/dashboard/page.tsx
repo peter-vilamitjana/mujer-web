@@ -1,12 +1,19 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowUp, BarChart, Calendar, PieChart, Users } from "lucide-react";
+import { ArrowUp, BarChart, Calendar, PieChart, Users, Clock, Star } from "lucide-react";
 import { WeeklyTurnosChart } from "@/components/charts/WeeklyTurnosChart";
 import { MonthlyVolumeChart } from "@/components/charts/MonthlyVolumeChart";
 import { PopularServicesChart } from "@/components/charts/PopularServicesChart";
+import { Badge } from "@/components/ui/badge";
 
-// Mock data based on the requested structure
+// Mock data based on the requested structure to emulate Apple Health style widgets
 const mockDashboardData = {
+  ingresosSemana: {
+    total: 1250000,
+    tendencia: 12,
+  },
+  turnosHoy: 18,
+  totalClientes: 257,
   turnosSemana: [
     { dia: 'Mar', cantidad: 8 },
     { dia: 'Mié', cantidad: 12 },
@@ -22,15 +29,9 @@ const mockDashboardData = {
     { name: 'Alisado', value: 40, fill: 'hsl(var(--primary))' },
     { name: 'Mechas', value: 25, fill: 'hsl(var(--primary) / 0.8)' },
     { name: 'Color', value: 18, fill: 'hsl(var(--primary) / 0.6)' },
-    { name: 'Otros', value: 17, fill: 'hsl(var(--primary) / 0.4)' },
+    { name: 'Botox Cap.', value: 12, fill: 'hsl(var(--primary) / 0.4)' },
+    { name: 'Reflejos', value: 5, fill: 'hsl(var(--primary) / 0.2)' },
   ],
-  clientes: { nuevas: 32, recurrentes: 68 },
-  ingresosSemana: {
-    total: 1250000,
-    tendencia: 12,
-  },
-  turnosHoy: 18,
-  totalClientes: 257,
 };
 
 const formatCurrency = (value: number) => 
@@ -38,13 +39,12 @@ const formatCurrency = (value: number) =>
 
 export default function DashboardPage() {
   const { 
-    turnosSemana, 
-    volumenMensual, 
-    serviciosTop, 
-    clientes,
     ingresosSemana,
     turnosHoy,
-    totalClientes
+    totalClientes,
+    turnosSemana, 
+    volumenMensual, 
+    serviciosTop
   } = mockDashboardData;
   
   const totalTurnosSemana = turnosSemana.reduce((acc, day) => acc + day.cantidad, 0);
@@ -56,71 +56,71 @@ export default function DashboardPage() {
         <p className="text-muted-foreground">Resumen de la actividad y rendimiento de tu salón.</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Widget: Turnos de Hoy */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* KPI: Turnos de Hoy */}
         <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle className="text-base font-medium flex items-center justify-between">
+            <CardTitle className="text-sm font-medium flex items-center justify-between text-muted-foreground">
               <span>Turnos de Hoy</span>
-              <Calendar className="h-5 w-5 text-muted-foreground" />
+              <Calendar className="h-5 w-5" />
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold">{turnosHoy}</p>
-            <p className="text-sm text-muted-foreground">Turnos programados para la jornada.</p>
+            <p className="text-xs text-muted-foreground mt-1">Turnos programados para la jornada.</p>
           </CardContent>
         </Card>
 
-        {/* Widget: Total Clientes */}
+        {/* KPI: Total Clientes */}
         <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle className="text-base font-medium flex items-center justify-between">
+            <CardTitle className="text-sm font-medium flex items-center justify-between text-muted-foreground">
               <span>Total de Clientes</span>
-              <Users className="h-5 w-5 text-muted-foreground" />
+              <Users className="h-5 w-5" />
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold">{totalClientes}</p>
-            <p className="text-sm text-muted-foreground">Clientes registrados en el sistema.</p>
+            <p className="text-xs text-muted-foreground mt-1">Clientes registrados en el sistema.</p>
           </CardContent>
         </Card>
 
-        {/* Widget: Ingresos Estimados */}
+        {/* KPI: Ingresos Semanales */}
         <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle className="text-base font-medium flex items-center justify-between">
+            <CardTitle className="text-sm font-medium flex items-center justify-between text-muted-foreground">
               <span>Ingresos Semanales</span>
-              <span className="text-green-500 flex items-center text-sm font-bold">
-                  <ArrowUp className="h-4 w-4"/> {ingresosSemana.tendencia}%
-              </span>
+               <Badge variant="outline" className="text-green-600 border-green-600/50 bg-green-500/10 dark:text-green-400 dark:border-green-400/30 dark:bg-green-500/10">
+                  <ArrowUp className="h-3 w-3 mr-1"/> {ingresosSemana.tendencia}%
+              </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold">{formatCurrency(ingresosSemana.total)}</p>
-            <p className="text-sm text-muted-foreground">Ingresos brutos estimados de la semana.</p>
+            <p className="text-xs text-muted-foreground mt-1">Ingresos brutos estimados de la semana.</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-5">
         {/* Widget: Turnos de la Semana */}
-        <Card className="lg:col-span-1 shadow-sm hover:shadow-md transition-shadow">
+        <Card className="lg:col-span-3 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle>Turnos de la Semana</CardTitle>
-            <CardDescription>Total semana: {totalTurnosSemana} turnos</CardDescription>
+            <CardDescription>Semana actual (mar-sáb). Total: {totalTurnosSemana} turnos</CardDescription>
           </CardHeader>
-          <CardContent className="h-64">
+          <CardContent className="h-80">
             <WeeklyTurnosChart data={turnosSemana} />
           </CardContent>
         </Card>
         
         {/* Widget: Servicios Populares */}
-        <Card className="lg:col-span-1 shadow-sm hover:shadow-md transition-shadow">
+        <Card className="lg:col-span-2 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle>Servicios Populares</CardTitle>
-            <CardDescription>Distribución de los servicios más solicitados.</CardDescription>
+            <CardDescription>Ranking de los servicios más solicitados.</CardDescription>
           </CardHeader>
-          <CardContent className="h-64 flex items-center justify-center">
+          <CardContent className="h-80 flex flex-col justify-center">
             <PopularServicesChart data={serviciosTop} />
           </CardContent>
         </Card>
@@ -130,7 +130,7 @@ export default function DashboardPage() {
         {/* Widget: Volumen Mensual */}
         <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
-            <CardTitle>Volumen Mensual</CardTitle>
+            <CardTitle>Volumen de Turnos Mensual</CardTitle>
             <CardDescription>Comparación de turnos del mes actual vs. el anterior.</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
