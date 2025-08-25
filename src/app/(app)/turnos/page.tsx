@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -48,16 +46,16 @@ const timeSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00"
 type SelectedServiceWithLargo = Servicio & { largo?: LargoPelo };
 
 const mockServices: Servicio[] = [
-    { id: 'corte', nombre: 'Corte', descripcion: '', precio: 30000, duracion: 15 },
-    { id: 'lavado', nombre: 'Lavado', descripcion: '', precio: 9000, duracion: 10 },
-    { id: 'peinado', nombre: 'Peinado', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 12 },
-    { id: 'mechas', nombre: 'Mechas', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 25 },
-    { id: 'reflejos', nombre: 'Reflejos', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 20 },
-    { id: 'color', nombre: 'Color', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 45 },
-    { id: 'bano_crema', nombre: 'Baño de Crema', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 30 },
-    { id: 'botox', nombre: 'Botox Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 40 },
-    { id: 'alisados', nombre: 'Alisados', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 60 },
-    { id: 'nutricion', nombre: 'Nutrición Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 35 },
+    { id: 'corte', nombre: 'Corte', descripcion: '', precio: 30000, duracion: 15, requiereLargo: false, variable: false },
+    { id: 'lavado', nombre: 'Lavado', descripcion: '', precio: 9000, duracion: 10, requiereLargo: false, variable: false },
+    { id: 'peinado', nombre: 'Peinado', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 12, requiereLargo: true, variable: false },
+    { id: 'mechas', nombre: 'Mechas', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 25, requiereLargo: true, variable: false },
+    { id: 'reflejos', nombre: 'Reflejos', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 20, requiereLargo: true, variable: false },
+    { id: 'color', nombre: 'Color', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 45, requiereLargo: true, variable: true, preciosHasta: { corto: 22000, mediano: 30000, largo: 35000 } },
+    { id: 'bano_crema', nombre: 'Baño de Crema', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 30, requiereLargo: true, variable: false },
+    { id: 'botox', nombre: 'Botox Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 40, requiereLargo: true, variable: false },
+    { id: 'alisados', nombre: 'Alisados', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 60, requiereLargo: true, variable: false },
+    { id: 'nutricion', nombre: 'Nutrición Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 35, requiereLargo: true, variable: false },
 ].sort((a, b) => a.nombre.localeCompare(b.nombre));
 
 
@@ -82,6 +80,7 @@ function TurnosContent() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
+  const [showLengthError, setShowLengthError] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,8 +91,8 @@ function TurnosContent() {
           .filter(s => serviceIdParams.includes(s.id))
           .map(s => {
               const largo = searchParams.get(`largo_${s.id}`) as LargoPelo | null;
-              const defaultLargo = s.precios ? (largo || 'corto') : undefined;
-              return { ...s, largo: defaultLargo };
+              // If service requires length, it must be selected by user, so largo is undefined initially
+              return { ...s, largo: s.requiereLargo ? largo || undefined : undefined };
           });
         setSelectedServices(preSelectedServices);
         setStep(isAdmin ? 1 : 2); // Adjust step based on role
@@ -136,32 +135,57 @@ function TurnosContent() {
         if (isSelected) {
             return prev.filter(s => s.id !== service.id);
         } else {
-            return [...prev, { ...service, largo: service.precios ? undefined : undefined }];
+            return [...prev, { ...service, largo: undefined }];
         }
     });
+    setShowLengthError(false);
   };
 
   const handleLargoChange = (serviceId: string, largo: LargoPelo) => {
     setSelectedServices(prev => prev.map(s => s.id === serviceId ? { ...s, largo } : s));
+    setShowLengthError(false);
   };
   
-  const getServicePrice = (service: SelectedServiceWithLargo): number => {
+  const getServicePrice = (service: SelectedServiceWithLargo): { from: number; to?: number } => {
     if (service.precios && service.largo) {
-        return service.precios[service.largo];
+        const fromPrice = service.precios[service.largo];
+        const toPrice = service.preciosHasta ? service.preciosHasta[service.largo] : undefined;
+        return { from: fromPrice, to: toPrice };
     }
-    return service.precio || 0;
+    return { from: service.precio || 0 };
   }
 
   const formatPrice = (price: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price);
   
   const canGoNextFromStep1 = useMemo(() => {
     if (selectedServices.length === 0) return false;
-    return selectedServices.every(s => !s.precios || (s.precios && !!s.largo));
+    return selectedServices.every(s => !s.requiereLargo || (s.requiereLargo && !!s.largo));
   }, [selectedServices]);
 
-  const totalAmount = useMemo(() => selectedServices.reduce((acc, s) => acc + getServicePrice(s), 0), [selectedServices]);
-  const totalDuration = useMemo(() => selectedServices.reduce((acc, s) => acc + s.duracion, 0), [selectedServices]);
-  const depositAmount = useMemo(() => Math.round(totalAmount * MONTO_SEÑA_PORCENTAJE), [totalAmount]);
+  const { totalFrom, totalTo, hasRange } = useMemo(() => {
+    let from = 0;
+    let to = 0;
+    let range = false;
+    selectedServices.forEach(s => {
+        if (s.requiereLargo && !s.largo) return;
+        const price = getServicePrice(s);
+        from += price.from;
+        if (price.to) {
+            to += price.to;
+            range = true;
+        } else {
+            to += price.from;
+        }
+    });
+    return { totalFrom: from, totalTo: to, hasRange: range };
+  }, [selectedServices]);
+
+  const totalDuration = useMemo(() => selectedServices.reduce((acc, s) => {
+      if (s.requiereLargo && !s.largo) return acc;
+      return acc + s.duracion;
+  }, 0), [selectedServices]);
+
+  const depositAmount = useMemo(() => Math.round(totalFrom * MONTO_SEÑA_PORCENTAJE), [totalFrom]);
 
   const servicesSummary = useMemo(() => {
     if (selectedServices.length === 0) return 'Ninguno';
@@ -199,7 +223,8 @@ function TurnosContent() {
           clienteNombre: `${selectedClient.nombre} ${selectedClient.apellido || ''}`.trim(),
           servicio: servicioNombres,
           servicioIds: selectedServices.map(s => s.id),
-          precio: totalAmount,
+          precio: totalFrom,
+          precioHasta: totalTo,
           empleadaNombre: selectedProfessional.name,
           empleadaAsignadaId: selectedProfessional.id,
           fecha: appointmentDateTime,
@@ -359,7 +384,7 @@ function TurnosContent() {
                                               <div className="flex justify-between items-baseline">
                                                 <h4 className="font-semibold">{service.nombre}</h4>
                                                 {service.precios && selectedData?.largo && isSelected ?
-                                                  <p className="text-primary font-bold text-sm">≈ {formatPrice(getServicePrice(selectedData))}</p> :
+                                                  <p className="text-primary font-bold text-sm">≈ {formatPrice(getServicePrice(selectedData).from)}</p> :
                                                   !service.precios && <p className="text-primary font-bold text-sm">{formatPrice(service.precio!)}</p>
                                                 }
                                               </div>
@@ -372,10 +397,10 @@ function TurnosContent() {
                                         </div>
                                         
                                         <div className="mt-4 flex-grow flex flex-col justify-end">
-                                            {isSelected && service.precios && (
+                                            {isSelected && service.requiereLargo && (
                                               <div className="mt-4 pt-4 border-t border-dashed">
                                                   <div className="grid grid-cols-3 gap-2">
-                                                      {(Object.keys(service.precios) as LargoPelo[]).map(largo => (
+                                                      {(Object.keys(service.precios!) as LargoPelo[]).map(largo => (
                                                           <Button
                                                             key={largo}
                                                             variant={selectedData?.largo === largo ? 'default' : 'outline'}
@@ -390,7 +415,8 @@ function TurnosContent() {
                                                           </Button>
                                                       ))}
                                                   </div>
-                                                  <p className="text-xs text-muted-foreground text-center mt-2">Precios aproximados según largo de pelo.</p>
+                                                  <p className="text-xs text-muted-foreground text-center mt-2">Precio desde. Se confirma en el local según diagnóstico.</p>
+                                                  {showLengthError && !selectedData?.largo && <p className="text-xs text-red-500 font-semibold text-center mt-1">Elegí un largo para continuar.</p>}
                                               </div>
                                             )}
                                             {isSelected && (
@@ -408,9 +434,10 @@ function TurnosContent() {
                 <CardFooter className="flex-col items-stretch gap-4 md:flex-row md:justify-between">
                     {selectedServices.length > 0 ? (
                         <div className='p-3 border rounded-lg bg-muted/50 text-sm w-full'>
-                            <p><span className="font-semibold">Total estimado:</span> {canGoNextFromStep1 ? formatPrice(totalAmount) : 'Selecciona el largo...'}</p>
-                            <p><span className="font-semibold">Tiempo total:</span> {totalDuration} min.</p>
+                            <p><span className="font-semibold">Total estimado:</span> {canGoNextFromStep1 ? (hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)) : 'Selecciona el largo...'}</p>
+                            <p><span className="font-semibold">Tiempo total:</span> {canGoNextFromStep1 ? `${totalDuration} min.` : '...'}</p>
                             <p className="truncate"><span className="font-semibold">Servicios:</span> {servicesSummary}</p>
+                            <p className="text-xs text-muted-foreground mt-1">Estimado. Puede variar según diagnóstico (+ insumos).</p>
                         </div>
                     ) : (
                          <div className='p-3 border rounded-lg bg-muted/50 text-sm text-center text-muted-foreground w-full'>
@@ -418,7 +445,7 @@ function TurnosContent() {
                         </div>
                     )}
                     <div className='flex justify-end w-full md:w-auto mt-4 md:mt-0'>
-                        <Button onClick={() => setStep(2)} disabled={!canGoNextFromStep1}>Siguiente</Button>
+                        <Button onClick={() => { canGoNextFromStep1 ? setStep(2) : setShowLengthError(true) }} disabled={selectedServices.length === 0}>Siguiente</Button>
                     </div>
                 </CardFooter>
               </Card>
@@ -507,7 +534,7 @@ function TurnosContent() {
                         <div className="p-6 border rounded-lg text-center bg-muted/25">
                             <p className="text-sm font-semibold text-muted-foreground">Seña para confirmar ({MONTO_SEÑA_PORCENTAJE * 100}%)</p>
                             <p className="text-5xl font-bold text-primary my-2">{formatPrice(depositAmount)}</p>
-                            <p className="text-sm text-muted-foreground">La seña se descontará del total de <span className="font-semibold text-foreground">{formatPrice(totalAmount)}</span> en tu visita.</p>
+                            <p className="text-sm text-muted-foreground">La seña se descontará del total de <span className="font-semibold text-foreground">{hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)}</span> en tu visita.</p>
                         </div>
                         <p className="text-xs text-center text-muted-foreground px-4">
                             Para asegurar tu turno se cobrará una seña del {MONTO_SEÑA_PORCENTAJE * 100}% del valor total. Luego se descontará del precio final.
@@ -534,14 +561,3 @@ export default function TurnosPage() {
         </Suspense>
     )
 }
-
-    
-
-    
-
-
-
-
-
-
-

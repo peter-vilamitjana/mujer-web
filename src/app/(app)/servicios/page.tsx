@@ -3,32 +3,38 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Clock, Minus, Plus } from "lucide-react";
+import { ArrowRight, Clock, Info } from "lucide-react";
 import NewServiceForm from "@/components/NewServiceForm";
 import { useUser } from "@/contexts/UserContext";
 import { cn } from "@/lib/utils";
-import type { Servicio, PreciosPorLargo, LargoPelo } from "@/lib/types";
+import type { Servicio, LargoPelo } from "@/lib/types";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 type SelectedServiceWithLargo = Servicio & { largo?: LargoPelo };
 
 const mockServices: Servicio[] = [
-    { id: 'corte', nombre: 'Corte', descripcion: '', precio: 30000, duracion: 15 },
-    { id: 'lavado', nombre: 'Lavado', descripcion: '', precio: 9000, duracion: 10 },
-    { id: 'peinado', nombre: 'Peinado', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 12 },
-    { id: 'mechas', nombre: 'Mechas', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 25 },
-    { id: 'reflejos', nombre: 'Reflejos', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 20 },
-    { id: 'color', nombre: 'Color', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 45 },
-    { id: 'bano_crema', nombre: 'Baño de Crema', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 30 },
-    { id: 'botox', nombre: 'Botox Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 40 },
-    { id: 'alisados', nombre: 'Alisados', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 60 },
-    { id: 'nutricion', nombre: 'Nutrición Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 35 },
+    { id: 'corte', nombre: 'Corte', descripcion: '', precio: 30000, duracion: 15, requiereLargo: false, variable: false },
+    { id: 'lavado', nombre: 'Lavado', descripcion: '', precio: 9000, duracion: 10, requiereLargo: false, variable: false },
+    { id: 'peinado', nombre: 'Peinado', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 12, requiereLargo: true, variable: false },
+    { id: 'mechas', nombre: 'Mechas', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 25, requiereLargo: true, variable: false },
+    { id: 'reflejos', nombre: 'Reflejos', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 20, requiereLargo: true, variable: false },
+    { id: 'color', nombre: 'Color', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 45, requiereLargo: true, variable: true, preciosHasta: { corto: 22000, mediano: 30000, largo: 35000 } },
+    { id: 'bano_crema', nombre: 'Baño de Crema', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 30, requiereLargo: true, variable: false },
+    { id: 'botox', nombre: 'Botox Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 40, requiereLargo: true, variable: false },
+    { id: 'alisados', nombre: 'Alisados', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 60, requiereLargo: true, variable: false },
+    { id: 'nutricion', nombre: 'Nutrición Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 35, requiereLargo: true, variable: false },
 ];
 
 
 export default function ServiciosPage() {
   const [selectedServices, setSelectedServices] = useState<SelectedServiceWithLargo[]>([]);
+  const [showLengthError, setShowLengthError] = useState(false);
   const user = useUser();
   const userRole = user?.rol;
   const router = useRouter();
@@ -39,25 +45,37 @@ export default function ServiciosPage() {
       if (isSelected) {
         return prev.filter(s => s.id !== service.id);
       } else {
-        const largo = service.precios ? 'corto' : undefined;
-        return [...prev, { ...service, largo }];
+        // Al seleccionar, no pre-definimos un largo. El usuario debe elegir.
+        return [...prev, { ...service, largo: undefined }];
       }
     });
+    setShowLengthError(false); // Reset error on change
   };
   
   const handleLargoChange = (serviceId: string, largo: LargoPelo) => {
     setSelectedServices(prev => prev.map(s => s.id === serviceId ? { ...s, largo } : s));
+    setShowLengthError(false); // Reset error on change
   };
 
-  const getServicePrice = (service: SelectedServiceWithLargo): number => {
+  const getServicePrice = (service: SelectedServiceWithLargo): { from: number; to?: number } => {
     if (service.precios && service.largo) {
-        return service.precios[service.largo];
+        const fromPrice = service.precios[service.largo];
+        const toPrice = service.preciosHasta ? service.preciosHasta[service.largo] : undefined;
+        return { from: fromPrice, to: toPrice };
     }
-    return service.precio || 0;
+    return { from: service.precio || 0 };
   }
 
+  const isContinueDisabled = useMemo(() => {
+    if (selectedServices.length === 0) return true;
+    return selectedServices.some(s => s.requiereLargo && !s.largo);
+  }, [selectedServices]);
+
   const handleContinue = () => {
-    if (selectedServices.length === 0) return;
+    if (isContinueDisabled) {
+      setShowLengthError(true);
+      return;
+    }
     const params = new URLSearchParams();
     selectedServices.forEach(service => {
         params.append('servicioId', service.id);
@@ -72,8 +90,28 @@ export default function ServiciosPage() {
     return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price);
   }
 
-  const totalAmount = useMemo(() => selectedServices.reduce((acc, s) => acc + getServicePrice(s), 0), [selectedServices]);
-  const totalDuration = useMemo(() => selectedServices.reduce((acc, s) => acc + s.duracion, 0), [selectedServices]);
+  const { totalFrom, totalTo, hasRange } = useMemo(() => {
+    let from = 0;
+    let to = 0;
+    let range = false;
+    selectedServices.forEach(s => {
+        if (s.requiereLargo && !s.largo) return; // No sumar si no se ha elegido largo
+        const price = getServicePrice(s);
+        from += price.from;
+        if (price.to) {
+            to += price.to;
+            range = true;
+        } else {
+            to += price.from;
+        }
+    });
+    return { totalFrom: from, totalTo: to, hasRange: range };
+  }, [selectedServices]);
+
+  const totalDuration = useMemo(() => selectedServices.reduce((acc, s) => {
+    if(s.requiereLargo && !s.largo) return acc;
+    return acc + s.duracion;
+  }, 0), [selectedServices]);
   
   const servicesSummary = useMemo(() => {
     if (selectedServices.length === 0) return '';
@@ -85,6 +123,27 @@ export default function ServiciosPage() {
     }
     return summary;
   }, [selectedServices]);
+
+  const LengthPopover = () => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-4 w-4 text-muted-foreground" aria-label="Información sobre largo">
+          <Info className="h-4 w-4"/>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 text-sm">
+        <h4 className="font-bold mb-2">Cómo definimos el largo</h4>
+        <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+          <li><span className="font-semibold text-foreground">Corto:</span> hasta el mentón</li>
+          <li><span className="font-semibold text-foreground">Mediano:</span> hasta los hombros</li>
+          <li><span className="font-semibold text-foreground">Largo:</span> por debajo de los hombros</li>
+        </ul>
+        <p className="mt-4 text-xs text-muted-foreground">
+          <span className="font-bold">Nota:</span> El precio mostrado es a partir de según diagnóstico al llegar.
+        </p>
+      </PopoverContent>
+    </Popover>
+  );
 
 
   return (
@@ -103,6 +162,7 @@ export default function ServiciosPage() {
         {mockServices.map(servicio => {
           const isSelected = selectedServices.some(s => s.id === servicio.id);
           const selectedData = selectedServices.find(s => s.id === servicio.id);
+          const price = getServicePrice(selectedData || servicio);
           
           return (
             <div
@@ -125,25 +185,28 @@ export default function ServiciosPage() {
                   
                   <div className="my-4 flex items-center justify-center min-h-[56px]">
                      {servicio.precios && !isSelected ? (
-                        <p className="text-lg text-center text-muted-foreground/80 italic">Precio variable</p>
+                        <div className="flex items-center gap-1 text-lg text-center text-muted-foreground/80 italic">
+                          <span>Precio variable</span>
+                          <LengthPopover />
+                        </div>
                      ) : (
-                        <p className="text-4xl font-bold text-primary text-center">{formatPrice(getServicePrice(selectedData || servicio))}</p>
+                        <p className="text-4xl font-bold text-primary text-center">{formatPrice(price.from)}</p>
                      )}
                   </div>
                 </div>
                  
-                 {servicio.precios && (
+                 {servicio.requiereLargo && (
                    <div 
                       className="mt-auto space-y-3"
                       onClick={(e) => e.stopPropagation()}
                    >
                      <RadioGroup
-                        value={selectedData?.largo || 'corto'}
+                        value={selectedData?.largo}
                         onValueChange={(value) => handleLargoChange(servicio.id, value as LargoPelo)}
                         className="grid grid-cols-3 gap-2"
                         disabled={!isSelected}
                       >
-                       {(Object.keys(servicio.precios) as LargoPelo[]).map(largo => (
+                       {(Object.keys(servicio.precios!) as LargoPelo[]).map(largo => (
                            <div key={largo}>
                              <RadioGroupItem value={largo} id={`${servicio.id}-${largo}`} className="sr-only" />
                              <Label htmlFor={`${servicio.id}-${largo}`} className={cn(
@@ -157,7 +220,7 @@ export default function ServiciosPage() {
                            </div>
                         ))}
                       </RadioGroup>
-                      <p className="text-xs text-muted-foreground text-center">Precio base. Varía según el largo.</p>
+                      <p className="text-xs text-muted-foreground text-center">Precio desde. Se confirma en el local según diagnóstico.</p>
                    </div>
                  )}
             </div>
@@ -171,11 +234,17 @@ export default function ServiciosPage() {
             <div className="max-w-md">
               {selectedServices.length > 0 ? (
                   <div>
-                      <p className="text-sm font-semibold">Total Estimado: <span className="text-2xl font-bold text-primary">{formatPrice(totalAmount)}</span></p>
+                      <p className="text-sm font-semibold">
+                        Total estimado: 
+                        <span className="text-2xl font-bold text-primary ml-2">
+                          {hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)}
+                        </span>
+                      </p>
                       <p className="text-xs text-muted-foreground">{selectedServices.length} servicio(s) seleccionado(s) - {totalDuration} min.</p>
                        <p className="text-sm text-foreground mt-2 truncate">
                           <span className="font-semibold">Serv:</span> {servicesSummary}
                        </p>
+                       <p className="text-xs text-muted-foreground mt-1">Estimado. Puede variar según diagnóstico (+ insumos).</p>
                   </div>
               ) : (
                   <div>
@@ -183,11 +252,12 @@ export default function ServiciosPage() {
                       <p className="text-sm text-muted-foreground">Elige uno o más servicios para continuar.</p>
                   </div>
               )}
+               {showLengthError && <p className="text-sm text-red-500 font-semibold mt-2">Elegí un largo para continuar.</p>}
             </div>
             <Button
               size="lg"
               onClick={handleContinue}
-              disabled={selectedServices.length === 0}
+              disabled={isContinueDisabled}
               className="w-full max-w-xs rounded-full py-6 text-lg"
             >
               Continuar
