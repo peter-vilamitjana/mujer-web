@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -89,13 +90,20 @@ const LengthPopoverTrigger = ({ asChild = false }: { asChild?: boolean }) => (
 );
 
 function formatDuration(minutes: number) {
-    if (!minutes) return `0 min`;
+    if (!minutes || minutes <= 0) return `0min`;
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
-    if(hours > 0) {
-        return `${hours}h ${remainingMinutes}min (${minutes} min)`;
+
+    if (hours > 0 && remainingMinutes === 0) {
+        return `${hours}h`;
     }
-    return `${minutes} min`;
+    if (hours === 0 && remainingMinutes > 0) {
+        return `${remainingMinutes}min`;
+    }
+    if (hours > 0 && remainingMinutes > 0) {
+        return `${hours}h ${remainingMinutes}min`;
+    }
+    return `${minutes}min`;
 }
 
 function TurnosContent() {
@@ -429,7 +437,7 @@ function TurnosContent() {
                                               </div>
                                               <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                                                   <Clock className="h-3 w-3"/>
-                                                  <span>{service.duracion} min.</span>
+                                                  <span>{formatDuration(service.duracion)}</span>
                                               </div>
                                             </div>
                                             <Checkbox checked={isSelected} className="rounded-full h-5 w-5"/>
@@ -477,7 +485,7 @@ function TurnosContent() {
                     {selectedServices.length > 0 ? (
                         <div className='p-3 border rounded-lg bg-muted/50 text-sm w-full'>
                             <p><span className="font-semibold">Total estimado:</span> {canGoNextFromStep1 ? (hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)) : 'Selecciona el largo...'}</p>
-                            <p><span className="font-semibold">Tiempo total:</span> {canGoNextFromStep1 ? `${totalDuration} min.` : '...'}</p>
+                            <p><span className="font-semibold">Tiempo total:</span> {canGoNextFromStep1 ? formatDuration(totalDuration) : '...'}</p>
                             <p className="truncate"><span className="font-semibold">Servicios:</span> {servicesSummary}</p>
                             <p className="text-xs text-muted-foreground mt-1">Estimado. Puede variar según diagnóstico (+ insumos).</p>
                         </div>
@@ -614,4 +622,5 @@ export default function TurnosPage() {
         </Suspense>
     )
 }
+
 

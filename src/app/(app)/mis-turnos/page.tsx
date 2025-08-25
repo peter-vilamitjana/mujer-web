@@ -40,29 +40,29 @@ function ProximoTurnoCard({ turno, onCancel }: { turno: Turno, onCancel: (id: st
   const hasMoreServices = services.length > 3;
 
   return (
-    <div key={turno.id} className="p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex flex-col sm:flex-row sm:items-stretch gap-6">
-      <div className="flex flex-col justify-center items-center text-center p-4 rounded-lg bg-black/10 flex-shrink-0">
-        <p className="font-bold text-4xl">{format(parseISO(turno.fecha), "d", { locale: es })}</p>
-        <h3 className="font-semibold text-lg capitalize">
+    <div key={turno.id} className="p-4 sm:p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex flex-col sm:flex-row sm:items-stretch gap-4">
+      <div className="flex flex-col justify-center items-center text-center p-4 rounded-lg bg-black/10 flex-shrink-0 w-full sm:w-28">
+        <p className="font-bold text-3xl sm:text-4xl">{format(parseISO(turno.fecha), "d", { locale: es })}</p>
+        <h3 className="font-semibold text-base sm:text-lg capitalize">
           {format(parseISO(turno.fecha), "MMMM", { locale: es })}
         </h3>
-        <p className="font-mono text-xl mt-3 flex items-center gap-2 bg-black/20 px-3 py-1 rounded-full">
-          <Clock className="h-5 w-5 opacity-80" />
-          {format(parseISO(turno.fecha), "HH:mm 'hs'")}
+        <p className="font-mono text-lg sm:text-xl mt-2 sm:mt-3 flex items-center gap-2 bg-black/20 px-3 py-1 rounded-full">
+          <Clock className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
+          {format(parseISO(turno.fecha), "HH:mm")}
         </p>
       </div>
 
       <div className="flex-1 flex flex-col justify-between">
         <div>
           <p className="flex items-center gap-2 text-sm opacity-90"><User className="h-4 w-4" />Con {turno.empleadaNombre}</p>
-          <p className="font-semibold mt-4 mb-2 text-base">Servicios:</p>
-           <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-              <ul className="space-y-1 text-sm list-disc list-inside text-white/90">
+          <p className="font-semibold mt-3 mb-1 text-sm">Servicios:</p>
+           <Collapsible open={isExpanded} onOpenChange={setIsExpanded} className="space-y-1">
+              <ul className="space-y-1 text-xs list-disc list-inside text-white/90">
                 {displayServices.map((s, i) => <li key={i}>{s}</li>)}
               </ul>
               {hasMoreServices && (
                 <CollapsibleTrigger asChild>
-                   <button className="flex items-center gap-1 text-sm font-semibold text-primary-foreground/80 hover:text-primary-foreground mt-2">
+                   <button className="flex items-center gap-1 text-xs font-semibold text-primary-foreground/80 hover:text-primary-foreground mt-2">
                     {isExpanded ? '– Ver menos' : `+ Ver todos los servicios`}
                     <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")} />
                   </button>
@@ -70,7 +70,7 @@ function ProximoTurnoCard({ turno, onCancel }: { turno: Turno, onCancel: (id: st
               )}
            </Collapsible>
         </div>
-        <div className="pt-4 mt-4 border-t border-white/20 flex justify-end">
+        <div className="pt-3 mt-3 border-t border-white/20 flex justify-end">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/20"><XCircle className="h-4 w-4 mr-2" /> Cancelar Turno</Button>
@@ -181,7 +181,7 @@ export default function MisTurnosPage() {
       ) : proximosTurnos.length > 0 ? (
         <Card className="bg-gradient-to-br from-primary/90 to-primary text-primary-foreground shadow-2xl shadow-primary/20 rounded-2xl">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg"><Calendar className="h-5 w-5"/>Próximo Turno</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-lg"><Calendar className="h-5 w-5"/>Próximos Turnos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {proximosTurnos.map(turno => (
