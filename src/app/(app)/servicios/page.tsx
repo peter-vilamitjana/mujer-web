@@ -22,14 +22,14 @@ type SelectedServiceWithLargo = Servicio & { largo?: LargoPelo };
 const mockServices: Servicio[] = [
     { id: 'corte', nombre: 'Corte', descripcion: '', precio: 30000, duracion: 15, requiereLargo: false, variable: false },
     { id: 'lavado', nombre: 'Lavado', descripcion: '', precio: 9000, duracion: 10, requiereLargo: false, variable: false },
-    { id: 'peinado', nombre: 'Peinado', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 12, requiereLargo: true, variable: false },
-    { id: 'mechas', nombre: 'Mechas', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 25, requiereLargo: true, variable: false },
-    { id: 'reflejos', nombre: 'Reflejos', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 20, requiereLargo: true, variable: false },
-    { id: 'color', nombre: 'Color', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 45, requiereLargo: true, variable: true, preciosHasta: { corto: 22000, mediano: 30000, largo: 35000 } },
-    { id: 'bano_crema', nombre: 'Baño de Crema', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 30, requiereLargo: true, variable: false },
-    { id: 'botox', nombre: 'Botox Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 40, requiereLargo: true, variable: false },
-    { id: 'alisados', nombre: 'Alisados', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 60, requiereLargo: true, variable: false },
-    { id: 'nutricion', nombre: 'Nutrición Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 35, requiereLargo: true, variable: false },
+    { id: 'peinado', nombre: 'Peinado', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 12, requiereLargo: true, variable: false, descripcion: '' },
+    { id: 'mechas', nombre: 'Mechas', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 25, requiereLargo: true, variable: true, preciosHasta: { corto: 22000, mediano: 30000, largo: 35000 }, descripcion: '' },
+    { id: 'reflejos', nombre: 'Reflejos', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 20, requiereLargo: true, variable: false, descripcion: '' },
+    { id: 'color', nombre: 'Color', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 45, requiereLargo: true, variable: true, preciosHasta: { corto: 22000, mediano: 30000, largo: 35000 }, descripcion: '' },
+    { id: 'bano_crema', nombre: 'Baño de Crema', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 30, requiereLargo: true, variable: false, descripcion: '' },
+    { id: 'botox', nombre: 'Botox Capilar', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 40, requiereLargo: true, variable: false, descripcion: '' },
+    { id: 'alisados', nombre: 'Alisados', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 60, requiereLargo: true, variable: false, descripcion: '' },
+    { id: 'nutricion', nombre: 'Nutrición Capilar', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 35, requiereLargo: true, variable: false, descripcion: '' },
 ];
 
 
@@ -59,6 +59,7 @@ export default function ServiciosPage() {
   };
 
   const getServicePrice = (service: SelectedServiceWithLargo): { from: number; to?: number } => {
+    if (service.requiereLargo && !service.largo) return { from: 0, to: 0 };
     if (service.precios && service.largo) {
         const fromPrice = service.precios[service.largo];
         const toPrice = service.variable && service.preciosHasta ? service.preciosHasta[service.largo] : undefined;
@@ -96,7 +97,6 @@ export default function ServiciosPage() {
     let to = 0;
     let range = false;
     selectedServices.forEach(s => {
-        if (s.requiereLargo && !s.largo) return; // No sumar si no se ha elegido largo
         const price = getServicePrice(s);
         from += price.from;
         if (price.to) {
@@ -111,7 +111,7 @@ export default function ServiciosPage() {
 
   const totalDuration = useMemo(() => selectedServices.reduce((acc, s) => {
     if(s.requiereLargo && !s.largo) return acc;
-    return acc + s.duracion;
+    return acc + (s.duracion || 0);
   }, 0), [selectedServices]);
   
   const servicesSummary = useMemo(() => {
@@ -185,7 +185,7 @@ export default function ServiciosPage() {
                    </p>
                   
                   <div className="my-4 flex items-center justify-center min-h-[56px]">
-                     {servicio.precios && !isSelected ? (
+                     {servicio.requiereLargo && !isSelected ? (
                         <div className="flex items-center gap-1 text-lg text-center text-muted-foreground/80 italic">
                           <span>Precio variable</span>
                           <LengthPopover />

@@ -49,14 +49,14 @@ type SelectedServiceWithLargo = Servicio & { largo?: LargoPelo };
 const mockServices: Servicio[] = [
     { id: 'corte', nombre: 'Corte', descripcion: '', precio: 30000, duracion: 15, requiereLargo: false, variable: false },
     { id: 'lavado', nombre: 'Lavado', descripcion: '', precio: 9000, duracion: 10, requiereLargo: false, variable: false },
-    { id: 'peinado', nombre: 'Peinado', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 12, requiereLargo: true, variable: false },
-    { id: 'mechas', nombre: 'Mechas', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 25, requiereLargo: true, variable: false },
-    { id: 'reflejos', nombre: 'Reflejos', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 20, requiereLargo: true, variable: false },
-    { id: 'color', nombre: 'Color', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 45, requiereLargo: true, variable: true, preciosHasta: { corto: 22000, mediano: 30000, largo: 35000 } },
-    { id: 'bano_crema', nombre: 'Baño de Crema', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 30, requiereLargo: true, variable: false },
-    { id: 'botox', nombre: 'Botox Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 40, requiereLargo: true, variable: false },
-    { id: 'alisados', nombre: 'Alisados', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 60, requiereLargo: true, variable: false },
-    { id: 'nutricion', nombre: 'Nutrición Capilar', descripcion: '', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 35, requiereLargo: true, variable: false },
+    { id: 'peinado', nombre: 'Peinado', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 12, requiereLargo: true, variable: false, descripcion: '' },
+    { id: 'mechas', nombre: 'Mechas', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 25, requiereLargo: true, variable: true, preciosHasta: { corto: 22000, mediano: 30000, largo: 35000 }, descripcion: '' },
+    { id: 'reflejos', nombre: 'Reflejos', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 20, requiereLargo: true, variable: false, descripcion: '' },
+    { id: 'color', nombre: 'Color', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 45, requiereLargo: true, variable: true, preciosHasta: { corto: 22000, mediano: 30000, largo: 35000 }, descripcion: '' },
+    { id: 'bano_crema', nombre: 'Baño de Crema', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 30, requiereLargo: true, variable: false, descripcion: '' },
+    { id: 'botox', nombre: 'Botox Capilar', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 40, requiereLargo: true, variable: false, descripcion: '' },
+    { id: 'alisados', nombre: 'Alisados', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 60, requiereLargo: true, variable: false, descripcion: '' },
+    { id: 'nutricion', nombre: 'Nutrición Capilar', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 35, requiereLargo: true, variable: false, descripcion: '' },
 ].sort((a, b) => a.nombre.localeCompare(b.nombre));
 
 
@@ -93,11 +93,10 @@ function TurnosContent() {
           .filter(s => serviceIdParams.includes(s.id))
           .map(s => {
               const largo = searchParams.get(`largo_${s.id}`) as LargoPelo | null;
-              // If service requires length, it must be selected by user, so largo is undefined initially
               return { ...s, largo: s.requiereLargo ? largo || undefined : undefined };
           });
         setSelectedServices(preSelectedServices);
-        setStep(isAdmin ? 1 : 2); // Adjust step based on role
+        setStep(isAdmin ? 1 : 2);
       }
 
       if (isAdmin) {
@@ -111,7 +110,7 @@ function TurnosContent() {
             const client = clientsData.find(c => c.id === clientIdParam);
             if (client) {
               setSelectedClient(client);
-              setStep(1); // Go to next step if client is pre-selected
+              setStep(1);
             }
         }
       } else if (user) {
@@ -149,6 +148,7 @@ function TurnosContent() {
   };
   
   const getServicePrice = (service: SelectedServiceWithLargo): { from: number; to?: number } => {
+    if (service.requiereLargo && !service.largo) return { from: 0, to: 0 };
     if (service.precios && service.largo) {
         const fromPrice = service.precios[service.largo];
         const toPrice = service.variable && service.preciosHasta ? service.preciosHasta[service.largo] : undefined;
@@ -169,7 +169,6 @@ function TurnosContent() {
     let to = 0;
     let range = false;
     selectedServices.forEach(s => {
-        if (s.requiereLargo && !s.largo) return;
         const price = getServicePrice(s);
         from += price.from;
         if (price.to) {
@@ -184,7 +183,7 @@ function TurnosContent() {
 
   const totalDuration = useMemo(() => selectedServices.reduce((acc, s) => {
       if (s.requiereLargo && !s.largo) return acc;
-      return acc + s.duracion;
+      return acc + (s.duracion || 0);
   }, 0), [selectedServices]);
 
   const depositAmount = useMemo(() => Math.round(totalFrom * MONTO_SEÑA_PORCENTAJE), [totalFrom]);
