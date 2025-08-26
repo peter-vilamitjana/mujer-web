@@ -1,14 +1,13 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowUp, Users, Scissors, LineChart as LineChartIcon, BarChart3, Clock } from "lucide-react";
-import { MonthlyVolumeChart } from "@/components/charts/MonthlyVolumeChart";
+import { ArrowUp, Users, Scissors } from "lucide-react";
 import { PopularServicesChart } from "@/components/charts/PopularServicesChart";
-import { Badge } from "@/components/ui/badge";
-import { WeeklyTurnosChart } from "@/components/charts/WeeklyTurnosChart";
 import { db } from "@/lib/firebase";
 import VolumenTiempoReal from "@/components/VolumenTiempoReal";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import IngresosSemanalesCard from "@/components/IngresosSemanalesCard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { MonthlyVolumeChart } from "@/components/charts/MonthlyVolumeChart";
+import { WeeklyTurnosChart } from "@/components/charts/WeeklyTurnosChart";
 
 
 const mockDashboardData = {
@@ -19,7 +18,7 @@ const mockDashboardData = {
   turnosHoy: 18,
   totalClientes: 257,
   live: {
-    clientasAhora: 5,
+    clientasAhora: 2,
     turnosUltimaHora: 3,
   },
   turnosSemana: [
@@ -34,11 +33,11 @@ const mockDashboardData = {
     { mes: 'actual', total: 205 },
   ],
   serviciosTop: [
-    { name: 'Alisado', value: 40 },
-    { name: 'Mechas', value: 25 },
-    { name: 'Color', value: 18 },
-    { name: 'Botox Cap.', value: 12 },
-    { name: 'Reflejos', value: 5 },
+    { nombre: 'Alisado', porcentaje: 38, deltaPct: 3.2 },
+    { nombre: 'Mechas', porcentaje: 25, deltaPct: -1.5 },
+    { nombre: 'Color', porcentaje: 18, deltaPct: 0 },
+    { nombre: 'Botox Capilar', porcentaje: 12, deltaPct: 5.8 },
+    { nombre: 'Reflejos', porcentaje: 7, deltaPct: -10.1 },
   ],
    horaPico: [
     { hora: '09:00', turnos: 2 },
@@ -61,22 +60,18 @@ const formatCurrency = (value: number) =>
 
 export default function DashboardPage() {
   const { 
-    ingresosSemana,
     turnosHoy,
     totalClientes,
-    volumenMensual, 
     serviciosTop,
     turnosSemana,
-    horaPico
+    volumenMensual
   } = mockDashboardData;
-  
-  const totalTurnosSemana = turnosSemana.reduce((acc, dia) => acc + dia.cantidad, 0);
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Resumen de la actividad y rendimiento de tu salón.</p>
+    <div className="space-y-6">
+      <div className="text-left">
+        <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground mt-1">Resumen de la actividad y rendimiento de tu salón.</p>
       </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -84,47 +79,65 @@ export default function DashboardPage() {
 
         <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
            <CardHeader>
-            <CardTitle className="text-base font-semibold flex items-center justify-between text-muted-foreground">
+            <CardTitle className="text-lg font-semibold flex items-center justify-between">
               <span>Turnos de Hoy</span>
             </CardTitle>
+            <CardDescription className="text-sm">Total de citas programadas para la jornada.</CardDescription>
           </CardHeader>
-           <CardContent>
+           <CardContent className="flex items-end justify-between">
             <p className="text-4xl font-bold">{turnosHoy}</p>
-             <p className="text-sm text-muted-foreground mt-1">Turnos programados para la jornada.</p>
+            <Scissors className="h-6 w-6 text-muted-foreground" />
           </CardContent>
         </Card>
 
         <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
            <CardHeader>
-             <CardTitle className="text-base font-semibold flex items-center justify-between text-muted-foreground">
+             <CardTitle className="text-lg font-semibold flex items-center justify-between">
                 <span>Total de Clientes</span>
-                <Users className="h-5 w-5" />
              </CardTitle>
+             <CardDescription className="text-sm">Clientes registrados en el sistema.</CardDescription>
            </CardHeader>
-           <CardContent>
+           <CardContent className="flex items-end justify-between">
              <p className="text-4xl font-bold">{totalClientes}</p>
-             <p className="text-sm text-muted-foreground mt-1">Clientes registrados en el sistema.</p>
+             <Users className="h-6 w-6 text-muted-foreground" />
            </CardContent>
         </Card>
       </div>
 
        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <Card className="lg:col-span-3 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
-          <CardHeader>
-              <CardTitle>Turnos de la Semana</CardTitle>
-              <CardDescription>Volumen de trabajo de martes a sábado.</CardDescription>
-          </CardHeader>
-          <CardContent className="h-80">
-              <WeeklyTurnosChart data={turnosSemana} />
-          </CardContent>
+           <Tabs defaultValue="semana">
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle>Volumen de Turnos</CardTitle>
+                            <CardDescription>Comparación de la cantidad de turnos.</CardDescription>
+                        </div>
+                        <TabsList>
+                            <TabsTrigger value="dia">Día</TabsTrigger>
+                            <TabsTrigger value="semana">Semana</TabsTrigger>
+                            <TabsTrigger value="mes">Mes</TabsTrigger>
+                        </TabsList>
+                    </div>
+                </CardHeader>
+                <TabsContent value="dia" className="h-80 w-full p-4">
+                     <WeeklyTurnosChart data={mockDashboardData.horaPico.map(h => ({ dia: h.hora.slice(0,2), cantidad: h.turnos }))} />
+                </TabsContent>
+                <TabsContent value="semana" className="h-80 w-full p-4">
+                     <WeeklyTurnosChart data={turnosSemana} />
+                </TabsContent>
+                <TabsContent value="mes" className="h-80 w-full p-4">
+                    <MonthlyVolumeChart data={volumenMensual} />
+                </TabsContent>
+            </Tabs>
         </Card>
         <Card className="lg:col-span-2 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
            <CardHeader>
             <CardTitle>Servicios Populares</CardTitle>
-            <CardDescription>Top 5 más solicitados.</CardDescription>
+            <CardDescription>Top 5 más solicitados esta semana.</CardDescription>
           </CardHeader>
           <CardContent className="h-80 flex flex-col justify-center">
-            <PopularServicesChart data={serviciosTop} />
+            <PopularServicesChart items={serviciosTop} updatedAt={new Date()} />
           </CardContent>
         </Card>
       </div>
@@ -142,11 +155,11 @@ export default function DashboardPage() {
         
         <Card className="lg:col-span-3 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
           <CardHeader>
-             <CardTitle>Volumen Mensual</CardTitle>
-            <CardDescription>Comparación de turnos del mes actual vs. el anterior.</CardDescription>
+             <CardTitle>Hora Pico del Día</CardTitle>
+            <CardDescription>Distribución de turnos a lo largo de la jornada.</CardDescription>
           </CardHeader>
           <CardContent className="h-80 flex flex-col justify-center">
-            <MonthlyVolumeChart data={volumenMensual} />
+            <WeeklyTurnosChart data={mockDashboardData.horaPico.map(h => ({ dia: h.hora.slice(0,2), cantidad: h.turnos }))} />
           </CardContent>
         </Card>
       </div>
