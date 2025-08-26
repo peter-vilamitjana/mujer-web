@@ -26,83 +26,89 @@ export default function RealtimeWaveformWidget({
   const { nowCount, lastHourCount, sparkline, capacity, stale } =
     useRealtimeMetrics(db, sucursalId);
 
-  const SAMPLES = 240;
   const baseline = height / 2;
 
-  const [amp, setAmp] = useState(8);      
-  const ampTargetRef = useRef(8);         
+  // ===== reemplazo de la “lógica de onda” por curva de nivel suave =====
+  const pathRef = useRef<SVGPathElement | null>(null);
+
+  // buffer de puntos (últimos N minutos). Cada punto representa un sample.
+  const WINDOW_MIN = 15; // ventana visible ~15 min (ajustable: más largo = más lenta)
+  const SAMPLE_EVERY_MS = 2000; // muestreo cada 2s (ajusta a 3000 si la querés más lenta)
+  const SAMPLES = Math.ceil((WINDOW_MIN * 60_000) / SAMPLE_EVERY_MS);
+
   const pointsRef = useRef<number[]>(
     Array.from({ length: SAMPLES }, () => baseline)
   );
-  const rafRef = useRef<number | null>(null);
-  const tRef = useRef(0);
 
-  useEffect(() => {
-    if (nowCount === null) return;
+  // nivel suavizado (EMA): sube/baja lento hacia el target (según nowCount)
+  const levelRef = useRef(baseline);
+  const targetRef = useRef(baseline);
+
+  // mapea cantidad de clientas a Y de pantalla (arriba = más clientas)
+  function yForCount(count: number) {
     const maxRef =
-      capacity ??
-      (sparkline.length ? Math.max(1, ...sparkline) : 6); 
-    const normalized = clamp((nowCount ?? 0) / maxRef, 0, 1);
-    // The target amplitude is now the main driver of the wave's height.
-    // It maps the number of clients to a pixel value for the wave's amplitude.
-    // An amplitude of 0 means the wave is on the baseline.
-    // We use a max amplitude of about 60px to avoid it going off-screen.
-    ampTargetRef.current = normalized * (height / 2 - 10);
-  }, [nowCount, sparkline, capacity, height]);
+      capacity ?? Math.max(1, ...sparkline, 6); // normaliza por capacidad o por histórico
+    const norm = Math.max(0, Math.min(1, count / maxRef));
+    const top = baseline - 50; // altura máxima (sube hasta 50px por encima del medio)
+    const bottom = baseline + 10; // y mínimo (ligeramente debajo del medio)
+    return bottom - (bottom - top) * norm; // más clientas => más arriba
+  }
+
+  // cuando cambia nowCount/ capacidad / sparkline, movemos el target
+  useEffect(() => {
+    targetRef.current = yForCount(nowCount ?? 0);
+  }, [nowCount, capacity, sparkline, yForCount]);
 
   useEffect(() => {
-    if (!sparkline?.length) return;
-    const maxRef =
-      capacity ?? Math.max(1, ...sparkline);
-    const mapped = sparkline.map((v, i) => {
-      const norm = clamp(v / maxRef, 0, 1);
-      // Map directly to a vertical position, no longer a sine wave
-      const localAmp = norm * (height / 2 - 10);
-      return baseline - localAmp;
-    });
-    const resampled: number[] = [];
-    for (let i = 0; i < SAMPLES; i++) {
-      const idx = Math.floor((i / SAMPLES) * mapped.length);
-      resampled.push(mapped[clamp(idx, 0, mapped.length - 1)]);
-    }
-    pointsRef.current = resampled;
-    setAmp(ampTargetRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sparkline, capacity, height]); 
+    let raf: number | null = null;
+    let last = performance.now();
+    let acc = 0;
 
-  const pathRef = useRef<SVGPathElement | null>(null);
-  useEffect(() => {
-    const animate = () => {
-      setAmp((prev) => lerp(prev, ampTargetRef.current, 0.08));
-      tRef.current += 0.06; 
-      
-      // The new point is now based on the smoothed amplitude, not a sine wave.
-      // A small noise is added for a "breathing" effect.
-      const noise = (Math.random() - 0.5) * 2; // small random flicker
-      const y = baseline - amp + noise;
+    const EMA_ALPHA_RISE = 0.12; // rapidez al subir
+    const EMA_ALPHA_FALL = 0.10; // rapidez al bajar (ligeramente más lenta; elegí a gusto)
 
-      const pts = pointsRef.current;
-      pts.shift();
-      pts.push(clamp(y, 5, height - 5)); // Clamp to stay within view
+    const tick = () => {
+      const now = performance.now();
+      const dt = now - last;
+      last = now;
+      acc += dt;
 
+      // amortiguación del nivel hacia el target (sube/baja despacio)
+      const cur = levelRef.current;
+      const tgt = targetRef.current;
+      const alpha = tgt < cur ? EMA_ALPHA_RISE : EMA_ALPHA_FALL; // ojo: en Y, menor = más arriba
+      levelRef.current = cur + (tgt - cur) * alpha;
+
+      // cada SAMPLE_EVERY_MS agregamos un nuevo punto y desplazamos
+      if (acc >= SAMPLE_EVERY_MS) {
+        acc = 0;
+        const pts = pointsRef.current;
+        pts.shift();
+        // micro-variación de ±1px para que no quede 100% rígida
+        const micro = (Math.random() - 0.5) * 2;
+        pts.push(levelRef.current + micro);
+      }
+
+      // dibujar path suave (Catmull-Rom → Bézier simple)
       if (pathRef.current) {
+        const pts = pointsRef.current;
         const stepX = width / (SAMPLES - 1);
+        // path con L simple (rápido y limpio); si querés más suavidad, podés implementar Bezier
         let d = "";
         for (let i = 0; i < pts.length; i++) {
           const x = i * stepX;
           const y = pts[i];
-          if (i === 0) d += `M ${x.toFixed(2)} ${y.toFixed(2)}`;
-          else d += ` L ${x.toFixed(2)} ${y.toFixed(2)}`;
+          d += (i === 0) ? `M ${x.toFixed(2)} ${y.toFixed(2)}` : ` L ${x.toFixed(2)} ${y.toFixed(2)}`;
         }
         pathRef.current.setAttribute("d", d);
       }
-      rafRef.current = requestAnimationFrame(animate);
+
+      raf = requestAnimationFrame(tick);
     };
-    rafRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [width, baseline, SAMPLES, amp, height]);
+
+    raf = requestAnimationFrame(tick);
+    return () => { if (raf) cancelAnimationFrame(raf); };
+  }, [width, baseline, SAMPLES, SAMPLE_EVERY_MS]);
 
   const gradientId = useMemo(
     () => `grad-${Math.random().toString(36).slice(2)}`,
