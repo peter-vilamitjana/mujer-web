@@ -58,10 +58,10 @@ function TurnCard({ turno }: { turno: Turno }) {
 
   const statusInfo = useMemo(() => {
     switch(status) {
-      case 'realizado': return { text: 'Realizado', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 ring-green-200' };
-      case 'cancelado': return { text: 'Cancelado', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 ring-red-200' };
-      case 'pendiente_pago': return { text: 'Pend. Pago', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 ring-orange-200' };
-      default: return { text: 'Pendiente', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 ring-yellow-200' };
+      case 'realizado': return { text: 'Realizado', className: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300 ring-green-600/20' };
+      case 'cancelado': return { text: 'Cancelado', className: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300 ring-red-600/20' };
+      case 'pendiente_pago': return { text: 'Pend. Pago', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 ring-orange-600/20' };
+      default: return { text: 'Pendiente', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400 ring-yellow-600/20' };
     }
   }, [status]);
   
@@ -69,21 +69,24 @@ function TurnCard({ turno }: { turno: Turno }) {
     <TooltipProvider delayDuration={150}>
       <div className="flex items-center rounded-xl p-4 transition-all duration-200 bg-card hover:shadow-md border min-h-[84px]">
         
-        {/* Columna Izquierda: Hora y Detalles */}
         <div className="flex items-center gap-4 flex-1 min-w-0">
           <div className="text-center w-16 flex-shrink-0">
-            <p className="text-lg font-bold text-primary">{format(parseISO(turno.fecha), "HH:mm")}</p>
+            <p className="text-xl font-bold text-primary">{format(parseISO(turno.fecha), "HH:mm")}</p>
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold text-base truncate">{turno.clienteNombre}</h4>
-            <p className="text-sm text-muted-foreground truncate flex items-center gap-1.5" title={turno.servicio}>
-              <Scissors className="inline w-3.5 h-3.5 flex-shrink-0" />
-              {turno.servicio}
-            </p>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <p className="text-sm text-muted-foreground truncate flex items-center gap-1.5" title={turno.servicio}>
+                      <Scissors className="inline w-3.5 h-3.5 flex-shrink-0" />
+                      {turno.servicio}
+                    </p>
+                </TooltipTrigger>
+                <TooltipContent align="start"><p>{turno.servicio}</p></TooltipContent>
+            </Tooltip>
           </div>
         </div>
         
-        {/* Columna Derecha: Estado, Profesional y Acciones */}
         <div className="flex items-center gap-4 sm:ml-4">
             <div className='text-right hidden sm:block'>
               <p className="text-sm font-medium text-muted-foreground truncate flex items-center justify-end gap-1.5" title={turno.empleadaNombre}>
@@ -272,7 +275,7 @@ export default function AgendaPage() {
 
        <div className="max-w-full overflow-hidden">
         <Accordion type="multiple" defaultValue={["calendar-view", "list-view"]} className="w-full space-y-4">
-          <AccordionItem value="calendar-view">
+           <AccordionItem value="calendar-view">
              <Card>
                <AccordionTrigger className="p-6 text-lg font-semibold">
                   Vista Calendario
@@ -322,8 +325,8 @@ export default function AgendaPage() {
                   Listado de Turnos
                 </AccordionTrigger>
                  <AccordionContent>
-                   <div className="px-6 pb-6 border-t">
-                      <div className="sticky top-16 bg-card/80 backdrop-blur-sm z-10 py-4 -mx-6 px-6 border-b">
+                   <div className="border-t">
+                      <div className="sticky top-16 bg-card/80 backdrop-blur-sm z-10 py-4 px-6 border-b">
                          <div className="flex flex-col sm:flex-row gap-4">
                            <div className="relative flex-grow">
                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -334,24 +337,29 @@ export default function AgendaPage() {
                                onChange={(e) => setSearchTerm(e.target.value)}
                              />
                            </div>
-                           <div className="flex items-center gap-2 overflow-x-auto pb-2 -mb-2">
-                              {filterOptions.map(option => (
-                                <Button 
-                                  key={option.value}
-                                  variant={statusFilter === option.value ? 'default' : 'outline'}
-                                  onClick={() => setStatusFilter(option.value)}
-                                  className={cn(
-                                      "rounded-full whitespace-nowrap h-9 px-4 text-sm",
-                                      statusFilter === option.value && "bg-primary text-primary-foreground hover:bg-primary/90",
-                                      statusFilter !== option.value && "bg-muted hover:bg-muted/80"
-                                  )}
-                                >
-                                  {option.label}
-                                </Button>
-                              ))}
+                           <div className="flex items-center gap-2 overflow-x-auto pb-2 -mb-2 relative">
+                              <div className="flex gap-2">
+                                {filterOptions.map(option => (
+                                  <Button 
+                                    key={option.value}
+                                    variant="outline"
+                                    onClick={() => setStatusFilter(option.value)}
+                                    className={cn(
+                                        "rounded-full whitespace-nowrap h-9 px-4 text-sm font-semibold border-transparent",
+                                        statusFilter === option.value 
+                                          ? "bg-primary/10 text-primary hover:bg-primary/20"
+                                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                    )}
+                                  >
+                                    {option.label}
+                                  </Button>
+                                ))}
+                              </div>
+                              <div className="pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-card to-transparent" />
                            </div>
                          </div>
                       </div>
+                    <div className="px-6 pb-6">
                     {loading ? (
                       <div className="pt-6 space-y-3">
                         <Skeleton className="h-20 w-full rounded-xl" />
@@ -362,13 +370,13 @@ export default function AgendaPage() {
                       <div className="pt-6">
                         {sortedDates.map(date => (
                           <div key={date} className="mb-8 last:mb-0">
-                            <h3 className="text-base font-semibold mb-4 capitalize sticky top-[138px] bg-card/80 backdrop-blur-sm z-10 py-2 -my-2">
+                            <h3 className="text-base font-semibold mb-3 capitalize sticky top-[138px] bg-card/80 backdrop-blur-sm z-10 py-2 -my-2 border-b">
                               {isSameDay(parseISO(date), new Date()) 
                                 ? "Hoy" 
                                 : format(parseISO(date), "eeee, d 'de' MMMM", { locale: es })
                               }
                             </h3>
-                            <div className="space-y-3 pt-4 border-t">
+                            <div className="space-y-3 pt-4">
                               {groupedTurnos[date]
                                 .sort((a,b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
                                 .map(turno => (
@@ -385,6 +393,7 @@ export default function AgendaPage() {
                         <p className="mt-1 text-sm">Prueba a cambiar los filtros o el término de búsqueda.</p>
                       </div>
                     )}
+                    </div>
                    </div>
                 </AccordionContent>
             </Card>
