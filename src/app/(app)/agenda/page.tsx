@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Calendar, Clock, Scissors, PlusCircle, User, Check, XCircle, Plus, CheckIcon } from "lucide-react";
-import { format, parseISO, isPast } from "date-fns";
+import { Calendar, Clock, Scissors, PlusCircle, User, Check, XCircle, Plus, CheckIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { format, parseISO, isPast, startOfWeek, endOfWeek, addDays, subDays, addWeeks, subWeeks } from "date-fns";
 import { es } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -140,6 +140,9 @@ export default function AgendaPage() {
   // State for the calendar views
   const [allTurnos, setAllTurnos] = useState<Turno[]>([]);
   const [loadingCalendar, setLoadingCalendar] = useState(true);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentView, setCurrentView] = useState('semanal');
+
 
   useEffect(() => {
     if (!user) return;
@@ -209,6 +212,24 @@ export default function AgendaPage() {
   }, {} as Record<string, Turno[]>);
 
   const sortedDates = Object.keys(groupedTurnos).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  
+  // Calendar controls logic
+  const handleDateChange = (direction: 'prev' | 'next') => {
+    if (currentView === 'semanal') {
+      setCurrentDate(direction === 'prev' ? subWeeks(currentDate, 1) : addWeeks(currentDate, 1));
+    } else {
+      setCurrentDate(direction === 'prev' ? subDays(currentDate, 1) : addDays(currentDate, 1));
+    }
+  };
+  
+  const getRangeText = () => {
+      if (currentView === 'semanal') {
+        const start = startOfWeek(currentDate, { weekStartsOn: 1 });
+        const end = endOfWeek(currentDate, { weekStartsOn: 1 });
+        return `${format(start, "d MMM", { locale: es })} - ${format(end, "d MMM, yyyy", { locale: es })}`;
+      }
+      return format(currentDate, "eeee, d 'de' MMMM, yyyy", { locale: es });
+  }
 
   return (
     <div className="space-y-8">
@@ -239,19 +260,36 @@ export default function AgendaPage() {
                       <Skeleton className="h-[400px] w-full" />
                     </div>
                   ) : (
-                    <Tabs defaultValue="semanal" className="w-full border-t">
-                       <CardHeader className="flex-col items-start md:flex-row md:items-center justify-between gap-4">
-                         <div className="flex-grow"></div>
-                        <TabsList>
-                          <TabsTrigger value="semanal">Semanal</TabsTrigger>
-                          <TabsTrigger value="diario">Diario</TabsTrigger>
-                        </TabsList>
-                      </CardHeader>
+                    <Tabs value={currentView} onValueChange={setCurrentView} className="w-full border-t">
+                      <div className="flex flex-wrap items-center justify-between gap-4 p-4">
+                          {/* Col A: Navigation */}
+                          <div className="flex items-center gap-2">
+                             <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>Hoy</Button>
+                             <Button variant="outline" size="icon" onClick={() => handleDateChange('prev')}><ChevronLeft className="h-4 w-4" /></Button>
+                             <Button variant="outline" size="icon" onClick={() => handleDateChange('next')}><ChevronRight className="h-4 w-4" /></Button>
+                          </div>
+                          {/* Col B: Range */}
+                          <div className="font-semibold text-center capitalize text-sm sm:text-base flex-grow">
+                            {getRangeText()}
+                          </div>
+                          {/* Col C: Actions */}
+                          <div className="flex items-center gap-2">
+                             <TabsList>
+                               <TabsTrigger value="semanal">Semanal</TabsTrigger>
+                               <TabsTrigger value="diario">Diario</TabsTrigger>
+                             </TabsList>
+                             {(userRole === 'admin' || userRole === 'clienta') && (
+                                <Link href="/turnos" className="hidden sm:block">
+                                  <Button size="sm"><Plus className="mr-2 h-4 w-4"/>Agendar</Button>
+                                </Link>
+                              )}
+                          </div>
+                      </div>
                       <TabsContent value="semanal">
-                          <WeeklyCalendarView turnos={allTurnos} />
+                          <WeeklyCalendarView turnos={allTurnos} currentDate={currentDate} />
                       </TabsContent>
                       <TabsContent value="diario">
-                          <DailyCalendarView turnos={allTurnos} />
+                          <DailyCalendarView turnos={allTurnos} currentDate={currentDate} />
                       </TabsContent>
                     </Tabs>
                   )}
@@ -305,3 +343,5 @@ export default function AgendaPage() {
     </div>
   );
 }
+
+    
