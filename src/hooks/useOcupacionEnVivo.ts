@@ -61,9 +61,7 @@ export function useOcupacionEnVivo(db: Firestore, sucursalId: string) {
 
     const turnosQuery = query(
       collection(db, "turnos"),
-      where("sucursalId", "==", sucursalId),
-      where("fecha", ">=", Timestamp.fromDate(todayStart)),
-      where("fecha", "<=", Timestamp.fromDate(todayEnd))
+      where("sucursalId", "==", sucursalId)
     );
     
     // Mocking a single active appointment for demonstration if no real data exists
@@ -97,6 +95,9 @@ export function useOcupacionEnVivo(db: Firestore, sucursalId: string) {
                 ...data,
                 fecha: (data.fecha as Timestamp).toDate().toISOString(),
             } as Turno;
+        }).filter(turno => {
+            const fechaTurno = new Date(turno.fecha);
+            return fechaTurno >= todayStart && fechaTurno <= todayEnd;
         });
 
         if (turnosData.length === 0 && process.env.NODE_ENV === 'development') {
