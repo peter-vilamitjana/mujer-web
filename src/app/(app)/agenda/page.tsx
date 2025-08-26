@@ -297,50 +297,48 @@ export default function AgendaPage() {
         <Accordion type="multiple" defaultValue={["calendar-view", "list-view"]} className="w-full space-y-4">
            <AccordionItem value="calendar-view">
             <Card>
-              <CardHeader className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 border-b">
-                  <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>Hoy</Button>
-                      <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleDateChange('prev')}><ChevronLeft className="h-4 w-4" /></Button>
-                      <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleDateChange('next')}><ChevronRight className="h-4 w-4" /></Button>
-                  </div>
-                  <div className="font-semibold text-center capitalize text-sm sm:text-base flex-grow">
-                    {getRangeText()}
-                  </div>
-                  <div className="flex items-center gap-4">
-                      <Tabs value={currentView} onValueChange={setCurrentView}>
+               <Tabs value={currentView} onValueChange={setCurrentView}>
+                <CardHeader className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 border-b">
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>Hoy</Button>
+                        <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleDateChange('prev')}><ChevronLeft className="h-4 w-4" /></Button>
+                        <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleDateChange('next')}><ChevronRight className="h-4 w-4" /></Button>
+                    </div>
+                    <div className="font-semibold text-center capitalize text-sm sm:text-base flex-grow">
+                      {getRangeText()}
+                    </div>
+                    <div className="flex items-center gap-4">
                         <TabsList>
                           <TabsTrigger value="semanal">Semanal</TabsTrigger>
                           <TabsTrigger value="diario">Diario</TabsTrigger>
                         </TabsList>
-                      </Tabs>
-                      {(userRole === 'admin' || userRole === 'clienta') && (
-                        <Link href="/turnos" className="hidden md:block">
-                          <Button size="sm"><Plus className="mr-2 h-4 w-4"/>Agendar</Button>
-                        </Link>
+                        {(userRole === 'admin' || userRole === 'clienta') && (
+                          <Link href="/turnos" className="hidden md:block">
+                            <Button size="sm"><Plus className="mr-2 h-4 w-4"/>Agendar</Button>
+                          </Link>
+                        )}
+                    </div>
+                </CardHeader>
+                <AccordionTrigger className="p-6 text-lg font-semibold sr-only">
+                    Vista Calendario
+                </AccordionTrigger>
+                <AccordionContent>
+                      {loadingCalendar ? (
+                        <div className="p-6 pt-0">
+                          <Skeleton className="h-[400px] w-full" />
+                        </div>
+                      ) : (
+                        <>
+                          <TabsContent value="semanal" className="mt-0">
+                              <WeeklyCalendarView turnos={allTurnos} currentDate={currentDate} />
+                          </TabsContent>
+                          <TabsContent value="diario" className="mt-0">
+                              <DailyCalendarView turnos={allTurnos} currentDate={currentDate} />
+                          </TabsContent>
+                        </>
                       )}
-                  </div>
-              </CardHeader>
-              <AccordionTrigger className="p-6 text-lg font-semibold sr-only">
-                  Vista Calendario
-              </AccordionTrigger>
-              <AccordionContent>
-                  <Tabs value={currentView} onValueChange={setCurrentView}>
-                    {loadingCalendar ? (
-                      <div className="p-6 pt-0">
-                        <Skeleton className="h-[400px] w-full" />
-                      </div>
-                    ) : (
-                      <>
-                        <TabsContent value="semanal" className="mt-0">
-                            <WeeklyCalendarView turnos={allTurnos} currentDate={currentDate} />
-                        </TabsContent>
-                        <TabsContent value="diario" className="mt-0">
-                            <DailyCalendarView turnos={allTurnos} currentDate={currentDate} />
-                        </TabsContent>
-                      </>
-                    )}
-                  </Tabs>
-              </AccordionContent>
+                </AccordionContent>
+              </Tabs>
             </Card>
           </AccordionItem>
           <AccordionItem value="list-view">
@@ -350,22 +348,23 @@ export default function AgendaPage() {
                 </AccordionTrigger>
                  <AccordionContent>
                    <div className="border-t">
-                      <div className="sticky top-16 bg-card/80 backdrop-blur-sm z-10 py-4 px-6 border-b">
-                         <div className="flex flex-col sm:flex-row gap-4 items-center">
-                           <div className="relative flex-grow w-full sm:w-auto">
+                     <div className="sticky top-16 bg-card/80 backdrop-blur-sm z-10 py-3 px-6 border-b">
+                         <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                           <div className="relative w-full sm:w-auto sm:flex-grow max-w-md">
                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                              <Input
                                placeholder="Buscar por nombre de clienta..."
-                               className="pl-10 h-11 w-full sm:w-64"
+                               className="pl-10 h-10 w-full"
                                value={searchTerm}
                                onChange={(e) => setSearchTerm(e.target.value)}
                              />
                            </div>
-                           <div className="flex flex-wrap gap-2 items-center justify-start sm:justify-end flex-grow">
+                           <div className="flex flex-wrap gap-2 items-center justify-start sm:justify-end">
                               {filterOptions.map(option => (
                                 <Button 
                                   key={option.value}
                                   variant="outline"
+                                  size="sm"
                                   onClick={() => setStatusFilter(option.value)}
                                   className={cn(
                                       "rounded-full whitespace-nowrap h-9 px-4 text-sm font-semibold border-transparent",
