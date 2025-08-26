@@ -43,8 +43,12 @@ export default function RealtimeWaveformWidget({
       capacity ??
       (sparkline.length ? Math.max(1, ...sparkline) : 6); 
     const normalized = clamp((nowCount ?? 0) / maxRef, 0, 1);
-    ampTargetRef.current = 6 + normalized * 36;
-  }, [nowCount, sparkline, capacity]);
+    // The target amplitude is now the main driver of the wave's height.
+    // It maps the number of clients to a pixel value for the wave's amplitude.
+    // An amplitude of 0 means the wave is on the baseline.
+    // We use a max amplitude of about 60px to avoid it going off-screen.
+    ampTargetRef.current = normalized * (height / 2 - 10);
+  }, [nowCount, sparkline, capacity, height]);
 
   useEffect(() => {
     if (!sparkline?.length) return;
@@ -52,9 +56,9 @@ export default function RealtimeWaveformWidget({
       capacity ?? Math.max(1, ...sparkline);
     const mapped = sparkline.map((v, i) => {
       const norm = clamp(v / maxRef, 0, 1);
-      const phase = (i / sparkline.length) * Math.PI * 2;
-      const localAmp = 6 + norm * 36;
-      return baseline - Math.sin(phase) * localAmp * 0.7;
+      // Map directly to a vertical position, no longer a sine wave
+      const localAmp = norm * (height / 2 - 10);
+      return baseline - localAmp;
     });
     const resampled: number[] = [];
     for (let i = 0; i < SAMPLES; i++) {
@@ -64,21 +68,22 @@ export default function RealtimeWaveformWidget({
     pointsRef.current = resampled;
     setAmp(ampTargetRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sparkline, capacity]); 
+  }, [sparkline, capacity, height]); 
 
   const pathRef = useRef<SVGPathElement | null>(null);
   useEffect(() => {
     const animate = () => {
       setAmp((prev) => lerp(prev, ampTargetRef.current, 0.08));
       tRef.current += 0.06; 
-      const noise =
-        (Math.sin(tRef.current * 2.7) +
-          Math.sin(tRef.current * 1.3 + 1.7) * 0.5) * 0.5;
-      const y = baseline - Math.sin(tRef.current) * amp + noise * 3;
+      
+      // The new point is now based on the smoothed amplitude, not a sine wave.
+      // A small noise is added for a "breathing" effect.
+      const noise = (Math.random() - 0.5) * 2; // small random flicker
+      const y = baseline - amp + noise;
 
       const pts = pointsRef.current;
       pts.shift();
-      pts.push(clamp(y, baseline - 60, baseline + 60));
+      pts.push(clamp(y, 5, height - 5)); // Clamp to stay within view
 
       if (pathRef.current) {
         const stepX = width / (SAMPLES - 1);
@@ -97,7 +102,7 @@ export default function RealtimeWaveformWidget({
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [width, baseline, SAMPLES, amp]);
+  }, [width, baseline, SAMPLES, amp, height]);
 
   const gradientId = useMemo(
     () => `grad-${Math.random().toString(36).slice(2)}`,
