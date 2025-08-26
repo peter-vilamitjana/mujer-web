@@ -296,51 +296,51 @@ export default function AgendaPage() {
        <div className="max-w-full overflow-hidden">
         <Accordion type="multiple" defaultValue={["calendar-view", "list-view"]} className="w-full space-y-4">
            <AccordionItem value="calendar-view">
-            <Card>
+             <Card>
                <Tabs value={currentView} onValueChange={setCurrentView}>
-                <CardHeader className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 border-b">
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>Hoy</Button>
-                        <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleDateChange('prev')}><ChevronLeft className="h-4 w-4" /></Button>
-                        <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleDateChange('next')}><ChevronRight className="h-4 w-4" /></Button>
-                    </div>
-                    <div className="font-semibold text-center capitalize text-sm sm:text-base flex-grow">
-                      {getRangeText()}
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <TabsList>
-                          <TabsTrigger value="semanal">Semanal</TabsTrigger>
-                          <TabsTrigger value="diario">Diario</TabsTrigger>
-                        </TabsList>
-                        {(userRole === 'admin' || userRole === 'clienta') && (
-                          <Link href="/turnos" className="hidden md:block">
-                            <Button size="sm"><Plus className="mr-2 h-4 w-4"/>Agendar</Button>
-                          </Link>
-                        )}
-                    </div>
-                </CardHeader>
-                <AccordionTrigger className="p-6 text-lg font-semibold sr-only">
-                    Vista Calendario
-                </AccordionTrigger>
-                <AccordionContent>
-                      {loadingCalendar ? (
-                        <div className="p-6 pt-0">
-                          <Skeleton className="h-[400px] w-full" />
-                        </div>
-                      ) : (
-                        <>
-                          <TabsContent value="semanal" className="mt-0">
-                              <WeeklyCalendarView turnos={allTurnos} currentDate={currentDate} />
-                          </TabsContent>
-                          <TabsContent value="diario" className="mt-0">
-                              <DailyCalendarView turnos={allTurnos} currentDate={currentDate} />
-                          </TabsContent>
-                        </>
-                      )}
-                </AccordionContent>
-              </Tabs>
-            </Card>
-          </AccordionItem>
+                 <CardHeader className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 border-b">
+                     <div className="flex items-center gap-2">
+                         <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>Hoy</Button>
+                         <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleDateChange('prev')}><ChevronLeft className="h-4 w-4" /></Button>
+                         <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleDateChange('next')}><ChevronRight className="h-4 w-4" /></Button>
+                     </div>
+                     <div className="font-semibold text-center capitalize text-sm sm:text-base flex-grow">
+                       {getRangeText()}
+                     </div>
+                     <div className="flex items-center gap-4">
+                         <TabsList>
+                           <TabsTrigger value="semanal">Semanal</TabsTrigger>
+                           <TabsTrigger value="diario">Diario</TabsTrigger>
+                         </TabsList>
+                         {(userRole === 'admin' || userRole === 'clienta') && (
+                           <Link href="/turnos" className="hidden md:block">
+                             <Button size="sm"><Plus className="mr-2 h-4 w-4"/>Agendar</Button>
+                           </Link>
+                         )}
+                     </div>
+                 </CardHeader>
+                 <AccordionTrigger className="p-6 text-lg font-semibold sr-only">
+                     Vista Calendario
+                 </AccordionTrigger>
+                 <AccordionContent>
+                       {loadingCalendar ? (
+                         <div className="p-6 pt-0">
+                           <Skeleton className="h-[400px] w-full" />
+                         </div>
+                       ) : (
+                         <>
+                           <TabsContent value="semanal" className="mt-0">
+                               <WeeklyCalendarView turnos={allTurnos} currentDate={currentDate} />
+                           </TabsContent>
+                           <TabsContent value="diario" className="mt-0">
+                               <DailyCalendarView turnos={allTurnos} currentDate={currentDate} />
+                           </TabsContent>
+                         </>
+                       )}
+                 </AccordionContent>
+               </Tabs>
+             </Card>
+           </AccordionItem>
           <AccordionItem value="list-view">
              <Card>
                 <AccordionTrigger className="p-6 text-lg font-semibold">
@@ -348,9 +348,9 @@ export default function AgendaPage() {
                 </AccordionTrigger>
                  <AccordionContent>
                    <div className="border-t">
-                     <div className="sticky top-16 bg-card z-10 p-4 border-b">
-                         <div className="flex flex-col sm:flex-row gap-4 items-center">
-                           <div className="relative w-full sm:max-w-xs">
+                      <div className="sticky top-16 bg-card z-10 p-4 border-b">
+                         <div className="flex flex-wrap items-center gap-4">
+                           <div className="relative flex-grow sm:flex-grow-0 sm:min-w-[280px] sm:max-w-xs">
                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                              <Input
                                placeholder="Buscar por nombre de clienta..."
@@ -387,15 +387,17 @@ export default function AgendaPage() {
                         <Skeleton className="h-24 w-full rounded-2xl" />
                       </div>
                     ) : sortedDates.length > 0 ? (
-                      <div className="pt-6">
+                      <div className="flow-root">
                         {sortedDates.map(date => (
-                          <div key={date} className="mb-6 last:mb-0">
-                            <h3 className="text-base font-semibold mb-3 capitalize sticky top-[132px] bg-card z-10 py-2 -my-2 border-b">
-                              {isSameDay(parseISO(date), new Date()) 
-                                ? "Hoy" 
-                                : format(parseISO(date), "eeee, d 'de' MMMM", { locale: es })
-                              }
-                            </h3>
+                          <div key={date} className="py-4">
+                            <div className="sticky top-[132px] bg-card z-10 py-2 -my-2 border-b">
+                                <h3 className="text-base font-semibold capitalize">
+                                  {isSameDay(parseISO(date), new Date()) 
+                                    ? "Hoy" 
+                                    : format(parseISO(date), "eeee, d 'de' MMMM", { locale: es })
+                                  }
+                                </h3>
+                            </div>
                             <div className="space-y-3 pt-4">
                               {groupedTurnos[date]
                                 .sort((a,b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
@@ -423,5 +425,3 @@ export default function AgendaPage() {
     </div>
   );
 }
-
-    
