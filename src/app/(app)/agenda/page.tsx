@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Calendar, Clock, Scissors, PlusCircle, User, Check, XCircle, Plus, CheckIcon, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Calendar, Clock, Scissors, PlusCircle, User, Check, XCircle, Plus, CheckIcon, ChevronLeft, ChevronRight, Search, ChevronDown } from "lucide-react";
 import { format, parseISO, isPast, startOfWeek, endOfWeek, addDays, subDays, addWeeks, subWeeks, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -30,11 +30,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 
 function TurnCard({ turno }: { turno: Turno }) {
   const { toast } = useToast();
   const [status, setStatus] = useState(turno.estado);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleUpdateStatus = async (newStatus: 'realizado' | 'cancelado') => {
     if (!turno.id) return;
@@ -65,73 +71,86 @@ function TurnCard({ turno }: { turno: Turno }) {
     }
   }, [status]);
   
+  const services = turno.servicio.split(',').map(s => s.trim());
+  const displayServices = services.slice(0, 3);
+  const hasMoreServices = services.length > 3;
+
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="flex items-center rounded-xl p-4 transition-all duration-200 bg-card hover:shadow-md border min-h-[84px]">
-        
-        <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="text-center w-16 flex-shrink-0">
-            <p className="text-xl font-bold text-primary">{format(parseISO(turno.fecha), "HH:mm")}</p>
-          </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-base truncate">{turno.clienteNombre}</h4>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <p className="text-sm text-muted-foreground truncate flex items-center gap-1.5" title={turno.servicio}>
-                      <Scissors className="inline w-3.5 h-3.5 flex-shrink-0" />
-                      {turno.servicio}
-                    </p>
-                </TooltipTrigger>
-                <TooltipContent align="start"><p>{turno.servicio}</p></TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-4 sm:ml-4">
-            <div className='text-right hidden sm:block'>
-              <p className="text-sm font-medium text-muted-foreground truncate flex items-center justify-end gap-1.5" title={turno.empleadaNombre}>
+      <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+        <div className="flex flex-col sm:flex-row items-start rounded-2xl p-4 transition-all duration-300 bg-card hover:shadow-md border min-h-[90px]">
+          <div className="flex items-start gap-4 flex-1 w-full">
+            <div className="text-center w-16 flex-shrink-0 pt-1">
+              <p className="text-xl font-bold text-primary">{format(parseISO(turno.fecha), "HH:mm")}</p>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-base">{turno.clienteNombre}</h4>
+              <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1" title={turno.empleadaNombre}>
                   <User className="inline w-3.5 h-3.5 flex-shrink-0" />
                   {turno.empleadaNombre}
               </p>
-            </div>
-             <Badge className={cn("text-xs font-bold w-24 justify-center py-1 ring-1 ring-inset hidden lg:inline-flex", statusInfo.className)}>
-                {statusInfo.text}
-            </Badge>
-            <div className="flex gap-1.5">
-               <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={() => handleUpdateStatus('realizado')}
-                    variant="outline"
-                    size="icon"
-                    className="bg-card hover:bg-green-50 dark:hover:bg-green-900/30 rounded-full h-9 w-9"
-                    aria-label="Marcar como realizado"
-                    disabled={status === 'realizado'}
-                  >
-                    <CheckIcon className="w-5 h-5 text-green-600" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent><p>Marcar como realizado</p></TooltipContent>
-              </Tooltip>
+              <div className="mt-3 text-sm text-muted-foreground">
+                 <ul className="space-y-1 list-disc list-inside">
+                    {displayServices.map((s,i) => <li key={i} className="truncate">{s}</li>)}
+                 </ul>
+                 <CollapsibleContent asChild>
+                    <ul className="space-y-1 list-disc list-inside mt-1">
+                        {services.slice(3).map((s, i) => <li key={`extra-${i}`} className="truncate">{s}</li>)}
+                    </ul>
+                 </CollapsibleContent>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    onClick={() => handleUpdateStatus('cancelado')}
-                    variant="outline"
-                    size="icon"
-                    className="bg-card hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full h-9 w-9"
-                    aria-label="Cancelar turno"
-                    disabled={status === 'cancelado'}
-                  >
-                    <XCircle className="w-5 h-5 text-red-600" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent><p>Cancelar turno</p></TooltipContent>
-              </Tooltip>
+                 {hasMoreServices && (
+                    <CollapsibleTrigger asChild>
+                       <button className="flex items-center gap-1 text-xs font-semibold text-primary/80 hover:text-primary mt-2">
+                        {isExpanded ? 'Ver menos' : `y ${services.length - 3} más...`}
+                        <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")} />
+                      </button>
+                    </CollapsibleTrigger>
+                 )}
+              </div>
             </div>
+          </div>
+          
+          <div className="flex sm:flex-col items-end justify-between sm:justify-start gap-4 w-full sm:w-auto mt-4 sm:mt-0 pl-0 sm:pl-4">
+              <Badge className={cn("text-xs font-bold w-24 justify-center py-1 ring-1 ring-inset", statusInfo.className)}>
+                  {statusInfo.text}
+              </Badge>
+              <div className="flex gap-1.5 mt-0 sm:mt-2">
+                 <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => handleUpdateStatus('realizado')}
+                      variant="outline"
+                      size="icon"
+                      className="bg-card hover:bg-green-50 dark:hover:bg-green-900/30 rounded-full h-9 w-9"
+                      aria-label="Marcar como realizado"
+                      disabled={status === 'realizado'}
+                    >
+                      <CheckIcon className="w-5 h-5 text-green-600" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>Marcar como realizado</p></TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => handleUpdateStatus('cancelado')}
+                      variant="outline"
+                      size="icon"
+                      className="bg-card hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full h-9 w-9"
+                      aria-label="Cancelar turno"
+                      disabled={status === 'cancelado'}
+                    >
+                      <XCircle className="w-5 h-5 text-red-600" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>Cancelar turno</p></TooltipContent>
+                </Tooltip>
+              </div>
+          </div>
         </div>
-      </div>
+      </Collapsible>
     </TooltipProvider>
   );
 }
@@ -277,7 +296,30 @@ export default function AgendaPage() {
         <Accordion type="multiple" defaultValue={["calendar-view", "list-view"]} className="w-full space-y-4">
            <AccordionItem value="calendar-view">
              <Card>
-               <AccordionTrigger className="p-6 text-lg font-semibold">
+               <CardHeader className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4">
+                  <div className="flex items-center gap-2">
+                     <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>Hoy</Button>
+                     <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleDateChange('prev')}><ChevronLeft className="h-4 w-4" /></Button>
+                     <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleDateChange('next')}><ChevronRight className="h-4 w-4" /></Button>
+                  </div>
+                  <div className="font-semibold text-center capitalize text-sm sm:text-base flex-grow">
+                    {getRangeText()}
+                  </div>
+                  <div className="flex items-center gap-4">
+                     <Tabs value={currentView} onValueChange={setCurrentView}>
+                         <TabsList>
+                           <TabsTrigger value="semanal">Semanal</TabsTrigger>
+                           <TabsTrigger value="diario">Diario</TabsTrigger>
+                         </TabsList>
+                     </Tabs>
+                     {(userRole === 'admin' || userRole === 'clienta') && (
+                        <Link href="/turnos" className="hidden md:block">
+                          <Button size="sm"><Plus className="mr-2 h-4 w-4"/>Agendar</Button>
+                        </Link>
+                      )}
+                  </div>
+               </CardHeader>
+               <AccordionTrigger className="p-6 text-lg font-semibold sr-only">
                   Vista Calendario
                </AccordionTrigger>
                <AccordionContent>
@@ -286,35 +328,14 @@ export default function AgendaPage() {
                       <Skeleton className="h-[400px] w-full" />
                     </div>
                   ) : (
-                    <Tabs value={currentView} onValueChange={setCurrentView} className="w-full border-t">
-                      <div className="flex flex-wrap items-center justify-between gap-4 p-4">
-                          <div className="flex items-center gap-2">
-                             <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>Hoy</Button>
-                             <Button variant="outline" size="icon" onClick={() => handleDateChange('prev')}><ChevronLeft className="h-4 w-4" /></Button>
-                             <Button variant="outline" size="icon" onClick={() => handleDateChange('next')}><ChevronRight className="h-4 w-4" /></Button>
-                          </div>
-                          <div className="font-semibold text-center capitalize text-sm sm:text-base flex-grow">
-                            {getRangeText()}
-                          </div>
-                          <div className="flex items-center gap-2">
-                             <TabsList>
-                               <TabsTrigger value="semanal">Semanal</TabsTrigger>
-                               <TabsTrigger value="diario">Diario</TabsTrigger>
-                             </TabsList>
-                             {(userRole === 'admin' || userRole === 'clienta') && (
-                                <Link href="/turnos" className="hidden sm:block">
-                                  <Button size="sm"><Plus className="mr-2 h-4 w-4"/>Agendar</Button>
-                                </Link>
-                              )}
-                          </div>
-                      </div>
-                      <TabsContent value="semanal">
+                    <>
+                      <TabsContent value="semanal" className="mt-0">
                           <WeeklyCalendarView turnos={allTurnos} currentDate={currentDate} />
                       </TabsContent>
-                      <TabsContent value="diario">
+                      <TabsContent value="diario" className="mt-0">
                           <DailyCalendarView turnos={allTurnos} currentDate={currentDate} />
                       </TabsContent>
-                    </Tabs>
+                    </>
                   )}
               </AccordionContent>
             </Card>
@@ -337,34 +358,31 @@ export default function AgendaPage() {
                                onChange={(e) => setSearchTerm(e.target.value)}
                              />
                            </div>
-                           <div className="flex items-center gap-2 overflow-x-auto pb-2 -mb-2 relative">
-                              <div className="flex gap-2">
-                                {filterOptions.map(option => (
-                                  <Button 
-                                    key={option.value}
-                                    variant="outline"
-                                    onClick={() => setStatusFilter(option.value)}
-                                    className={cn(
-                                        "rounded-full whitespace-nowrap h-9 px-4 text-sm font-semibold border-transparent",
-                                        statusFilter === option.value 
-                                          ? "bg-primary/10 text-primary hover:bg-primary/20"
-                                          : "bg-muted text-muted-foreground hover:bg-muted/80"
-                                    )}
-                                  >
-                                    {option.label}
-                                  </Button>
-                                ))}
-                              </div>
-                              <div className="pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-card to-transparent" />
+                           <div className="flex flex-wrap gap-2 items-center">
+                              {filterOptions.map(option => (
+                                <Button 
+                                  key={option.value}
+                                  variant="outline"
+                                  onClick={() => setStatusFilter(option.value)}
+                                  className={cn(
+                                      "rounded-full whitespace-nowrap h-9 px-4 text-sm font-semibold border-transparent",
+                                      statusFilter === option.value 
+                                        ? "bg-primary/10 text-primary hover:bg-primary/20"
+                                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                  )}
+                                >
+                                  {option.label}
+                                </Button>
+                              ))}
                            </div>
                          </div>
                       </div>
                     <div className="px-6 pb-6">
                     {loading ? (
                       <div className="pt-6 space-y-3">
-                        <Skeleton className="h-20 w-full rounded-xl" />
-                        <Skeleton className="h-20 w-full rounded-xl" />
-                        <Skeleton className="h-20 w-full rounded-xl" />
+                        <Skeleton className="h-24 w-full rounded-2xl" />
+                        <Skeleton className="h-24 w-full rounded-2xl" />
+                        <Skeleton className="h-24 w-full rounded-2xl" />
                       </div>
                     ) : sortedDates.length > 0 ? (
                       <div className="pt-6">
@@ -403,3 +421,5 @@ export default function AgendaPage() {
     </div>
   );
 }
+
+    
