@@ -1,12 +1,14 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowUp, Users } from "lucide-react";
+import { ArrowUp, Users, Scissors, LineChart as LineChartIcon, BarChart3, Clock } from "lucide-react";
 import { MonthlyVolumeChart } from "@/components/charts/MonthlyVolumeChart";
 import { PopularServicesChart } from "@/components/charts/PopularServicesChart";
 import { Badge } from "@/components/ui/badge";
 import { WeeklyTurnosChart } from "@/components/charts/WeeklyTurnosChart";
 import { db } from "@/lib/firebase";
 import VolumenTiempoReal from "@/components/VolumenTiempoReal";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import IngresosSemanalesCard from "@/components/IngresosSemanalesCard";
 
 
 const mockDashboardData = {
@@ -64,9 +66,12 @@ export default function DashboardPage() {
     totalClientes,
     volumenMensual, 
     serviciosTop,
-    turnosSemana
+    turnosSemana,
+    horaPico
   } = mockDashboardData;
   
+  const totalTurnosSemana = turnosSemana.reduce((acc, dia) => acc + dia.cantidad, 0);
+
   return (
     <div className="space-y-8">
       <div>
@@ -75,20 +80,7 @@ export default function DashboardPage() {
       </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
-           <CardHeader>
-             <CardTitle className="text-base font-semibold flex items-center justify-between text-muted-foreground">
-                <span>Ingresos Semanales</span>
-             </CardTitle>
-          </CardHeader>
-           <CardContent>
-             <p className="text-4xl font-bold">{formatCurrency(ingresosSemana.total)}</p>
-             <div className="flex items-center text-sm text-green-600 font-semibold mt-1">
-                <ArrowUp className="h-4 w-4 mr-1"/> 
-                <span>{ingresosSemana.tendencia}% vs semana anterior</span>
-            </div>
-           </CardContent>
-        </Card>
+        <IngresosSemanalesCard />
 
         <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
            <CardHeader>
