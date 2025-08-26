@@ -24,6 +24,13 @@ import {
 } from "@/components/ui/accordion"
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 
 function TurnCard({ turno }: { turno: Turno }) {
   const { toast } = useToast();
@@ -51,68 +58,78 @@ function TurnCard({ turno }: { turno: Turno }) {
 
   const statusInfo = useMemo(() => {
     switch(status) {
-      case 'realizado': return { text: 'Realizado', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 ring-1 ring-inset ring-green-200 dark:ring-green-800' };
-      case 'cancelado': return { text: 'Cancelado', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 ring-1 ring-inset ring-red-200 dark:ring-red-800' };
-      case 'pendiente_pago': return { text: 'Pend. Pago', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 ring-1 ring-inset ring-yellow-200 dark:ring-yellow-800' };
-      default: return { text: 'Pendiente', className: 'bg-muted text-muted-foreground ring-1 ring-inset ring-border' };
+      case 'realizado': return { text: 'Realizado', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 ring-green-200' };
+      case 'cancelado': return { text: 'Cancelado', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 ring-red-200' };
+      case 'pendiente_pago': return { text: 'Pend. Pago', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 ring-orange-200' };
+      default: return { text: 'Pendiente', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 ring-yellow-200' };
     }
   }, [status]);
   
   return (
-    <div
-      className={cn(
-        'flex flex-col sm:flex-row items-center rounded-xl p-4 transition-all duration-200 bg-card hover:shadow-md border',
-        status === 'realizado' && 'border-green-200 dark:border-green-800',
-        status === 'cancelado' && 'border-red-200 dark:border-red-800 opacity-70',
-        status === 'pendiente_pago' && 'border-yellow-200 dark:border-yellow-800',
-      )}
-    >
-      <div className="flex-1 flex items-center gap-4 w-full">
-        <div className="text-center w-16 flex-shrink-0">
-          <p className="text-lg font-bold text-primary">{format(parseISO(turno.fecha), "HH:mm")}</p>
-          <p className="text-xs text-muted-foreground">{format(parseISO(turno.fecha), "a")}</p>
+    <TooltipProvider delayDuration={150}>
+      <div className="flex items-center rounded-xl p-4 transition-all duration-200 bg-card hover:shadow-md border min-h-[84px]">
+        
+        {/* Columna Izquierda: Hora y Detalles */}
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="text-center w-16 flex-shrink-0">
+            <p className="text-lg font-bold text-primary">{format(parseISO(turno.fecha), "HH:mm")}</p>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-base truncate">{turno.clienteNombre}</h4>
+            <p className="text-sm text-muted-foreground truncate flex items-center gap-1.5" title={turno.servicio}>
+              <Scissors className="inline w-3.5 h-3.5 flex-shrink-0" />
+              {turno.servicio}
+            </p>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-base truncate">{turno.clienteNombre}</h4>
-          <p className="text-sm text-muted-foreground truncate flex items-center gap-1.5">
-            <Scissors className="inline w-3.5 h-3.5 flex-shrink-0" />
-            {turno.servicio}
-          </p>
-          <p className="text-sm text-muted-foreground truncate flex items-center gap-1.5">
-            <User className="inline w-3.5 h-3.5 flex-shrink-0" />
-            {turno.empleadaNombre}
-          </p>
+        
+        {/* Columna Derecha: Estado, Profesional y Acciones */}
+        <div className="flex items-center gap-4 sm:ml-4">
+            <div className='text-right hidden sm:block'>
+              <p className="text-sm font-medium text-muted-foreground truncate flex items-center justify-end gap-1.5" title={turno.empleadaNombre}>
+                  <User className="inline w-3.5 h-3.5 flex-shrink-0" />
+                  {turno.empleadaNombre}
+              </p>
+            </div>
+             <Badge className={cn("text-xs font-bold w-24 justify-center py-1 ring-1 ring-inset hidden lg:inline-flex", statusInfo.className)}>
+                {statusInfo.text}
+            </Badge>
+            <div className="flex gap-1.5">
+               <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => handleUpdateStatus('realizado')}
+                    variant="outline"
+                    size="icon"
+                    className="bg-card hover:bg-green-50 dark:hover:bg-green-900/30 rounded-full h-9 w-9"
+                    aria-label="Marcar como realizado"
+                    disabled={status === 'realizado'}
+                  >
+                    <CheckIcon className="w-5 h-5 text-green-600" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Marcar como realizado</p></TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    onClick={() => handleUpdateStatus('cancelado')}
+                    variant="outline"
+                    size="icon"
+                    className="bg-card hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full h-9 w-9"
+                    aria-label="Cancelar turno"
+                    disabled={status === 'cancelado'}
+                  >
+                    <XCircle className="w-5 h-5 text-red-600" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Cancelar turno</p></TooltipContent>
+              </Tooltip>
+            </div>
         </div>
       </div>
-      
-      <div className="flex items-center gap-3 sm:ml-4 mt-3 sm:mt-0 w-full sm:w-auto justify-end">
-        <Badge className={cn("text-xs font-bold w-24 justify-center", statusInfo.className)}>
-          {statusInfo.text}
-        </Badge>
-        <div className="flex gap-2">
-          <Button
-            onClick={() => handleUpdateStatus('realizado')}
-            variant="outline"
-            size="icon"
-            className="bg-card hover:bg-green-50 dark:hover:bg-green-900/30 rounded-full h-9 w-9"
-            aria-label="Marcar realizado"
-            disabled={status === 'realizado'}
-          >
-            <CheckIcon className="w-5 h-5 text-green-600" />
-          </Button>
-          <Button
-            onClick={() => handleUpdateStatus('cancelado')}
-            variant="outline"
-            size="icon"
-            className="bg-card hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full h-9 w-9"
-            aria-label="Cancelar turno"
-            disabled={status === 'cancelado'}
-          >
-            <XCircle className="w-5 h-5 text-red-600" />
-          </Button>
-        </div>
-      </div>
-    </div>
+    </TooltipProvider>
   );
 }
 
@@ -268,17 +285,14 @@ export default function AgendaPage() {
                   ) : (
                     <Tabs value={currentView} onValueChange={setCurrentView} className="w-full border-t">
                       <div className="flex flex-wrap items-center justify-between gap-4 p-4">
-                          {/* Col A: Navigation */}
                           <div className="flex items-center gap-2">
                              <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>Hoy</Button>
                              <Button variant="outline" size="icon" onClick={() => handleDateChange('prev')}><ChevronLeft className="h-4 w-4" /></Button>
                              <Button variant="outline" size="icon" onClick={() => handleDateChange('next')}><ChevronRight className="h-4 w-4" /></Button>
                           </div>
-                          {/* Col B: Range */}
                           <div className="font-semibold text-center capitalize text-sm sm:text-base flex-grow">
                             {getRangeText()}
                           </div>
-                          {/* Col C: Actions */}
                           <div className="flex items-center gap-2">
                              <TabsList>
                                <TabsTrigger value="semanal">Semanal</TabsTrigger>
@@ -325,9 +339,12 @@ export default function AgendaPage() {
                                 <Button 
                                   key={option.value}
                                   variant={statusFilter === option.value ? 'default' : 'outline'}
-                                  size="sm"
                                   onClick={() => setStatusFilter(option.value)}
-                                  className="rounded-full whitespace-nowrap"
+                                  className={cn(
+                                      "rounded-full whitespace-nowrap h-9 px-4 text-sm",
+                                      statusFilter === option.value && "bg-primary text-primary-foreground hover:bg-primary/90",
+                                      statusFilter !== option.value && "bg-muted hover:bg-muted/80"
+                                  )}
                                 >
                                   {option.label}
                                 </Button>
@@ -336,22 +353,22 @@ export default function AgendaPage() {
                          </div>
                       </div>
                     {loading ? (
-                      <div className="pt-6 space-y-4">
-                        <Skeleton className="h-20 w-full" />
-                        <Skeleton className="h-20 w-full" />
-                        <Skeleton className="h-20 w-full" />
+                      <div className="pt-6 space-y-3">
+                        <Skeleton className="h-20 w-full rounded-xl" />
+                        <Skeleton className="h-20 w-full rounded-xl" />
+                        <Skeleton className="h-20 w-full rounded-xl" />
                       </div>
                     ) : sortedDates.length > 0 ? (
                       <div className="pt-6">
                         {sortedDates.map(date => (
-                          <div key={date} className="mb-8">
-                            <h3 className="text-lg font-semibold mb-4 capitalize sticky top-[138px] bg-card/80 backdrop-blur-sm z-10 py-2 -my-2">
+                          <div key={date} className="mb-8 last:mb-0">
+                            <h3 className="text-base font-semibold mb-4 capitalize sticky top-[138px] bg-card/80 backdrop-blur-sm z-10 py-2 -my-2">
                               {isSameDay(parseISO(date), new Date()) 
                                 ? "Hoy" 
                                 : format(parseISO(date), "eeee, d 'de' MMMM", { locale: es })
                               }
                             </h3>
-                            <div className="space-y-3 pt-4">
+                            <div className="space-y-3 pt-4 border-t">
                               {groupedTurnos[date]
                                 .sort((a,b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
                                 .map(turno => (
