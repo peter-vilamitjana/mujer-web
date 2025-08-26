@@ -348,9 +348,9 @@ export default function AgendaPage() {
                 </AccordionTrigger>
                  <AccordionContent>
                    <div className="border-t">
-                     <div className="sticky top-16 bg-card/80 backdrop-blur-sm z-10 py-3 px-6 border-b">
-                         <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                           <div className="relative w-full sm:w-auto sm:flex-grow max-w-md">
+                     <div className="sticky top-16 bg-card z-10 p-4 border-b">
+                         <div className="flex flex-col sm:flex-row gap-4 items-center">
+                           <div className="relative w-full sm:max-w-xs">
                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                              <Input
                                placeholder="Buscar por nombre de clienta..."
@@ -359,7 +359,7 @@ export default function AgendaPage() {
                                onChange={(e) => setSearchTerm(e.target.value)}
                              />
                            </div>
-                           <div className="flex flex-wrap gap-2 items-center justify-start sm:justify-end">
+                           <div className="flex flex-wrap gap-2 items-center">
                               {filterOptions.map(option => (
                                 <Button 
                                   key={option.value}
@@ -389,8 +389,8 @@ export default function AgendaPage() {
                     ) : sortedDates.length > 0 ? (
                       <div className="pt-6">
                         {sortedDates.map(date => (
-                          <div key={date} className="mb-8 last:mb-0">
-                            <h3 className="text-base font-semibold mb-3 capitalize sticky top-[138px] bg-card/80 backdrop-blur-sm z-10 py-2 -my-2 border-b">
+                          <div key={date} className="mb-6 last:mb-0">
+                            <h3 className="text-base font-semibold mb-3 capitalize sticky top-[132px] bg-card z-10 py-2 -my-2 border-b">
                               {isSameDay(parseISO(date), new Date()) 
                                 ? "Hoy" 
                                 : format(parseISO(date), "eeee, d 'de' MMMM", { locale: es })
