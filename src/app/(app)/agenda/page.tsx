@@ -323,20 +323,24 @@ export default function AgendaPage() {
                      Vista Calendario
                  </AccordionTrigger>
                  <AccordionContent>
+                   <TabsContent value="semanal" className="mt-0">
                        {loadingCalendar ? (
                          <div className="p-6 pt-0">
                            <Skeleton className="h-[400px] w-full" />
                          </div>
                        ) : (
-                         <>
-                           <TabsContent value="semanal" className="mt-0">
-                               <WeeklyCalendarView turnos={allTurnos} currentDate={currentDate} />
-                           </TabsContent>
-                           <TabsContent value="diario" className="mt-0">
-                               <DailyCalendarView turnos={allTurnos} currentDate={currentDate} />
-                           </TabsContent>
-                         </>
+                         <WeeklyCalendarView turnos={allTurnos} currentDate={currentDate} />
                        )}
+                   </TabsContent>
+                   <TabsContent value="diario" className="mt-0">
+                      {loadingCalendar ? (
+                         <div className="p-6 pt-0">
+                           <Skeleton className="h-[400px] w-full" />
+                         </div>
+                       ) : (
+                         <DailyCalendarView turnos={allTurnos} currentDate={currentDate} />
+                       )}
+                   </TabsContent>
                  </AccordionContent>
                </Tabs>
              </Card>
@@ -348,9 +352,9 @@ export default function AgendaPage() {
                 </AccordionTrigger>
                  <AccordionContent>
                    <div className="border-t">
-                      <div className="sticky top-16 bg-card z-10 p-4 border-b">
-                         <div className="flex flex-wrap items-center gap-4">
-                           <div className="relative flex-grow sm:flex-grow-0 sm:min-w-[280px] sm:max-w-xs">
+                      <div className="p-4 border-b">
+                         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                           <div className="relative flex-grow min-w-[250px] max-w-xs">
                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                              <Input
                                placeholder="Buscar por nombre de clienta..."
@@ -367,10 +371,10 @@ export default function AgendaPage() {
                                   size="sm"
                                   onClick={() => setStatusFilter(option.value)}
                                   className={cn(
-                                      "rounded-full whitespace-nowrap h-9 px-4 text-sm font-semibold border-transparent",
+                                      "rounded-full whitespace-nowrap h-9 px-4 text-sm font-semibold",
                                       statusFilter === option.value 
-                                        ? "bg-primary/10 text-primary hover:bg-primary/20"
-                                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                        ? "bg-primary/10 text-primary hover:bg-primary/20 border-primary/20"
+                                        : "bg-muted text-muted-foreground hover:bg-muted/80 border-transparent"
                                   )}
                                 >
                                   {option.label}
@@ -389,8 +393,8 @@ export default function AgendaPage() {
                     ) : sortedDates.length > 0 ? (
                       <div className="flow-root">
                         {sortedDates.map(date => (
-                          <div key={date} className="py-4">
-                            <div className="sticky top-[132px] bg-card z-10 py-2 -my-2 border-b">
+                          <div key={date}>
+                            <div className="sticky top-16 bg-card z-10 py-3 border-b">
                                 <h3 className="text-base font-semibold capitalize">
                                   {isSameDay(parseISO(date), new Date()) 
                                     ? "Hoy" 
