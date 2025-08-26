@@ -1,15 +1,14 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowUp, BarChart, Calendar, PieChart, Users, Clock, Star, Activity, Users2 } from "lucide-react";
+import { ArrowUp, Users } from "lucide-react";
 import { MonthlyVolumeChart } from "@/components/charts/MonthlyVolumeChart";
 import { PopularServicesChart } from "@/components/charts/PopularServicesChart";
 import { Badge } from "@/components/ui/badge";
 import { WeeklyTurnosChart } from "@/components/charts/WeeklyTurnosChart";
 import { db } from "@/lib/firebase";
-import RealtimeWaveformWidget from "@/components/RealtimeWaveformWidget";
+import VolumenTiempoReal from "@/components/VolumenTiempoReal";
 
 
-// Mock data based on the requested structure to emulate Apple Health style widgets
 const mockDashboardData = {
   ingresosSemana: {
     total: 1250000,
@@ -65,7 +64,6 @@ export default function DashboardPage() {
     totalClientes,
     volumenMensual, 
     serviciosTop,
-    live,
     turnosSemana
   } = mockDashboardData;
   
@@ -78,44 +76,43 @@ export default function DashboardPage() {
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium flex items-center justify-between text-muted-foreground">
+           <CardHeader>
+             <CardTitle className="text-base font-semibold flex items-center justify-between text-muted-foreground">
+                <span>Ingresos Semanales</span>
+             </CardTitle>
+          </CardHeader>
+           <CardContent>
+             <p className="text-4xl font-bold">{formatCurrency(ingresosSemana.total)}</p>
+             <div className="flex items-center text-sm text-green-600 font-semibold mt-1">
+                <ArrowUp className="h-4 w-4 mr-1"/> 
+                <span>{ingresosSemana.tendencia}% vs semana anterior</span>
+            </div>
+           </CardContent>
+        </Card>
+
+        <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+           <CardHeader>
+            <CardTitle className="text-base font-semibold flex items-center justify-between text-muted-foreground">
               <span>Turnos de Hoy</span>
-              <Calendar className="h-5 w-5" />
             </CardTitle>
           </CardHeader>
-          <CardContent>
+           <CardContent>
             <p className="text-4xl font-bold">{turnosHoy}</p>
-            <p className="text-xs text-muted-foreground mt-1">Turnos programados para la jornada.</p>
+             <p className="text-sm text-muted-foreground mt-1">Turnos programados para la jornada.</p>
           </CardContent>
         </Card>
 
         <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium flex items-center justify-between text-muted-foreground">
-              <span>Total de Clientes</span>
-              <Users className="h-5 w-5" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold">{totalClientes}</p>
-            <p className="text-xs text-muted-foreground mt-1">Clientes registrados en el sistema.</p>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium flex items-center justify-between text-muted-foreground">
-              <span>Ingresos Semanales</span>
-               <Badge variant="outline" className="text-green-600 border-green-600/50 bg-green-500/10 dark:text-green-400 dark:border-green-400/30 dark:bg-green-500/10">
-                  <ArrowUp className="h-3 w-3 mr-1"/> {ingresosSemana.tendencia}%
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold">{formatCurrency(ingresosSemana.total)}</p>
-            <p className="text-xs text-muted-foreground mt-1">Ingresos brutos estimados de la semana.</p>
-          </CardContent>
+           <CardHeader>
+             <CardTitle className="text-base font-semibold flex items-center justify-between text-muted-foreground">
+                <span>Total de Clientes</span>
+                <Users className="h-5 w-5" />
+             </CardTitle>
+           </CardHeader>
+           <CardContent>
+             <p className="text-4xl font-bold">{totalClientes}</p>
+             <p className="text-sm text-muted-foreground mt-1">Clientes registrados en el sistema.</p>
+           </CardContent>
         </Card>
       </div>
 
@@ -147,7 +144,7 @@ export default function DashboardPage() {
             <CardDescription>Pulso de actividad del salón ahora mismo.</CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex flex-col items-center justify-center text-center p-0">
-             <RealtimeWaveformWidget db={db} sucursalId="main" />
+             <VolumenTiempoReal db={db} sucursalId="main" />
           </CardContent>
         </Card>
         
