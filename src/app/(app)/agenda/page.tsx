@@ -231,6 +231,18 @@ export default function AgendaPage() {
       unsubAllTurnos();
     }
   }, [user]);
+
+  // Set default view on mobile
+  useEffect(() => {
+    const checkScreenSize = () => {
+      if (window.innerWidth < 768) {
+        setCurrentView('diario');
+      }
+    };
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
   
   const filteredTurnos = useMemo(() => {
       return turnos.filter(turno => {
@@ -295,56 +307,56 @@ export default function AgendaPage() {
 
        <div className="max-w-full overflow-hidden">
         <Accordion type="multiple" defaultValue={["calendar-view", "list-view"]} className="w-full space-y-4">
-           <AccordionItem value="calendar-view">
-             <Card>
-               <AccordionTrigger className="p-6 text-lg font-semibold">
-                   Vista Calendario
-               </AccordionTrigger>
-               <AccordionContent>
-                 <Tabs value={currentView} onValueChange={setCurrentView}>
-                   <CardHeader className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 border-b">
-                       <div className="flex items-center gap-2">
-                           <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>Hoy</Button>
-                           <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleDateChange('prev')}><ChevronLeft className="h-4 w-4" /></Button>
-                           <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleDateChange('next')}><ChevronRight className="h-4 w-4" /></Button>
-                       </div>
-                       <div className="font-semibold text-center capitalize text-sm sm:text-base flex-grow">
-                         {getRangeText()}
-                       </div>
-                       <div className="flex items-center gap-4">
-                           <TabsList>
-                             <TabsTrigger value="semanal">Semanal</TabsTrigger>
-                             <TabsTrigger value="diario">Diario</TabsTrigger>
-                           </TabsList>
-                           {(userRole === 'admin' || userRole === 'clienta') && (
-                             <Link href="/turnos" className="hidden md:block">
-                               <Button size="sm"><Plus className="mr-2 h-4 w-4"/>Agendar</Button>
-                             </Link>
-                           )}
-                       </div>
-                   </CardHeader>
-                   <TabsContent value="semanal" className="mt-0">
-                       {loadingCalendar ? (
-                         <div className="p-6 pt-0">
-                           <Skeleton className="h-[400px] w-full" />
-                         </div>
-                       ) : (
-                         <WeeklyCalendarView turnos={allTurnos} currentDate={currentDate} />
-                       )}
-                   </TabsContent>
-                   <TabsContent value="diario" className="mt-0">
+          <AccordionItem value="calendar-view">
+            <Card>
+              <AccordionTrigger className="p-6 text-lg font-semibold">
+                  Vista Calendario
+              </AccordionTrigger>
+              <AccordionContent>
+                <Tabs value={currentView} onValueChange={setCurrentView}>
+                  <CardHeader className="flex flex-col lg:flex-row items-center justify-between gap-4 p-4 border-b">
+                      <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())}>Hoy</Button>
+                          <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleDateChange('prev')}><ChevronLeft className="h-4 w-4" /></Button>
+                          <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => handleDateChange('next')}><ChevronRight className="h-4 w-4" /></Button>
+                      </div>
+                      <div className="font-semibold text-center capitalize text-sm sm:text-base flex-grow">
+                        {getRangeText()}
+                      </div>
+                      <div className="flex items-center gap-4">
+                          <TabsList>
+                            <TabsTrigger value="semanal" className="hidden md:inline-flex">Semanal</TabsTrigger>
+                            <TabsTrigger value="diario">Diario</TabsTrigger>
+                          </TabsList>
+                          {(userRole === 'admin' || userRole === 'clienta') && (
+                            <Link href="/turnos" className="hidden md:block">
+                              <Button size="sm"><Plus className="mr-2 h-4 w-4"/>Agendar</Button>
+                            </Link>
+                          )}
+                      </div>
+                  </CardHeader>
+                  <TabsContent value="semanal" className="mt-0">
                       {loadingCalendar ? (
-                         <div className="p-6 pt-0">
-                           <Skeleton className="h-[400px] w-full" />
-                         </div>
-                       ) : (
-                         <DailyCalendarView turnos={allTurnos} currentDate={currentDate} />
-                       )}
-                   </TabsContent>
-                 </Tabs>
-               </AccordionContent>
-             </Card>
-           </AccordionItem>
+                        <div className="p-6 pt-0">
+                          <Skeleton className="h-[400px] w-full" />
+                        </div>
+                      ) : (
+                        <WeeklyCalendarView turnos={allTurnos} currentDate={currentDate} />
+                      )}
+                  </TabsContent>
+                  <TabsContent value="diario" className="mt-0">
+                     {loadingCalendar ? (
+                        <div className="p-6 pt-0">
+                          <Skeleton className="h-[400px] w-full" />
+                        </div>
+                      ) : (
+                        <DailyCalendarView turnos={allTurnos} currentDate={currentDate} />
+                      )}
+                  </TabsContent>
+                </Tabs>
+              </AccordionContent>
+            </Card>
+          </AccordionItem>
           <AccordionItem value="list-view">
              <Card>
                 <AccordionTrigger className="p-6 text-lg font-semibold">
