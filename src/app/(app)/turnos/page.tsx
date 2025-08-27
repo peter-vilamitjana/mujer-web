@@ -83,12 +83,12 @@ const LengthPopoverTrigger = ({ asChild = false }: { asChild?: boolean }) => (
           Ver cómo definimos el largo
         </button>
       ) : (
-        <Button
+        <button
           className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-4 w-4 text-muted-foreground ml-1"
           aria-label="Información sobre largo"
         >
           <Info className="h-4 w-4" />
-        </Button>
+        </button>
       )}
     </PopoverTrigger>
     <LengthPopoverContent />
@@ -140,37 +140,42 @@ function TurnosContent() {
   useEffect(() => {
     const fetchData = async () => {
       setLoadingData(true);
-      const serviceIdParams = searchParams.getAll('servicioId');
-      if (serviceIdParams.length > 0 && services.length > 0) {
-        const preSelectedServices = services
-          .filter(s => serviceIdParams.includes(s.id))
-          .map(s => {
-              const largo = searchParams.get(`largo_${s.id}`) as LargoPelo | null;
-              return { ...s, largo: s.requiereLargo ? largo || undefined : undefined };
-          });
-        setSelectedServices(preSelectedServices);
-        setStep(isAdmin ? 1 : 2);
-      }
-
-      if (isAdmin) {
-        const clientsQuery = query(collection(db, 'clientes'), orderBy('nombre'));
-        const clientsSnapshot = await getDocs(clientsQuery);
-        const clientsData = clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Cliente))
-        setClients(clientsData);
-        
-        const clientIdParam = searchParams.get('clienteId');
-        if (clientIdParam) {
-            const client = clientsData.find(c => c.id === clientIdParam);
-            if (client) {
-              setSelectedClient(client);
-              setStep(1);
-            }
+      try {
+        const serviceIdParams = searchParams.getAll('servicioId');
+        if (serviceIdParams.length > 0 && services.length > 0) {
+          const preSelectedServices = services
+            .filter(s => serviceIdParams.includes(s.id))
+            .map(s => {
+                const largo = searchParams.get(`largo_${s.id}`) as LargoPelo | null;
+                return { ...s, largo: s.requiereLargo ? largo || undefined : undefined };
+            });
+          setSelectedServices(preSelectedServices);
+          setStep(isAdmin ? 1 : 2);
         }
-      } else if (user) {
-        const userAsClient: Cliente = { id: user.id, nombre: user.nombre, apellido: '', email: user.email, telefono: '', fechaRegistro: new Date() as any };
-        setSelectedClient(userAsClient);
+
+        if (isAdmin) {
+          const clientsQuery = query(collection(db, 'clientes'), orderBy('nombre'));
+          const clientsSnapshot = await getDocs(clientsQuery);
+          const clientsData = clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Cliente))
+          setClients(clientsData);
+          
+          const clientIdParam = searchParams.get('clienteId');
+          if (clientIdParam) {
+              const client = clientsData.find(c => c.id === clientIdParam);
+              if (client) {
+                setSelectedClient(client);
+                setStep(1);
+              }
+          }
+        } else if (user) {
+          const userAsClient: Cliente = { id: user.id, nombre: user.nombre, apellido: '', email: user.email, telefono: '', fechaRegistro: new Date() as any };
+          setSelectedClient(userAsClient);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoadingData(false);
       }
-      setLoadingData(false);
     };
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
