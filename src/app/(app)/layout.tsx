@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
@@ -9,6 +10,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import type { Usuario } from '@/lib/types';
 import { UserProvider } from '@/contexts/UserContext';
+import { SessionProvider } from 'next-auth/react';
 
 export default function AppLayout({
   children,
@@ -80,7 +82,7 @@ export default function AppLayout({
   }
   
   if (pathname.startsWith('/login')) {
-      return <>{children}</>;
+      return <SessionProvider><main>{children}</main></SessionProvider>;
   }
 
   if (!user) {
@@ -92,14 +94,16 @@ export default function AppLayout({
   }
 
   return (
-    <UserProvider user={user}>
-      <div className="flex min-h-screen w-full flex-col bg-muted/40">
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={user.rol} />
-        <div className="flex flex-col md:pl-64 transition-all duration-300">
-          <Header onMenuClick={() => setSidebarOpen(true)} />
-          <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+    <SessionProvider>
+        <UserProvider user={user}>
+        <div className="flex min-h-screen w-full flex-col bg-muted/40">
+            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userRole={user.rol} />
+            <div className="flex flex-col md:pl-64 transition-all duration-300">
+            <Header onMenuClick={() => setSidebarOpen(true)} />
+            <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+            </div>
         </div>
-      </div>
-    </UserProvider>
+        </UserProvider>
+    </SessionProvider>
   );
 }

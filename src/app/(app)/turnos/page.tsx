@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -6,7 +7,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2, Calendar as CalendarIcon, Clock, User, Tag, ArrowLeft, Check, CheckCircle, Users, Scissors, Info, Search } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
@@ -33,6 +34,8 @@ import {
 } from "@/components/ui/popover";
 import NewClientForm from '@/components/NewClientForm';
 import { Label } from '@/components/ui/label';
+import { google } from 'googleapis';
+import { useSession } from 'next-auth/react';
 
 
 const professionals = [
@@ -110,6 +113,7 @@ function TurnosContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const user = useUser();
+  const { data: session } = useSession();
   const { toast } = useToast();
   
   const isAdmin = user?.rol === 'admin';
@@ -264,8 +268,30 @@ function TurnosContent() {
           }
           return name;
         }).join(', ');
+        
+        let googleEventId = undefined;
+        if(isAdmin && session?.accessToken){
+             const calendar = google.calendar({ version: 'v3', auth: new google.auth.OAuth2() });
+             calendar.context._options.headers = { Authorization: `Bearer ${session.accessToken}` };
+            
+             const event = {
+                summary: `Turno: ${selectedClient.nombre} ${selectedClient.apellido || ''}`,
+                description: `Servicios: ${servicioNombres}\nProfesional: ${selectedProfessional.name}`,
+                start: { dateTime: appointmentDateTime.toISOString(), timeZone: 'America/Argentina/Buenos_Aires' },
+                end: { dateTime: new Date(appointmentDateTime.getTime() + totalDuration * 60000).toISOString(), timeZone: 'America/Argentina/Buenos_Aires' },
+                extendedProperties: {
+                    private: {
+                        appointmentId: '', // Will be set after doc creation
+                    }
+                }
+             };
+             const createdEvent = await calendar.events.insert({ calendarId: 'primary', requestBody: event });
+             googleEventId = createdEvent.data.id;
+        }
 
+        const newTurnoRef = doc(collection(db, 'turnos'));
         await addDoc(collection(db, 'turnos'), {
+          id: newTurnoRef.id,
           clienteId: selectedClient.id,
           clienteNombre: `${selectedClient.nombre} ${selectedClient.apellido || ''}`.trim(),
           servicio: servicioNombres,
@@ -279,8 +305,28 @@ function TurnosContent() {
           señaPagada: false,
           montoSeña: depositAmount,
           fechaCreacion: serverTimestamp(),
-          duracion: totalDuration
+          duracion: totalDuration,
+          googleEventId: googleEventId,
+          source: 'app',
         });
+        
+        // Update Google event with the appointment ID
+        if(googleEventId && session?.accessToken){
+            const calendar = google.calendar({ version: 'v3', auth: new google.auth.OAuth2() });
+            calendar.context._options.headers = { Authorization: `Bearer ${session.accessToken}` };
+            await calendar.events.patch({
+                calendarId: 'primary',
+                eventId: googleEventId,
+                requestBody: {
+                    extendedProperties: {
+                        private: {
+                            appointmentId: newTurnoRef.id,
+                        }
+                    }
+                }
+            });
+        }
+
 
         toast({
           title: "¡Turno agendado!",
@@ -622,5 +668,3 @@ export default function TurnosPage() {
         </Suspense>
     )
 }
-
-

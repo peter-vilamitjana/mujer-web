@@ -1,3 +1,4 @@
+
 import type { Timestamp } from 'firebase/firestore';
 
 export type UserRole = 'admin' | 'empleada' | 'clienta';
@@ -47,6 +48,9 @@ export interface Turno {
   montoSeña?: number;
   señaPagada?: boolean;
   duracion: number; // en minutos
+  googleEventId?: string;
+  lastSyncedAt?: Timestamp;
+  source?: 'app' | 'google';
 }
 
 export interface PreciosPorLargo {

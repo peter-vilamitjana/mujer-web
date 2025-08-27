@@ -1,4 +1,5 @@
 
+
 'use client';
 import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Turno } from "@/lib/types";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, orderBy, Timestamp, where, updateDoc, doc } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, Timestamp, where, updateDoc, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/contexts/UserContext";
@@ -36,7 +37,104 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { signIn, signOut, useSession } from "next-auth/react";
+import { google } from "googleapis";
 
+
+async function setupGoogleCalendarWatch(accessToken: string) {
+    const calendar = google.calendar({ version: 'v3' });
+     calendar.context._options.headers = { Authorization: `Bearer ${accessToken}` };
+
+    const webhookUrl = `${process.env.NEXTAUTH_URL}/api/google/webhook`;
+
+    const response = await calendar.events.watch({
+        calendarId: 'primary',
+        requestBody: {
+            id: crypto.randomUUID(),
+            type: 'web_hook',
+            address: webhookUrl,
+        }
+    });
+
+    const channelId = response.data.id;
+    const resourceId = response.data.resourceId;
+
+    if (channelId && resourceId) {
+        const user = useUser();
+        if (user) {
+            await setDoc(doc(db, 'calendarChannels', user.id), {
+                channelId,
+                resourceId,
+                expiration: response.data.expiration,
+            });
+        }
+    }
+}
+
+function GoogleCalendarConnect() {
+    const { data: session, status } = useSession();
+    const [isConnected, setIsConnected] = useState(false);
+    const user = useUser();
+
+    useEffect(() => {
+        // Check connection status from your backend/DB
+        const checkConnection = async () => {
+             if(user?.rol === 'admin'){
+                const tokenDoc = await doc(db, 'calendarTokens', user.id).get();
+                setIsConnected(tokenDoc.exists());
+             }
+        };
+        if(status === 'authenticated' && user) {
+            checkConnection();
+        }
+    }, [status, user]);
+
+    if (user?.rol !== 'admin') {
+        return null;
+    }
+
+    const handleConnect = async () => {
+        const result = await signIn('google');
+        if (result?.ok) {
+            // After sign-in, the session callback in NextAuth will save tokens.
+            // Then we can set up the watch channel.
+            const session = await getSession(); // Re-fetch session to get the latest tokens
+            if(session?.accessToken){
+               await setupGoogleCalendarWatch(session.accessToken);
+               setIsConnected(true);
+            }
+        }
+    };
+
+    const handleDisconnect = async () => {
+       if(user){
+            await deleteDoc(doc(db, 'calendarTokens', user.id));
+            await deleteDoc(doc(db, 'calendarChannels', user.id));
+            signOut({ redirect: false });
+            setIsConnected(false);
+       }
+    };
+
+    return (
+        <div className="p-4 border-b">
+            <CardTitle>Conexión con Google Calendar</CardTitle>
+            <CardDescription>Sincroniza tus turnos de la app con tu calendario de Google.</CardDescription>
+            <div className="flex items-center gap-4 mt-4">
+                {isConnected ? (
+                    <>
+                        <Badge variant="default" className="bg-green-500">Conectado</Badge>
+                        <Button variant="outline" onClick={handleDisconnect}>Desconectar</Button>
+                    </>
+                ) : (
+                    <>
+                        <Badge variant="secondary">Desconectado</Badge>
+                        <Button onClick={handleConnect}>Conectar con Google Calendar</Button>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
 
 function TurnCard({ turno }: { turno: Turno }) {
   const { toast } = useToast();
@@ -335,7 +433,7 @@ export default function AgendaPage() {
                           )}
                       </div>
                   </CardHeader>
-                  <TabsContent value="semanal" className="mt-0">
+                   <TabsContent value="semanal" className="mt-0">
                       {loadingCalendar ? (
                         <div className="p-6 pt-0">
                           <Skeleton className="h-[400px] w-full" />
@@ -364,6 +462,7 @@ export default function AgendaPage() {
                 </AccordionTrigger>
                  <AccordionContent>
                    <div className="border-t">
+                      <GoogleCalendarConnect />
                       <div className="p-4 border-b">
                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                            <div className="relative flex-grow min-w-[250px] max-w-xs">
