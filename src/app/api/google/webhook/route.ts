@@ -1,48 +1,63 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { google } from 'googleapis';
 import type { Turno } from '@/lib/types';
+import { getSession } from 'next-auth/react';
+import { getToken } from 'next-auth/jwt';
 
-// Function to get a valid access token, refreshing if necessary
-async function getValidToken(adminUid: string) {
-    const tokenRef = doc(db, 'calendarTokens', adminUid);
-    const tokenSnap = await getDocs(query(collection(db, 'calendarTokens'), where('__name__', '==', adminUid)));
-    
-    if (tokenSnap.empty) {
-        throw new Error('Admin token not found');
+// This is a simplified token store. In a real app, you'd want this to be more robust.
+// For this example, we assume there's only one admin user whose tokens we manage.
+const getAdminTokens = async () => {
+    // In a real app, you might query for the admin user's doc.
+    // For this example, let's assume we know the admin's UID or have a single doc.
+    const q = query(collection(db, 'calendarTokens'));
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) {
+        return null;
     }
+    const adminDoc = snapshot.docs[0];
+    return { id: adminDoc.id, ...adminDoc.data() };
+};
 
-    let tokenData = tokenSnap.docs[0].data();
+const refreshAccessToken = async (tokenId: string, refreshToken: string) => {
+    const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            client_id: process.env.GOOGLE_CLIENT_ID!,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+            refresh_token: refreshToken,
+            grant_type: 'refresh_token',
+        }),
+    });
 
-    if (Date.now() >= tokenData.expiryDate) {
-        const res = await fetch('https://oauth2.googleapis.com/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-                client_id: process.env.GOOGLE_CLIENT_ID!,
-                client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-                refresh_token: tokenData.refreshToken,
-                grant_type: 'refresh_token',
-            }),
-        });
+    const newTokens = await res.json();
+    if (!response.ok) {
+        console.error("Failed to refresh access token", newTokens);
+        throw new Error('Failed to refresh token');
+    }
+    
+    const expiryDate = Date.now() + newTokens.expires_in * 1000;
+    
+    await setDoc(doc(db, 'calendarTokens', tokenId), {
+        accessToken: newTokens.access_token,
+        expiryDate: expiryDate,
+    }, { merge: true });
 
-        const newTokens = await res.json();
-        if (!res.ok) {
-            throw new Error('Failed to refresh token');
-        }
-        
-        tokenData = {
-            ...tokenData,
-            accessToken: newTokens.access_token,
-            expiryDate: Date.now() + newTokens.expires_in * 1000,
-        };
+    return { accessToken: newTokens.access_token, expiryDate };
+};
 
-        await updateDoc(doc(db, 'calendarTokens', adminUid), {
-            accessToken: tokenData.accessToken,
-            expiryDate: tokenData.expiryDate,
-        });
+
+async function getValidTokenForAdmin() {
+    const tokenData = await getAdminTokens();
+    if (!tokenData) throw new Error('Admin token not found');
+
+    if (Date.now() >= (tokenData.expiryDate || 0)) {
+        console.log("Refreshing expired token...");
+        const refreshed = await refreshAccessToken(tokenData.id, tokenData.refreshToken);
+        return refreshed.accessToken;
     }
 
     return tokenData.accessToken;
@@ -67,22 +82,23 @@ export async function POST(req: NextRequest) {
             console.warn('No active channel found for webhook notification.');
             return NextResponse.json({ message: 'No active channel' }, { status: 200 });
         }
-        const adminUid = channelSnap.docs[0].id;
-        const channelData = channelSnap.docs[0].data();
+        
+        const channelDoc = channelSnap.docs[0];
+        const channelData = channelDoc.data();
 
         if (channelData.channelId !== channelId || channelData.resourceId !== resourceId) {
              console.warn('Webhook notification for an unknown channel received.');
              return NextResponse.json({ message: 'Unknown channel' }, { status: 400 });
         }
         
-        const settingsRef = doc(db, `settings/calendar/${adminUid}`);
-        const settingsSnap = await getDocs(query(collection(db, `settings/calendar`), where('__name__', '==', adminUid)));
+        const settingsRef = doc(db, `settings/calendar/${channelDoc.id}`);
+        const settingsSnap = await getDocs(query(collection(db, `settings/calendar`), where('__name__', '==', channelDoc.id)));
         
         const syncToken = settingsSnap.empty ? null : settingsSnap.docs[0].data().nextSyncToken;
-        const accessToken = await getValidToken(adminUid);
+        const accessToken = await getValidTokenForAdmin();
         
-        const calendar = google.calendar({ version: 'v3', auth: new google.auth.OAuth2() });
-         calendar.context._options.headers = { Authorization: `Bearer ${accessToken}` };
+        const calendar = google.calendar({ version: 'v3' });
+        calendar.context._options.headers = { Authorization: `Bearer ${accessToken}` };
         
         const eventsRes = await calendar.events.list({
             calendarId: 'primary',
@@ -141,4 +157,3 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ status: 'ok' }, { status: 200 });
 }
-

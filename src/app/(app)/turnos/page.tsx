@@ -7,11 +7,11 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2, Calendar as CalendarIcon, Clock, User, Tag, ArrowLeft, Check, CheckCircle, Users, Scissors, Info, Search } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
-import type { Cliente, Servicio, LargoPelo } from '@/lib/types';
+import type { Cliente, Servicio, LargoPelo, Turno } from '@/lib/types';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -34,7 +34,6 @@ import {
 } from "@/components/ui/popover";
 import NewClientForm from '@/components/NewClientForm';
 import { Label } from '@/components/ui/label';
-import { google } from 'googleapis';
 import { useSession } from 'next-auth/react';
 
 
@@ -269,29 +268,9 @@ function TurnosContent() {
           return name;
         }).join(', ');
         
-        let googleEventId = undefined;
-        if(isAdmin && session?.accessToken){
-             const calendar = google.calendar({ version: 'v3', auth: new google.auth.OAuth2() });
-             calendar.context._options.headers = { Authorization: `Bearer ${session.accessToken}` };
-            
-             const event = {
-                summary: `Turno: ${selectedClient.nombre} ${selectedClient.apellido || ''}`,
-                description: `Servicios: ${servicioNombres}\nProfesional: ${selectedProfessional.name}`,
-                start: { dateTime: appointmentDateTime.toISOString(), timeZone: 'America/Argentina/Buenos_Aires' },
-                end: { dateTime: new Date(appointmentDateTime.getTime() + totalDuration * 60000).toISOString(), timeZone: 'America/Argentina/Buenos_Aires' },
-                extendedProperties: {
-                    private: {
-                        appointmentId: '', // Will be set after doc creation
-                    }
-                }
-             };
-             const createdEvent = await calendar.events.insert({ calendarId: 'primary', requestBody: event });
-             googleEventId = createdEvent.data.id;
-        }
-
         const newTurnoRef = doc(collection(db, 'turnos'));
-        await addDoc(collection(db, 'turnos'), {
-          id: newTurnoRef.id,
+        
+        const newTurnoData: Omit<Turno, 'id'> = {
           clienteId: selectedClient.id,
           clienteNombre: `${selectedClient.nombre} ${selectedClient.apellido || ''}`.trim(),
           servicio: servicioNombres,
@@ -300,33 +279,44 @@ function TurnosContent() {
           precioHasta: totalTo,
           empleadaNombre: selectedProfessional.name,
           empleadaAsignadaId: selectedProfessional.id,
-          fecha: appointmentDateTime,
+          fecha: appointmentDateTime.toISOString(),
           estado: 'pendiente_pago',
           señaPagada: false,
           montoSeña: depositAmount,
-          fechaCreacion: serverTimestamp(),
+          //fechaCreacion: serverTimestamp(), // This will be set by Firestore
           duracion: totalDuration,
-          googleEventId: googleEventId,
           source: 'app',
-        });
-        
-        // Update Google event with the appointment ID
-        if(googleEventId && session?.accessToken){
-            const calendar = google.calendar({ version: 'v3', auth: new google.auth.OAuth2() });
-            calendar.context._options.headers = { Authorization: `Bearer ${session.accessToken}` };
-            await calendar.events.patch({
-                calendarId: 'primary',
-                eventId: googleEventId,
-                requestBody: {
-                    extendedProperties: {
-                        private: {
-                            appointmentId: newTurnoRef.id,
-                        }
-                    }
-                }
-            });
-        }
+        };
 
+        // Create appointment in our DB
+        await setDoc(newTurnoRef, newTurnoData);
+
+        // If admin is connected to Google Calendar, create event there too
+        if (isAdmin && session?.accessToken) {
+          try {
+            const response = await fetch('/api/google/events', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    appointmentId: newTurnoRef.id,
+                    summary: `Turno: ${newTurnoData.clienteNombre}`,
+                    description: `Servicios: ${newTurnoData.servicio}\nProfesional: ${newTurnoData.empleadaNombre}`,
+                    startTime: newTurnoData.fecha,
+                    duration: newTurnoData.duracion,
+                })
+            });
+            if (response.ok) {
+              const { eventId } = await response.json();
+              await setDoc(newTurnoRef, { googleEventId: eventId }, { merge: true });
+            } else {
+              const error = await response.json();
+              console.warn("Could not create Google Calendar event:", error.message);
+              toast({ variant: "default", title: "Advertencia", description: "El turno se creó en la app, pero no se pudo sincronizar con Google Calendar."});
+            }
+          } catch (e) {
+             console.error("Error calling /api/google/events", e);
+          }
+        }
 
         toast({
           title: "¡Turno agendado!",

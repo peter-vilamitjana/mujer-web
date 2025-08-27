@@ -38,36 +38,22 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { google } from "googleapis";
 
 
-async function setupGoogleCalendarWatch(accessToken: string) {
-    const calendar = google.calendar({ version: 'v3' });
-     calendar.context._options.headers = { Authorization: `Bearer ${accessToken}` };
-
-    const webhookUrl = `${process.env.NEXTAUTH_URL}/api/google/webhook`;
-
-    const response = await calendar.events.watch({
-        calendarId: 'primary',
-        requestBody: {
-            id: crypto.randomUUID(),
-            type: 'web_hook',
-            address: webhookUrl,
+async function setupGoogleCalendarWatch() {
+    // This function will now be a call to our own API endpoint
+    try {
+        const response = await fetch('/api/google/sync/bootstrap', {
+            method: 'POST',
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to setup calendar watch');
         }
-    });
-
-    const channelId = response.data.id;
-    const resourceId = response.data.resourceId;
-
-    if (channelId && resourceId) {
-        const user = useUser();
-        if (user) {
-            await setDoc(doc(db, 'calendarChannels', user.id), {
-                channelId,
-                resourceId,
-                expiration: response.data.expiration,
-            });
-        }
+        return await response.json();
+    } catch (error) {
+        console.error("Error setting up Google Calendar watch:", error);
+        throw error;
     }
 }
 
@@ -75,16 +61,18 @@ function GoogleCalendarConnect() {
     const { data: session, status } = useSession();
     const [isConnected, setIsConnected] = useState(false);
     const user = useUser();
+    const { toast } = useToast();
 
     useEffect(() => {
-        // Check connection status from your backend/DB
         const checkConnection = async () => {
-             if(user?.rol === 'admin'){
-                const tokenDoc = await doc(db, 'calendarTokens', user.id).get();
+            if (user?.rol === 'admin' && user?.id) {
+                // A simple way to check could be to see if the token doc exists
+                const tokenDocRef = doc(db, 'calendarTokens', user.id);
+                const tokenDoc = await tokenDocRef.get();
                 setIsConnected(tokenDoc.exists());
-             }
+            }
         };
-        if(status === 'authenticated' && user) {
+        if (status === 'authenticated' && user) {
             checkConnection();
         }
     }, [status, user]);
@@ -94,24 +82,31 @@ function GoogleCalendarConnect() {
     }
 
     const handleConnect = async () => {
-        const result = await signIn('google');
-        if (result?.ok) {
+        try {
+            await signIn('google', {
+                callbackUrl: '/agenda',
+                redirect: true,
+            });
             // After sign-in, the session callback in NextAuth will save tokens.
-            // Then we can set up the watch channel.
-            const session = await getSession(); // Re-fetch session to get the latest tokens
-            if(session?.accessToken){
-               await setupGoogleCalendarWatch(session.accessToken);
-               setIsConnected(true);
-            }
+            // We can then try to set up the watch channel.
+            await setupGoogleCalendarWatch();
+            setIsConnected(true);
+            toast({ title: 'Conectado!', description: 'Tu Google Calendar ha sido sincronizado.' });
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message || 'No se pudo conectar con Google Calendar.', variant: 'destructive'});
         }
     };
 
     const handleDisconnect = async () => {
-       if(user){
-            await deleteDoc(doc(db, 'calendarTokens', user.id));
-            await deleteDoc(doc(db, 'calendarChannels', user.id));
-            signOut({ redirect: false });
-            setIsConnected(false);
+       if(user?.id){
+            try {
+                await fetch('/api/google/disconnect', { method: 'POST' });
+                await signOut({ redirect: false });
+                setIsConnected(false);
+                toast({ title: 'Desconectado', description: 'Se ha desvinculado tu Google Calendar.' });
+            } catch (error: any) {
+                 toast({ title: 'Error', description: error.message || 'No se pudo desconectar.', variant: 'destructive'});
+            }
        }
     };
 
@@ -433,7 +428,7 @@ export default function AgendaPage() {
                           )}
                       </div>
                   </CardHeader>
-                   <TabsContent value="semanal" className="mt-0">
+                  <TabsContent value="semanal" className="mt-0">
                       {loadingCalendar ? (
                         <div className="p-6 pt-0">
                           <Skeleton className="h-[400px] w-full" />
