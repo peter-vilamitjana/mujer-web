@@ -4,7 +4,7 @@
 import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { db } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const GOOGLE_AUTHORIZATION_URL =
   "https://accounts.google.com/o/oauth2/v2/auth?" +
@@ -78,7 +78,7 @@ const handler = NextAuth({
         token.user = user;
         return token;
       }
-      
+
       if (Date.now() < (token.accessTokenExpires as number)) {
         return token;
       }
@@ -90,15 +90,40 @@ const handler = NextAuth({
       session.accessToken = token.accessToken as string;
       session.error = token.error as string;
 
+      // Check if user has a salon associated
+      const userRef = doc(db, 'users', session.user.id);
+      // We need to fetch the user doc to see if they have a salonId
+      // ideally we should do this in JWT callback to persist it in token
+      // but for now let's just do it here or assume it's in token.user if we put it there.
+
+      // Let's actually put it in the token in the jwt callback if strictly needed, 
+      // but seeing as next-auth strategy is jwt, we can enrich the session here.
+
+      // For now, let's keep the existing admin logic and add a placeholder for salonId
+      // In a real app we'd fetch the user profile here or in jwt callback.
+      // Check if user has a salon associated
+      const userDocRef = doc(db, 'users', session.user.id);
+      try {
+        const userSnap = await getDoc(userDocRef);
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          if (userData.salonId) {
+            (session.user as any).salonId = userData.salonId;
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user salonId:", error);
+      }
+
       // Save tokens to Firestore for admin
       if (session.user?.email === 'admin@mujer.com' && token.refreshToken) {
         const userDocRef = doc(db, 'calendarTokens', session.user.id);
         await setDoc(userDocRef, {
-            accessToken: token.accessToken,
-            refreshToken: token.refreshToken,
-            expiryDate: token.accessTokenExpires,
-            scope: token.scope,
-            tokenType: token.token_type,
+          accessToken: token.accessToken,
+          refreshToken: token.refreshToken,
+          expiryDate: token.accessTokenExpires,
+          scope: token.scope,
+          tokenType: token.token_type,
         }, { merge: true });
       }
 

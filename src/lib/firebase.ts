@@ -1,3 +1,4 @@
+import "@/lib/shim-storage";
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
@@ -19,7 +20,7 @@ import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   // ==================> PEGA TUS CREDENCIALES AQUÍ <==================
-  
+
   apiKey: "AIzaSyCcU9HP6ELT0SKyhVXyxMPebE4c5KqTi7g",
 
   authDomain: "mujer-app.firebaseapp.com",
@@ -43,6 +44,32 @@ const firebaseConfig = {
 // Esta lógica previene la re-inicialización en entornos de desarrollo (hot-reloading)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
-const auth = getAuth(app);
+
+let auth;
+try {
+  // Check if we are in a browser environment
+  if (typeof window !== "undefined") {
+    auth = getAuth(app);
+  } else {
+    // Server-side
+    const { initializeAuth, inMemoryPersistence } = require("firebase/auth");
+    // Try to initialize with in-memory persistence
+    auth = initializeAuth(app, {
+      persistence: inMemoryPersistence
+    });
+    console.error("[DEBUG] Server auth initialized successfully");
+  }
+} catch (e) {
+  console.error("[DEBUG] Failed to initialize (likely already initialized). Error:", e);
+  // If initializeAuth fails, it usually means it was already initialized.
+  // We can try getAuth(app), but if that crashes, we should catch it too.
+  try {
+    auth = getAuth(app);
+  } catch (e2) {
+    console.error("[DEBUG] getAuth(app) also failed:", e2);
+    // Return a mock or empty object to prevent crash
+    auth = {} as any;
+  }
+}
 
 export { db, auth };

@@ -7,9 +7,11 @@ export function ThemeToggle() {
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
-    const stored = localStorage.getItem('theme')
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    
+    const stored = (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function')
+      ? localStorage.getItem('theme')
+      : null;
+    const prefersDark = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)').matches : false;
+
     if (stored === 'dark' || (!stored && prefersDark)) {
       document.documentElement.classList.add('dark')
       setIsDark(true)
@@ -23,7 +25,9 @@ export function ThemeToggle() {
     const next = !isDark
     setIsDark(next)
     document.documentElement.classList.toggle('dark', next)
-    localStorage.setItem('theme', next ? 'dark' : 'light')
+    if (typeof localStorage !== 'undefined' && typeof localStorage.setItem === 'function') {
+      localStorage.setItem('theme', next ? 'dark' : 'light')
+    }
   }
 
   return (

@@ -22,19 +22,25 @@ export default function ClientesPage() {
 
   useEffect(() => {
     const clientesQuery = query(collection(db, 'clientes'), orderBy('nombre'));
-    const unsubClientes = onSnapshot(clientesQuery, (snapshot) => {
-      const clientesData = snapshot.docs.map(doc => {
+    const unsubClientes = onSnapshot(clientesQuery,
+      (snapshot) => {
+        const clientesData = snapshot.docs.map(doc => {
           const data = doc.data();
-          return { 
-              id: doc.id, 
-              ...data,
-              ultimaVisita: data.ultimaVisita,
-              fechaRegistro: data.fechaRegistro,
+          return {
+            id: doc.id,
+            ...data,
+            ultimaVisita: data.ultimaVisita,
+            fechaRegistro: data.fechaRegistro,
           } as Cliente;
-      });
-      setClientes(clientesData);
-      setLoading(false);
-    });
+        });
+        setClientes(clientesData);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error al obtener clientes: ", error);
+        setLoading(false);
+      }
+    );
 
     return () => unsubClientes();
   }, []);

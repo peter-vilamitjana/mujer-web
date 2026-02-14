@@ -1,50 +1,89 @@
-import Logo from '@/components/Logo';
-import { Button } from '@/components/ui/button';
-import { Instagram, Facebook, Phone, Mail, MapPin } from 'lucide-react';
+import { Instagram, Twitter } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="bg-[#0f0f12] text-gray-300">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center">
-          <div className="lg:col-span-1 text-center md:text-left">
-            <div className="[&_span]:text-white">
-                <Logo />
-            </div>
-            <p className="mt-4 text-gray-400 text-sm">Tu estilo empieza acá. © {new Date().getFullYear()} Mujer.</p>
+    <footer className="bg-white md:bg-zinc-950 text-zinc-400 py-12 border-t border-zinc-100 md:border-zinc-900">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Mobile View */}
+        <div className="md:hidden flex flex-col items-center">
+          <div className="mb-10 text-center">
+            <h2 className="text-2xl font-bold text-[#9D6EFE] tracking-widest uppercase font-serif">MUJER</h2>
           </div>
-          <div className="md:col-span-2 lg:col-span-3">
-             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                 <div>
-                    <h3 className="font-semibold text-white">Contacto</h3>
-                    <ul className="mt-4 space-y-3 text-sm">
-                      <li className="flex items-center gap-2 text-gray-400"><MapPin className="h-4 w-4 text-primary" /> Guillermo Rawson 3688, La Lucila</li>
-                      <li className="flex items-center gap-2 text-gray-400"><Phone className="h-4 w-4 text-primary" /> (011) 1234-5678</li>
-                      <li className="flex items-center gap-2 text-gray-400"><Mail className="h-4 w-4 text-primary" /> contacto@mujer.com</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white">Navegación</h3>
-                     <ul className="mt-4 space-y-3 text-sm">
-                        <li><Link href="#promotions" className="text-gray-400 hover:text-primary transition-colors">Promociones</Link></li>
-                        <li><Link href="/login" className="text-gray-400 hover:text-primary transition-colors">Reservar Turno</Link></li>
-                        <li><Link href="#testimonios" className="text-gray-400 hover:text-primary transition-colors">Testimonios</Link></li>
-                        <li><Link href="/login" className="text-gray-400 hover:text-primary transition-colors">Mi Cuenta</Link></li>
-                     </ul>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white">Síguenos</h3>
-                    <div className="flex mt-4 space-x-2">
-                      <Link href="#" aria-label="Instagram">
-                        <Button variant="outline" size="icon" className="rounded-full bg-white/5 border-white/10 text-white hover:bg-white/10"><Instagram className="h-5 w-5"/></Button>
-                      </Link>
-                      <Link href="#" aria-label="Facebook">
-                        <Button variant="outline" size="icon" className="rounded-full bg-white/5 border-white/10 text-white hover:bg-white/10"><Facebook className="h-5 w-5"/></Button>
-                      </Link>
-                    </div>
-                  </div>
-             </div>
+
+          <nav className="flex flex-col items-center gap-6 mb-12">
+            <Link href="#servicios" className="text-xs font-semibold tracking-widest uppercase text-zinc-600">Servicios</Link>
+            <Link href="#promotions" className="text-xs font-semibold tracking-widest uppercase text-zinc-600">Combos</Link>
+            <Link href="/gift-cards" className="text-xs font-semibold tracking-widest uppercase text-zinc-600">Gift Cards</Link>
+            <Link href="/contacto" className="text-xs font-semibold tracking-widest uppercase text-zinc-600">Contacto</Link>
+          </nav>
+
+          <div className="flex items-center gap-8 mb-12">
+            <Link
+              href="https://twitter.com"
+              target="_blank"
+              className="text-[#9D6EFE]"
+              aria-label="Twitter"
+            >
+              <Twitter className="h-5 w-5" />
+            </Link>
+            <Link
+              href="https://instagram.com"
+              target="_blank"
+              className="text-[#9D6EFE]"
+              aria-label="Instagram"
+            >
+              <Instagram className="h-5 w-5" />
+            </Link>
+          </div>
+
+          <div className="pt-8 w-full border-t border-zinc-100 text-center">
+            <p className="text-[10px] font-medium tracking-tight text-zinc-300">
+              © {currentYear} MUJER Studio Beauty Center. <br />
+              Todos los derechos reservados.
+            </p>
+          </div>
+        </div>
+
+        {/* Desktop View */}
+        <div className="hidden md:flex flex-col">
+          <div className="flex justify-between items-center gap-8 mb-12">
+            {/* Brand */}
+            <div className="flex flex-col items-start text-zinc-400">
+              <h2 className="text-2xl font-bold text-white tracking-widest uppercase font-serif">MUJER</h2>
+              <p className="mt-2 text-sm italic font-serif tracking-widest uppercase opacity-50">Estilo & Belleza</p>
+            </div>
+
+            {/* Nav Links */}
+            <nav className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-xs font-semibold tracking-widest uppercase">
+              <Link href="#promotions" className="hover:text-primary transition-colors duration-300">Promociones</Link>
+              <Link href="/login" className="hover:text-primary transition-colors duration-300">Reservar Turno</Link>
+              <Link href="#testimonios" className="hover:text-primary transition-colors duration-300">Testimonios</Link>
+              <Link href="/login" className="hover:text-primary transition-colors duration-300">Mi Cuenta</Link>
+            </nav>
+
+            {/* Social */}
+            <div className="flex items-center gap-6">
+              <Link
+                href="https://instagram.com"
+                target="_blank"
+                className="hover:text-white transition-all duration-300 hover:scale-110 active:scale-95"
+                aria-label="Instagram"
+              >
+                <Instagram className="h-5 w-5" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="pt-8 border-t border-zinc-900 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-light tracking-widest uppercase opacity-40">
+            <p>© {currentYear} MUJER. TODOS LOS DERECHOS RESERVADOS.</p>
+            <div className="flex gap-6">
+              <Link href="#" className="hover:underline underline-offset-4">Privacidad</Link>
+              <Link href="#" className="hover:underline underline-offset-4">Términos</Link>
+            </div>
           </div>
         </div>
       </div>

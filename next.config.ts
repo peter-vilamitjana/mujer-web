@@ -1,5 +1,6 @@
 
-import type {NextConfig} from 'next';
+import './src/lib/shim-storage';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -14,37 +15,36 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'placehold.co',
-        port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'cdn.thumbor.leadformance.com',
-        port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'instagram.faep14-2.fna.fbcdn.net',
-        port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'firebasestorage.googleapis.com',
-        port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'instagram.fros9-1.fna.fbcdn.net',
-        port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'instagram.faep14-3.fna.fbcdn.net',
-        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
         pathname: '/**',
       }
     ],

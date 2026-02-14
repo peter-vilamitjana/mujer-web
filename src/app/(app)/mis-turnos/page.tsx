@@ -31,13 +31,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
+import { cn, safeFormatDate } from "@/lib/utils";
 
 
 function ProximoTurnoCard({ turno, onCancel }: { turno: Turno, onCancel: (id: string) => void }) {
   const services = turno.servicio.split(',').map(s => s.trim());
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   const displayServices = isExpanded ? services : services.slice(0, 3);
   const hasMoreServices = services.length > 3;
 
@@ -58,19 +58,19 @@ function ProximoTurnoCard({ turno, onCancel }: { turno: Turno, onCancel: (id: st
         <div>
           <p className="flex items-center gap-2 text-sm opacity-90"><User className="h-4 w-4" />Con {turno.empleadaNombre}</p>
           <p className="font-semibold mt-3 mb-1 text-sm">Servicios:</p>
-           <Collapsible open={isExpanded} onOpenChange={setIsExpanded} className="space-y-1">
-              <ul className="space-y-1 text-xs list-disc list-inside text-white/90">
-                {displayServices.map((s, i) => <li key={i}>{s}</li>)}
-              </ul>
-              {hasMoreServices && (
-                <CollapsibleTrigger asChild>
-                   <button className="flex items-center gap-1 text-xs font-semibold text-primary-foreground/80 hover:text-primary-foreground mt-2">
-                    {isExpanded ? '– Ver menos' : `+ Ver todos los servicios`}
-                    <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")} />
-                  </button>
-                </CollapsibleTrigger>
-              )}
-           </Collapsible>
+          <Collapsible open={isExpanded} onOpenChange={setIsExpanded} className="space-y-1">
+            <ul className="space-y-1 text-xs list-disc list-inside text-white/90">
+              {displayServices.map((s, i) => <li key={i}>{s}</li>)}
+            </ul>
+            {hasMoreServices && (
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center gap-1 text-xs font-semibold text-primary-foreground/80 hover:text-primary-foreground mt-2">
+                  {isExpanded ? '– Ver menos' : `+ Ver todos los servicios`}
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", isExpanded && "rotate-180")} />
+                </button>
+              </CollapsibleTrigger>
+            )}
+          </Collapsible>
         </div>
         <div className="pt-3 mt-3 border-t border-white/20 flex justify-end">
           <AlertDialog>
@@ -107,14 +107,18 @@ export default function MisTurnosPage() {
   const [visibleCount, setVisibleCount] = useState(10);
 
   useEffect(() => {
-    const savedFilter = localStorage.getItem('historialFiltro');
-    if (savedFilter && ['week', 'month', 'quarter', 'all'].includes(savedFilter)) {
-      setFilter(savedFilter);
+    if (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') {
+      const savedFilter = localStorage.getItem('historialFiltro');
+      if (savedFilter && ['week', 'month', 'quarter', 'all'].includes(savedFilter)) {
+        setFilter(savedFilter);
+      }
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('historialFiltro', filter);
+    if (typeof localStorage !== 'undefined' && typeof localStorage.setItem === 'function') {
+      localStorage.setItem('historialFiltro', filter);
+    }
   }, [filter]);
 
   useEffect(() => {
@@ -124,23 +128,23 @@ export default function MisTurnosPage() {
     }
 
     const turnosQuery = query(
-      collection(db, 'turnos'), 
+      collection(db, 'turnos'),
       where('clienteId', '==', user.id)
     );
 
     const unsubscribe = onSnapshot(turnosQuery, (snapshot) => {
       const turnosData = snapshot.docs.map(doc => {
         const data = doc.data();
-        const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate().toISOString() : new Date(data.fecha).toISOString();
+        const fecha = safeFormatDate(data.fecha);
         return { id: doc.id, ...data, fecha } as Turno;
       });
       turnosData.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
       setTurnos(turnosData);
       setLoading(false);
     }, (error) => {
-        console.error("Error al obtener turnos: ", error);
-        setLoading(false);
-        toast({ title: "Error", description: "No se pudieron cargar tus turnos.", variant: "destructive" });
+      console.error("Error al obtener turnos: ", error);
+      setLoading(false);
+      toast({ title: "Error", description: "No se pudieron cargar tus turnos.", variant: "destructive" });
     });
 
     return () => unsubscribe();
@@ -156,7 +160,7 @@ export default function MisTurnosPage() {
       toast({ title: "Error", description: "No se pudo cancelar el turno. Intenta de nuevo.", variant: "destructive" });
     }
   };
-  
+
   const getStatusInfo = (status: Turno['estado']) => {
     switch (status) {
       case 'pendiente':
@@ -166,14 +170,14 @@ export default function MisTurnosPage() {
       case 'cancelado':
         return { text: 'Cancelado', icon: Ban, className: 'bg-red-500/20 text-red-400 border-red-500/30' };
       case 'pendiente_pago':
-         return { text: 'Pendiente de Seña', icon: Clock, className: 'bg-orange-500/20 text-orange-400 border-orange-500/30' };
+        return { text: 'Pendiente de Seña', icon: Clock, className: 'bg-orange-500/20 text-orange-400 border-orange-500/30' };
       default:
         return { text: 'Desconocido', icon: Clock, className: 'bg-gray-500/20 text-gray-400 border-gray-500/30' };
     }
   };
 
   const proximosTurnos = turnos.filter(t => isFuture(parseISO(t.fecha)) && (t.estado === 'pendiente' || t.estado === 'pendiente_pago'));
-  
+
   const historialTurnos = useMemo(() => {
     const allPastTurnos = turnos.filter(t => !proximosTurnos.some(pt => pt.id === t.id));
     if (filter === 'all') {
@@ -187,11 +191,11 @@ export default function MisTurnosPage() {
     }[filter] || 30;
 
     const startDate = startOfDay(subDays(now, daysToSubtract));
-    
+
     return allPastTurnos.filter(t => new Date(t.fecha) >= startDate);
 
   }, [turnos, proximosTurnos, filter]);
-  
+
   const visibleHistorial = historialTurnos.slice(0, visibleCount);
 
   return (
@@ -204,7 +208,7 @@ export default function MisTurnosPage() {
           </p>
         </div>
         <Link href="/turnos">
-          <Button><Plus className="mr-2 h-4 w-4"/> Agendar Turno</Button>
+          <Button><Plus className="mr-2 h-4 w-4" /> Agendar Turno</Button>
         </Link>
       </div>
 
@@ -216,26 +220,26 @@ export default function MisTurnosPage() {
       ) : proximosTurnos.length > 0 ? (
         <Card className="bg-gradient-to-br from-primary/90 to-primary text-primary-foreground shadow-2xl shadow-primary/20 rounded-2xl">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg"><Calendar className="h-5 w-5"/>Próximos Turnos</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-lg"><Calendar className="h-5 w-5" />Próximos Turnos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {proximosTurnos.map(turno => (
-               <ProximoTurnoCard key={turno.id} turno={turno} onCancel={handleCancelTurno} />
+              <ProximoTurnoCard key={turno.id} turno={turno} onCancel={handleCancelTurno} />
             ))}
           </CardContent>
         </Card>
       ) : (
-         <Card className="text-center py-16 bg-card border-dashed border-border/80 rounded-2xl">
-            <CardContent>
-                <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-xl font-semibold">No tenés próximos turnos</h3>
-                <p className="text-muted-foreground mt-2 max-w-sm mx-auto">
-                   ¿Lista para tu próxima transformación? Animate a reservar tu cita y viví la experiencia Mujer.
-                </p>
-                <Button asChild className="mt-6">
-                    <Link href="/turnos">Agendar un turno</Link>
-                </Button>
-            </CardContent>
+        <Card className="text-center py-16 bg-card border-dashed border-border/80 rounded-2xl">
+          <CardContent>
+            <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h3 className="mt-4 text-xl font-semibold">No tenés próximos turnos</h3>
+            <p className="text-muted-foreground mt-2 max-w-sm mx-auto">
+              ¿Lista para tu próxima transformación? Animate a reservar tu cita y viví la experiencia Mujer.
+            </p>
+            <Button asChild className="mt-6">
+              <Link href="/turnos">Agendar un turno</Link>
+            </Button>
+          </CardContent>
         </Card>
       )}
 
@@ -244,17 +248,17 @@ export default function MisTurnosPage() {
           <CardTitle className="text-lg">Historial de Visitas</CardTitle>
           <CardDescription>Aquí podés ver todos tus turnos anteriores.</CardDescription>
         </CardHeader>
-         <Tabs value={filter} onValueChange={(value) => { setFilter(value); setVisibleCount(10); }} className="w-full px-6">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="week">Última semana</TabsTrigger>
-              <TabsTrigger value="month">Último mes</TabsTrigger>
-              <TabsTrigger value="quarter">Últimos 3 meses</TabsTrigger>
-              <TabsTrigger value="all">Todos</TabsTrigger>
-            </TabsList>
+        <Tabs value={filter} onValueChange={(value) => { setFilter(value); setVisibleCount(10); }} className="w-full px-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="week">Última semana</TabsTrigger>
+            <TabsTrigger value="month">Último mes</TabsTrigger>
+            <TabsTrigger value="quarter">Últimos 3 meses</TabsTrigger>
+            <TabsTrigger value="all">Todos</TabsTrigger>
+          </TabsList>
         </Tabs>
         <CardContent className="pt-6" aria-live="polite">
           {loading ? (
-             <div className="space-y-2">
+            <div className="space-y-2">
               {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full" />)}
             </div>
           ) : visibleHistorial.length > 0 ? (
@@ -265,27 +269,27 @@ export default function MisTurnosPage() {
                   <Card key={turno.id} className="bg-muted/40 dark:bg-muted/10 border dark:border-border/50 rounded-xl">
                     <CardContent className="p-4 flex items-center justify-between">
                       <div className="space-y-1">
-                          <p className="font-semibold capitalize text-base">{format(parseISO(turno.fecha), "d 'de' MMMM yyyy", { locale: es })}</p>
-                          <ul className="text-sm text-muted-foreground list-disc list-inside">
-                             {turno.servicio.split(',').map((s, i) => <li key={i}>{s.trim()}</li>)}
-                          </ul>
+                        <p className="font-semibold capitalize text-base">{format(parseISO(turno.fecha), "d 'de' MMMM yyyy", { locale: es })}</p>
+                        <ul className="text-sm text-muted-foreground list-disc list-inside">
+                          {turno.servicio.split(',').map((s, i) => <li key={i}>{s.trim()}</li>)}
+                        </ul>
                       </div>
-                       <Badge variant="outline" className={`gap-2 text-xs font-bold ${statusInfo.className}`}>
-                          <statusInfo.icon className="h-3.5 w-3.5" />
-                          <span>{statusInfo.text}</span>
-                       </Badge>
+                      <Badge variant="outline" className={`gap-2 text-xs font-bold ${statusInfo.className}`}>
+                        <statusInfo.icon className="h-3.5 w-3.5" />
+                        <span>{statusInfo.text}</span>
+                      </Badge>
                     </CardContent>
                   </Card>
                 )
               })}
               {historialTurnos.length > visibleCount && (
                 <div className="text-center pt-4">
-                    <Button variant="secondary" onClick={() => setVisibleCount(prev => prev + 10)}>
-                        Ver más visitas
-                    </Button>
+                  <Button variant="secondary" onClick={() => setVisibleCount(prev => prev + 10)}>
+                    Ver más visitas
+                  </Button>
                 </div>
               )}
-               <p className="text-xs text-muted-foreground text-center pt-4">
+              <p className="text-xs text-muted-foreground text-center pt-4">
                 Los valores finales de cada visita se ajustaron según diagnóstico en el local.
               </p>
             </div>
@@ -298,4 +302,3 @@ export default function MisTurnosPage() {
   );
 }
 
-    
