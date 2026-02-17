@@ -23,11 +23,11 @@ const firebaseConfig = {
 
   apiKey: "AIzaSyCcU9HP6ELT0SKyhVXyxMPebE4c5KqTi7g",
 
-  authDomain: "mujer-web.firebaseapp.com",
+  authDomain: "mujer-app.firebaseapp.com",
 
-  projectId: "mujer-web",
+  projectId: "mujer-app",
 
-  storageBucket: "mujer-web.appspot.com",
+  storageBucket: "mujer-app.appspot.com",
 
   messagingSenderId: "731843251807",
 
