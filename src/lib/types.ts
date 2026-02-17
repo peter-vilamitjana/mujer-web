@@ -8,10 +8,11 @@ export interface Usuario {
   nombre: string;
   email: string;
   rol: UserRole;
+  salonId?: string;
 }
 
 export interface Cliente {
-  id:string;
+  id: string;
   nombre: string;
   apellido: string;
   email: string;

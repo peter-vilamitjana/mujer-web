@@ -27,7 +27,7 @@ const firebaseConfig = {
 
   projectId: "mujer-app",
 
-  storageBucket: "mujer-app.appspot.com",
+  storageBucket: "mujer-app.firebasestorage.app",
 
   messagingSenderId: "731843251807",
 

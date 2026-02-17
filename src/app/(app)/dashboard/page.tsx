@@ -10,8 +10,9 @@ import IngresosSemanalesCard from "@/components/IngresosSemanalesCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MonthlyVolumeChart } from "@/components/charts/MonthlyVolumeChart";
 import { WeeklyTurnosChart } from "@/components/charts/WeeklyTurnosChart";
-import { useSession } from "next-auth/react";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { useUser } from "@/contexts/UserContext";
+import { doc, onSnapshot, setDoc } from "firebase/firestore";
+import { Button } from "@/components/ui/button";
 
 // Fallback mock data for charts while we build the real data ingestion
 const mockChartData = {
@@ -28,66 +29,118 @@ const mockChartData = {
 };
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
+  const user = useUser();
   const [salonData, setSalonData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const [debugStep, setDebugStep] = useState('Initializing...');
+
   useEffect(() => {
-    if (!session?.user?.id) return;
+    if (!user) {
+      setDebugStep('Waiting for user context...');
+      return;
+    }
 
     const fetchSalonData = async () => {
       try {
-        // 1. Get User to find Salon ID (if not already in session)
-        // In a real app we'd trust the session, but let's be double sure or handle the case where it's not updated yet
-        // For now, let's try to get it from the user doc if we don't have it easily
-        let salonId = (session.user as any).salonId;
+        setDebugStep(`User Context OK. ID: ${user.id}. Rol: ${user.rol}`);
+
+        let salonId = user.salonId;
 
         if (!salonId) {
-          const userDoc = await getDoc(doc(db, "users", session.user.id));
-          if (userDoc.exists()) {
-            salonId = userDoc.data().salonId;
-          }
-        }
-
-        if (!salonId) {
+          setDebugStep('No Salon ID found in user profile.');
           setLoading(false);
           return;
         }
 
-        // 2. Subscribe to Salon Document for realtime updates (optional, or just fetch)
-        // For dashboard stats we might want to listen to a "stats" subcollection or just aggregated fields on the salon doc
+        setDebugStep(`Subscribing to Salon: ${salonId}...`);
         const unsub = onSnapshot(doc(db, "salons", salonId),
           (doc) => {
             if (doc.exists()) {
               setSalonData(doc.data());
+              setDebugStep('Salon data loaded!');
+            } else {
+              setDebugStep(`Salon document "${salonId}" does not exist.`);
             }
             setLoading(false);
           },
           (error) => {
             console.error("Error fetching salon data:", error);
+            setDebugStep(`Error subscribing to salon: ${error.message}`);
             setLoading(false);
           }
         );
 
         return () => unsub();
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching dashboard data:", error);
+        setDebugStep(`Fatal error: ${error.message}`);
         setLoading(false);
       }
     };
 
     fetchSalonData();
-  }, [session]);
+  }, [user]);
+
+  const handleFixAccount = async () => {
+    if (!user?.id) return;
+    try {
+      setLoading(true);
+      setDebugStep('Iniciando reparación automática de cuenta...');
+
+      // 1. Update User with salonId: "main"
+      await setDoc(doc(db, "users", user.id), {
+        salonId: "main",
+        rol: "admin", // Ensure role is admin
+        nombre: user.nombre || "Administradora",
+        email: user.email || "admin@mujer.com"
+      }, { merge: true });
+
+      // 2. Create default Salon doc: "main"
+      await setDoc(doc(db, "salons", "main"), {
+        name: "Mi Salón",
+        ownerId: user.id,
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+
+      setDebugStep('¡Cuenta reparada! Recargando página...');
+
+      // Delay slightly to ensure writes propagate then reload
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+
+    } catch (e: any) {
+      console.error(e);
+      setDebugStep(`Error al reparar cuenta: ${e.message}`);
+      setLoading(false);
+    }
+  };
 
   if (loading) {
-    return <div className="flex h-96 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-pink-600" /></div>
+    return (
+      <div className="flex flex-col h-96 items-center justify-center gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-pink-600" />
+        <p className="text-gray-500 font-mono text-sm">{debugStep}</p>
+      </div>
+    );
   }
 
   if (!salonData) {
     return (
-      <div className="text-center py-20">
+      <div className="text-center py-20 flex flex-col items-center">
         <h2 className="text-2xl font-bold">No se encontró información del salón</h2>
-        <p className="text-gray-500">Por favor contacta a soporte o registra tu salón.</p>
+        <p className="text-gray-500">Estado Final: {debugStep}</p>
+        <p className="text-xs text-gray-400 mt-4">ID de Usuario: {user?.id}</p>
+
+        <div className="mt-8">
+          <Button onClick={handleFixAccount} variant="default">
+            Crear Mi Salón y Vincular Cuenta (Automático)
+          </Button>
+          <p className="text-xs text-muted-foreground mt-2">
+            Esto creará los datos faltantes en la base de datos por ti.
+          </p>
+        </div>
       </div>
     )
   }
