@@ -19,37 +19,54 @@ export default function Hero() {
           {/* Mobile view content (Visible only on mobile) */}
           <div className="md:hidden flex flex-col items-center justify-center w-full">
             <ScrollReveal direction="down" className="w-full flex justify-center">
-              {/* Flex Container for Static Strip Layout - Vertically Centered */}
-              <div className="relative w-full flex justify-center items-center gap-8 mb-6 overflow-visible">
 
-                {/* Left Card (Decorative - Peek - Slightly focused) */}
-                <div className="relative w-[200px] h-[360px] rounded-[2rem] overflow-hidden shrink-0 select-none pointer-events-none">
-                  <img
-                    src="/landing/hero-left.png"
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
+              {/* Scaled Group Wrapper */}
+              {/* Using 640px reference logic to essentially "zoom out" the strip on all mobile screens */}
+              {/* This guarantees side visibility even on very narrow devices */}
+              <div className="w-full overflow-visible flex justify-center py-4 relative">
+
+                {/* The "Stage" - Fixed design width (640px reference) */}
+                {/* INLINE STYLE applied to guarantee scale works regardless of Tailwind class support */}
+                {/* Math: scale = 100vw / 640. Minimized to 1.0 to prevent upscaling. */}
+                <div
+                  className="flex items-center justify-center gap-8 origin-center transition-transform duration-300 ease-out"
+                  style={{
+                    width: '640px',
+                    flexShrink: 0,
+                    transform: 'scale(min(1, calc(100vw / 640px)))'
+                  }}
+                >
+
+                  {/* Left Card (Fixed Pixel Size) */}
+                  <div className="relative w-[200px] h-[360px] rounded-[2rem] overflow-hidden shrink-0 select-none pointer-events-none shadow-sm">
+                    <img
+                      src="/landing/hero-left.png"
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  {/* Center Card (Fixed Pixel Size - Original) */}
+                  <div className="relative z-20 w-[320px] aspect-[4/5] shadow-xl rounded-[2rem] overflow-hidden shrink-0">
+                    <img
+                      src="/landing/hero-mobile.jpg"
+                      alt="Mujer disfrutando"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  {/* Right Card (Fixed Pixel Size) */}
+                  <div className="relative w-[200px] h-[360px] rounded-[2rem] overflow-hidden shrink-0 select-none pointer-events-none shadow-sm">
+                    <img
+                      src="/landing/hero-right.png"
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
                 </div>
-
-                {/* Center Card (Original Hero - unchanged pixels) */}
-                <div className="relative z-20 w-[320px] aspect-[4/5] shadow-xl rounded-[2rem] overflow-hidden shrink-0">
-                  <img
-                    src="/landing/hero-mobile.jpg"
-                    alt="Mujer disfrutando"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                {/* Right Card (Decorative - Peek - Slightly focused) */}
-                <div className="relative w-[200px] h-[360px] rounded-[2rem] overflow-hidden shrink-0 select-none pointer-events-none">
-                  <img
-                    src="/landing/hero-right.png"
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
               </div>
+
             </ScrollReveal>
 
             <ScrollReveal delay={0.2} className="w-full flex flex-col items-center">
