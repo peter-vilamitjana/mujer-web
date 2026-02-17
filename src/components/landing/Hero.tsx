@@ -19,13 +19,36 @@ export default function Hero() {
           {/* Mobile view content (Visible only on mobile) */}
           <div className="md:hidden flex flex-col items-center justify-center w-full">
             <ScrollReveal direction="down" className="w-full flex justify-center">
-              <div className="relative w-full max-w-[320px] aspect-[4/5] rounded-[2rem] overflow-hidden mb-6 shadow-xl">
-                <img
-                  src="/landing/hero-mobile.jpg"
-                  alt="Portrait"
-                  className="object-cover w-full h-full"
-                  loading="eager"
-                />
+              {/* Flex Container for Static Strip Layout - Vertically Centered */}
+              <div className="relative w-full flex justify-center items-center gap-8 mb-6 overflow-visible">
+
+                {/* Left Card (Decorative - Peek - Slightly focused) */}
+                <div className="relative w-[200px] h-[360px] rounded-[2rem] overflow-hidden shrink-0 select-none pointer-events-none">
+                  <img
+                    src="/landing/hero-left.png"
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                {/* Center Card (Original Hero - unchanged pixels) */}
+                <div className="relative z-20 w-[320px] aspect-[4/5] shadow-xl rounded-[2rem] overflow-hidden shrink-0">
+                  <img
+                    src="/landing/hero-mobile.jpg"
+                    alt="Mujer disfrutando"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
+                {/* Right Card (Decorative - Peek - Slightly focused) */}
+                <div className="relative w-[200px] h-[360px] rounded-[2rem] overflow-hidden shrink-0 select-none pointer-events-none">
+                  <img
+                    src="/landing/hero-right.png"
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+
               </div>
             </ScrollReveal>
 
