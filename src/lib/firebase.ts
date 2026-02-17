@@ -19,14 +19,14 @@ import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   // ==================> PEGA TUS CREDENCIALES AQUÍ <==================
-  
+
   apiKey: "AIzaSyCcU9HP6ELT0SKyhVXyxMPebE4c5KqTi7g",
 
   authDomain: "mujer-app.firebaseapp.com",
 
   projectId: "mujer-app",
 
-  storageBucket: "mujer-app.appspot.com",
+  storageBucket: "mujer-app.firebasestorage.app",
 
   messagingSenderId: "731843251807",
 
@@ -43,6 +43,29 @@ const firebaseConfig = {
 // Esta lógica previene la re-inicialización en entornos de desarrollo (hot-reloading)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
-const auth = getAuth(app);
+
+let auth;
+try {
+  // Check if we are in a browser environment
+  if (typeof window !== "undefined") {
+    auth = getAuth(app);
+  } else {
+    // Server-side
+    const { initializeAuth, inMemoryPersistence } = require("firebase/auth");
+    // Try to initialize with in-memory persistence
+    auth = initializeAuth(app, {
+      persistence: inMemoryPersistence
+    });
+  }
+} catch (e) {
+  console.error("Firebase Auth Init Error (handled):", e);
+  // If initializeAuth fails, it usually means it was already initialized.
+  try {
+    auth = getAuth(app);
+  } catch (e2) {
+    console.error("getAuth also failed:", e2);
+    auth = {} as any;
+  }
+}
 
 export { db, auth };
