@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowUp, Users, Scissors, Loader2 } from "lucide-react";
+import { ArrowUp, Users, Scissors } from "lucide-react";
 import { PopularServicesChart } from "@/components/charts/PopularServicesChart";
 import { db } from "@/lib/firebase";
 import VolumenTiempoReal from "@/components/VolumenTiempoReal";
@@ -11,153 +10,79 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MonthlyVolumeChart } from "@/components/charts/MonthlyVolumeChart";
 import { WeeklyTurnosChart } from "@/components/charts/WeeklyTurnosChart";
 import { useUser } from "@/contexts/UserContext";
-import { doc, onSnapshot, setDoc } from "firebase/firestore";
-import { Button } from "@/components/ui/button";
 
-// Fallback mock data for charts while we build the real data ingestion
-const mockChartData = {
+const mockDashboardData = {
   ingresosSemana: {
-    total: 0,
-    tendencia: 0,
+    total: 1250000,
+    tendencia: 12,
   },
-  turnosHoy: 0,
-  totalClientes: 0,
-  serviciosTop: [],
-  horaPico: [],
-  turnosSemana: [],
-  volumenMensual: []
+  turnosHoy: 18,
+  totalClientes: 257,
+  live: {
+    clientasAhora: 2,
+    turnosUltimaHora: 3,
+  },
+  turnosSemana: [
+    { dia: 'Mar', cantidad: 8 },
+    { dia: 'Mié', cantidad: 12 },
+    { dia: 'Jue', cantidad: 15 },
+    { dia: 'Vie', cantidad: 22 },
+    { dia: 'Sáb', cantidad: 25 },
+  ],
+  volumenMensual: [
+    { mes: 'anterior', total: 180 },
+    { mes: 'actual', total: 205 },
+  ],
+  serviciosTop: [
+    { nombre: 'Alisado', porcentaje: 38, deltaPct: 3.2 },
+    { nombre: 'Mechas', porcentaje: 25, deltaPct: -1.5 },
+    { nombre: 'Color', porcentaje: 18, deltaPct: 0 },
+    { nombre: 'Botox Capilar', porcentaje: 12, deltaPct: 5.8 },
+    { nombre: 'Reflejos', porcentaje: 7, deltaPct: -10.1 },
+  ],
+  horaPico: [
+    { hora: '09:00', turnos: 2 },
+    { hora: '10:00', turnos: 5 },
+    { hora: '11:00', turnos: 8 },
+    { hora: '12:00', turnos: 6 },
+    { hora: '13:00', turnos: 3 },
+    { hora: '14:00', turnos: 7 },
+    { hora: '15:00', turnos: 12 },
+    { hora: '16:00', turnos: 11 },
+    { hora: '17:00', turnos: 9 },
+    { hora: '18:00', turnos: 10 },
+    { hora: '19:00', turnos: 4 },
+    { hora: '20:00', turnos: 1 },
+  ]
 };
+
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(value);
 
 export default function DashboardPage() {
   const user = useUser();
-  const [salonData, setSalonData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  const [debugStep, setDebugStep] = useState('Initializing...');
+  // Basic protection: if no user is loading/found, layout will handle redirect, 
+  // but we can show a loader or null here if needed.
+  if (!user) return null;
 
-  useEffect(() => {
-    if (!user) {
-      setDebugStep('Waiting for user context...');
-      return;
-    }
-
-    const fetchSalonData = async () => {
-      try {
-        setDebugStep(`User Context OK. ID: ${user.id}. Rol: ${user.rol}`);
-
-        let salonId = user.salonId;
-
-        if (!salonId) {
-          setDebugStep('No Salon ID found in user profile.');
-          setLoading(false);
-          return;
-        }
-
-        setDebugStep(`Subscribing to Salon: ${salonId}...`);
-        const unsub = onSnapshot(doc(db, "salons", salonId),
-          (doc) => {
-            if (doc.exists()) {
-              setSalonData(doc.data());
-              setDebugStep('Salon data loaded!');
-            } else {
-              setDebugStep(`Salon document "${salonId}" does not exist.`);
-            }
-            setLoading(false);
-          },
-          (error) => {
-            console.error("Error fetching salon data:", error);
-            setDebugStep(`Error subscribing to salon: ${error.message}`);
-            setLoading(false);
-          }
-        );
-
-        return () => unsub();
-      } catch (error: any) {
-        console.error("Error fetching dashboard data:", error);
-        setDebugStep(`Fatal error: ${error.message}`);
-        setLoading(false);
-      }
-    };
-
-    fetchSalonData();
-  }, [user]);
-
-  const handleFixAccount = async () => {
-    if (!user?.id) return;
-    try {
-      setLoading(true);
-      setDebugStep('Iniciando reparación automática de cuenta...');
-
-      // 1. Update User with salonId: "main"
-      await setDoc(doc(db, "users", user.id), {
-        salonId: "main",
-        rol: "admin", // Ensure role is admin
-        nombre: user.nombre || "Administradora",
-        email: user.email || "admin@mujer.com"
-      }, { merge: true });
-
-      // 2. Create default Salon doc: "main"
-      await setDoc(doc(db, "salons", "main"), {
-        name: "Mi Salón",
-        ownerId: user.id,
-        createdAt: new Date().toISOString()
-      }, { merge: true });
-
-      setDebugStep('¡Cuenta reparada! Recargando página...');
-
-      // Delay slightly to ensure writes propagate then reload
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-
-    } catch (e: any) {
-      console.error(e);
-      setDebugStep(`Error al reparar cuenta: ${e.message}`);
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex flex-col h-96 items-center justify-center gap-4">
-        <Loader2 className="h-8 w-8 animate-spin text-pink-600" />
-        <p className="text-gray-500 font-mono text-sm">{debugStep}</p>
-      </div>
-    );
-  }
-
-  if (!salonData) {
-    return (
-      <div className="text-center py-20 flex flex-col items-center">
-        <h2 className="text-2xl font-bold">No se encontró información del salón</h2>
-        <p className="text-gray-500">Estado Final: {debugStep}</p>
-        <p className="text-xs text-gray-400 mt-4">ID de Usuario: {user?.id}</p>
-
-        <div className="mt-8">
-          <Button onClick={handleFixAccount} variant="default">
-            Crear Mi Salón y Vincular Cuenta (Automático)
-          </Button>
-          <p className="text-xs text-muted-foreground mt-2">
-            Esto creará los datos faltantes en la base de datos por ti.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  // Use real data where available, fallback to 0 or mocks
-  const turnosHoy = 0; // TODO: Fetch from 'appointments' collection
-  const totalClientes = 0; // TODO: Fetch from 'clients' collection count
+  const {
+    turnosHoy,
+    totalClientes,
+    serviciosTop,
+    turnosSemana,
+    volumenMensual
+  } = mockDashboardData;
 
   return (
     <div className="space-y-6">
       <div className="text-left">
-        <h1 className="text-3xl font-semibold tracking-tight">Hola, {salonData.name}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground mt-1">Resumen de la actividad y rendimiento de tu salón.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <IngresosSemanalesCard /> {/* Needs refactoring to accept props or fetch its own data */}
+        <IngresosSemanalesCard />
 
         <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
           <CardHeader>
@@ -203,13 +128,13 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <TabsContent value="dia" className="h-80 w-full p-4">
-              <WeeklyTurnosChart data={mockChartData.horaPico} />
+              <WeeklyTurnosChart data={mockDashboardData.horaPico.map(h => ({ dia: h.hora.slice(0, 2), cantidad: h.turnos }))} />
             </TabsContent>
             <TabsContent value="semana" className="h-80 w-full p-4">
-              <WeeklyTurnosChart data={mockChartData.turnosSemana} />
+              <WeeklyTurnosChart data={turnosSemana} />
             </TabsContent>
             <TabsContent value="mes" className="h-80 w-full p-4">
-              <MonthlyVolumeChart data={mockChartData.volumenMensual} />
+              <MonthlyVolumeChart data={volumenMensual} />
             </TabsContent>
           </Tabs>
         </Card>
@@ -219,7 +144,7 @@ export default function DashboardPage() {
             <CardDescription>Top 5 más solicitados esta semana.</CardDescription>
           </CardHeader>
           <CardContent className="h-80 flex flex-col justify-center">
-            <PopularServicesChart items={mockChartData.serviciosTop} updatedAt={new Date()} />
+            <PopularServicesChart items={serviciosTop} updatedAt={new Date()} />
           </CardContent>
         </Card>
       </div>
@@ -231,7 +156,7 @@ export default function DashboardPage() {
             <CardDescription>Pulso de actividad del salón ahora mismo.</CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex flex-col items-center justify-center text-center p-0">
-            <VolumenTiempoReal db={db} sucursalId={salonData.id || "main"} />
+            <VolumenTiempoReal db={db} sucursalId="main" />
           </CardContent>
         </Card>
 
@@ -241,7 +166,7 @@ export default function DashboardPage() {
             <CardDescription>Distribución de turnos a lo largo de la jornada.</CardDescription>
           </CardHeader>
           <CardContent className="h-80 flex flex-col justify-center">
-            <WeeklyTurnosChart data={mockChartData.horaPico} />
+            <WeeklyTurnosChart data={mockDashboardData.horaPico.map(h => ({ dia: h.hora.slice(0, 2), cantidad: h.turnos }))} />
           </CardContent>
         </Card>
       </div>
