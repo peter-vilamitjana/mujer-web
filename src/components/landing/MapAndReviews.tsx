@@ -40,22 +40,22 @@ export default function MapAndReviews() {
             <h2 className="font-serif text-3xl font-bold tracking-tight text-foreground mb-8">Ubicación</h2>
             <div className="relative aspect-[4/3] w-full rounded-[2rem] overflow-hidden border border-black/5 shadow-xl mb-6">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3288.620095874415!2d-58.48429482342084!3d-34.48722894877233!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcb16be99e9095%3A0x6191c95e54d35e5d!2sRawson%203688%2C%20B1636AET%20La%20Lucila%2C%20Provincia%20de%20Buenos%20Aires!5e0!3m2!1sen!2sar!4v1718134762514!5m2!1sen!2sar"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d10962.61053075249!2d-58.491372551465245!3d-34.48866753040445!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcb16be99e9095%3A0x6191c95e54d35e5d!2sGuillermo%20Rawson%203688%2C%20B1636%20La%20Lucila%2C%20Provincia%20de%20Buenos%20Aires!5e0!3m2!1sen!2sar!4v1718134762514!5m2!1sen!2sar"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
                 allowFullScreen={true}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                className="grayscale"
+                className=""
               />
             </div>
             <div className="mb-8">
               <h3 className="font-bold text-sm text-black">MUJER Studio</h3>
-              <p className="text-xs text-muted-foreground mt-1">Av. Libertador 3688, Palermo.</p>
+              <p className="text-xs text-muted-foreground mt-1">Guillermo Rawson 3688, La Lucila.</p>
             </div>
-            <Link href="https://maps.google.com" target="_blank" className="w-full inline-block">
-              <Button className="w-full bg-[#111827] hover:bg-black text-white rounded-full py-7 text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3">
+            <Link href="https://www.google.com/maps/dir//Guillermo+Rawson+3688,+B1636+La+Lucila,+Provincia+de+Buenos+Aires/@-34.4886675,-58.4913726,15z" target="_blank" className="w-full inline-block">
+              <Button className="w-full bg-[#9D6EFE] hover:bg-[#8B5CF6] text-white rounded-full py-7 text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-3">
                 <Navigation className="h-4 w-4" />
                 CÓMO LLEGAR
               </Button>
@@ -79,7 +79,7 @@ export default function MapAndReviews() {
             <ScrollReveal direction="right" className="w-full min-h-[450px]">
               <div className="relative group h-full rounded-3xl overflow-hidden border border-border/50 shadow-2xl transition-all duration-700 hover:shadow-primary/10">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3288.620095874415!2d-58.48429482342084!3d-34.48722894877233!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcb16be99e9095%3A0x6191c95e54d35e5d!2sRawson%203688%2C%20B1636AET%20La%20Lucila%2C%20Provincia%20de%20Buenos%20Aires!5e0!3m2!1sen!2sar!4v1718134762514!5m2!1sen!2sar"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d10962.61053075249!2d-58.491372551465245!3d-34.48866753040445!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bcb16be99e9095%3A0x6191c95e54d35e5d!2sGuillermo%20Rawson%203688%2C%20B1636%20La%20Lucila%2C%20Provincia%20de%20Buenos%20Aires!5e0!3m2!1sen!2sar!4v1718134762514!5m2!1sen!2sar"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}

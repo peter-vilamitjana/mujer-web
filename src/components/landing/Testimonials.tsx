@@ -13,7 +13,7 @@ const testimonials = [
   {
     name: "Martina S.",
     text: "¡Mi pelo nunca se vio tan sano y brillante! El balayage quedó perfecto, súper natural. ¡Volveré sin dudas!",
-    avatar: "https://placehold.co/100x100.png",
+    avatar: "/landing/martina-avatar.png",
     hint: "woman smiling"
   },
   {
@@ -28,22 +28,28 @@ export default function Testimonials() {
   return (
     <section id="testimonios" className="relative overflow-hidden border-y border-white/5 bg-black md:bg-black">
       {/* Mobile-only view */}
-      <div className="md:hidden relative py-20 bg-[#F2F2F7]/80">
-        <ScrollReveal>
+      <div className="md:hidden relative py-20 min-h-[500px] flex items-center">
+        <div
+          className="absolute inset-0 z-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('/landing/testimonials-mobile-bg.png?v=3')" }}
+        />
+        <div className="absolute inset-0 z-0 bg-black/60" /> {/* Dark overlay */}
+
+        <ScrollReveal className="relative z-10 w-full">
           <div className="container mx-auto px-8 text-center flex flex-col items-center">
-            <div className="text-primary mb-8">
+            <div className="text-primary/80 mb-6">
               <span className="text-6xl font-serif">“</span>
             </div>
-            <p className="font-serif text-xl leading-relaxed text-black italic mb-10">
+            <p className="font-serif text-xl leading-relaxed text-white/90 italic mb-10 drop-shadow-sm">
               "{testimonials[1].text}"
             </p>
             <div className="flex flex-col items-center">
-              <Avatar className="h-12 w-12 mb-4 border border-primary/20">
-                <AvatarImage src={testimonials[1].avatar} alt={testimonials[1].name} />
+              <Avatar className="h-14 w-14 mb-4 border-2 border-white/10 ring-2 ring-primary/20">
+                <AvatarImage src={testimonials[1].avatar} alt={testimonials[1].name} className="object-cover" />
                 <AvatarFallback>{testimonials[1].name.charAt(0)}</AvatarFallback>
               </Avatar>
-              <h4 className="font-bold text-sm text-black uppercase tracking-widest">{testimonials[1].name}</h4>
-              <p className="text-[10px] text-primary font-bold uppercase tracking-widest mt-1">Clienta Frecuente</p>
+              <h4 className="font-bold text-sm text-white uppercase tracking-widest">{testimonials[1].name}</h4>
+              <p className="text-[10px] text-primary/80 font-bold uppercase tracking-widest mt-1">Clienta Frecuente</p>
             </div>
           </div>
         </ScrollReveal>

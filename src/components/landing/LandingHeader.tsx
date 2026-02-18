@@ -58,11 +58,23 @@ export default function LandingHeader() {
           (!scrolled || isDarkTheme) && "md:[&_span]:text-white"
         )} />
 
-        {/* Mobile Menu Icon */}
+        {/* Mobile Action Button */}
         <div className="md:hidden">
-          <Button variant="ghost" size="icon" className="text-primary hover:bg-primary/5">
-            <Menu className="h-6 w-6" />
-          </Button>
+          <Link href="/login">
+            <Button
+              variant="outline"
+              className={cn(
+                'rounded-full py-1.5 px-4 text-sm font-medium transition-all duration-500 ease-in-out',
+                scrolled
+                  ? isDarkTheme
+                    ? 'border-white/20 bg-white/5 text-white hover:bg-white/10'
+                    : 'bg-primary text-white border-primary shadow-lg hover:bg-primary/90'
+                  : 'bg-primary text-white border-primary shadow-lg hover:bg-primary/90'
+              )}
+            >
+              Acceder
+            </Button>
+          </Link>
         </div>
 
         {/* Desktop Navigation */}
