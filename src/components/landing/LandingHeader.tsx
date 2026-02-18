@@ -86,9 +86,9 @@ export default function LandingHeader() {
                 'rounded-full py-1.5 px-4 text-sm font-medium transition-all duration-500 ease-in-out',
                 scrolled
                   ? isDarkTheme
-                    ? 'border-white/20 bg-white/5 text-white hover:bg-white/10 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]'
+                    ? 'border-white/20 bg-white/5 text-white hover:text-white hover:bg-primary hover:border-primary hover:shadow-[0_0_15px_rgba(127,70,246,0.4)]'
                     : 'border-primary text-primary hover:text-white hover:bg-primary hover:shadow-[0_0_10px_rgba(127,70,246,0.4)]'
-                  : 'border-white/20 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20'
+                  : 'border-white/20 bg-white/10 text-white backdrop-blur-sm hover:text-white hover:bg-primary hover:border-primary hover:shadow-[0_0_15px_rgba(127,70,246,0.4)]'
               )}
             >
               Acceder

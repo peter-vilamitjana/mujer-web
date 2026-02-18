@@ -28,6 +28,7 @@ export const ScrollReveal = ({
     return (
         <div className={className} style={{ position: "relative", width, overflow: "visible" }}>
             <motion.div
+                className="h-full"
                 variants={{
                     hidden: {
                         opacity: 0,

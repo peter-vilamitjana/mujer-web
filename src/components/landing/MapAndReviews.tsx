@@ -86,14 +86,14 @@ export default function MapAndReviews() {
                   allowFullScreen={true}
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  className="grayscale contrast-[1.1] brightness-[0.9] group-hover:grayscale-0 group-hover:contrast-100 group-hover:brightness-100 transition-all duration-1000 ease-in-out"
+                  className="transition-all duration-1000 ease-in-out"
                 />
                 <div className="absolute top-6 left-6 z-10">
                   <div className="bg-background/80 backdrop-blur-xl border border-white/20 px-5 py-2.5 rounded-full shadow-2xl flex items-center gap-2 group-hover:bg-background/95 transition-all duration-500">
                     <div className="bg-primary/20 p-1.5 rounded-full">
                       <MapPin className="h-4 w-4 text-primary animate-pulse" />
                     </div>
-                    <span className="text-xs font-bold uppercase tracking-widest opacity-90">La Lucila, Buenos Aires</span>
+                    <span className="text-xs font-bold uppercase tracking-widest opacity-90">Guillermo Rawson 3688, La Lucila</span>
                   </div>
                 </div>
                 <div className="absolute inset-0 pointer-events-none ring-1 ring-inset ring-white/10 rounded-3xl" />
