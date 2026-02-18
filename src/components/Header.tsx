@@ -12,15 +12,17 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, User, Menu } from 'lucide-react';
 import Logo from './Logo';
+import { cn } from '@/lib/utils';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { ThemeToggle } from './ThemeToggle';
 
 type HeaderProps = {
   onMenuClick: () => void;
+  userRole?: string;
 };
 
-export default function Header({ onMenuClick }: HeaderProps) {
+export default function Header({ onMenuClick, userRole }: HeaderProps) {
   const router = useRouter();
   const user = auth.currentUser;
 
@@ -28,7 +30,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
     await auth.signOut();
     router.push('/login');
   };
-  
+
   const userName = user?.displayName || user?.email?.split('@')[0] || 'Usuario';
   const userEmail = user?.email || 'No hay email';
   const userInitial = (user?.displayName || user?.email || "U").charAt(0).toUpperCase();
@@ -39,7 +41,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="d-block md:hidden"
+          className={cn("block md:hidden", userRole === 'admin' ? "hidden" : "")}
           onClick={onMenuClick}
         >
           <Menu className="h-5 w-5" />
@@ -49,7 +51,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           {/* Logo is now in sidebar */}
         </div>
       </div>
-      
+
       <div className="flex items-center gap-2">
         <ThemeToggle />
         <DropdownMenu>
