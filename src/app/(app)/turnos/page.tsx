@@ -37,9 +37,9 @@ import { useSession } from 'next-auth/react';
 
 
 const professionals = [
-  { id: 'carolina_spranda', name: 'Carolina Spranda', avatar: 'https://instagram.fros9-1.fna.fbcdn.net/v/t51.2885-19/165164532_268634798069001_7058218041199102261_n.jpg?efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby42NDkuYzIifQ&_nc_ht=instagram.fros9-1.fna.fbcdn.net&_nc_cat=109&_nc_oc=Q6cZ2QHbZkJIT2ni_QHK7SHyg4Gy_4tCbgZSsqMJmoixogGcXhJclAR9u-I1wzGr67hsroM&_nc_ohc=Q-nUGHJTEZcQ7kNvwG6mQx5&_nc_gid=v7HbfF8jYUVra_8ldm7xMw&edm=APoiHPcBAAAA&ccb=7-5&oh=00_AfQnRXEppnKHoiFYgnPK24Mf7SJpzCnG4U6MXWJoEWvNIQ&oe=688EAAEF&_nc_sid=22de04', hint: 'woman professional' },
-  { id: 'laura_bortolazo', name: 'Laura Bortolazo', avatar: 'https://instagram.faep14-3.fna.fbcdn.net/v/t51.2885-19/495257400_18329670898165301_5663086207881759788_n.jpg?efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLmRqYW5nby4xMDgwLmMyIn0&_nc_ht=instagram.faep14-3.fna.fbcdn.net&_nc_cat=105&_nc_oc=Q6cZ2QFe0nbw-wQgutrzG-k2xGSsR5KmGiDELtd0Niq6PbQBLgZwiDqWf_sHll4lcxeRvVs&_nc_ohc=FyGTW0_y4wcQ7kNvwGk7MQu&_nc_gid=Yzh7RdC1pAesG_j9Is84gA&edm=AP4sbd4BAAAA&ccb=7-5&oh=00_AfSptaYOHanpNA3Jztb5lxlCEq9naJeZ3KlbDGzn7Le44g&oe=688ECDF6&_nc_sid=7a9f4b', hint: 'woman smiling' },
-  { id: 'fabiana_estilista', name: 'Fabiana', avatar: 'https://placehold.co/100x100.png', hint: 'woman portrait' },
+  { id: 'carolina_spranda', name: 'Carolina Spranda', avatar: '/professionals/carolina.png', hint: 'woman professional' },
+  { id: 'laura_bortolazo', name: 'Laura Bortolazo', avatar: '/professionals/laura.png', hint: 'woman smiling' },
+  { id: 'fabiana_estilista', name: 'Fabiana', avatar: '/professionals/fabiana.png', hint: 'woman portrait' },
 ];
 
 const MONTO_SEÑA_PORCENTAJE = 0.15; // 15%
@@ -560,7 +560,7 @@ function TurnosContent() {
                   className={cn("p-4 border rounded-xl cursor-pointer transition-all flex flex-col items-center gap-4 text-center",
                     selectedProfessional?.id === prof.id ? "border-primary ring-2 ring-primary/20 shadow-lg" : "hover:border-primary/50 dark:border-border/50"
                   )}>
-                  <Image src={prof.avatar} alt={prof.name} data-ai-hint={prof.hint} width={80} height={80} className="rounded-full border-2 border-muted" />
+                  <Image src={prof.avatar} alt={prof.name} data-ai-hint={prof.hint} width={80} height={80} className="rounded-full border-2 border-muted object-cover object-top aspect-square" />
                   <h4 className="font-semibold">{prof.name}</h4>
                 </div>
               ))}
