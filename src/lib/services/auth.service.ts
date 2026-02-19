@@ -12,6 +12,7 @@ interface RegisterData {
     phone?: string;
     tenantId: string;
     photo?: File;
+    photoBase64?: string;
 }
 
 export const authService = {
@@ -22,31 +23,7 @@ export const authService = {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        let photoURL = '';
-
-        // 1.5 Upload Photo if exists
-        if (photo) {
-            try {
-                const storageRef = ref(storage, `profile-pictures/${user.uid}`);
-                await uploadBytes(storageRef, photo);
-                photoURL = await getDownloadURL(storageRef);
-            } catch (error) {
-                console.error("Error uploading photo:", error);
-                // Continue without photo
-            }
-        }
-
-        // 2. Update Auth Profile (Display Name & Photo)
-        await updateProfile(user, { displayName: fullName, photoURL: photoURL || null });
-
-        // 3. Create User Profile (users/{uid})
-        // We use 'users' path to align with the new architecture, but checked layout.tsx uses 'usuarios' (legacy)
-        // AND 'users/{uid}/memberships'. 
-        // To be safe and compatible with AppLayout:
-        // AppLayout checks 'users/{uid}/memberships' for role.
-        // AppLayout checks 'usuarios/{uid}' for profile data.
-        // We will write to BOTH until we fully migrate to 'users'.
-
+        // 2. PRE-CREATE User Profile (Critical for AppLayout)
         const userProfile: Usuario = {
             id: user.uid,
             nombre: fullName,
@@ -58,12 +35,47 @@ export const authService = {
         // Write to Legacy Profile (for AppLayout compatibility)
         await setDoc(doc(db, 'usuarios', user.uid), userProfile);
 
-        // 4. Create Membership (users/{uid}/memberships/{tenantId})
+        // Write Membership
         await setDoc(doc(db, 'users', user.uid, 'memberships', tenantId), {
             role: 'clienta',
             tenantId: tenantId,
             joinedAt: serverTimestamp()
         });
+
+        // 3. Upload Photo (Async / Optional)
+        // 3. Upload Photo (Async / Optional)
+        let photoURL = data.photoBase64 || '';
+
+        if (photo && storage && storage.app) {
+            try {
+                console.log("Debug: Attempting Storage upload...", photo.name);
+                const storageRef = ref(storage, `profile-pictures/${user.uid}`);
+
+                // Enforce 5s timeout to prevent hanging
+                const uploadTask = uploadBytes(storageRef, photo);
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Upload timeout")), 5000)
+                );
+
+                await Promise.race([uploadTask, timeoutPromise]);
+
+                const downloadURL = await getDownloadURL(storageRef);
+                console.log("Debug: Upload success. URL:", downloadURL);
+                photoURL = downloadURL;
+            } catch (error) {
+                console.error("Debug: Upload failed or timed out (using Base64 fallback):", error);
+            }
+        }
+
+        // 4. Update Auth Profile & Firestore
+        // Only use storage URL for Auth Profile (size limit)
+        const authPhotoURL = photoURL.startsWith('http') ? photoURL : null;
+        await updateProfile(user, { displayName: fullName, photoURL: authPhotoURL });
+
+        // Update Firestore (Can hold Base64)
+        if (photoURL) {
+            await setDoc(doc(db, 'usuarios', user.uid), { ...userProfile, photoURL: photoURL }, { merge: true });
+        }
 
         // 5. Create Customer Record (tenants/{tenantId}/customers)
         // This makes them appear in the Admin's client list immediately.
@@ -80,13 +92,13 @@ export const authService = {
             userId: user.uid // Link back to auth user
         });
 
-        // 6. Send Welcome Notification
-        await notificationService.sendEmail({
+        // 6. Send Welcome Notification (Non-blocking)
+        notificationService.sendEmail({
             to: email,
             subject: '¡Bienvenida a Mujer!',
             type: 'welcome',
             data: { name: fullName }
-        });
+        }).catch(err => console.error("Background email error:", err));
 
         return user;
     }

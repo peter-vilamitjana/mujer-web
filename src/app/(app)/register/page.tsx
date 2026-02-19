@@ -27,6 +27,7 @@ export default function RegisterPage() {
     const [isLoading, setIsLoading] = useState(false);
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [photoBase64, setPhotoBase64] = useState<string>('');
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -46,7 +47,8 @@ export default function RegisterPage() {
                 fullName: formData.fullName,
                 phone: formData.phone,
                 tenantId: tenantId,
-                photo: selectedFile || undefined
+                photo: selectedFile || undefined,
+                photoBase64: photoBase64 || undefined
             });
 
             toast({ title: "Cuenta creada", description: "Te registraste con éxito. ¡Bienvenida!" });
@@ -67,12 +69,82 @@ export default function RegisterPage() {
         setFormData({ ...formData, [e.target.id]: e.target.value });
     }
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Helper for compression
+    const compressImage = (file: File): Promise<File> => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                // Resize to max 500px width (sufficient for avatar)
+                const MAX_WIDTH = 500;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                if (!ctx) { reject(new Error("No context")); return; }
+
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const newFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now(),
+                        });
+                        resolve(newFile);
+                    } else {
+                        reject(new Error("Canvas blob error"));
+                    }
+                }, 'image/jpeg', 0.8); // 80% quality
+            };
+            img.onerror = (e) => reject(e);
+        });
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            setSelectedFile(file);
+
+            // Basic validation
+            if (file.size > 10 * 1024 * 1024) {
+                toast({ variant: "destructive", title: "Archivo muy grande", description: "La imagen debe pesar menos de 10MB." });
+                return;
+            }
+
+            // Client-side visual preview (immediate)
             const url = URL.createObjectURL(file);
             setPreviewUrl(url);
+
+            // Simple compression/resize logic
+            try {
+                let fileToUse = file;
+                // If larger than 500KB, compress
+                if (file.size > 500 * 1024) {
+                    fileToUse = await compressImage(file);
+                }
+
+                setSelectedFile(fileToUse);
+
+                // Convert to Base64 for fallback
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setPhotoBase64(reader.result as string);
+                };
+                reader.readAsDataURL(fileToUse);
+
+            } catch (err) {
+                console.error("Compression warning:", err);
+                setSelectedFile(file); // Fallback to original
+            }
         }
     };
 

@@ -9,6 +9,7 @@ export interface Usuario {
   email: string;
   rol: UserRole;
   salonId?: string;
+  photoURL?: string;
 }
 
 export interface Cliente {

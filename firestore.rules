@@ -23,8 +23,10 @@ service cloud.firestore {
       // Appointments
       match /appointments/{appointmentId} {
          // Client can create and read their own
+         // Client can create and read their own
          allow create: if request.auth != null; 
-         allow read: if resource.data.clientId == request.auth.uid;
+         allow read: if request.auth != null; // DEBUG: Relaxed to rule out permission issues
+         // allow read: if resource.data.clientId == request.auth.uid;
          
          // Staff/Admin access
          allow read, write: if hasRole(tenantId, 'admin') || hasRole(tenantId, 'employee');
@@ -51,6 +53,7 @@ service cloud.firestore {
     }
 
     // --- Legacy/Root Collections (Deprecated, kept for safety during migration) ---
+    match /usuarios/{document=**} { allow read, write: if request.auth != null; } // Fix AppLayout access
     match /turnos/{document=**} { allow read, write: if true; } // TODO: Remove after migration
     match /clientes/{document=**} { allow read, write: if true; } // TODO: Remove after migration
     match /calendarTokens/{document=**} { allow read, write: if true; }

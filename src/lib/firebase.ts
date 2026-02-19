@@ -17,7 +17,15 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
-const storage = getStorage(app);
+
+let storage: ReturnType<typeof getStorage>;
+try {
+  storage = getStorage(app);
+} catch (e) {
+  // Storage might fail on server-side or if config is missing bucket
+  console.warn("Storage init warning:", e);
+  storage = {} as any;
+}
 
 let auth: Auth;
 try {

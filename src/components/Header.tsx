@@ -31,7 +31,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const userEmail = userCtx?.email || authUser?.email || 'No hay email';
   const userInitial = (userName || "U").charAt(0).toUpperCase();
 
-  const photoURL = authUser?.photoURL;
+  const photoURL = userCtx?.photoURL || authUser?.photoURL;
+  console.log("Header Avatar Debug:", { userCtxPhoto: userCtx?.photoURL, authPhoto: authUser?.photoURL });
+
+  // Use key to force re-render when photoURL changes
+  const avatarSrc = photoURL || undefined;
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between bg-card/80 backdrop-blur-lg px-4 sm:px-6">
@@ -55,9 +59,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-              <Avatar className="h-10 w-10 border-2 border-primary/20">
-                <AvatarImage src={photoURL || `https://placehold.co/100x100.png`} data-ai-hint="woman portrait" alt={userName} />
-                <AvatarFallback>{userInitial}</AvatarFallback>
+              <Avatar key={avatarSrc} className="h-10 w-10 border-2 border-primary/20">
+                <AvatarImage src={avatarSrc} className="object-cover" alt={userName} />
+                <AvatarFallback className="bg-primary/10 text-primary font-semibold">{userInitial}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>

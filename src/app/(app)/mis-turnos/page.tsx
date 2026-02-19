@@ -41,16 +41,29 @@ function ProximoTurnoCard({ turno, onCancel }: { turno: Turno, onCancel: (id: st
   const displayServices = isExpanded ? services : services.slice(0, 3);
   const hasMoreServices = services.length > 3;
 
+  let day = "0";
+  let month = "Mes";
+  let time = "00:00";
+
+  try {
+    const dateObj = parseISO(turno.fecha);
+    day = format(dateObj, "d", { locale: es });
+    month = format(dateObj, "MMMM", { locale: es });
+    time = format(dateObj, "HH:mm");
+  } catch (e) {
+    console.error("Invalid date in card:", turno.fecha);
+  }
+
   return (
     <div key={turno.id} className="p-4 sm:p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex flex-col sm:flex-row sm:items-stretch gap-4">
       <div className="flex flex-col justify-center items-center text-center p-4 rounded-lg bg-black/10 flex-shrink-0 w-full sm:w-28">
-        <p className="font-bold text-3xl sm:text-4xl">{format(parseISO(turno.fecha), "d", { locale: es })}</p>
+        <p className="font-bold text-3xl sm:text-4xl">{day}</p>
         <h3 className="font-semibold text-base sm:text-lg capitalize">
-          {format(parseISO(turno.fecha), "MMMM", { locale: es })}
+          {month}
         </h3>
         <p className="font-mono text-lg sm:text-xl mt-2 sm:mt-3 flex items-center gap-2 bg-black/20 px-3 py-1 rounded-full">
           <Clock className="h-4 w-4 sm:h-5 sm:w-5 opacity-80" />
-          {format(parseISO(turno.fecha), "HH:mm")}
+          {time}
         </p>
       </div>
 
@@ -127,49 +140,76 @@ export default function MisTurnosPage() {
   }, [filter]);
 
   useEffect(() => {
-    if (!user || !tenantId) {
+    if (!user || !user.id || !tenantId) {
       setLoading(false);
       return;
     }
 
-    const turnosQuery = query(
-      collection(db, 'tenants', tenantId, 'appointments'),
-      where('clientId', '==', user.id)
-    );
+    setLoading(true);
 
-    const unsubscribe = onSnapshot(turnosQuery, (snapshot) => {
-      const turnosData = snapshot.docs.map(doc => {
-        const data = doc.data();
-        const fecha = data.date instanceof Timestamp ? data.date.toDate().toISOString() : safeFormatDate(data.date);
+    try {
+      const turnosRef = collection(db, 'tenants', tenantId, 'appointments');
+      // Simple query for now, ensure index exists or is not needed
+      const turnosQuery = query(
+        turnosRef,
+        where('clientId', '==', user.id)
+      );
 
-        let estado: Turno['estado'] = 'pendiente';
-        if (data.status === 'completed') estado = 'realizado';
-        else if (data.status === 'cancelled') estado = 'cancelado';
-        else if (data.status === 'pending_payment') estado = 'pendiente_pago';
+      const unsubscribe = onSnapshot(turnosQuery, {
+        next: (snapshot) => {
+          const turnosData = snapshot.docs.map(doc => {
+            const data = doc.data();
+            // Safe date parsing
+            let fecha = new Date().toISOString();
+            try {
+              fecha = data.date instanceof Timestamp ? data.date.toDate().toISOString() : safeFormatDate(data.date);
+            } catch (e) { console.error("Date parse error", e); }
 
-        return {
-          id: doc.id,
-          clienteNombre: data.clientName,
-          empleadaNombre: data.staffName,
-          servicio: data.serviceNames || '',
-          fecha: fecha,
-          estado: estado,
-          precio: data.priceEstimated,
-          duracion: data.durationMinutes,
-          clienteId: data.clientId,
-          // ...
-        } as Turno;
+            let estado: Turno['estado'] = 'pendiente';
+            if (data.status === 'completed') estado = 'realizado';
+            else if (data.status === 'cancelled') estado = 'cancelado';
+            else if (data.status === 'pending_payment') estado = 'pendiente_pago';
+
+            return {
+              id: doc.id,
+              clienteNombre: data.clientName || '',
+              empleadaNombre: data.staffName || '',
+              servicio: data.serviceNames || '',
+              fecha: fecha,
+              estado: estado,
+              precio: data.priceEstimated || 0,
+              duracion: data.durationMinutes || 0,
+              clienteId: data.clientId,
+              // ...
+            } as Turno;
+          });
+
+          // Safe sort
+          turnosData.sort((a, b) => {
+            const dateA = new Date(a.fecha).getTime();
+            const dateB = new Date(b.fecha).getTime();
+            return (isNaN(dateB) ? 0 : dateB) - (isNaN(dateA) ? 0 : dateA);
+          });
+
+          setTurnos(turnosData);
+          setLoading(false);
+        },
+        error: (error) => {
+          console.error("Firestore Error (MisTurnos):", error);
+          // Provide a cleaner UI experience even on error
+          setLoading(false);
+          // Only toast if it's NOT a permission/not-found error which might be transient
+          if (error.code !== 'permission-denied') {
+            toast({ title: "Error", description: "No se pudieron cargar tus turnos.", variant: "destructive" });
+          }
+        }
       });
-      turnosData.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
-      setTurnos(turnosData);
-      setLoading(false);
-    }, (error) => {
-      console.error("Error al obtener turnos: ", error);
-      setLoading(false);
-      toast({ title: "Error", description: "No se pudieron cargar tus turnos.", variant: "destructive" });
-    });
 
-    return () => unsubscribe();
+      return () => unsubscribe();
+    } catch (e) {
+      console.error("Error setting up listener:", e);
+      setLoading(false);
+    }
   }, [user, toast, tenantId]);
 
   const handleCancelTurno = async (turnoId: string) => {
@@ -289,11 +329,17 @@ export default function MisTurnosPage() {
             <div className="space-y-4">
               {visibleHistorial.map(turno => {
                 const statusInfo = getStatusInfo(turno.estado);
+                let dateStr = turno.fecha;
+                try {
+                  dateStr = format(parseISO(turno.fecha), "d 'de' MMMM yyyy", { locale: es });
+                } catch (e) {
+                  console.error("Date error in history:", e);
+                }
                 return (
                   <Card key={turno.id} className="bg-muted/40 dark:bg-muted/10 border dark:border-border/50 rounded-xl">
                     <CardContent className="p-4 flex items-center justify-between">
                       <div className="space-y-1">
-                        <p className="font-semibold capitalize text-base">{format(parseISO(turno.fecha), "d 'de' MMMM yyyy", { locale: es })}</p>
+                        <p className="font-semibold capitalize text-base">{dateStr}</p>
                         <ul className="text-sm text-muted-foreground list-disc list-inside">
                           {turno.servicio.split(',').map((s, i) => <li key={i}>{s.trim()}</li>)}
                         </ul>
