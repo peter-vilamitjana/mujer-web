@@ -1,6 +1,7 @@
-import { auth, db } from '@/lib/firebase';
+import { auth, db, storage } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile, User } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Usuario, Cliente } from '@/lib/types';
 import { notificationService } from './notification.service';
 
@@ -9,19 +10,34 @@ interface RegisterData {
     password: string;
     fullName: string;
     phone?: string;
-    tenantId: string; // The tenant they are registering for (e.g., 'demo-salon')
+    tenantId: string;
+    photo?: File;
 }
 
 export const authService = {
     async registerUser(data: RegisterData): Promise<User> {
-        const { email, password, fullName, phone, tenantId } = data;
+        const { email, password, fullName, phone, tenantId, photo } = data;
 
         // 1. Create Auth User
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // 2. Update Auth Profile (Display Name)
-        await updateProfile(user, { displayName: fullName });
+        let photoURL = '';
+
+        // 1.5 Upload Photo if exists
+        if (photo) {
+            try {
+                const storageRef = ref(storage, `profile-pictures/${user.uid}`);
+                await uploadBytes(storageRef, photo);
+                photoURL = await getDownloadURL(storageRef);
+            } catch (error) {
+                console.error("Error uploading photo:", error);
+                // Continue without photo
+            }
+        }
+
+        // 2. Update Auth Profile (Display Name & Photo)
+        await updateProfile(user, { displayName: fullName, photoURL: photoURL || null });
 
         // 3. Create User Profile (users/{uid})
         // We use 'users' path to align with the new architecture, but checked layout.tsx uses 'usuarios' (legacy)
@@ -59,7 +75,6 @@ export const authService = {
             fechaRegistro: serverTimestamp() as any, // Type cast for now
         };
 
-        // ... previous code
         await setDoc(doc(db, 'tenants', tenantId, 'customers', user.uid), {
             ...newCustomer,
             userId: user.uid // Link back to auth user

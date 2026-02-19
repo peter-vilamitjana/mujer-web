@@ -13,7 +13,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, User, Menu } from 'lucide-react';
 import Logo from './Logo';
 import { useUser } from '@/contexts/UserContext';
-// ... imports
+import { auth } from '@/lib/firebase';
+import { useRouter } from 'next/navigation';
+import { ThemeToggle } from './ThemeToggle';
 
 export default function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();

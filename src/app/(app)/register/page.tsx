@@ -26,6 +26,9 @@ export default function RegisterPage() {
     });
     const [isLoading, setIsLoading] = useState(false);
 
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
@@ -42,11 +45,11 @@ export default function RegisterPage() {
                 password: formData.password,
                 fullName: formData.fullName,
                 phone: formData.phone,
-                tenantId: tenantId
+                tenantId: tenantId,
+                photo: selectedFile || undefined
             });
 
             toast({ title: "Cuenta creada", description: "Te registraste con éxito. ¡Bienvenida!" });
-            // Redirect handled by layout/auth state change, but push just in case
             router.push('/mis-turnos');
         } catch (error: any) {
             console.error("Error al registrar:", error);
@@ -64,6 +67,15 @@ export default function RegisterPage() {
         setFormData({ ...formData, [e.target.id]: e.target.value });
     }
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setSelectedFile(file);
+            const url = URL.createObjectURL(file);
+            setPreviewUrl(url);
+        }
+    };
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-muted/50 p-4">
             <div className="w-full max-w-md space-y-6">
@@ -79,6 +91,32 @@ export default function RegisterPage() {
                     </CardHeader>
                     <CardContent className="p-8 pt-0">
                         <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="flex flex-col items-center gap-2 mb-6">
+                                <Label htmlFor="photo" className="cursor-pointer group relative">
+                                    <div className="h-24 w-24 rounded-full overflow-hidden border-2 border-dashed border-muted-foreground/30 group-hover:border-primary transition-colors bg-muted/30 flex items-center justify-center relative">
+                                        {previewUrl ? (
+                                            <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
+                                        ) : (
+                                            <div className="flex flex-col items-center text-muted-foreground group-hover:text-primary transition-colors">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-camera"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>
+                                            </div>
+                                        )}
+                                        {!previewUrl && (
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-full" />
+                                        )}
+                                    </div>
+                                    <Input
+                                        id="photo"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        disabled={isLoading}
+                                        className="hidden"
+                                    />
+                                </Label>
+                                <p className="text-xs text-muted-foreground">Toca para subir tu foto</p>
+                            </div>
+
                             <div className="space-y-2">
                                 <Label htmlFor="fullName">Nombre Completo</Label>
                                 <Input

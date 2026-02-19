@@ -1,3 +1,4 @@
+'use client';
 import { useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
