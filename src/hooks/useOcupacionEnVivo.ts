@@ -60,9 +60,10 @@ export function useOcupacionEnVivo(db: Firestore, sucursalId: string) {
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);
 
+    // sucursalId passed here is actually the Tenant ID in our new architecture
     const turnosQuery = query(
-      collection(db, "turnos"),
-      where("sucursalId", "==", sucursalId)
+      collection(db, "tenants", sucursalId, "appointments")
+      // Remove 'where sucursalId' as it is implicit in the path
     );
 
     // Mocking a single active appointment for demonstration if no real data exists
@@ -71,7 +72,7 @@ export function useOcupacionEnVivo(db: Firestore, sucursalId: string) {
       const now = new Date();
       const mock: Turno = {
         id: 'mock-1',
-        sucursalId: 'main',
+        // sucursalId: 'main', // Removed as it is not in Turno type
         clienteId: 'mock-client',
         clienteNombre: 'Clienta de Prueba',
         servicio: 'Corte',
@@ -79,7 +80,7 @@ export function useOcupacionEnVivo(db: Firestore, sucursalId: string) {
         fecha: now.toISOString(),
         empleadaAsignadaId: 'mock-prof',
         empleadaNombre: 'Profesional de Prueba',
-        estado: 'en_progreso',
+        estado: 'realizado', // Changed from 'en_progreso' to match Turno type
         duracion: 60,
         precio: 5000,
       };

@@ -52,7 +52,9 @@ export default function NewServiceForm() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      await addDoc(collection(db, 'servicios'), {
+      // Use hardcoded tenant for now or context if available. Form usually used in Admin context.
+      const tenantId = 'demo-salon';
+      await addDoc(collection(db, 'tenants', tenantId, 'services'), {
         nombre: values.nombre,
         precio: values.precio,
         duracion: values.duracion,
@@ -125,19 +127,19 @@ export default function NewServiceForm() {
                 <FormItem>
                   <FormLabel>Duración (minutos)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="Ej: 60" {...field} disabled={isSubmitting}/>
+                    <Input type="number" placeholder="Ej: 60" {...field} disabled={isSubmitting} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <DialogFooter>
-                <DialogClose asChild>
-                    <Button type="button" variant="outline" disabled={isSubmitting}>Cancelar</Button>
-                </DialogClose>
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="animate-spin" /> : 'Guardar Servicio'}
-                </Button>
+              <DialogClose asChild>
+                <Button type="button" variant="outline" disabled={isSubmitting}>Cancelar</Button>
+              </DialogClose>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Guardar Servicio'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Servicio } from '@/lib/types';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { Button } from '../ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
@@ -79,11 +79,12 @@ export default function FeaturedServices() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const servicesQuery = query(
-          collection(db, 'servicios'),
-          where('destacado', '==', true)
+        const q = query(
+          collection(db, 'tenants', 'demo-salon', 'services'),
+          where('destacado', '==', true),
+          limit(3)
         );
-        const querySnapshot = await getDocs(servicesQuery);
+        const querySnapshot = await getDocs(q);
         let servicesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Servicio);
 
         if (servicesData.length === 0) {

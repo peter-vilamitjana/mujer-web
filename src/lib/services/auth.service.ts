@@ -23,7 +23,7 @@ export const authService = {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // 2. PRE-CREATE User Profile (Critical for AppLayout)
+        // 2. PRE-CREATE User Profile (Legacy & New)
         const userProfile: Usuario = {
             id: user.uid,
             nombre: fullName,
@@ -32,8 +32,19 @@ export const authService = {
             salonId: tenantId
         };
 
-        // Write to Legacy Profile (for AppLayout compatibility)
-        await setDoc(doc(db, 'usuarios', user.uid), userProfile);
+        // A. WRITE TO LEGACY (Compatibility) - REMOVED
+        // await setDoc(doc(db, 'usuarios', user.uid), userProfile);
+
+        // B. WRITE TO NEW SOURCE OF TRUTH (users/{uid})
+        // Mapping schema: displayName, email, phone, photoURL
+        await setDoc(doc(db, 'users', user.uid), {
+            id: user.uid,
+            displayName: fullName,
+            email: email,
+            phone: phone || null,
+            photoURL: null, // Will update after upload
+            createdAt: serverTimestamp()
+        });
 
         // Write Membership
         await setDoc(doc(db, 'users', user.uid, 'memberships', tenantId), {
@@ -42,7 +53,6 @@ export const authService = {
             joinedAt: serverTimestamp()
         });
 
-        // 3. Upload Photo (Async / Optional)
         // 3. Upload Photo (Async / Optional)
         let photoURL = data.photoBase64 || '';
 
@@ -74,17 +84,17 @@ export const authService = {
 
         // Update Firestore (Can hold Base64)
         if (photoURL) {
-            await setDoc(doc(db, 'usuarios', user.uid), { ...userProfile, photoURL: photoURL }, { merge: true });
+            // Update New
+            await setDoc(doc(db, 'users', user.uid), { photoURL: photoURL }, { merge: true });
         }
 
         // 5. Create Customer Record (tenants/{tenantId}/customers)
-        // This makes them appear in the Admin's client list immediately.
         const newCustomer: Omit<Cliente, 'id'> = {
             nombre: fullName.split(' ')[0],
             apellido: fullName.split(' ').slice(1).join(' ') || '',
             email: email,
             telefono: phone || '',
-            fechaRegistro: serverTimestamp() as any, // Type cast for now
+            fechaRegistro: serverTimestamp() as any,
         };
 
         await setDoc(doc(db, 'tenants', tenantId, 'customers', user.uid), {

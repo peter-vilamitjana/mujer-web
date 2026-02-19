@@ -37,7 +37,16 @@ export default function LoginPage() {
             email: email,
             rol: 'clienta',
           };
-          await setDoc(doc(db, 'usuarios', userCredential.user.uid), clientaData);
+          await setDoc(doc(db, 'users', userCredential.user.uid), {
+            ...clientaData,
+            createdAt: new Date(),
+            photoURL: null
+          });
+          // Also Create Membership
+          await setDoc(doc(db, 'users', userCredential.user.uid, 'memberships', 'demo-salon'), {
+            role: 'clienta',
+            tenantId: 'demo-salon'
+          });
           toast({ title: "Cuenta de prueba creada", description: "Se ha creado una clienta de prueba para que puedas ingresar." });
           // Let the layout handle redirection
           return;

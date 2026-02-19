@@ -16,7 +16,11 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+// [HARDENING] Enable ignoreUndefinedProperties to prevent crashes on undefined fields
 const db = getFirestore(app);
+if (db) {
+  db._settings = { ...db._settings, ignoreUndefinedProperties: true };
+}
 
 let storage: ReturnType<typeof getStorage>;
 try {

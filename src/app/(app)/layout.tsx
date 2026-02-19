@@ -7,7 +7,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
-import type { Usuario } from '@/lib/types';
+import type { Usuario, UserRole } from '@/lib/types';
 import { UserProvider } from '@/contexts/UserContext';
 import { SessionProvider } from 'next-auth/react';
 
@@ -44,81 +44,94 @@ export default function AppLayout({
           const membershipRef = doc(db, 'users', firebaseUser.uid, 'memberships', tenantId);
           // We assume membership doesn't change often enough to need snapshot, but we could if needed.
           const membershipSnap = await getDoc(membershipRef);
-          let tenantRole = 'clienta'; // Default to client if no membership
+          let tenantRole: UserRole = 'clienta'; // Default to client if no membership
           if (membershipSnap.exists()) {
-            tenantRole = membershipSnap.data().role;
+            tenantRole = membershipSnap.data().role as UserRole;
           } else if (firebaseUser.email === 'admin@mujer.com') {
             // If admin email and no membership, create admin membership
             await setDoc(membershipRef, { role: 'admin', tenantId, tenantName: 'Mujer Demo' });
             tenantRole = 'admin';
           }
 
-          // 2. Real-time Profile Listener (Fixes photo update and race conditions)
-          const userDocRef = doc(db, 'usuarios', firebaseUser.uid);
+          // 2. Real-time Profile Listener (New Source of Truth with Fallback)
+          const newProfileRef = doc(db, 'users', firebaseUser.uid);
 
-          const unsubProfile = onSnapshot(userDocRef, async (userDoc) => {
-            // Auto-create Admin (Legacy fallback/dev convenience)
-            if (!userDoc.exists() && firebaseUser.email === 'admin@mujer.com') {
-              const adminData: Omit<Usuario, 'id'> = {
-                nombre: 'Administradora',
-                email: 'admin@mujer.com',
-                rol: 'admin',
-              };
-              await setDoc(userDocRef, adminData);
-              // The onSnapshot listener will fire again with the newly created document
-              return;
-            }
-
+          const unsubProfile = onSnapshot(newProfileRef, async (userDoc) => {
             if (userDoc.exists()) {
-              const userData = { id: userDoc.id, ...userDoc.data(), rol: tenantRole } as Usuario;
+              // Happy path: User has been migrated or is new
+              const data = userDoc.data();
+              // Map new schema to internal Usuario type
+              const userData: Usuario = {
+                id: userDoc.id,
+                nombre: data.displayName || data.nombre || 'Sin Nombre',
+                email: data.email,
+                rol: tenantRole,
+                photoURL: data.photoURL || undefined, // Map null to undefined
+                salonId: tenantId // Contextual
+              };
               setUser(userData);
-
-              // Route Protection
-              const protectedRoutes = ['/admin', '/agenda', '/clientes', '/dashboard'];
-              const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
-              const canAccessProtected = ['admin', 'empleada', 'owner'].includes(userData.rol);
-
-              if (isProtectedRoute && !canAccessProtected) {
-                console.log(`Access denied for ${userData.rol} to ${pathname}`);
-                router.push('/mis-turnos');
-              }
-
-              // Redirect from Login/Home
-              if (pathname === '/login' || pathname === '/') {
-                if (userData.rol === 'clienta') {
-                  router.push('/mis-turnos');
-                } else {
-                  router.push('/dashboard');
-                }
-              }
+              handleNavigation(userData, pathname, router);
               setLoading(false);
             } else {
-              // Profile doesn't exist yet
-              // If on register page, this is expected. Keep loading true.
-              // If on other pages, we wait for the profile to be created.
-              console.log("Waiting for user profile creation...");
+              // Missing in 'users'? Check Legacy 'usuarios' (Self-healing)
+              console.warn('[LEGACY ACCESS DETECTED] Profile not found in \'users\', checking legacy \'usuarios\'...');
+
+              try {
+                const legacyRef = doc(db, 'usuarios', firebaseUser.uid);
+                const legacySnap = await getDoc(legacyRef);
+
+                if (legacySnap.exists()) {
+                  console.log("Found legacy profile. Migrating to 'users'...");
+                  const legacyData = legacySnap.data() as Usuario;
+
+                  const newProfileData = {
+                    id: firebaseUser.uid,
+                    displayName: legacyData.nombre || firebaseUser.displayName || 'Usuario',
+                    email: legacyData.email || firebaseUser.email,
+                    photoURL: legacyData.photoURL || firebaseUser.photoURL || null,
+                    migratedAt: new Date(),
+                    source: 'legacy_migration'
+                  };
+
+                  // Perform Migration
+                  await setDoc(newProfileRef, newProfileData);
+                  // The listener will trigger again with the new doc, entering the "Happy path"
+                  return;
+                }
+
+                // Handle Admin Seed Case (if not in legacy either)
+                if (firebaseUser.email === 'admin@mujer.com') {
+                  console.log("Seeding Admin profile...");
+                  const adminData = {
+                    displayName: 'Administradora',
+                    email: 'admin@mujer.com',
+                    createdAt: new Date()
+                  };
+                  await setDoc(newProfileRef, adminData);
+                  // Listener re-triggers
+                  return;
+                }
+
+              } catch (err) {
+                console.error("Migration/Fallback error:", err);
+              }
+
+              // If we are here, no profile exists in either. 
+              // Registration page should handle creation.
               if (!pathname.startsWith('/register') && !pathname.startsWith('/login')) {
-                // This state indicates a user is logged in but has no profile.
-                // The loading spinner will remain until a profile is created or they log out.
+                console.log("No profile found anywhere.");
               }
             }
           }, (error) => {
             console.error("Profile snapshot error:", error);
-            // If there's an error with the snapshot, we should stop loading
-            // and potentially log out or show an error message.
             setLoading(false);
-            // Optionally, force logout if a critical error occurs
-            // auth.signOut();
-            // router.push('/login');
           });
 
           profileUnsubRef.current = unsubProfile;
 
         } catch (error) {
           console.error("Error during auth state change or data fetching:", error);
-          // Ensure loading is set to false even if an error occurs before snapshot setup
           setLoading(false);
-          // If a critical error, force logout
           await auth.signOut();
           router.push('/login');
         }
@@ -130,6 +143,26 @@ export default function AppLayout({
       profileUnsubRef.current(); // Cleanup profile listener on component unmount
     };
   }, [router, pathname, tenantId]);
+
+  // Helper to centralize navigation logic (defined outside or inside useEffect, simplified here)
+  const handleNavigation = (userData: Usuario, path: string, router: any) => {
+    const protectedRoutes = ['/admin', '/agenda', '/clientes', '/dashboard'];
+    const isProtectedRoute = protectedRoutes.some(route => path.startsWith(route));
+    const canAccessProtected = ['admin', 'empleada', 'owner'].includes(userData.rol);
+
+    if (isProtectedRoute && !canAccessProtected) {
+      console.log(`Access denied for ${userData.rol} to ${path}`);
+      router.push('/mis-turnos');
+    }
+
+    if (path === '/login' || path === '/') {
+      if (userData.rol === 'clienta') {
+        router.push('/mis-turnos');
+      } else {
+        router.push('/dashboard');
+      }
+    }
+  };
 
   if (loading) {
     return (

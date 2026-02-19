@@ -35,24 +35,37 @@ export default function RegisterSalonPage() {
         setIsLoading(true);
 
         try {
-            // 1. Create Salon Document
-            const salonRef = await addDoc(collection(db, "salons"), {
+            // 1. Create Tenant Document
+            // Use slug as ID if possible for cleaner URLs, or auto-id
+            const tenantId = formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const tenantRef = doc(db, "tenants", tenantId);
+
+            await setDoc(tenantRef, {
+                id: tenantId,
                 name: formData.name,
                 address: formData.address,
                 phone: formData.phone,
-                slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
+                slug: tenantId,
                 ownerId: session.user.id,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
                 email: session.user.email,
-                image: session.user.image
+                image: session.user.image,
+                settings: { currency: 'ARS', timezone: 'America/Argentina/Buenos_Aires' }
             });
 
-            // 2. Update User Profile with salonId
+            // 2. Update User Profile with salonId (tenantId)
+            // Note: register page logic used 'salonRef' from addDoc. Now we use tenantId string.
             await setDoc(doc(db, "users", session.user.id), {
-                salonId: salonRef.id,
+                salonId: tenantId, // Keeping 'salonId' field for compatibility, but value is tenantId
                 role: 'owner'
             }, { merge: true });
+
+            // Create Owner Membership
+            await setDoc(doc(db, "users", session.user.id, "memberships", tenantId), {
+                role: 'owner',
+                tenantId: tenantId
+            });
 
             // 3. Redirect to Dashboard
             router.push("/dashboard");

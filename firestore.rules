@@ -2,60 +2,126 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper: Check membership role
+    // --- Helper Functions ---
+    // Check if user has a specific role in the tenant
     function hasRole(tenantId, role) {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)/memberships/$(tenantId)).data.role == role;
     }
+    
+    // Check if user is a member of the tenant (any role)
+    function isTenantMember(tenantId) {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)/memberships/$(tenantId));
+    }
 
-    // --- Tenant Isolation ---
-    match /tenants/{tenantId} {
-      allow read, write: if request.auth != null; // TEMP: Allow write for seed (and read tenant settings)
+    // --- 1. Global User Data (New Source of Truth) ---
+    match /users/{userId} {
+      // User can read/write their own profile
+      allow read, write: if request.auth != null && request.auth.uid == userId;
       
-      // Public Content (Landing Page)
-      match /services/{document=**} { allow read: if true; allow write: if request.auth != null; } // TEMP: Allow write for seed
-      match /promotions/{document=**} { allow read: if true; allow write: if request.auth != null; } // TEMP: Allow write for seed
-      match /content/{document=**} { allow read: if true; allow write: if request.auth != null; } // TEMP: Allow write for seed
-      match /staff/{document=**} { allow read: if true; allow write: if request.auth != null; } // TEMP: Allow write for seed
+      // Memberships: User can read their own. Admin writes (via Admin SDK usually, but allow self-read)
+      match /memberships/{tenantId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // Integrations (e.g., Google Calendar Tokens) - Private
+      match /integrations/{integrationId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
 
-      // Branches (Public for reading location)
-      match /branches/{document=**} { allow read: if true; allow write: if request.auth != null; } // TEMP: Allow write for seed
-
-      // Appointments
-      match /appointments/{appointmentId} {
-         // Client can create and read their own
-         // Client can create and read their own
-         allow create: if request.auth != null; 
-         allow read: if request.auth != null; // DEBUG: Relaxed to rule out permission issues
-         // allow read: if resource.data.clientId == request.auth.uid;
-         
-         // Staff/Admin access
-         allow read, write: if hasRole(tenantId, 'admin') || hasRole(tenantId, 'employee');
+    // --- 2. Tenant Data (Multi-tenant Isolation) ---
+    match /tenants/{tenantId} {
+      // Tenant Config: Public read (for branding/settings), Admin write
+      allow read: if true; 
+      allow write: if hasRole(tenantId, 'admin'); // Only admin can edit tenant settings
+      
+      // -- Public Catalog (Services, Staff, Promos, Content) --
+      match /services/{doc} { 
+        allow read: if true; 
+        allow write: if hasRole(tenantId, 'admin'); 
+      }
+      match /staff/{doc} { 
+        allow read: if true; 
+        allow write: if hasRole(tenantId, 'admin'); 
+      }
+      match /promotions/{doc} { 
+        allow read: if true; 
+        allow write: if hasRole(tenantId, 'admin'); 
+      }
+      match /content/{doc} { 
+        allow read: if true; 
+        allow write: if hasRole(tenantId, 'admin'); 
+      }
+      match /branches/{doc} { 
+        allow read: if true; 
+        allow write: if hasRole(tenantId, 'admin'); 
       }
 
-      // Customers
+      // -- Private Business Data --
+      
+      // Customers: Admin/Employee manage. User reads own.
       match /customers/{customerId} {
-         // Staff/Admin access
-         allow read, write: if hasRole(tenantId, 'admin') || hasRole(tenantId, 'employee');
-         
-         // Client can read their own profile AND create it during registration
-         allow read: if request.auth.uid == resource.data.userId;
-         allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+         allow read: if hasRole(tenantId, 'admin') || hasRole(tenantId, 'employee') || (request.auth != null && request.auth.uid == customerId);
+         allow write: if hasRole(tenantId, 'admin') || hasRole(tenantId, 'employee');
+         allow create: if request.auth != null && request.auth.uid == customerId; // Self-registration during signup
       }
+      
+      // Appointments: Admin/Employee manage. User manages own.
+      match /appointments/{apptId} {
+         // Read: Staff or Owner
+         allow read: if hasRole(tenantId, 'admin') || hasRole(tenantId, 'employee') || (request.auth != null && resource.data.clientId == request.auth.uid);
+         
+         // Create: Any authenticated user (for booting)
+         allow create: if request.auth != null; 
+         
+         // Update: Staff or Owner (Owner can only cancel)
+         allow update: if hasRole(tenantId, 'admin') || hasRole(tenantId, 'employee') || (resource.data.clientId == request.auth.uid && request.resource.data.status == 'cancelled');
+      }
+    }
+
+    // --- 3. LEGACY Compatibility (Phase 4: READ-ONLY ARCHIVE) ---
+    // [LEGACY LOCKDOWN] - STRICTLY NO WRITES ALLOWED
+    
+    // Legacy Users (usuarios)
+    // Allow READ for self-healing (own) OR Admin (migration). DENY write.
+    match /usuarios/{userId} {
+      allow read: if (request.auth != null && request.auth.uid == userId) || request.auth.token.email == 'admin@mujer.com';; 
+      allow write: if false; 
     }
     
-    // --- Global User Profiles ---
-    match /users/{userId} {
-      allow read, write: if request.auth.uid == userId;
-      
-      match /memberships/{tenantId} {
-        allow read: if request.auth.uid == userId;
-      }
+    // Legacy Calendar Tokens (root)
+    match /calendarTokens/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false; 
+    }
+    
+    // Legacy Turnos (root) - Archive
+    match /turnos/{document=**} { 
+      allow read: if request.auth.token.email == 'admin@mujer.com'; 
+      allow write: if false;
+    } 
+    
+    // Legacy Clientes (root) - Archive
+    match /clientes/{document=**} { 
+      allow read: if request.auth.token.email == 'admin@mujer.com'; 
+      allow write: if false;
     }
 
-    // --- Legacy/Root Collections (Deprecated, kept for safety during migration) ---
-    match /usuarios/{document=**} { allow read, write: if request.auth != null; } // Fix AppLayout access
-    match /turnos/{document=**} { allow read, write: if true; } // TODO: Remove after migration
-    match /clientes/{document=**} { allow read, write: if true; } // TODO: Remove after migration
-    match /calendarTokens/{document=**} { allow read, write: if true; }
+    // Legacy Servicios (root) - Archive
+    match /servicios/{document=**} { 
+      allow read: if true; // Public catalog (cached/legacy)
+      allow write: if false;
+    }
+    
+    // Legacy Orgs & Salons (root) - Archive
+    // Allow Admin Read for Migration
+    match /orgs/{document=**} { 
+      allow read: if request.auth.token.email == 'admin@mujer.com'; 
+      allow write: if false; 
+    }
+    match /salons/{document=**} { 
+      allow read: if request.auth.token.email == 'admin@mujer.com'; 
+      allow write: if false; 
+    }
   }
 }

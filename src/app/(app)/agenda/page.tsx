@@ -68,11 +68,29 @@ function GoogleCalendarConnect() {
   useEffect(() => {
     const checkConnection = async () => {
       if (user?.rol === 'admin' && user?.id) {
-        // A simple way to check could be to see if the token doc exists
+        // Check New Path (Primary)
         try {
-          const tokenDocRef = doc(db, 'calendarTokens', user.id);
-          const tokenDoc = await getDoc(tokenDocRef);
-          setIsConnected(tokenDoc.exists());
+          const newRef = doc(db, 'users', user.id, 'integrations', 'google');
+          const newSnap = await getDoc(newRef);
+
+          if (newSnap.exists()) {
+            setIsConnected(true);
+            return;
+          }
+
+          // Fallback Legacy Check (Self-healing UI)
+          const legacyRef = doc(db, 'calendarTokens', user.id);
+          const legacySnap = await getDoc(legacyRef);
+          if (legacySnap.exists()) {
+            console.warn('[LEGACY ACCESS DETECTED] Found legacy calendar token.');
+            // It exists in legacy but not new. 
+            // The user should "Reconnect" to migrate, or we can consider them connected 
+            // but maybe show a warning? For now, just show connected.
+            // The bootstrap endpoint handles migration if they click connect again.
+            setIsConnected(true);
+          } else {
+            setIsConnected(false);
+          }
         } catch (error) {
           console.error("Error checking calendar connection:", error);
           setIsConnected(false);

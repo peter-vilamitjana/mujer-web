@@ -37,7 +37,7 @@ export default function SalonProfilePage() {
                     setSalonId(sId);
 
                     if (sId) {
-                        const salonDoc = await getDoc(doc(db, "salons", sId));
+                        const salonDoc = await getDoc(doc(db, "tenants", sId));
                         if (salonDoc.exists()) {
                             const data = salonDoc.data();
                             setFormData({
@@ -65,7 +65,7 @@ export default function SalonProfilePage() {
 
         setSaving(true);
         try {
-            await updateDoc(doc(db, "salons", salonId), {
+            await updateDoc(doc(db, "tenants", salonId), {
                 ...formData,
                 updatedAt: new Date()
             });
