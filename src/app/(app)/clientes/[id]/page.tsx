@@ -58,14 +58,14 @@ export default function ClienteDetailPage() {
       }
     );
 
-    const qTurnos = query(collection(db, "turnos"), where("clienteId", "==", id), orderBy("fecha", "desc"));
+    const qTurnos = query(collection(db, "turnos"), where("clienteId", "==", id));
     const unsubTurnos = onSnapshot(qTurnos,
       (snapshot) => {
         const turnosData = snapshot.docs.map(doc => {
           const data = doc.data();
           const fecha = safeFormatDate(data.fecha);
           return { id: doc.id, ...data, fecha } as Turno;
-        });
+        }).sort((a, b) => b.fecha.localeCompare(a.fecha));
         setTurnos(turnosData);
       },
       (error) => {
