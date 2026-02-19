@@ -1,12 +1,15 @@
 'use client';
 import "@/lib/shim-storage";
 
+import { TenantProvider } from "@/contexts/TenantContext";
 import { SessionProvider } from "next-auth/react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <SessionProvider>
-            {children}
+            <TenantProvider>
+                {children}
+            </TenantProvider>
         </SessionProvider>
     );
 }

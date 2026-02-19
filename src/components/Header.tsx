@@ -12,26 +12,24 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, User, Menu } from 'lucide-react';
 import Logo from './Logo';
-import { auth } from '@/lib/firebase';
-import { useRouter } from 'next/navigation';
-import { ThemeToggle } from './ThemeToggle';
-
-type HeaderProps = {
-  onMenuClick: () => void;
-};
+import { useUser } from '@/contexts/UserContext';
+// ... imports
 
 export default function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();
-  const user = auth.currentUser;
+  const userCtx = useUser();
+  const authUser = auth.currentUser;
 
   const handleLogout = async () => {
     await auth.signOut();
     router.push('/login');
   };
-  
-  const userName = user?.displayName || user?.email?.split('@')[0] || 'Usuario';
-  const userEmail = user?.email || 'No hay email';
-  const userInitial = (user?.displayName || user?.email || "U").charAt(0).toUpperCase();
+
+  const userName = userCtx?.nombre || authUser?.displayName || authUser?.email?.split('@')[0] || 'Usuario';
+  const userEmail = userCtx?.email || authUser?.email || 'No hay email';
+  const userInitial = (userName || "U").charAt(0).toUpperCase();
+
+  const photoURL = authUser?.photoURL;
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between bg-card/80 backdrop-blur-lg px-4 sm:px-6">
@@ -49,14 +47,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
           {/* Logo is now in sidebar */}
         </div>
       </div>
-      
+
       <div className="flex items-center gap-2">
         <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10 border-2 border-primary/20">
-                <AvatarImage src={user?.photoURL || `https://placehold.co/100x100.png`} data-ai-hint="woman portrait" alt={userName} />
+                <AvatarImage src={photoURL || `https://placehold.co/100x100.png`} data-ai-hint="woman portrait" alt={userName} />
                 <AvatarFallback>{userInitial}</AvatarFallback>
               </Avatar>
             </Button>
@@ -86,3 +84,4 @@ export default function Header({ onMenuClick }: HeaderProps) {
     </header>
   );
 }
+

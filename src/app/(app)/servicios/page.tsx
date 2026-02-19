@@ -1,9 +1,8 @@
-'use client';
 import { useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Clock, Info } from "lucide-react";
+import { ArrowRight, Clock, Info, Loader2 } from "lucide-react";
 import NewServiceForm from "@/components/NewServiceForm";
 import { useUser } from "@/contexts/UserContext";
 import { cn } from "@/lib/utils";
@@ -16,21 +15,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useCatalog } from "@/hooks/useCatalog";
 
 type SelectedServiceWithLargo = Servicio & { largo?: LargoPelo };
-
-const mockServices: Servicio[] = [
-    { id: 'corte', nombre: 'Corte', descripcion: '', precio: 30000, duracion: 15, requiereLargo: false, variable: false },
-    { id: 'lavado', nombre: 'Lavado', descripcion: '', precio: 9000, duracion: 10, requiereLargo: false, variable: false },
-    { id: 'peinado', nombre: 'Peinado', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 12, requiereLargo: true, variable: false, descripcion: '' },
-    { id: 'mechas', nombre: 'Mechas', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 25, requiereLargo: true, variable: true, preciosHasta: { corto: 22000, mediano: 30000, largo: 35000 }, descripcion: '' },
-    { id: 'reflejos', nombre: 'Reflejos', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 20, requiereLargo: true, variable: false, descripcion: '' },
-    { id: 'color', nombre: 'Color', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 45, requiereLargo: true, variable: true, preciosHasta: { corto: 22000, mediano: 30000, largo: 35000 }, descripcion: '' },
-    { id: 'bano_crema', nombre: 'Baño de Crema', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 30, requiereLargo: true, variable: false, descripcion: '' },
-    { id: 'botox', nombre: 'Botox Capilar', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 40, requiereLargo: true, variable: false, descripcion: '' },
-    { id: 'alisados', nombre: 'Alisados', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 60, requiereLargo: true, variable: false, descripcion: '' },
-    { id: 'nutricion', nombre: 'Nutrición Capilar', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 35, requiereLargo: true, variable: false, descripcion: '' },
-];
 
 const LengthPopoverContent = () => (
   <PopoverContent className="w-64 text-sm" onClick={(e) => e.stopPropagation()}>
@@ -50,7 +37,7 @@ const LengthPopoverTrigger = () => (
   <Popover>
     <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
       <Button variant="ghost" size="icon" className="h-4 w-4 text-muted-foreground ml-1" aria-label="Información sobre largo">
-        <Info className="h-4 w-4"/>
+        <Info className="h-4 w-4" />
       </Button>
     </PopoverTrigger>
     <LengthPopoverContent />
@@ -59,6 +46,22 @@ const LengthPopoverTrigger = () => (
 
 
 export default function ServiciosPage() {
+  const { services: catalogServices, loading } = useCatalog();
+
+  const services = useMemo(() => {
+    return catalogServices.map(s => ({
+      id: s.id,
+      nombre: s.name,
+      descripcion: s.description || '',
+      precio: typeof s.price === 'number' ? s.price : undefined,
+      precios: typeof s.price === 'object' ? s.price : undefined,
+      duracion: s.durationMinutes,
+      requiereLargo: s.requiresLengthSelection,
+      variable: s.variablePrice,
+      preciosHasta: s.priceHasta
+    } as Servicio));
+  }, [catalogServices]);
+
   const [selectedServices, setSelectedServices] = useState<SelectedServiceWithLargo[]>([]);
   const [showLengthError, setShowLengthError] = useState(false);
   const user = useUser();
@@ -77,7 +80,7 @@ export default function ServiciosPage() {
     });
     setShowLengthError(false); // Reset error on change
   };
-  
+
   const handleLargoChange = (serviceId: string, largo: LargoPelo) => {
     setSelectedServices(prev => prev.map(s => s.id === serviceId ? { ...s, largo } : s));
     setShowLengthError(false); // Reset error on change
@@ -86,9 +89,9 @@ export default function ServiciosPage() {
   const getServicePrice = (service: SelectedServiceWithLargo): { from: number; to?: number } => {
     if (service.requiereLargo && !service.largo) return { from: 0, to: 0 };
     if (service.precios && service.largo) {
-        const fromPrice = service.precios[service.largo];
-        const toPrice = service.variable && service.preciosHasta ? service.preciosHasta[service.largo] : undefined;
-        return { from: fromPrice, to: toPrice };
+      const fromPrice = service.precios[service.largo];
+      const toPrice = service.variable && service.preciosHasta ? service.preciosHasta[service.largo] : undefined;
+      return { from: fromPrice, to: toPrice };
     }
     return { from: service.precio || 0 };
   }
@@ -105,10 +108,10 @@ export default function ServiciosPage() {
     }
     const params = new URLSearchParams();
     selectedServices.forEach(service => {
-        params.append('servicioId', service.id);
-        if (service.largo) {
-            params.append(`largo_${service.id}`, service.largo);
-        }
+      params.append('servicioId', service.id);
+      if (service.largo) {
+        params.append(`largo_${service.id}`, service.largo);
+      }
     });
     router.push(`/turnos?${params.toString()}`);
   }
@@ -122,30 +125,30 @@ export default function ServiciosPage() {
     let to = 0;
     let range = false;
     selectedServices.forEach(s => {
-        const price = getServicePrice(s);
-        from += price.from;
-        if (price.to) {
-            to += price.to;
-            range = true;
-        } else {
-            to += price.from;
-        }
+      const price = getServicePrice(s);
+      from += price.from;
+      if (price.to) {
+        to += price.to;
+        range = true;
+      } else {
+        to += price.from;
+      }
     });
     return { totalFrom: from, totalTo: to, hasRange: range && to > from };
   }, [selectedServices]);
 
   const totalDuration = useMemo(() => selectedServices.reduce((acc, s) => {
-    if(s.requiereLargo && !s.largo) return acc;
+    if (s.requiereLargo && !s.largo) return acc;
     return acc + (s.duracion || 0);
   }, 0), [selectedServices]);
-  
+
   const servicesSummary = useMemo(() => {
     if (selectedServices.length === 0) return '';
     const names = selectedServices.map(s => s.nombre);
     const limit = 3;
     let summary = names.slice(0, limit).join(', ');
     if (names.length > limit) {
-        summary += ` +${names.length - limit} más`;
+      summary += ` +${names.length - limit} más`;
     }
     return summary;
   }, [selectedServices]);
@@ -162,105 +165,105 @@ export default function ServiciosPage() {
         {userRole === 'admin' && <NewServiceForm />}
       </div>
 
-      <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))'}}>
-        {mockServices.map(servicio => {
+      <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+        {loading ? <div className="col-span-full flex justify-center py-10"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div> : services.map(servicio => {
           const isSelected = selectedServices.some(s => s.id === servicio.id);
           const selectedData = selectedServices.find(s => s.id === servicio.id);
           const price = getServicePrice(selectedData || servicio);
-          
+
           return (
             <div
               key={servicio.id}
               onClick={() => handleServiceToggle(servicio)}
               className={cn(
                 "flex flex-col rounded-2xl bg-card shadow-sm border-2 cursor-pointer transition-all duration-300 h-full p-6",
-                 "hover:shadow-lg dark:hover:shadow-primary/10",
-                 isSelected 
-                    ? "border-primary shadow-lg ring-2 ring-primary/20 dark:ring-primary/40 dark:border-primary/50" 
-                    : "border-border/50 dark:border-border/30"
+                "hover:shadow-lg dark:hover:shadow-primary/10",
+                isSelected
+                  ? "border-primary shadow-lg ring-2 ring-primary/20 dark:ring-primary/40 dark:border-primary/50"
+                  : "border-border/50 dark:border-border/30"
               )}
             >
-                <div className="flex-grow">
-                   <h3 className="text-xl font-semibold mb-2 text-foreground">{servicio.nombre}</h3>
-                   <p className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                     <Clock className="h-4 w-4" />
-                     <span>{servicio.duracion} min.</span>
-                   </p>
-                  
-                  <div className="my-4 flex items-center justify-center min-h-[56px]">
-                     {servicio.requiereLargo && !isSelected ? (
-                        <div className="flex items-center gap-1 text-lg text-center text-muted-foreground/80 italic">
-                          <span>Precio variable</span>
-                          <LengthPopoverTrigger />
-                        </div>
-                     ) : (
-                        <p className="text-4xl font-bold text-primary text-center">{formatPrice(price.from)}</p>
-                     )}
-                  </div>
+              <div className="flex-grow">
+                <h3 className="text-xl font-semibold mb-2 text-foreground">{servicio.nombre}</h3>
+                <p className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+                  <Clock className="h-4 w-4" />
+                  <span>{servicio.duracion} min.</span>
+                </p>
+
+                <div className="my-4 flex items-center justify-center min-h-[56px]">
+                  {servicio.requiereLargo && !isSelected ? (
+                    <div className="flex items-center gap-1 text-lg text-center text-muted-foreground/80 italic">
+                      <span>Precio variable</span>
+                      <LengthPopoverTrigger />
+                    </div>
+                  ) : (
+                    <p className="text-4xl font-bold text-primary text-center">{formatPrice(price.from)}</p>
+                  )}
                 </div>
-                 
-                 {servicio.requiereLargo && (
-                   <div 
-                      className="mt-auto space-y-3"
-                      onClick={(e) => e.stopPropagation()}
-                   >
-                     <RadioGroup
-                        value={selectedData?.largo}
-                        onValueChange={(value) => handleLargoChange(servicio.id, value as LargoPelo)}
-                        className="grid grid-cols-3 gap-2"
-                        disabled={!isSelected}
-                      >
-                       {(Object.keys(servicio.precios!) as LargoPelo[]).map(largo => (
-                           <div key={largo}>
-                             <RadioGroupItem value={largo} id={`${servicio.id}-${largo}`} className="sr-only" />
-                             <Label htmlFor={`${servicio.id}-${largo}`} className={cn(
-                               "block p-2 text-center text-xs border rounded-md cursor-pointer transition-all",
-                               selectedData?.largo === largo ? "border-primary bg-primary/10 text-primary dark:bg-primary/20" : "border-border",
-                               !isSelected && "cursor-not-allowed opacity-50"
-                             )}>
-                               <span className="font-semibold capitalize">{largo}</span>
-                               <span className="block text-muted-foreground">{formatPrice(servicio.precios![largo])}</span>
-                             </Label>
-                           </div>
-                        ))}
-                      </RadioGroup>
-                      <p className="text-xs text-muted-foreground text-center flex items-center justify-center">
-                        Precio desde. Se confirma en el local según diagnóstico.
-                        <LengthPopoverTrigger />
-                      </p>
-                      {showLengthError && isSelected && !selectedData?.largo && <p className="text-xs text-red-500 font-semibold text-center mt-1">Elegí un largo para continuar.</p>}
-                   </div>
-                 )}
+              </div>
+
+              {servicio.requiereLargo && (
+                <div
+                  className="mt-auto space-y-3"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <RadioGroup
+                    value={selectedData?.largo}
+                    onValueChange={(value) => handleLargoChange(servicio.id, value as LargoPelo)}
+                    className="grid grid-cols-3 gap-2"
+                    disabled={!isSelected}
+                  >
+                    {(Object.keys(servicio.precios!) as LargoPelo[]).map(largo => (
+                      <div key={largo}>
+                        <RadioGroupItem value={largo} id={`${servicio.id}-${largo}`} className="sr-only" />
+                        <Label htmlFor={`${servicio.id}-${largo}`} className={cn(
+                          "block p-2 text-center text-xs border rounded-md cursor-pointer transition-all",
+                          selectedData?.largo === largo ? "border-primary bg-primary/10 text-primary dark:bg-primary/20" : "border-border",
+                          !isSelected && "cursor-not-allowed opacity-50"
+                        )}>
+                          <span className="font-semibold capitalize">{largo}</span>
+                          <span className="block text-muted-foreground">{formatPrice(servicio.precios![largo])}</span>
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                  <p className="text-xs text-muted-foreground text-center flex items-center justify-center">
+                    Precio desde. Se confirma en el local según diagnóstico.
+                    <LengthPopoverTrigger />
+                  </p>
+                  {showLengthError && isSelected && !selectedData?.largo && <p className="text-xs text-red-500 font-semibold text-center mt-1">Elegí un largo para continuar.</p>}
+                </div>
+              )}
             </div>
           )
         })}
       </div>
-      
+
       {userRole !== 'admin' && (
         <div className="fixed bottom-0 left-0 right-0 z-20 p-4 bg-background/80 backdrop-blur-lg border-t dark:border-border/50">
           <div className="container mx-auto flex items-center justify-between">
             <div className="max-w-md">
               {selectedServices.length > 0 ? (
-                  <div>
-                      <p className="text-sm font-semibold">
-                        Total estimado: 
-                        <span className="text-2xl font-bold text-primary ml-2">
-                          {hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)}
-                        </span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">{selectedServices.length} servicio(s) seleccionado(s) - {totalDuration} min.</p>
-                       <p className="text-sm text-foreground mt-2 truncate">
-                          <span className="font-semibold">Serv:</span> {servicesSummary}
-                       </p>
-                       <p className="text-xs text-muted-foreground mt-1">Estimado. Puede variar según diagnóstico (+ insumos).</p>
-                  </div>
+                <div>
+                  <p className="text-sm font-semibold">
+                    Total estimado:
+                    <span className="text-2xl font-bold text-primary ml-2">
+                      {hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)}
+                    </span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">{selectedServices.length} servicio(s) seleccionado(s) - {totalDuration} min.</p>
+                  <p className="text-sm text-foreground mt-2 truncate">
+                    <span className="font-semibold">Serv:</span> {servicesSummary}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Estimado. Puede variar según diagnóstico (+ insumos).</p>
+                </div>
               ) : (
-                  <div>
-                      <p className="font-bold">Selecciona un servicio</p>
-                      <p className="text-sm text-muted-foreground">Elige uno o más servicios para continuar.</p>
-                  </div>
+                <div>
+                  <p className="font-bold">Selecciona un servicio</p>
+                  <p className="text-sm text-muted-foreground">Elige uno o más servicios para continuar.</p>
+                </div>
               )}
-               {showLengthError && <p className="text-sm text-red-500 font-semibold mt-2">Elegí un largo para continuar.</p>}
+              {showLengthError && <p className="text-sm text-red-500 font-semibold mt-2">Elegí un largo para continuar.</p>}
             </div>
             <Button
               size="lg"

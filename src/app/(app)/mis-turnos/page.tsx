@@ -97,10 +97,15 @@ function ProximoTurnoCard({ turno, onCancel }: { turno: Turno, onCancel: (id: st
 }
 
 
+import { useTenant } from "@/contexts/TenantContext";
+
+// ...
+
 export default function MisTurnosPage() {
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [loading, setLoading] = useState(true);
   const user = useUser();
+  const { tenantId } = useTenant();
   const { toast } = useToast();
 
   const [filter, setFilter] = useState('month');
@@ -122,21 +127,38 @@ export default function MisTurnosPage() {
   }, [filter]);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !tenantId) {
       setLoading(false);
       return;
     }
 
     const turnosQuery = query(
-      collection(db, 'turnos'),
-      where('clienteId', '==', user.id)
+      collection(db, 'tenants', tenantId, 'appointments'),
+      where('clientId', '==', user.id)
     );
 
     const unsubscribe = onSnapshot(turnosQuery, (snapshot) => {
       const turnosData = snapshot.docs.map(doc => {
         const data = doc.data();
-        const fecha = safeFormatDate(data.fecha);
-        return { id: doc.id, ...data, fecha } as Turno;
+        const fecha = data.date instanceof Timestamp ? data.date.toDate().toISOString() : safeFormatDate(data.date);
+
+        let estado: Turno['estado'] = 'pendiente';
+        if (data.status === 'completed') estado = 'realizado';
+        else if (data.status === 'cancelled') estado = 'cancelado';
+        else if (data.status === 'pending_payment') estado = 'pendiente_pago';
+
+        return {
+          id: doc.id,
+          clienteNombre: data.clientName,
+          empleadaNombre: data.staffName,
+          servicio: data.serviceNames || '',
+          fecha: fecha,
+          estado: estado,
+          precio: data.priceEstimated,
+          duracion: data.durationMinutes,
+          clienteId: data.clientId,
+          // ...
+        } as Turno;
       });
       turnosData.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
       setTurnos(turnosData);
@@ -148,12 +170,14 @@ export default function MisTurnosPage() {
     });
 
     return () => unsubscribe();
-  }, [user, toast]);
+  }, [user, toast, tenantId]);
 
   const handleCancelTurno = async (turnoId: string) => {
+    if (!tenantId) return;
     try {
-      const turnoRef = doc(db, 'turnos', turnoId);
-      await updateDoc(turnoRef, { estado: 'cancelado' });
+      const turnoRef = doc(db, 'tenants', tenantId, 'appointments', turnoId);
+      // Update status to 'cancelled' (schema uses cancelled)
+      await updateDoc(turnoRef, { status: 'cancelled' });
       toast({ title: "Turno cancelado", description: "Tu turno ha sido cancelado con éxito." });
     } catch (error) {
       console.error("Error al cancelar turno:", error);

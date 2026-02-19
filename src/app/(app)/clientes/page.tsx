@@ -14,23 +14,33 @@ import { Skeleton } from "@/components/ui/skeleton";
 import NewClientForm from "@/components/NewClientForm";
 import { Input } from "@/components/ui/input";
 
+import { useTenant } from "@/contexts/TenantContext";
+// ... imports
+
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const userRole = 'admin'; // TODO: Get role from user auth state
+  const { tenantId } = useTenant();
 
   useEffect(() => {
-    const clientesQuery = query(collection(db, 'clientes'), orderBy('nombre'));
+    if (!tenantId) return;
+
+    // Schema uses firstName, legacy used nombre
+    const clientesQuery = query(collection(db, 'tenants', tenantId, 'customers'), orderBy('firstName'));
     const unsubClientes = onSnapshot(clientesQuery,
       (snapshot) => {
         const clientesData = snapshot.docs.map(doc => {
           const data = doc.data();
           return {
             id: doc.id,
-            ...data,
-            ultimaVisita: data.ultimaVisita,
-            fechaRegistro: data.fechaRegistro,
+            nombre: data.firstName || data.nombre,
+            apellido: data.lastName || data.apellido,
+            email: data.email,
+            telefono: data.phone || data.telefono,
+            ultimaVisita: data.lastVisit || data.ultimaVisita,
+            fechaRegistro: data.createdAt || data.fechaRegistro,
           } as Cliente;
         });
         setClientes(clientesData);
@@ -43,7 +53,7 @@ export default function ClientesPage() {
     );
 
     return () => unsubClientes();
-  }, []);
+  }, [tenantId]);
 
   const filteredClientes = clientes.filter(cliente =>
     `${cliente.nombre} ${cliente.apellido}`.toLowerCase().includes(searchTerm.toLowerCase()) ||

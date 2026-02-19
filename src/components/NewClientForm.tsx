@@ -28,6 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2, PlusCircle } from 'lucide-react';
+import { useTenant } from "@/contexts/TenantContext";
 
 const formSchema = z.object({
   nombre: z.string().min(2, { message: 'El nombre es requerido.' }),
@@ -40,6 +41,7 @@ export default function NewClientForm() {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { tenantId } = useTenant();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -52,16 +54,20 @@ export default function NewClientForm() {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!tenantId) {
+      toast({ title: "Error", description: "No se identificó la sucursal.", variant: "destructive" });
+      return;
+    }
     setIsSubmitting(true);
     try {
       const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
-      await addDoc(collection(db, 'clientes'), {
-        nombre: values.nombre,
-        apellido: values.apellido,
+      await addDoc(collection(db, 'tenants', tenantId, 'customers'), {
+        firstName: values.nombre,
+        lastName: values.apellido,
         email: values.email || '',
-        telefono: values.telefono,
+        phone: values.telefono,
         token: token,
-        fechaRegistro: serverTimestamp()
+        createdAt: serverTimestamp()
       });
       toast({
         title: '¡Clienta Creada!',
@@ -70,6 +76,7 @@ export default function NewClientForm() {
       form.reset();
       setOpen(false);
     } catch (error) {
+      //...
       console.error('Error al crear cliente:', error);
       toast({
         variant: 'destructive',
@@ -131,7 +138,7 @@ export default function NewClientForm() {
                 <FormItem>
                   <FormLabel>Email (Opcional)</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="ejemplo@email.com" {...field} disabled={isSubmitting}/>
+                    <Input type="email" placeholder="ejemplo@email.com" {...field} disabled={isSubmitting} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -144,19 +151,19 @@ export default function NewClientForm() {
                 <FormItem>
                   <FormLabel>Teléfono</FormLabel>
                   <FormControl>
-                    <Input type="tel" placeholder="Ej: 1122334455" {...field} disabled={isSubmitting}/>
+                    <Input type="tel" placeholder="Ej: 1122334455" {...field} disabled={isSubmitting} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <DialogFooter>
-                <DialogClose asChild>
-                    <Button type="button" variant="outline" disabled={isSubmitting}>Cancelar</Button>
-                </DialogClose>
-                <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="animate-spin" /> : 'Guardar Cliente'}
-                </Button>
+              <DialogClose asChild>
+                <Button type="button" variant="outline" disabled={isSubmitting}>Cancelar</Button>
+              </DialogClose>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="animate-spin" /> : 'Guardar Cliente'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

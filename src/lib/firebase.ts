@@ -2,7 +2,7 @@ import "@/lib/shim-storage";
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getAuth, Auth } from "firebase/auth";
 
 // ---
 // ¡ACCIÓN MUY IMPORTANTE!
@@ -45,7 +45,7 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 
-let auth;
+let auth: Auth;
 try {
   // Check if we are in a browser environment
   if (typeof window !== "undefined") {

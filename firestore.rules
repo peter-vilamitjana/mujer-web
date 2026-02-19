@@ -1,15 +1,58 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow public read access to the 'servicios' collection for the landing page
-    match /servicios/{document=**} {
-      allow read: if true;
-      allow write: if false; 
+    
+    // Helper: Check membership role
+    function hasRole(tenantId, role) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)/memberships/$(tenantId)).data.role == role;
+    }
+
+    // --- Tenant Isolation ---
+    match /tenants/{tenantId} {
+      allow read, write: if request.auth != null; // TEMP: Allow write for seed (and read tenant settings)
+      
+      // Public Content (Landing Page)
+      match /services/{document=**} { allow read: if true; allow write: if request.auth != null; } // TEMP: Allow write for seed
+      match /promotions/{document=**} { allow read: if true; allow write: if request.auth != null; } // TEMP: Allow write for seed
+      match /content/{document=**} { allow read: if true; allow write: if request.auth != null; } // TEMP: Allow write for seed
+      match /staff/{document=**} { allow read: if true; allow write: if request.auth != null; } // TEMP: Allow write for seed
+
+      // Branches (Public for reading location)
+      match /branches/{document=**} { allow read: if true; allow write: if request.auth != null; } // TEMP: Allow write for seed
+
+      // Appointments
+      match /appointments/{appointmentId} {
+         // Client can create and read their own
+         allow create: if request.auth != null; 
+         allow read: if resource.data.clientId == request.auth.uid;
+         
+         // Staff/Admin access
+         allow read, write: if hasRole(tenantId, 'admin') || hasRole(tenantId, 'employee');
+      }
+
+      // Customers
+      match /customers/{customerId} {
+         // Staff/Admin access
+         allow read, write: if hasRole(tenantId, 'admin') || hasRole(tenantId, 'employee');
+         
+         // Client can read their own profile AND create it during registration
+         allow read: if request.auth.uid == resource.data.userId;
+         allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      }
     }
     
-    // Default deny for all other collections
-    match /{document=**} {
-      allow read, write: if false;
+    // --- Global User Profiles ---
+    match /users/{userId} {
+      allow read, write: if request.auth.uid == userId;
+      
+      match /memberships/{tenantId} {
+        allow read: if request.auth.uid == userId;
+      }
     }
+
+    // --- Legacy/Root Collections (Deprecated, kept for safety during migration) ---
+    match /turnos/{document=**} { allow read, write: if true; } // TODO: Remove after migration
+    match /clientes/{document=**} { allow read, write: if true; } // TODO: Remove after migration
+    match /calendarTokens/{document=**} { allow read, write: if true; }
   }
 }

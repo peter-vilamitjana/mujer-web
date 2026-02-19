@@ -1,0 +1,141 @@
+import { Timestamp } from 'firebase/firestore';
+
+// --- Global Collections ---
+
+export interface UserProfile {
+    id: string; // Auth UID
+    email: string;
+    displayName: string;
+    photoURL?: string;
+    createdAt: Timestamp;
+}
+
+export type UserRole = 'admin' | 'employee' | 'client';
+
+export interface Membership {
+    tenantId: string;
+    role: UserRole;
+    joinedAt: Timestamp;
+}
+
+// --- Tenant Sub-collections (root: tenants/{tenantId}) ---
+
+export interface Tenant {
+    id: string;
+    name: string;
+    slug: string;
+    logoUrl?: string;
+    createdAt: Timestamp;
+    settings: {
+        primaryColor?: string;
+        currency: string;
+        timezone: string;
+    };
+}
+
+export interface Branch {
+    id: string;
+    name: string;
+    address: string;
+    phone?: string;
+    active: boolean;
+    schedule?: {
+        [key: string]: { open: string; close: string }; // e.g., "monday": { open: "09:00", close: "18:00" }
+    };
+}
+
+export interface ServicePrice {
+    from: number;
+    to?: number;
+}
+
+export interface ServicePriceByLength {
+    corto: number;
+    mediano: number;
+    largo: number;
+}
+
+export interface Service {
+    id: string;
+    name: string;
+    description?: string;
+    categoryId?: string;
+    durationMinutes: number;
+    price: number | ServicePriceByLength; // Fixed price or by length
+    priceHasta?: ServicePriceByLength; // Optional "up to" price
+    requiresLengthSelection: boolean;
+    variablePrice: boolean; // If true, "desde" logic applies
+    active: boolean;
+    image?: string;
+}
+
+export type PromoType = 'standard' | 'warm' | 'popular' | 'premium';
+
+export interface Promotion {
+    id: string;
+    title: string; // subtitle in current UI
+    services: string[]; // List of service *names* included (or IDs)
+    price: number;
+    badge?: string;
+    type: PromoType;
+    active: boolean;
+    order?: number;
+}
+
+export interface Staff {
+    id: string; // Doc ID
+    userId?: string; // Link to user auth if they have login
+    name: string;
+    avatarUrl?: string;
+    role: string; // Display role (e.g. "Estilista Senior")
+    assignedBranchIds: string[];
+    active: boolean;
+}
+
+export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show' | 'pending_payment';
+
+export interface Appointment {
+    id: string;
+    tenantId: string;
+    branchId: string;
+    clientId: string;
+    clientName: string; // Denormalized for lists
+    staffId: string;
+    staffName: string; // Denormalized
+    serviceIds: string[];
+    serviceNames: string; // Denormalized "Corte, Color..."
+    date: Timestamp; // Start time
+    durationMinutes: number;
+    status: AppointmentStatus;
+    priceEstimated: number;
+    priceFinal?: number;
+    depositAmount?: number;
+    depositPaid: boolean;
+    notes?: string;
+    createdAt: Timestamp;
+    createdBy: string; // User ID
+    googleEventId?: string;
+}
+
+export interface Customer {
+    id: string;
+    userId?: string; // If they have a user account
+    fullName: string;
+    email?: string;
+    phone?: string;
+    createdAt: Timestamp;
+    metrics?: {
+        totalVisits: number;
+        lastVisit?: Timestamp;
+        totalSpent: number;
+    }
+}
+
+export interface TechnicalRecord {
+    id: string;
+    date: Timestamp;
+    staffName: string;
+    serviceSummary: string;
+    formula: string; // tono/mezcla
+    notes?: string;
+}

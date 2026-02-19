@@ -33,17 +33,17 @@ export default function LoginPage() {
         try {
           const userCredential = await createUserWithEmailAndPassword(auth, email, password);
           const clientaData: Omit<Usuario, 'id'> = {
-              nombre: 'Valeria', // Example name
-              email: email,
-              rol: 'clienta',
+            nombre: 'Valeria', // Example name
+            email: email,
+            rol: 'clienta',
           };
           await setDoc(doc(db, 'usuarios', userCredential.user.uid), clientaData);
           toast({ title: "Cuenta de prueba creada", description: "Se ha creado una clienta de prueba para que puedas ingresar." });
           // Let the layout handle redirection
-          return; 
+          return;
         } catch (creationError: any) {
-            console.error("Error al crear usuaria de prueba:", creationError);
-            toast({ variant: "destructive", title: "Error", description: "No se pudo crear la usuaria de prueba." });
+          console.error("Error al crear usuaria de prueba:", creationError);
+          toast({ variant: "destructive", title: "Error", description: "No se pudo crear la usuaria de prueba." });
         }
       } else {
         handleAuthError(error);
@@ -76,7 +76,7 @@ export default function LoginPage() {
         title = "Email Inválido";
         description = "El formato del email no es válido.";
         break;
-       case 'auth/email-already-in-use':
+      case 'auth/email-already-in-use':
         title = "Email en uso";
         description = "Este email ya está registrado. Intenta iniciar sesión.";
         break;
@@ -92,59 +92,63 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/50 p-4">
       <div className="w-full max-w-md space-y-6">
-          <div className="text-center">
-             <Logo />
-          </div>
-          <Card className="shadow-lg">
-            <CardHeader className="text-center p-8">
-              <CardTitle className="text-2xl">Bienvenida de nuevo</CardTitle>
-              <CardDescription>
-                Ingresa a tu cuenta para gestionar tu salón.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 pt-0">
-              <form onSubmit={handleLogin} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="tu@email.com" 
-                    required 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={isLoading}
-                    className="py-6"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Contraseña</Label>
-                  <Input 
-                    id="password" 
-                    type="password" 
-                    required 
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={isLoading}
-                    className="py-6"
-                  />
-                </div>
-                <Button type="submit" size="lg" className="w-full py-6" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="animate-spin" /> : "Ingresar"}
-                </Button>
-              </form>
-               <p className="mt-6 text-center text-sm text-muted-foreground">
-                <Link href="/" className="underline hover:text-primary">
-                  Volver a la página principal
-                </Link>
-              </p>
-            </CardContent>
-          </Card>
-           <div className="text-center text-xs text-muted-foreground p-4 border rounded-lg">
-                <p className="font-bold">Datos de prueba:</p>
-                <p><span className="font-semibold">Admin:</span> admin@mujer.com / password123</p>
-                <p><span className="font-semibold">Clienta:</span> clienta@mujer.com / password123</p>
-            </div>
+        <div className="text-center">
+          <Logo />
+        </div>
+        <Card className="shadow-lg">
+          <CardHeader className="text-center p-8">
+            <CardTitle className="text-2xl">Bienvenida de nuevo</CardTitle>
+            <CardDescription>
+              Ingresa a tu cuenta para gestionar tu salón.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-8 pt-0">
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="tu@email.com"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                  className="py-6"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Contraseña</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  className="py-6"
+                />
+              </div>
+              <Button type="submit" size="lg" className="w-full py-6" disabled={isLoading}>
+                {isLoading ? <Loader2 className="animate-spin" /> : "Ingresar"}
+              </Button>
+            </form>
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              <Link href="/" className="underline hover:text-primary">
+                Volver al inicio
+              </Link>
+              <span className="mx-2 text-muted-foreground/30">|</span>
+              <Link href="/register" className="underline hover:text-primary font-medium">
+                ¿No tienes cuenta? Regístrate
+              </Link>
+            </p>
+          </CardContent>
+        </Card>
+        <div className="text-center text-xs text-muted-foreground p-4 border rounded-lg">
+          <p className="font-bold">Datos de prueba:</p>
+          <p><span className="font-semibold">Admin:</span> admin@mujer.com / password123</p>
+          <p><span className="font-semibold">Clienta:</span> clienta@mujer.com / password123</p>
+        </div>
       </div>
     </div>
   );

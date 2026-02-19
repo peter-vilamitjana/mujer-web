@@ -38,6 +38,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { signIn, signOut, useSession } from "next-auth/react";
+import { useCatalog } from "@/hooks/useCatalog";
+import { useTenant } from "@/contexts/TenantContext";
 
 
 async function setupGoogleCalendarWatch() {
@@ -136,22 +138,31 @@ function GoogleCalendarConnect() {
   );
 }
 
+
 function TurnCard({ turno }: { turno: Turno }) {
   const { toast } = useToast();
+  const { tenantId } = useTenant(); // Get tenantId
   const [status, setStatus] = useState(turno.estado);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleUpdateStatus = async (newStatus: 'realizado' | 'cancelado') => {
-    if (!turno.id) return;
-    const turnoRef = doc(db, 'turnos', turno.id);
+    if (!turno.id || !tenantId) return;
+    const turnoRef = doc(db, 'tenants', tenantId, 'appointments', turno.id);
+
+    // Map UI status to Schema status
+    let schemaStatus = 'pending';
+    if (newStatus === 'realizado') schemaStatus = 'completed';
+    else if (newStatus === 'cancelado') schemaStatus = 'cancelled';
+
     try {
-      await updateDoc(turnoRef, { estado: newStatus });
+      await updateDoc(turnoRef, { status: schemaStatus });
       setStatus(newStatus);
       toast({
         title: "Estado actualizado",
         description: `El turno de ${turno.clienteNombre} ha sido marcado como ${newStatus}.`
       });
     } catch (error) {
+      // ...
       console.error("Error updating status: ", error);
       toast({
         title: "Error",
@@ -271,19 +282,21 @@ export default function AgendaPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<Turno['estado'] | 'todos'>('todos');
 
+  const { tenantId } = useTenant();
+  const { staff } = useCatalog();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !tenantId) return; // Wait for tenantId
     setLoading(true);
     setLoadingCalendar(true);
 
     let turnosQuery;
-    const baseQuery = collection(db, 'turnos');
+    const baseQuery = collection(db, 'tenants', tenantId, 'appointments');
 
     if (user.rol === 'admin') {
-      turnosQuery = query(baseQuery, orderBy('fecha', 'desc'));
+      turnosQuery = query(baseQuery, orderBy('date', 'desc')); // date instead of fecha
     } else if (user.rol === 'empleada') {
-      turnosQuery = query(baseQuery, where('empleadaNombre', '==', user.nombre));
+      turnosQuery = query(baseQuery, where('staffName', '==', user.nombre)); // staffName instead of empleadaNombre
     } else {
       setLoading(false);
       setLoadingCalendar(false);
@@ -293,8 +306,28 @@ export default function AgendaPage() {
     const unsubscribe = onSnapshot(turnosQuery, (snapshot) => {
       const turnosData = snapshot.docs.map(doc => {
         const data = doc.data();
-        const fecha = safeFormatDate(data.fecha);
-        return { id: doc.id, ...data, fecha } as Turno;
+        // Map Appointment schema to Turno type
+        const fecha = data.date instanceof Timestamp ? data.date.toDate().toISOString() : safeFormatDate(data.date);
+
+        // Status mapping
+        let estado: Turno['estado'] = 'pendiente';
+        if (data.status === 'completed') estado = 'realizado';
+        else if (data.status === 'cancelled') estado = 'cancelado';
+        else if (data.status === 'pending_payment') estado = 'pendiente_pago';
+
+        return {
+          id: doc.id,
+          clienteNombre: data.clientName,
+          empleadaNombre: data.staffName,
+          servicio: data.serviceNames || '',
+          fecha: fecha,
+          estado: estado,
+          precio: data.priceEstimated,
+          duracion: data.durationMinutes,
+          clienteId: data.clientId,
+          empleadaAsignadaId: data.staffId,
+          // ... other fields
+        } as Turno;
       });
 
       if (user.rol === 'empleada') {
@@ -308,13 +341,29 @@ export default function AgendaPage() {
       setLoading(false);
     });
 
-    const allTurnosQuery = query(collection(db, 'turnos'));
+    const allTurnosQuery = query(collection(db, 'tenants', tenantId, 'appointments'));
     const unsubAllTurnos = onSnapshot(allTurnosQuery, (snapshot) => {
       const turnosData = snapshot.docs.map(doc => {
         const data = doc.data();
-        const duracion = data.duracion || 30;
-        const fecha = data.fecha instanceof Timestamp ? data.fecha.toDate().toISOString() : new Date(data.fecha).toISOString();
-        return { id: doc.id, ...data, fecha, duracion } as Turno;
+        const duracion = data.durationMinutes || 30;
+        const fecha = data.date instanceof Timestamp ? data.date.toDate().toISOString() : new Date(data.date).toISOString();
+
+        let estado: Turno['estado'] = 'pendiente';
+        if (data.status === 'completed') estado = 'realizado';
+        else if (data.status === 'cancelled') estado = 'cancelado';
+        else if (data.status === 'pending_payment') estado = 'pendiente_pago';
+
+        return {
+          id: doc.id,
+          clienteNombre: data.clientName,
+          empleadaNombre: data.staffName,
+          servicio: data.serviceNames || '',
+          fecha: fecha,
+          duracion,
+          estado,
+          empleadaAsignadaId: data.staffId,
+          clienteId: data.clientId
+        } as Turno;
       });
       setAllTurnos(turnosData);
       setLoadingCalendar(false);
@@ -328,7 +377,7 @@ export default function AgendaPage() {
       unsubscribe();
       unsubAllTurnos();
     }
-  }, [user]);
+  }, [user, tenantId]);
 
   // Set default view on mobile
   useEffect(() => {
@@ -448,7 +497,7 @@ export default function AgendaPage() {
                         <Skeleton className="h-[400px] w-full" />
                       </div>
                     ) : (
-                      <DailyCalendarView turnos={allTurnos} currentDate={currentDate} />
+                      <DailyCalendarView turnos={allTurnos} currentDate={currentDate} staff={staff} />
                     )}
                   </TabsContent>
                 </Tabs>

@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc, setDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc, setDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2, Calendar as CalendarIcon, Clock, User, Tag, ArrowLeft, Check, CheckCircle, Users, Scissors, Info, Search } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
@@ -34,32 +34,15 @@ import {
 import NewClientForm from '@/components/NewClientForm';
 import { Label } from '@/components/ui/label';
 import { useSession } from 'next-auth/react';
+import { useCatalog } from '@/hooks/useCatalog';
+import type { Staff } from '@/lib/schema';
 
-
-const professionals = [
-  { id: 'carolina_spranda', name: 'Carolina Spranda', avatar: '/professionals/carolina.png', hint: 'woman professional' },
-  { id: 'laura_bortolazo', name: 'Laura Bortolazo', avatar: '/professionals/laura.png', hint: 'woman smiling' },
-  { id: 'fabiana_estilista', name: 'Fabiana', avatar: '/professionals/fabiana.png', hint: 'woman portrait' },
-];
 
 const MONTO_SEÑA_PORCENTAJE = 0.15; // 15%
 
 const timeSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00"];
 
 type SelectedServiceWithLargo = Servicio & { largo?: LargoPelo };
-
-const mockServices: Servicio[] = [
-  { id: 'corte', nombre: 'Corte', descripcion: '', precio: 30000, duracion: 15, requiereLargo: false, variable: false },
-  { id: 'lavado', nombre: 'Lavado', descripcion: '', precio: 9000, duracion: 10, requiereLargo: false, variable: false },
-  { id: 'peinado', nombre: 'Peinado', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 12, requiereLargo: true, variable: false, descripcion: '' },
-  { id: 'mechas', nombre: 'Mechas', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 25, requiereLargo: true, variable: true, preciosHasta: { corto: 22000, mediano: 30000, largo: 35000 }, descripcion: '' },
-  { id: 'reflejos', nombre: 'Reflejos', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 20, requiereLargo: true, variable: false, descripcion: '' },
-  { id: 'color', nombre: 'Color', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 45, requiereLargo: true, variable: true, preciosHasta: { corto: 22000, mediano: 30000, largo: 35000 }, descripcion: '' },
-  { id: 'bano_crema', nombre: 'Baño de Crema', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 30, requiereLargo: true, variable: false, descripcion: '' },
-  { id: 'botox', nombre: 'Botox Capilar', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 40, requiereLargo: true, variable: false, descripcion: '' },
-  { id: 'alisados', nombre: 'Alisados', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 60, requiereLargo: true, variable: false, descripcion: '' },
-  { id: 'nutricion', nombre: 'Nutrición Capilar', precios: { corto: 18000, mediano: 25000, largo: 30000 }, duracion: 35, requiereLargo: true, variable: false, descripcion: '' },
-].sort((a, b) => a.nombre.localeCompare(b.nombre));
 
 const LengthPopoverContent = () => (
   <PopoverContent className="w-64 text-sm" onClick={(e) => e.stopPropagation()}>
@@ -112,21 +95,48 @@ function formatDuration(minutes: number) {
   return `${minutes}min`;
 }
 
+import { notificationService } from '@/lib/services/notification.service';
+import { useTenant } from '@/contexts/TenantContext';
+
 function TurnosContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const user = useUser();
+  const { tenantId } = useTenant();
   const { data: session } = useSession();
   const { toast } = useToast();
+
+  const { services: catalogServices, staff: catalogStaff, loading: catalogLoading } = useCatalog();
 
   const isAdmin = user?.rol === 'admin';
   const initialStep = isAdmin ? 0 : 1;
   const [step, setStep] = useState(initialStep);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loadingData, setLoadingData] = useState(true);
+
+  const services = useMemo(() => {
+    return catalogServices.map(s => ({
+      id: s.id,
+      nombre: s.name,
+      descripcion: s.description || '',
+      precio: typeof s.price === 'number' ? s.price : undefined,
+      precios: typeof s.price === 'object' ? s.price : undefined,
+      duracion: s.durationMinutes,
+      requiereLargo: s.requiresLengthSelection,
+      variable: s.variablePrice,
+      preciosHasta: s.priceHasta
+    } as Servicio));
+  }, [catalogServices]);
+
+  const professionals = useMemo(() => {
+    return catalogStaff.map(s => ({
+      id: s.id,
+      name: s.name,
+      avatar: s.avatarUrl || '/professionals/default.png', // Fallback
+      hint: 'professional' // Default hint
+    }));
+  }, [catalogStaff]);
 
   const [clients, setClients] = useState<Cliente[]>([]);
-  const [services] = useState<Servicio[]>(mockServices);
 
   const [selectedServices, setSelectedServices] = useState<SelectedServiceWithLargo[]>([]);
   const [selectedProfessional, setSelectedProfessional] = useState<(typeof professionals[0]) | null>(null);
@@ -139,7 +149,6 @@ function TurnosContent() {
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoadingData(true);
       try {
         const serviceIdParams = searchParams.getAll('servicioId');
         if (serviceIdParams.length > 0 && services.length > 0) {
@@ -153,10 +162,20 @@ function TurnosContent() {
           setStep(isAdmin ? 1 : 2);
         }
 
-        if (isAdmin) {
-          const clientsQuery = query(collection(db, 'clientes'), orderBy('nombre'));
+        if (isAdmin && tenantId) {
+          const clientsQuery = query(collection(db, 'tenants', tenantId, 'customers'), orderBy('firstName'));
           const clientsSnapshot = await getDocs(clientsQuery);
-          const clientsData = clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Cliente))
+          const clientsData = clientsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              nombre: data.firstName || data.nombre,
+              apellido: data.lastName || data.apellido,
+              email: data.email,
+              telefono: data.phone || data.telefono,
+              fechaRegistro: data.createdAt ? new Date(data.createdAt.toDate()) : new Date(), // Assuming createdAt exists
+            } as Cliente;
+          });
           setClients(clientsData);
 
           const clientIdParam = searchParams.get('clienteId');
@@ -173,13 +192,13 @@ function TurnosContent() {
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-      } finally {
-        setLoadingData(false);
       }
     };
-    fetchData();
+    if (!catalogLoading && tenantId) {
+      fetchData();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin, user, services]);
+  }, [isAdmin, user, services, catalogLoading, searchParams, tenantId]);
 
 
   const goToStep = (stepNumber: number) => {
@@ -269,7 +288,7 @@ function TurnosContent() {
       const appointmentDateTime = new Date(selectedDate);
       appointmentDateTime.setHours(hour, minute, 0, 0);
 
-      const servicioNombres = selectedServices.map(s => {
+      const selectedServicesNames = selectedServices.map(s => {
         let name = s.nombre;
         if (s.precios && s.largo) {
           name += ` (${s.largo})`
@@ -277,28 +296,35 @@ function TurnosContent() {
         return name;
       }).join(', ');
 
-      const newTurnoRef = doc(collection(db, 'turnos'));
+      const newTurnoRef = doc(collection(db, 'tenants', tenantId, 'appointments'));
 
-      const newTurnoData: Omit<Turno, 'id'> = {
-        clienteId: selectedClient.id,
-        clienteNombre: `${selectedClient.nombre} ${selectedClient.apellido || ''}`.trim(),
-        servicio: servicioNombres,
-        servicioIds: selectedServices.map(s => s.id),
-        precio: totalFrom,
-        precioHasta: totalTo,
-        empleadaNombre: selectedProfessional.name,
-        empleadaAsignadaId: selectedProfessional.id,
-        fecha: appointmentDateTime.toISOString(),
-        estado: 'pendiente_pago',
-        señaPagada: false,
-        montoSeña: depositAmount,
-        //fechaCreacion: serverTimestamp(), // This will be set by Firestore
-        duracion: totalDuration,
-        source: 'app',
+      // Create appointment object matching schema
+      const newAppointmentData = {
+        id: newTurnoRef.id,
+        tenantId,
+        branchId: 'sucursal_centro', // TODO: Get from context when generic branch support is added
+        clientId: selectedClient.id,
+        clientName: `${selectedClient.nombre} ${selectedClient.apellido || ''}`.trim(),
+        staffId: selectedProfessional.id,
+        staffName: selectedProfessional.name,
+        serviceIds: selectedServices.map(s => s.id),
+        serviceNames: selectedServicesNames,
+        date: Timestamp.fromDate(appointmentDateTime),
+        durationMinutes: totalDuration,
+        status: 'pending_payment',
+        priceEstimated: totalFrom,
+        priceFinal: totalTo, // Using priceFinal as upper bound for range? Or just leave undefined. Schema says priceFinal number. Let's put totalTo or maybe undefined. totalFrom is better as estimated.
+        // Schema: priceFinal optional.
+        depositAmount: depositAmount,
+        depositPaid: false,
+        createdAt: serverTimestamp(),
+        createdBy: user?.id || 'system',
+        source: 'app', // extra field not in schema but useful?
+        notes: ''
       };
 
       // Create appointment in our DB
-      await setDoc(newTurnoRef, newTurnoData);
+      await setDoc(newTurnoRef, newAppointmentData);
 
       // If admin is connected to Google Calendar, create event there too
       if (isAdmin && session?.accessToken) {
@@ -308,10 +334,10 @@ function TurnosContent() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               appointmentId: newTurnoRef.id,
-              summary: `Turno: ${newTurnoData.clienteNombre}`,
-              description: `Servicios: ${newTurnoData.servicio}\nProfesional: ${newTurnoData.empleadaNombre}`,
-              startTime: newTurnoData.fecha,
-              duration: newTurnoData.duracion,
+              summary: `Turno: ${newAppointmentData.clientName}`,
+              description: `Servicios: ${newAppointmentData.serviceNames}\nProfesional: ${newAppointmentData.staffName}`,
+              startTime: appointmentDateTime.toISOString(), // API likely expects ISO string
+              duration: newAppointmentData.durationMinutes,
             })
           });
           if (response.ok) {
@@ -328,9 +354,31 @@ function TurnosContent() {
       }
 
       toast({
-        title: "¡Turno agendado!",
-        description: `El turno para ${selectedClient.nombre} ha sido creado exitosamente.`,
+        title: "¡Turno confirmado!",
+        description: `Tu cita para ${selectedServicesNames} quedó agendada.`,
       });
+
+      // Send Confirmation Email
+      if (user && user.email) {
+        await notificationService.sendEmail({
+          to: user.email,
+          subject: 'Confirmación de Turno - Mujer',
+          type: 'confirmation',
+          data: {
+            clientName: user.nombre,
+            serviceName: selectedServicesNames,
+            date: format(selectedDate, "EEEE d 'de' MMMM", { locale: es }),
+            time: selectedTime,
+            location: 'Sucursal Centro'
+          }
+        });
+      }
+
+      // Reset selection and redirect
+      setSelectedServices([]);
+      setSelectedDate(undefined);
+      setSelectedTime(null);
+
       router.push(isAdmin ? '/agenda' : '/mis-turnos');
     } catch (error) {
       console.error("Error al agendar turno:", error);
@@ -340,7 +388,7 @@ function TurnosContent() {
     }
   }
 
-  if (loadingData) {
+  if (catalogLoading) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
   }
 

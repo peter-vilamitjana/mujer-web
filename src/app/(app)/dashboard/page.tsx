@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowUp, Users, Scissors } from "lucide-react";
+import { ArrowUp, Users, Scissors, Loader2 } from "lucide-react";
 import { PopularServicesChart } from "@/components/charts/PopularServicesChart";
 import { db } from "@/lib/firebase";
 import VolumenTiempoReal from "@/components/VolumenTiempoReal";
@@ -10,69 +10,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MonthlyVolumeChart } from "@/components/charts/MonthlyVolumeChart";
 import { WeeklyTurnosChart } from "@/components/charts/WeeklyTurnosChart";
 import { useUser } from "@/contexts/UserContext";
-
-const mockDashboardData = {
-  ingresosSemana: {
-    total: 1250000,
-    tendencia: 12,
-  },
-  turnosHoy: 18,
-  totalClientes: 257,
-  live: {
-    clientasAhora: 2,
-    turnosUltimaHora: 3,
-  },
-  turnosSemana: [
-    { dia: 'Mar', cantidad: 8 },
-    { dia: 'Mié', cantidad: 12 },
-    { dia: 'Jue', cantidad: 15 },
-    { dia: 'Vie', cantidad: 22 },
-    { dia: 'Sáb', cantidad: 25 },
-  ],
-  volumenMensual: [
-    { mes: 'anterior', total: 180 },
-    { mes: 'actual', total: 205 },
-  ],
-  serviciosTop: [
-    { nombre: 'Alisado', porcentaje: 38, deltaPct: 3.2 },
-    { nombre: 'Mechas', porcentaje: 25, deltaPct: -1.5 },
-    { nombre: 'Color', porcentaje: 18, deltaPct: 0 },
-    { nombre: 'Botox Capilar', porcentaje: 12, deltaPct: 5.8 },
-    { nombre: 'Reflejos', porcentaje: 7, deltaPct: -10.1 },
-  ],
-  horaPico: [
-    { hora: '09:00', turnos: 2 },
-    { hora: '10:00', turnos: 5 },
-    { hora: '11:00', turnos: 8 },
-    { hora: '12:00', turnos: 6 },
-    { hora: '13:00', turnos: 3 },
-    { hora: '14:00', turnos: 7 },
-    { hora: '15:00', turnos: 12 },
-    { hora: '16:00', turnos: 11 },
-    { hora: '17:00', turnos: 9 },
-    { hora: '18:00', turnos: 10 },
-    { hora: '19:00', turnos: 4 },
-    { hora: '20:00', turnos: 1 },
-  ]
-};
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(value);
+import { useMetrics } from "@/hooks/useMetrics";
 
 export default function DashboardPage() {
   const user = useUser();
-
-  // Basic protection: if no user is loading/found, layout will handle redirect, 
-  // but we can show a loader or null here if needed.
-  if (!user) return null;
-
   const {
     turnosHoy,
     totalClientes,
     serviciosTop,
     turnosSemana,
-    volumenMensual
-  } = mockDashboardData;
+    volumenMensual,
+    horaPico,
+    ingresosSemana,
+    loading
+  } = useMetrics();
+
+  if (!user) return null;
+
+  if (loading) {
+    return (
+      <div className="flex h-[50vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -82,7 +43,8 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <IngresosSemanalesCard />
+        {/* Pass props if supported, otherwise it might still use mock. We'll check next. */}
+        <IngresosSemanalesCard total={ingresosSemana.total} tendencia={ingresosSemana.tendencia} />
 
         <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
           <CardHeader>
@@ -128,7 +90,8 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <TabsContent value="dia" className="h-80 w-full p-4">
-              <WeeklyTurnosChart data={mockDashboardData.horaPico.map(h => ({ dia: h.hora.slice(0, 2), cantidad: h.turnos }))} />
+              {/* Map horaPico to expected format for chart */}
+              <WeeklyTurnosChart data={horaPico.map(h => ({ dia: `${h.hora.slice(0, 2)}hs`, cantidad: h.turnos }))} />
             </TabsContent>
             <TabsContent value="semana" className="h-80 w-full p-4">
               <WeeklyTurnosChart data={turnosSemana} />
@@ -141,7 +104,7 @@ export default function DashboardPage() {
         <Card className="lg:col-span-2 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
           <CardHeader>
             <CardTitle>Servicios Populares</CardTitle>
-            <CardDescription>Top 5 más solicitados esta semana.</CardDescription>
+            <CardDescription>Top 5 más solicitados.</CardDescription>
           </CardHeader>
           <CardContent className="h-80 flex flex-col justify-center">
             <PopularServicesChart items={serviciosTop} updatedAt={new Date()} />
@@ -166,7 +129,7 @@ export default function DashboardPage() {
             <CardDescription>Distribución de turnos a lo largo de la jornada.</CardDescription>
           </CardHeader>
           <CardContent className="h-80 flex flex-col justify-center">
-            <WeeklyTurnosChart data={mockDashboardData.horaPico.map(h => ({ dia: h.hora.slice(0, 2), cantidad: h.turnos }))} />
+            <WeeklyTurnosChart data={horaPico.map(h => ({ dia: `${h.hora.slice(0, 2)}hs`, cantidad: h.turnos }))} />
           </CardContent>
         </Card>
       </div>

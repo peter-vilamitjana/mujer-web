@@ -18,10 +18,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { safeFormatDate } from '@/lib/utils';
 
+import { useTenant } from "@/contexts/TenantContext";
+// ... imports
+
 export default function ClienteDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const { toast } = useToast();
+  const { tenantId } = useTenant();
 
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [formData, setFormData] = useState<Partial<Cliente>>({});
@@ -37,13 +41,22 @@ export default function ClienteDetailPage() {
   const canEditFicha = userRole === 'admin';
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !tenantId) return;
 
     setLoading(true);
-    const unsubCliente = onSnapshot(doc(db, "clientes", id),
+    const unsubCliente = onSnapshot(doc(db, "tenants", tenantId, "customers", id),
       (doc) => {
         if (doc.exists()) {
-          const clienteData = { id: doc.id, ...doc.data() } as Cliente;
+          const data = doc.data();
+          const clienteData = {
+            id: doc.id,
+            nombre: data.firstName || data.nombre,
+            apellido: data.lastName || data.apellido,
+            email: data.email,
+            telefono: data.phone || data.telefono,
+            observaciones: data.notes || data.observaciones,
+            fechaRegistro: data.createdAt // Keep as Timestamp or map? Type expects Timestamp usually
+          } as Cliente;
           setCliente(clienteData);
           setFormData(clienteData);
         } else {
@@ -58,14 +71,30 @@ export default function ClienteDetailPage() {
       }
     );
 
-    const qTurnos = query(collection(db, "turnos"), where("clienteId", "==", id), orderBy("fecha", "desc"));
+    const qTurnos = query(collection(db, "tenants", tenantId, "appointments"), where("clientId", "==", id));
     const unsubTurnos = onSnapshot(qTurnos,
       (snapshot) => {
         const turnosData = snapshot.docs.map(doc => {
           const data = doc.data();
-          const fecha = safeFormatDate(data.fecha);
-          return { id: doc.id, ...data, fecha } as Turno;
+          const fecha = data.date instanceof Timestamp ? data.date.toDate().toISOString() : safeFormatDate(data.date);
+
+          let estado: Turno['estado'] = 'pendiente';
+          if (data.status === 'completed') estado = 'realizado';
+          else if (data.status === 'cancelled') estado = 'cancelado';
+          else if (data.status === 'pending_payment') estado = 'pendiente_pago';
+
+          return {
+            id: doc.id,
+            ...data,
+            fecha,
+            estado,
+            servicio: data.serviceNames || '',
+            clienteNombre: data.clientName,
+            empleadaNombre: data.staffName
+          } as Turno;
         });
+        // Sort client-side to avoid composite index requirement
+        turnosData.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
         setTurnos(turnosData);
       },
       (error) => {
@@ -74,18 +103,27 @@ export default function ClienteDetailPage() {
       }
     );
 
-    const qFichas = query(collection(db, `clientes/${id}/fichas_tecnicas`), orderBy("fecha", "desc"));
+    const qFichas = query(collection(db, "tenants", tenantId, "customers", id, "technicalRecords"), orderBy("date", "desc"));
     const unsubFichas = onSnapshot(qFichas,
       (snapshot) => {
         const fichasData = snapshot.docs.map(doc => {
           const data = doc.data();
-          const fecha = safeFormatDate(data.fecha);
-          return { id: doc.id, ...data, fecha } as FichaTecnica;
+          const fecha = safeFormatDate(data.date); // Schema uses 'date'
+          return {
+            id: doc.id,
+            ...data,
+            fecha,
+            servicioRealizado: data.serviceSummary,
+            tono: data.formula,
+            observaciones: data.notes,
+            empleadaNombre: data.staffName
+          } as FichaTecnica;
         });
         setFichas(fichasData);
       },
       (error) => {
         console.error("Error al obtener fichas técnicas: ", error);
+        // Note: Missing index error might occur here for compound query
         toast({ title: "Error", description: "No se pudo cargar la ficha técnica.", variant: "destructive" });
       }
     );
@@ -95,7 +133,7 @@ export default function ClienteDetailPage() {
       unsubTurnos();
       unsubFichas();
     };
-  }, [id]);
+  }, [id, tenantId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -108,11 +146,19 @@ export default function ClienteDetailPage() {
   };
 
   const handleSaveChanges = async () => {
-    if (userRole !== 'admin') return;
+    if (userRole !== 'admin' || !tenantId) return;
     setIsSaving(true);
     try {
-      const clienteRef = doc(db, 'clientes', id);
-      await updateDoc(clienteRef, formData);
+      const clienteRef = doc(db, "tenants", tenantId, "customers", id);
+      // Map back to schema fields
+      const dataToUpdate = {
+        firstName: formData.nombre,
+        lastName: formData.apellido,
+        email: formData.email,
+        phone: formData.telefono,
+        notes: formData.observaciones
+      };
+      await updateDoc(clienteRef, dataToUpdate);
       toast({ title: "¡Éxito!", description: "Los datos de la clienta se han actualizado." });
     } catch (error) {
       console.error(error);
@@ -123,14 +169,16 @@ export default function ClienteDetailPage() {
   };
 
   const handleAddFicha = async () => {
-    if (isReadOnly || !newFicha.servicioRealizado.trim()) return;
+    if (isReadOnly || !newFicha.servicioRealizado.trim() || !tenantId) return;
     setIsSaving(true);
     try {
-      await addDoc(collection(db, `clientes/${id}/fichas_tecnicas`), {
-        clienteId: id,
-        ...newFicha,
-        fecha: serverTimestamp(),
-        empleadaNombre: "Admin/Empleada" // TODO: Get current user name
+      await addDoc(collection(db, "tenants", tenantId, "customers", id, "technicalRecords"), {
+        // Schema: TechnicalRecord
+        date: serverTimestamp(),
+        staffName: "Admin/Empleada", // TODO: Get current user name
+        serviceSummary: newFicha.servicioRealizado,
+        formula: newFicha.tono,
+        notes: newFicha.observaciones
       });
       setNewFicha({ servicioRealizado: '', tono: '', observaciones: '' });
       toast({ title: "Ficha agregada", description: "La nueva entrada de la ficha técnica ha sido guardada." });
