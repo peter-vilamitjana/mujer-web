@@ -43,3 +43,20 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# temporary and marker files
+.modified
+debug_admin.js
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
