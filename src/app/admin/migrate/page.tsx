@@ -295,7 +295,7 @@ export default function MigrationPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold">Migration Command Center</h1>
-                    <p className="text-muted-foreground">Legacy Root -> Multi-Tenant SaaS (Target: <code>{targetTenantId}</code>)</p>
+                    <p className="text-muted-foreground">Legacy Root to Multi-Tenant SaaS (Target: <code>{targetTenantId}</code>)</p>
                 </div>
             </div>
 
@@ -303,7 +303,7 @@ export default function MigrationPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-lg">1. Users & Auth</CardTitle>
-                        <CardDescription>Usuarios (Root) -> Users + Memberships</CardDescription>
+                        <CardDescription>Usuarios (Root) to Users + Memberships</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Button onClick={migrateUsers} disabled={loading} className="w-full">
@@ -315,7 +315,7 @@ export default function MigrationPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-lg">2. Customers</CardTitle>
-                        <CardDescription>Clientes (Root) -> Tenants/Customers</CardDescription>
+                        <CardDescription>Clientes (Root) to Tenants/Customers</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Button onClick={migrateCustomers} disabled={loading} className="w-full" variant="secondary">
@@ -327,7 +327,7 @@ export default function MigrationPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-lg">3. Services</CardTitle>
-                        <CardDescription>Servicios (Root) -> Tenants/Services</CardDescription>
+                        <CardDescription>Servicios (Root) to Tenants/Services</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Button onClick={migrateServices} disabled={loading} className="w-full" variant="outline">
@@ -339,7 +339,7 @@ export default function MigrationPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-lg">4. Appointments</CardTitle>
-                        <CardDescription>Turnos (Root) -> Tenants/Appointments</CardDescription>
+                        <CardDescription>Turnos (Root) to Tenants/Appointments</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Button onClick={migrateAppointments} disabled={loading} className="w-full" variant="secondary">
@@ -351,7 +351,7 @@ export default function MigrationPage() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-lg">5. Business Profile</CardTitle>
-                        <CardDescription>Salons (Root) -> Tenants Info</CardDescription>
+                        <CardDescription>Salons (Root) to Tenants Info</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Button onClick={migrateTenantInfo} disabled={loading} className="w-full" variant="default">
