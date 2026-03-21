@@ -31,51 +31,59 @@ service cloud.firestore {
 
     // --- 2. Tenant Data (Multi-tenant Isolation) ---
     match /tenants/{tenantId} {
-      // Tenant Config: Public read (for branding/settings), Admin write
-      allow read: if true; 
-      allow write: if hasRole(tenantId, 'admin'); // Only admin can edit tenant settings
-      
-      // -- Public Catalog (Services, Staff, Promos, Content) --
-      match /services/{doc} { 
-        allow read: if true; 
-        allow write: if hasRole(tenantId, 'admin'); 
+      // Documento raíz: público para lectura (branding, nombre, slug, settings)
+      allow read: if true;
+      allow write: if hasRole(tenantId, 'admin');
+
+      // -- Catálogo público (visible en la vitrina del marketplace) --
+      match /services/{doc} {
+        allow read: if true;
+        allow write: if hasRole(tenantId, 'admin');
       }
-      match /staff/{doc} { 
-        allow read: if true; 
-        allow write: if hasRole(tenantId, 'admin'); 
+      match /staff/{doc} {
+        allow read: if true;
+        allow write: if hasRole(tenantId, 'admin');
       }
-      match /promotions/{doc} { 
-        allow read: if true; 
-        allow write: if hasRole(tenantId, 'admin'); 
-      }
-      match /content/{doc} { 
-        allow read: if true; 
-        allow write: if hasRole(tenantId, 'admin'); 
-      }
-      match /branches/{doc} { 
-        allow read: if true; 
-        allow write: if hasRole(tenantId, 'admin'); 
+      match /promotions/{doc} {
+        allow read: if true;
+        allow write: if hasRole(tenantId, 'admin');
       }
 
-      // -- Private Business Data --
-      
-      // Customers: Admin/Employee manage. User reads own.
-      match /customers/{customerId} {
-         allow read: if hasRole(tenantId, 'admin') || hasRole(tenantId, 'employee') || (request.auth != null && request.auth.uid == customerId);
-         allow write: if hasRole(tenantId, 'admin') || hasRole(tenantId, 'employee');
-         allow create: if request.auth != null && request.auth.uid == customerId; // Self-registration during signup
+      // -- Dato privado: acceso solo para staff del tenant --
+      match /content/{doc} {
+        allow read: if isTenantMember(tenantId);
+        allow write: if hasRole(tenantId, 'admin');
       }
-      
-      // Appointments: Admin/Employee manage. User manages own.
+      match /branches/{doc} {
+        allow read: if isTenantMember(tenantId);
+        allow write: if hasRole(tenantId, 'admin');
+      }
+
+      // -- CRM privado: customers es el registro local del salón --
+      // Se pobla automáticamente cuando un usuario global reserva por primera vez.
+      // Nunca es visible públicamente.
+      match /customers/{customerId} {
+        allow read: if hasRole(tenantId, 'admin')
+            || hasRole(tenantId, 'employee')
+            || (request.auth != null && request.auth.uid == customerId);
+        allow write: if hasRole(tenantId, 'admin') || hasRole(tenantId, 'employee');
+        allow create: if request.auth != null && request.auth.uid == customerId;
+      }
+
+      // -- Turnos: privados con acceso al cliente dueño --
       match /appointments/{apptId} {
-         // Read: Staff or Owner
-         allow read: if hasRole(tenantId, 'admin') || hasRole(tenantId, 'employee') || (request.auth != null && resource.data.clientId == request.auth.uid);
-         
-         // Create: Any authenticated user (for booting)
-         allow create: if request.auth != null; 
-         
-         // Update: Staff or Owner (Owner can only cancel)
-         allow update: if hasRole(tenantId, 'admin') || hasRole(tenantId, 'employee') || (resource.data.clientId == request.auth.uid && request.resource.data.status == 'cancelled');
+        allow read: if hasRole(tenantId, 'admin')
+            || hasRole(tenantId, 'employee')
+            || (request.auth != null && resource.data.clientId == request.auth.uid);
+        allow create: if request.auth != null && (
+            isTenantMember(tenantId) ||
+            request.resource.data.clientId == request.auth.uid
+        );
+        allow update: if hasRole(tenantId, 'admin')
+            || hasRole(tenantId, 'employee')
+            || (request.auth != null
+                && resource.data.clientId == request.auth.uid
+                && request.resource.data.status == 'cancelled');
       }
     }
 
@@ -122,6 +130,13 @@ service cloud.firestore {
     match /salons/{document=**} { 
       allow read: if request.auth.token.email == 'admin@mujer.com'; 
       allow write: if false; 
+    }
+    
+    // --- 4. Collection Group: appointments (para vista B2C cross-tenant) ---
+    // Permite al cliente B2C ver SUS turnos en cualquier tenant
+    match /{path=**}/appointments/{apptId} {
+      allow read: if request.auth != null 
+        && resource.data.clientId == request.auth.uid;
     }
   }
 }
