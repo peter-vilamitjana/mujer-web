@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -142,4 +143,21 @@
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+.tonal-transition {
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(243,244,245,0.5) 100%);
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.glass-effect {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.ambient-shadow {
+  box-shadow: 0 32px 64px -12px rgba(25, 28, 29, 0.04);
 }
