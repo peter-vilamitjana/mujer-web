@@ -25,6 +25,7 @@ export interface Tenant {
     name: string;
     slug: string;
     logoUrl?: string;
+    isActivePublicly?: boolean;
     createdAt: Timestamp;
     settings: {
         primaryColor?: string;
