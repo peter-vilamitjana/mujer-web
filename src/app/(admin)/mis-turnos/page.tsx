@@ -7,7 +7,7 @@ import { Calendar, Clock, Scissors, Plus, XCircle, RefreshCw, User, CheckCircle,
 import { format, parseISO, isFuture, isPast, subDays, startOfDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, orderBy, Timestamp, where, doc, updateDoc } from "firebase/firestore";
+import { collectionGroup, onSnapshot, query, orderBy, Timestamp, where, doc, updateDoc } from "firebase/firestore";
 import type { Turno } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/contexts/UserContext";
@@ -34,7 +34,7 @@ import {
 import { cn, safeFormatDate } from "@/lib/utils";
 
 
-function ProximoTurnoCard({ turno, onCancel }: { turno: Turno, onCancel: (id: string) => void }) {
+function ProximoTurnoCard({ turno, onCancel }: { turno: Turno & { tenantId: string }, onCancel: (id: string, tenantId: string) => void }) {
   const services = turno.servicio.split(',').map(s => s.trim());
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -99,7 +99,7 @@ function ProximoTurnoCard({ turno, onCancel }: { turno: Turno, onCancel: (id: st
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Volver</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onCancel(turno.id)}>Sí, cancelar turno</AlertDialogAction>
+                <AlertDialogAction onClick={() => onCancel(turno.id, turno.tenantId)}>Sí, cancelar turno</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -118,7 +118,6 @@ export default function MisTurnosPage() {
   const [turnos, setTurnos] = useState<Turno[]>([]);
   const [loading, setLoading] = useState(true);
   const user = useUser();
-  const { tenantId } = useTenant();
   const { toast } = useToast();
 
   const [filter, setFilter] = useState('month');
@@ -140,7 +139,7 @@ export default function MisTurnosPage() {
   }, [filter]);
 
   useEffect(() => {
-    if (!user || !user.id || !tenantId) {
+    if (!user || !user.id) {
       setLoading(false);
       return;
     }
@@ -148,11 +147,11 @@ export default function MisTurnosPage() {
     setLoading(true);
 
     try {
-      const turnosRef = collection(db, 'tenants', tenantId, 'appointments');
-      // Simple query for now, ensure index exists or is not needed
+      const turnosRef = collectionGroup(db, 'appointments');
       const turnosQuery = query(
         turnosRef,
-        where('clientId', '==', user.id)
+        where('clientId', '==', user.id),
+        orderBy('date', 'desc')
       );
 
       const unsubscribe = onSnapshot(turnosQuery, {
@@ -180,8 +179,8 @@ export default function MisTurnosPage() {
               precio: data.priceEstimated || 0,
               duracion: data.durationMinutes || 0,
               clienteId: data.clientId,
-              // ...
-            } as Turno;
+              tenantId: data.tenantId,
+            } as Turno & { tenantId: string };
           });
 
           // Safe sort
@@ -210,12 +209,12 @@ export default function MisTurnosPage() {
       console.error("Error setting up listener:", e);
       setLoading(false);
     }
-  }, [user, toast, tenantId]);
+  }, [user, toast]);
 
-  const handleCancelTurno = async (turnoId: string) => {
-    if (!tenantId) return;
+  const handleCancelTurno = async (turnoId: string, turnoTenantId: string) => {
+    if (!turnoTenantId) return;
     try {
-      const turnoRef = doc(db, 'tenants', tenantId, 'appointments', turnoId);
+      const turnoRef = doc(db, 'tenants', turnoTenantId, 'appointments', turnoId);
       // Update status to 'cancelled' (schema uses cancelled)
       await updateDoc(turnoRef, { status: 'cancelled' });
       toast({ title: "Turno cancelado", description: "Tu turno ha sido cancelado con éxito." });
@@ -288,7 +287,7 @@ export default function MisTurnosPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {proximosTurnos.map(turno => (
-              <ProximoTurnoCard key={turno.id} turno={turno} onCancel={handleCancelTurno} />
+              <ProximoTurnoCard key={turno.id} turno={turno as Turno & { tenantId: string }} onCancel={handleCancelTurno} />
             ))}
           </CardContent>
         </Card>

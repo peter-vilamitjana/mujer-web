@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import Logo from "@/components/Logo";
 import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
+import { signIn } from "next-auth/react";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -25,8 +26,17 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      // Let the layout handle redirection based on role
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        throw new Error("Credenciales inválidas");
+      }
+      
+      router.push('/dashboard');
     } catch (error: any) {
       // If user does not exist and it's the test clienta email, create it.
       if ((error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') && email === 'clienta@mujer.com') {
@@ -90,13 +100,19 @@ export default function LoginPage() {
         description = "Este email ya está registrado. Intenta iniciar sesión.";
         break;
     }
+    if (error?.message) {
+      if (error.message.includes("Credenciales")) {
+        title = "Credenciales Inválidas";
+        description = "El email o la contraseña son incorrectos. Por favor, verifica tus datos.";
+      }
+    }
 
     toast({
       variant: "destructive",
       title: title,
       description: description,
     });
-  }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/50 p-4">

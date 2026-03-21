@@ -6,9 +6,10 @@ import { Home, Calendar, Users, X, Scissors, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Logo from './Logo';
 import { Button } from './ui/button';
-import type { UserRole } from '@/lib/types';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/contexts/UserContext';
+import { useUI } from '@/contexts/UIContext';
 
 const adminNavItems = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
@@ -29,16 +30,14 @@ const clientNavItems = [
   { href: '/turnos', label: 'Agendar Turno', icon: Calendar },
 ];
 
-
-type SidebarProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  userRole: UserRole;
-};
-
-export default function Sidebar({ isOpen, onClose, userRole }: SidebarProps) {
+export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const userCtx = useUser();
+  const { isSidebarOpen: isOpen, setSidebarOpen } = useUI();
+  const onClose = () => setSidebarOpen(false);
+
+  const userRole = userCtx?.rol || 'clienta';
 
   let navItems = adminNavItems;
   if (userRole === 'empleada') navItems = employeeNavItems;

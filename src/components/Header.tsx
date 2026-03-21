@@ -17,7 +17,10 @@ import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import { ThemeToggle } from './ThemeToggle';
 
-export default function Header({ onMenuClick }: HeaderProps) {
+import { useUI } from '@/contexts/UIContext';
+
+export default function Header() {
+  const { setSidebarOpen } = useUI();
   const router = useRouter();
   const userCtx = useUser();
   const authUser = auth.currentUser;
@@ -44,7 +47,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           variant="ghost"
           size="icon"
           className="d-block md:hidden"
-          onClick={onMenuClick}
+          onClick={() => setSidebarOpen(true)}
         >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Toggle Menu</span>

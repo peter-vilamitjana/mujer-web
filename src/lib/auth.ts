@@ -1,7 +1,9 @@
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import { db } from '@/lib/firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
+import { doc, setDoc, collection, getDocs } from 'firebase/firestore';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 async function refreshAccessToken(token: any) {
     try {
@@ -56,45 +58,72 @@ export const authOptions: NextAuthOptions = {
                 }
             }
         }),
+        CredentialsProvider({
+            name: 'Credentials',
+            credentials: {
+                email: { label: 'Email', type: 'email' },
+                password: { label: 'Password', type: 'password' },
+            },
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) return null;
+                try {
+                    const userCredential = await signInWithEmailAndPassword(
+                        auth,
+                        credentials.email,
+                        credentials.password
+                    );
+                    const firebaseUser = userCredential.user;
+                    return {
+                        id: firebaseUser.uid,
+                        email: firebaseUser.email,
+                        name: firebaseUser.displayName,
+                        image: firebaseUser.photoURL,
+                    };
+                } catch (error) {
+                    return null;
+                }
+            },
+        }),
     ],
     secret: process.env.NEXTAUTH_SECRET,
     callbacks: {
         async jwt({ token, user, account }) {
+            // Primer login: account y user están presentes
             if (account && user) {
                 token.accessToken = account.access_token;
                 token.refreshToken = account.refresh_token;
                 token.accessTokenExpires = account.expires_at! * 1000;
                 token.user = user;
+                token.uid = user.id; // UID explícito en el token
+
+                // Leer memberships UNA SOLA VEZ, al momento del login
+                try {
+                    const membershipsRef = collection(db, 'users', user.id, 'memberships');
+                    const snap = await getDocs(membershipsRef);
+                    token.tenantIds = snap.docs.map(d => d.id);
+                } catch {
+                    token.tenantIds = [];
+                }
                 return token;
             }
 
+            // Token aún vigente: devolver sin tocar Firestore
             if (Date.now() < (token.accessTokenExpires as number)) {
                 return token;
             }
 
+            // Token expirado: refrescar (lógica existente, no cambiar)
             return refreshAccessToken(token);
         },
         async session({ session, token }) {
             session.user = token.user as any;
+            (session.user as any).uid = token.uid;
+            (session.user as any).tenantIds = (token.tenantIds as string[]) ?? [];
+            (session.user as any).salonId = ((token.tenantIds as string[]) ?? [])[0] ?? null;
             session.accessToken = token.accessToken as string;
             session.error = token.error as string;
 
-            // Check if user has a salon associated (Legacy logic kept for compatibility)
-            const userDocRef = doc(db, 'users', session.user.id);
-            try {
-                const userSnap = await getDoc(userDocRef);
-                if (userSnap.exists()) {
-                    const userData = userSnap.data();
-                    if (userData.salonId) {
-                        (session.user as any).salonId = userData.salonId;
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching user salonId:", error);
-            }
-
-            // Save tokens to Firestore for admin (and potential future roles)
-            // Phase 2: Dual Write Strategy
+            // Guardar tokens de Google Calendar — lógica existente, SIN cambios en el bloque
             if (session.user?.email === 'admin@mujer.com' && token.refreshToken) {
                 const tokenData = {
                     accessToken: token.accessToken,
@@ -104,25 +133,19 @@ export const authOptions: NextAuthOptions = {
                     tokenType: token.token_type,
                     updatedAt: Date.now()
                 };
-
-                // 1. Write to Legacy (calendarTokens/{uid}) - Keep for Webhook backward compat
-                const legacyRef = doc(db, 'calendarTokens', session.user.id);
+                const legacyRef = doc(db, 'calendarTokens', (session.user as any).uid);
                 await setDoc(legacyRef, tokenData, { merge: true });
-
-                // 2. Write to New (users/{uid}/integrations/google) - Private & Scoped
-                const newRef = doc(db, 'users', session.user.id, 'integrations', 'google');
+                const newRef = doc(db, 'users', (session.user as any).uid, 'integrations', 'google');
                 await setDoc(newRef, tokenData, { merge: true });
             }
 
             return session;
         },
         async signIn({ user, account }) {
-            if (account?.provider === "google") {
-                if (user.email === 'admin@mujer.com') {
-                    return true; // Allow admin to sign in
-                }
+            if (account?.provider === "google" || account?.provider === "credentials") {
+                return true; // Todos pueden autenticarse. Los roles se manejan con Memberships.
             }
-            return false; // Block other users
+            return false;
         },
     },
 };
