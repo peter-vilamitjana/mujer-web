@@ -5,12 +5,11 @@ import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Servicio } from '@/lib/types';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { Button } from '../ui/button';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { cn } from '@/lib/utils';
-import { ScrollReveal } from './ScrollReveal';
+import { ScrollReveal } from '../landing/ScrollReveal';
 
 const mockServices: Omit<Servicio, 'id' | 'duracion' | 'descripcion'>[] = [
   {
@@ -69,7 +68,12 @@ const mockServices: Omit<Servicio, 'id' | 'duracion' | 'descripcion'>[] = [
   },
 ];
 
-export default function FeaturedServices() {
+interface SalonFeaturedServicesProps {
+  tenantId: string;
+  tenantSlug: string;
+}
+
+export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFeaturedServicesProps) {
   const [services, setServices] = useState<Servicio[]>([]);
   const [loading, setLoading] = useState(true);
   const plugin = useRef(
@@ -80,11 +84,27 @@ export default function FeaturedServices() {
     const fetchServices = async () => {
       try {
         const servicesQuery = query(
-          collection(db, 'servicios'),
-          where('destacado', '==', true)
+          collection(db, 'tenants', tenantId, 'services'),
+          where('active', '==', true)
         );
+
         const querySnapshot = await getDocs(servicesQuery);
-        let servicesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Servicio);
+        let servicesData = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            nombre: String(data.name || 'Servicio Sin Nombre'),
+            precio: typeof data.price === 'number' ? data.price :
+                    (data.price?.corto ?? data.price?.mediano ?? 0),
+            imagen: data.image || null,
+            badge: undefined,
+            destacado: true,
+            duracion: data.durationMinutes,
+            descripcion: data.description || '',
+            requiereLargo: data.requiresLengthSelection,
+            variable: data.variablePrice,
+          } as unknown as Servicio;
+        });
 
         if (servicesData.length === 0) {
           console.log("No featured services found, using mock data.");
@@ -101,7 +121,7 @@ export default function FeaturedServices() {
     };
 
     fetchServices();
-  }, []);
+  }, [tenantId]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price);
@@ -117,7 +137,7 @@ export default function FeaturedServices() {
           <h2 className="font-serif text-3xl font-bold tracking-tight text-foreground">
             Servicios
           </h2>
-          <Link href="/servicios" className="text-[10px] font-bold uppercase tracking-widest text-[#9D6EFE]">
+          <Link href={`/salones/${tenantSlug}/servicios`} className="text-[10px] font-bold uppercase tracking-widest text-[#9D6EFE]">
             VER TODOS
           </Link>
         </div>
@@ -161,14 +181,14 @@ export default function FeaturedServices() {
                     </div>
                     <div className="space-y-3">
                       <h3 className="font-serif text-xl font-bold text-foreground">
-                        {service.nombre.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')}
+                        {String(service.nombre || '').split(' ').map(w => w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '').join(' ')}
                       </h3>
                       <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                         Asesoramiento personalizado de nuestros expertos styling final para un look moderno renovado.
                       </p>
-                      <Link href="/login" className="inline-block pt-2">
+                      <Link href={`/salones/${tenantSlug}/book`} className="inline-block pt-2">
                         <Button variant="outline" className="rounded-full px-6 py-5 text-[10px] font-bold uppercase tracking-widest border-black/10 hover:bg-black/5 transition-all text-foreground">
-                          Ver más detalles
+                          Reservar Turno
                         </Button>
                       </Link>
                     </div>
@@ -208,7 +228,7 @@ export default function FeaturedServices() {
                             }
                           </div>
                           <div className="flex flex-grow flex-col">
-                            <h3 className="flex-grow text-2xl font-normal uppercase tracking-wide text-foreground font-serif">{service.nombre}</h3>
+                            <h3 className="flex-grow text-2xl font-normal uppercase tracking-wide text-foreground font-serif">{service.nombre || 'Servicio'}</h3>
 
                             <div className="mt-6 pt-6 border-t border-dotted border-black/10">
                               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Desde</p>
@@ -216,9 +236,9 @@ export default function FeaturedServices() {
                             </div>
 
                             <div className="mt-8">
-                              <Link href="/login" className="w-full">
+                              <Link href={`/salones/${tenantSlug}/book`} className="w-full">
                                 <Button variant="secondary" className="w-full rounded-full py-7 bg-[#E9E9EB] hover:bg-[#DDE0E3] text-foreground font-medium text-sm transition-all duration-300">
-                                  Ver más
+                                  Reservar Turno
                                 </Button>
                               </Link>
                             </div>

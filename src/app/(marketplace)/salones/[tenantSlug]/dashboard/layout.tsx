@@ -1,0 +1,68 @@
+'use client';
+import { useState, useEffect } from 'react';
+import Header from '@/components/Header';
+import SalonSidebar from '@/components/salon/SalonSidebar';
+import { useRouter, useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { Loader2 } from 'lucide-react';
+import { UserProvider } from '@/contexts/UserContext';
+import { SessionProvider } from 'next-auth/react';
+
+function DashboardContent({ children }: { children: React.ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
+  const params = useParams();
+  const tenantSlug = params?.tenantSlug as string;
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      if (tenantSlug) {
+        router.push(`/salones/${tenantSlug}/login`);
+      }
+    }
+  }, [status, router, tenantSlug]);
+
+  if (status === 'loading') {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (status === 'unauthenticated' || !session?.user) {
+    return null;
+  }
+
+  const user = {
+    id: (session.user as any).id || 'client',
+    nombre: session.user.name || 'Clienta',
+    email: session.user.email || '',
+    rol: 'clienta' as const,
+  };
+
+  return (
+    <UserProvider user={user as unknown as any}>
+      <div className="flex min-h-screen w-full flex-col bg-muted/40">
+        <SalonSidebar 
+           isOpen={sidebarOpen} 
+           onClose={() => setSidebarOpen(false)} 
+           tenantSlug={tenantSlug} 
+        />
+        <div className="flex flex-col md:pl-64 transition-all duration-300">
+          <Header onMenuClick={() => setSidebarOpen(true)} />
+          <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+        </div>
+      </div>
+    </UserProvider>
+  );
+}
+
+export default function SalonDashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SessionProvider>
+      <DashboardContent>{children}</DashboardContent>
+    </SessionProvider>
+  );
+}

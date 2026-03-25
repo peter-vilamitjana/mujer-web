@@ -1,11 +1,45 @@
 'use client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Scissors, ArrowRight, Loader2 } from 'lucide-react';
+import { Scissors, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { ScrollReveal } from './ScrollReveal';
-import { useCatalog } from '@/hooks/useCatalog';
+
+const promoData = [
+    {
+        id: 1,
+        subtitle: 'TRADICIONAL',
+        price: 29999,
+        services: ['CORTE', 'LAVADO ESPECIAL', 'BOTOX CAPILAR', 'PEINADO', 'PLANCHITA'],
+        badge: null,
+        type: 'standard',
+    },
+    {
+        id: 2,
+        subtitle: 'TENDENCIA',
+        price: 44999,
+        services: ['CORTE', 'LAVADO ESPECIAL', 'COLOR DE RAÍZ', 'BRUSHING', 'PLANCHITA'],
+        badge: null,
+        type: 'warm',
+    },
+    {
+        id: 3,
+        subtitle: 'RENOVADA',
+        price: 34999,
+        services: ['CORTE', 'LAVADO ESPECIAL', 'SHOCK DE KERATINA', 'BRUSHING', 'PLANCHITA'],
+        badge: 'MÁS POPULAR',
+        type: 'popular',
+    },
+    {
+        id: 4,
+        subtitle: 'PREMIUM',
+        price: 49999,
+        services: ['BALAYAGE', 'BAÑO DE LUZ', 'LAVADO ESPECIAL', 'NUTRICIÓN CAPILAR', 'BRUSHING'],
+        badge: 'Premium',
+        type: 'premium',
+    },
+];
 
 const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price);
@@ -19,21 +53,6 @@ const formatPriceParts = (price: number) => {
 }
 
 export default function PromoSection() {
-    const { promotions, loading } = useCatalog();
-
-    // Sort accordingly if needed, or rely on catalog service query
-    const sortedPromotions = [...promotions].sort((a, b) => a.price - b.price);
-
-    if (loading) {
-        return (
-            <section id="promotions" className="py-20 sm:py-28 bg-[#F2F2F7]/50 min-h-[600px] flex items-center justify-center">
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            </section>
-        )
-    }
-
-    if (promotions.length === 0) return null;
-
     return (
         <section id="promotions" className="py-20 sm:py-28 bg-[#F2F2F7]/50">
             <div className="container mx-auto px-4">
@@ -56,7 +75,7 @@ export default function PromoSection() {
 
                 {/* Mobile Horizontal Scroll */}
                 <div className="md:hidden -mx-4 px-4 overflow-x-auto pb-8 flex gap-4 snap-x snap-mandatory hide-scrollbar">
-                    {sortedPromotions.map((promo, index) => (
+                    {promoData.map((promo, index) => (
                         <div key={promo.id} className="min-w-[280px] snap-center">
                             <Card className={cn(
                                 "relative flex flex-col rounded-[2.5rem] p-8 h-full bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/[0.03] transition-all duration-300",
@@ -70,9 +89,9 @@ export default function PromoSection() {
                                     </div>
                                 )}
                                 <CardContent className="p-0 flex flex-col h-full">
-                                    <h3 className="font-serif text-xl font-bold text-foreground mb-4">{promo.title}</h3>
+                                    <h3 className="font-serif text-xl font-bold text-foreground mb-4">{promo.subtitle}</h3>
                                     <p className="text-[10px] text-muted-foreground font-medium mb-6 leading-relaxed">
-                                        {promo.services.join(', ')}
+                                        Corte, Color, Nutrición y Styling final para un look moderno renovado.
                                     </p>
 
                                     <div className="mt-auto">
@@ -94,7 +113,7 @@ export default function PromoSection() {
 
                 {/* Desktop Grid */}
                 <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
-                    {sortedPromotions.map((promo, index) => (
+                    {promoData.map((promo, index) => (
                         <ScrollReveal key={promo.id} delay={index * 0.1}>
                             <Card className={cn(
                                 "relative flex flex-col rounded-2xl text-center transition-all duration-500 transform hover:translate-y-[-4px] group p-8 h-full",
@@ -139,7 +158,7 @@ export default function PromoSection() {
                                         <p className={cn(
                                             "font-serif text-2xl font-normal tracking-wide uppercase mt-1",
                                             (promo.type === 'premium') ? 'text-white/90 font-thin' : promo.type === 'popular' ? 'text-primary font-normal' : 'text-foreground'
-                                        )}>{promo.title}</p>
+                                        )}>{promo.subtitle}</p>
                                         <div className={cn(
                                             "my-6 font-semibold text-4xl flex items-baseline justify-center gap-2 transition-transform duration-500 group-hover:scale-110",
                                             {
