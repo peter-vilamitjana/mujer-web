@@ -8,8 +8,31 @@ import { collection, doc, writeBatch, Timestamp, getDocs } from 'firebase/firest
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, User } from 'firebase/auth';
 import { Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 
-// Hardcoded data from codebase
-// ... (omitted for brevity, keep existing)
+// Hardcoded data — these are seeded into tenants/demo-salon/*
+const SERVICES = [
+    { id: 'alisado-fotonico', name: 'Alisado Fotónico Laser', description: 'Tratamiento de alisado con tecnología láser fotónico para un cabello liso y brillante.', price: 34999, durationMinutes: 120, image: '/images/services/alisado.png', variablePrice: true, requiresLengthSelection: true },
+    { id: 'permanente', name: 'Permanente', description: 'Rizado permanente profesional con los mejores productos del mercado.', price: 34999, durationMinutes: 150, image: '/images/services/permanente.png', variablePrice: false, requiresLengthSelection: true },
+    { id: 'balayage', name: 'Balayage', description: 'Técnica de coloración francesa que crea un degradé natural y luminoso.', price: 29999, durationMinutes: 180, image: '/images/services/balayage.png', variablePrice: true, requiresLengthSelection: true },
+    { id: 'corte-estilo', name: 'Corte & Estilo', description: 'Corte personalizado con ending styling profesional acorde a tu look.', price: 15999, durationMinutes: 60, image: '/images/services/corte.png', variablePrice: false, requiresLengthSelection: false },
+    { id: 'coloracion', name: 'Coloración Profesional', description: 'Coloración completa con productos de primera línea para mayor durabilidad y brillo.', price: 24999, durationMinutes: 120, image: '/images/services/coloracion.png', variablePrice: true, requiresLengthSelection: true },
+    { id: 'keratina', name: 'Keratina Profesional', description: 'Tratamiento de keratina que elimina el frizz y aporta brillo y suavidad duraderos.', price: 39999, durationMinutes: 150, image: '/images/services/keratina.png', variablePrice: true, requiresLengthSelection: true },
+];
+
+const PROMOS = [
+    { id: 'promo-tradicional', name: 'Pack Tradicional', description: 'Corte + Peinado', price: 22000, durationMinutes: 90 },
+    { id: 'promo-premium', name: 'Pack Premium', description: 'Corte + Color + Peinado', price: 45000, durationMinutes: 180 },
+    { id: 'promo-novia', name: 'Pack Novia', description: 'Peinado nupcial + Maquillaje', price: 80000, durationMinutes: 240 },
+];
+
+const STAFF = [
+    { id: 'staff-valeria', name: 'Valeria', role: 'Estilista Senior', image: null },
+    { id: 'staff-lucia', name: 'Lucía', role: 'Colorista', image: null },
+    { id: 'staff-camila', name: 'Camila', role: 'Estilista', image: null },
+];
+
+const BRANCHES = [
+    { id: 'sucursal-centro', name: 'Sucursal Centro', address: 'Av. Corrientes 1234, CABA', phone: '+54 11 4567-8900', active: true },
+];
 
 export default function SeedPage() {
     const [loading, setLoading] = useState(false);
