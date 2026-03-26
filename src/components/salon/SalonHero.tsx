@@ -1,15 +1,14 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
-import { ScrollReveal } from '../landing/ScrollReveal';
+import { ScrollReveal } from './ScrollReveal';
 
 interface SalonHeroProps {
   tenantSlug: string;
   salonName: string;
-  tagline?: string;
 }
 
-export default function SalonHero({ tenantSlug, salonName, tagline }: SalonHeroProps) {
+export default function SalonHero({ tenantSlug, salonName }: SalonHeroProps) {
   return (
     <section className="relative overflow-hidden bg-[#F2F2F7]/50 md:bg-transparent">
       {/* Desktop Background (Hidden on mobile) */}
@@ -25,10 +24,7 @@ export default function SalonHero({ tenantSlug, salonName, tagline }: SalonHeroP
           {/* Mobile view content (Visible only on mobile) */}
           <div className="md:hidden flex flex-col items-center justify-center w-full">
             <ScrollReveal direction="down" className="w-full flex justify-center">
-
-              {/* Scaled Group Wrapper */}
               <div className="w-full overflow-visible flex justify-center py-4 relative">
-                {/* The "Stage" */}
                 <div
                   className="flex items-center justify-center gap-8 origin-center transition-transform duration-300 ease-out"
                   style={{
@@ -37,35 +33,17 @@ export default function SalonHero({ tenantSlug, salonName, tagline }: SalonHeroP
                     transform: 'scale(min(1, calc(100vw / 640px)))'
                   }}
                 >
-                  {/* Left Card */}
                   <div className="relative w-[200px] h-[360px] rounded-[2rem] overflow-hidden shrink-0 select-none pointer-events-none shadow-sm">
-                    <img
-                      src="/landing/hero-left.png"
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
+                    <img src="/landing/hero-left.png" alt="" className="w-full h-full object-cover" />
                   </div>
-
-                  {/* Center Card */}
                   <div className="relative z-20 w-[320px] aspect-[4/5] shadow-xl rounded-[2rem] overflow-hidden shrink-0">
-                    <img
-                      src="/landing/hero-mobile.jpg"
-                      alt="Mujer disfrutando"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src="/landing/hero-mobile.jpg" alt="Mujer disfrutando" className="w-full h-full object-cover" />
                   </div>
-
-                  {/* Right Card */}
                   <div className="relative w-[200px] h-[360px] rounded-[2rem] overflow-hidden shrink-0 select-none pointer-events-none shadow-sm">
-                    <img
-                      src="/landing/hero-right.png"
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
+                    <img src="/landing/hero-right.png" alt="" className="w-full h-full object-cover" />
                   </div>
                 </div>
               </div>
-
             </ScrollReveal>
 
             <ScrollReveal delay={0.2} className="w-full flex flex-col items-center">
@@ -82,6 +60,7 @@ export default function SalonHero({ tenantSlug, salonName, tagline }: SalonHeroP
 
             <ScrollReveal delay={0.4} direction="up" className="w-full">
               <div className="w-full max-w-[320px] mx-auto">
+                {/* CAMBIO 3: /login → /salones/{tenantSlug}/book */}
                 <Link href={`/salones/${tenantSlug}/book`} className="w-full">
                   <Button size="lg" className="w-full bg-[#9D6EFE] hover:bg-[#8B5CF6] text-white rounded-full py-6 text-sm font-bold uppercase tracking-widest shadow-lg shadow-primary/20 transition-all duration-300 active:scale-95 flex items-center justify-center gap-3">
                     RESERVAR TURNO
@@ -95,12 +74,14 @@ export default function SalonHero({ tenantSlug, salonName, tagline }: SalonHeroP
           {/* Desktop view content (Hidden on mobile) */}
           <div className="hidden md:block text-white text-center">
             <ScrollReveal direction="down">
+              {/* CAMBIO 2: "MUJER" → {salonName} */}
               <h1 className="font-serif text-5xl md:text-7xl font-bold tracking-tight mb-6 drop-shadow-sm uppercase">{salonName}</h1>
             </ScrollReveal>
             <ScrollReveal delay={0.2}>
-              <p className="text-xl md:text-2xl font-light mb-10 tracking-widest uppercase opacity-90 drop-shadow-sm">{tagline ?? 'Estilo & Belleza Profesional'}</p>
+              <p className="text-xl md:text-2xl font-light mb-10 tracking-widest uppercase opacity-90 drop-shadow-sm">Estilo & Belleza Profesional</p>
             </ScrollReveal>
             <ScrollReveal delay={0.4} direction="up">
+              {/* CAMBIO 3: /login → /salones/{tenantSlug}/book */}
               <Link href={`/salones/${tenantSlug}/book`}>
                 <Button size="lg" className="group bg-white text-primary hover:bg-white/90 rounded-full px-10 py-7 text-lg font-bold uppercase tracking-wider shadow-xl shadow-black/20 transition-all duration-500 hover:scale-105 active:scale-95">
                   Reservar Turno

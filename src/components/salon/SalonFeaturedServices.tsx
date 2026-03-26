@@ -9,65 +9,19 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { ScrollReveal } from '../landing/ScrollReveal';
+import { ScrollReveal } from './ScrollReveal';
 
+// Mock data — fallback idéntico al original
 const mockServices: Omit<Servicio, 'id' | 'duracion' | 'descripcion'>[] = [
-  {
-    nombre: 'ALISADO FOTÓNICO LASER',
-    precio: 34999,
-    imagen: '/images/services/alisado.png',
-    badge: 'NOVEDAD',
-    destacado: true,
-    requiereLargo: true,
-    variable: true,
-  },
-  {
-    nombre: 'PERMANENTE',
-    precio: 34999,
-    imagen: '/images/services/permanente.png',
-    badge: 'TENDENCIA',
-    destacado: true,
-    requiereLargo: true,
-    variable: false,
-  },
-  {
-    nombre: 'BALAYAGE',
-    precio: 29999,
-    imagen: '/images/services/balayage.png',
-    badge: 'MÁS BUSCADOS',
-    destacado: true,
-    requiereLargo: true,
-    variable: true,
-  },
-  {
-    nombre: 'CORTE & ESTILO',
-    precio: 15999,
-    imagen: '/images/services/corte.png',
-    badge: 'CLÁSICO',
-    destacado: true,
-    requiereLargo: false,
-    variable: false,
-  },
-  {
-    nombre: 'COLORACIÓN PROFESIONAL',
-    precio: 24999,
-    imagen: '/images/services/coloracion.png',
-    badge: 'PREMIUM',
-    destacado: true,
-    requiereLargo: true,
-    variable: true,
-  },
-  {
-    nombre: 'KERATINA PROFESIONAL',
-    precio: 39999,
-    imagen: '/images/services/keratina.png',
-    badge: 'TRATAMIENTO',
-    destacado: true,
-    requiereLargo: true,
-    variable: true,
-  },
+  { nombre: 'ALISADO FOTÓNICO LASER', precio: 34999, imagen: '/images/services/alisado.png', badge: 'NOVEDAD', destacado: true, requiereLargo: true, variable: true },
+  { nombre: 'PERMANENTE', precio: 34999, imagen: '/images/services/permanente.png', badge: 'TENDENCIA', destacado: true, requiereLargo: true, variable: false },
+  { nombre: 'BALAYAGE', precio: 29999, imagen: '/images/services/balayage.png', badge: 'MÁS BUSCADOS', destacado: true, requiereLargo: true, variable: true },
+  { nombre: 'CORTE & ESTILO', precio: 15999, imagen: '/images/services/corte.png', badge: 'CLÁSICO', destacado: true, requiereLargo: false, variable: false },
+  { nombre: 'COLORACIÓN PROFESIONAL', precio: 24999, imagen: '/images/services/coloracion.png', badge: 'PREMIUM', destacado: true, requiereLargo: true, variable: true },
+  { nombre: 'KERATINA PROFESIONAL', precio: 39999, imagen: '/images/services/keratina.png', badge: 'TRATAMIENTO', destacado: true, requiereLargo: true, variable: true },
 ];
 
+// CAMBIO 1: Props del tenant
 interface SalonFeaturedServicesProps {
   tenantId: string;
   tenantSlug: string;
@@ -76,38 +30,42 @@ interface SalonFeaturedServicesProps {
 export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFeaturedServicesProps) {
   const [services, setServices] = useState<Servicio[]>([]);
   const [loading, setLoading] = useState(true);
-  const plugin = useRef(
-    Autoplay({ delay: 10000, stopOnInteraction: true })
-  );
+  const plugin = useRef(Autoplay({ delay: 10000, stopOnInteraction: true }));
 
   useEffect(() => {
     const fetchServices = async () => {
       try {
+        // CAMBIO 2: Query a subcolección del tenant en lugar de colección legacy
         const servicesQuery = query(
           collection(db, 'tenants', tenantId, 'services'),
           where('active', '==', true)
         );
-
         const querySnapshot = await getDocs(servicesQuery);
-        let servicesData = querySnapshot.docs.map(doc => {
+
+        // Mapeo de campos schema nuevo → tipo Servicio legacy (sin modificar types.ts)
+        let servicesData: Servicio[] = querySnapshot.docs.map(doc => {
           const data = doc.data();
+          // price puede ser number (precio fijo) o objeto {corto, mediano, largo}
+          const precio = typeof data.price === 'number'
+            ? data.price
+            : (data.price?.corto ?? data.price?.mediano ?? data.price?.largo ?? 0);
+
           return {
             id: doc.id,
-            nombre: String(data.name || 'Servicio Sin Nombre'),
-            precio: typeof data.price === 'number' ? data.price :
-                    (data.price?.corto ?? data.price?.mediano ?? 0),
-            imagen: data.image || null,
-            badge: undefined,
+            nombre: data.name ?? '',
+            descripcion: data.description ?? '',
+            precio,
+            imagen: data.image ?? undefined,
+            badge: undefined,           // el schema nuevo no tiene badge — se muestra sin badge
             destacado: true,
-            duracion: data.durationMinutes,
-            descripcion: data.description || '',
-            requiereLargo: data.requiresLengthSelection,
-            variable: data.variablePrice,
-          } as unknown as Servicio;
+            duracion: data.durationMinutes ?? 60,
+            requiereLargo: data.requiresLengthSelection ?? false,
+            variable: data.variablePrice ?? false,
+          } as Servicio;
         });
 
         if (servicesData.length === 0) {
-          console.log("No featured services found, using mock data.");
+          console.log("No services found in tenant, using mock data.");
           servicesData = mockServices.map((s, i) => ({ ...s, id: `mock-${i}`, duracion: 60, descripcion: '' }));
         }
 
@@ -121,28 +79,26 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
     };
 
     fetchServices();
-  }, [tenantId]);
+  }, [tenantId]); // tenantId en deps para refetch si cambia
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price);
-  }
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price);
 
   return (
-    <section
-      className="py-20 sm:py-28 relative z-0 overflow-hidden bg-[#F2F2F7]/30"
-    >
+    <section className="py-20 sm:py-28 relative z-0 overflow-hidden bg-[#F2F2F7]/30">
       <div className="container mx-auto px-4 relative z-10">
-        {/* Mobile Header */}
+        {/* Mobile Header — idéntico al original */}
         <div className="flex items-end justify-between mb-8 md:hidden">
           <h2 className="font-serif text-3xl font-bold tracking-tight text-foreground">
             Servicios
           </h2>
-          <Link href={`/salones/${tenantSlug}/servicios`} className="text-[10px] font-bold uppercase tracking-widest text-[#9D6EFE]">
-            VER TODOS
+          {/* CAMBIO 3: /servicios → /salones/{tenantSlug}/book */}
+          <Link href={`/salones/${tenantSlug}/book`} className="text-[10px] font-bold uppercase tracking-widest text-[#9D6EFE]">
+            RESERVAR
           </Link>
         </div>
 
-        {/* Desktop Header */}
+        {/* Desktop Header — idéntico al original */}
         <ScrollReveal>
           <div className="hidden md:block text-center mb-16 px-4">
             <h2 className="font-serif text-4xl md:text-5xl font-bold tracking-tight uppercase text-foreground mb-6">
@@ -162,7 +118,7 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
           </div>
         ) : (
           <>
-            {/* Mobile Vertical List */}
+            {/* Mobile Vertical List — idéntico al original */}
             <div className="flex flex-col gap-6 md:hidden">
               {services.slice(0, 3).map((service, index) => (
                 <ScrollReveal key={service.id} delay={index * 0.1}>
@@ -181,14 +137,15 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
                     </div>
                     <div className="space-y-3">
                       <h3 className="font-serif text-xl font-bold text-foreground">
-                        {String(service.nombre || '').split(' ').map(w => w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '').join(' ')}
+                        {service.nombre.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')}
                       </h3>
                       <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                         Asesoramiento personalizado de nuestros expertos styling final para un look moderno renovado.
                       </p>
+                      {/* CAMBIO 3: /login → /salones/{tenantSlug}/book */}
                       <Link href={`/salones/${tenantSlug}/book`} className="inline-block pt-2">
                         <Button variant="outline" className="rounded-full px-6 py-5 text-[10px] font-bold uppercase tracking-widest border-black/10 hover:bg-black/5 transition-all text-foreground">
-                          Reservar Turno
+                          Ver más detalles
                         </Button>
                       </Link>
                     </div>
@@ -197,7 +154,7 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
               ))}
             </div>
 
-            {/* Desktop Carousel */}
+            {/* Desktop Carousel — idéntico al original */}
             <Carousel
               plugins={[plugin.current]}
               className="w-full hidden md:block"
@@ -210,9 +167,7 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
                   <CarouselItem key={service.id} className="pl-6 md:basis-1/2 lg:basis-1/3">
                     <ScrollReveal delay={index * 0.1}>
                       <div className="h-full pb-8">
-                        <div
-                          className="group relative flex h-full flex-col overflow-hidden rounded-[2.5rem] transition-all duration-500 p-8 bg-white shadow-[0_10px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(163,127,255,0.12)] border border-black/5"
-                        >
+                        <div className="group relative flex h-full flex-col overflow-hidden rounded-[2.5rem] transition-all duration-500 p-8 bg-white shadow-[0_10px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(163,127,255,0.12)] border border-black/5">
                           <div className="relative mb-8 flex-shrink-0">
                             <div className="overflow-hidden rounded-3xl transition-all duration-500">
                               <img
@@ -221,24 +176,23 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
                                 className="object-cover w-full h-80 group-hover:scale-105 transition-transform duration-700"
                               />
                             </div>
-                            {service.badge &&
+                            {service.badge && (
                               <div className="absolute top-4 right-4 px-5 py-2 rounded-full bg-[#9D6EFE] shadow-[0_0_20px_rgba(157,110,254,0.4)]">
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-white">{service.badge}</span>
                               </div>
-                            }
+                            )}
                           </div>
                           <div className="flex flex-grow flex-col">
-                            <h3 className="flex-grow text-2xl font-normal uppercase tracking-wide text-foreground font-serif">{service.nombre || 'Servicio'}</h3>
-
+                            <h3 className="flex-grow text-2xl font-normal uppercase tracking-wide text-foreground font-serif">{service.nombre}</h3>
                             <div className="mt-6 pt-6 border-t border-dotted border-black/10">
                               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Desde</p>
                               <p className="text-4xl font-bold text-[#9D6EFE]">{formatPrice(service.precio || 0)}</p>
                             </div>
-
                             <div className="mt-8">
+                              {/* CAMBIO 3: /login → /salones/{tenantSlug}/book */}
                               <Link href={`/salones/${tenantSlug}/book`} className="w-full">
                                 <Button variant="secondary" className="w-full rounded-full py-7 bg-[#E9E9EB] hover:bg-[#DDE0E3] text-foreground font-medium text-sm transition-all duration-300">
-                                  Reservar Turno
+                                  Ver más
                                 </Button>
                               </Link>
                             </div>
