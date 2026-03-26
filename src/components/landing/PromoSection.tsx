@@ -52,7 +52,7 @@ const formatPriceParts = (price: number) => {
     return { symbol, value };
 }
 
-export default function PromoSection() {
+export default function PromoSection({ tenantSlug }: { tenantSlug: string }) {
     return (
         <section id="promotions" className="py-20 sm:py-28 bg-[#F2F2F7]/50">
             <div className="container mx-auto px-4">
@@ -195,7 +195,7 @@ export default function PromoSection() {
                                         </ul>
                                     </div>
                                     <div className="mt-auto pt-8">
-                                        <Link href="/login" className="w-full">
+                                        <Link href={`/salones/${tenantSlug}/book`} className="w-full">
                                             <Button
                                                 size="lg"
                                                 variant={(promo.type === 'premium') ? 'default' : 'outline'}

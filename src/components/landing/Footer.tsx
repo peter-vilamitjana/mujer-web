@@ -1,7 +1,7 @@
 import { Instagram, Twitter } from 'lucide-react';
 import Link from 'next/link';
 
-export default function Footer() {
+export default function Footer({ tenantSlug }: { tenantSlug: string }) {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -59,9 +59,9 @@ export default function Footer() {
             {/* Nav Links */}
             <nav className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-xs font-semibold tracking-widest uppercase">
               <Link href="#promotions" className="hover:text-primary transition-colors duration-300">Promociones</Link>
-              <Link href="/login" className="hover:text-primary transition-colors duration-300">Reservar Turno</Link>
+              <Link href={`/salones/${tenantSlug}/book`} className="hover:text-primary transition-colors duration-300">Reservar Turno</Link>
               <Link href="#testimonios" className="hover:text-primary transition-colors duration-300">Testimonios</Link>
-              <Link href="/login" className="hover:text-primary transition-colors duration-300">Mi Cuenta</Link>
+              <Link href={`/salones/${tenantSlug}/login`} className="hover:text-primary transition-colors duration-300">Mi Cuenta</Link>
             </nav>
 
             {/* Social */}

@@ -30,7 +30,6 @@ interface SalonFeaturedServicesProps {
 export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFeaturedServicesProps) {
   const [services, setServices] = useState<Servicio[]>([]);
   const [loading, setLoading] = useState(true);
-  const plugin = useRef(Autoplay({ delay: 10000, stopOnInteraction: true }));
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -156,10 +155,8 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
 
             {/* Desktop Carousel — idéntico al original */}
             <Carousel
-              plugins={[plugin.current]}
+              plugins={[Autoplay({ delay: 8000, stopOnInteraction: true })]}
               className="w-full hidden md:block"
-              onMouseEnter={plugin.current.stop}
-              onMouseLeave={plugin.current.reset}
               opts={{ align: 'start', loop: true }}
             >
               <CarouselContent className="-ml-6">
