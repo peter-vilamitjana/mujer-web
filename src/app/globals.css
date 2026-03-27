@@ -1,12 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Inter:wght@300;400;500&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    --color-primary: #FFFFFF;
+    --color-accent: #8E8E93;
+    --color-bg: #050505;
+    --color-charcoal: #0F0F0F;
+    --color-glass: rgba(15, 15, 15, 0.65);
+    --color-glass-border: rgba(255, 255, 255, 0.08);
+
     --background: 240 5% 96%;
-    /* Gris muy claro (casi blanco) - bg.light: #F9FAFB */
     --foreground: 225 25% 9%;
     /* Negro azulado - text.light: #111827 */
 
@@ -81,17 +88,18 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--color-bg);
+    color: #FFFFFF;
+    letter-spacing: -0.01em;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
   }
 
   html {
     @apply scroll-smooth;
     scroll-padding-top: 5rem;
+    overflow-x: hidden;
   }
 }
 
@@ -160,4 +168,58 @@
 
 .ambient-shadow {
   box-shadow: 0 32px 64px -12px rgba(25, 28, 29, 0.04);
+}
+
+@layer utilities {
+  .font-vogue {
+    font-family: 'Playfair Display', serif;
+    letter-spacing: -0.04em;
+  }
+  .liquid-glass {
+    background: var(--color-glass);
+    backdrop-filter: blur(32px) saturate(150%);
+    -webkit-backdrop-filter: blur(32px) saturate(150%);
+    border: 1px solid var(--color-glass-border);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), 0 24px 48px rgba(0, 0, 0, 0.5);
+  }
+  .hero-title {
+    font-size: clamp(3.5rem, 12vw, 9rem);
+    line-height: 0.85;
+    font-weight: 900;
+  }
+  .no-ring {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-color: transparent !important;
+  }
+  .editorial-image-container {
+    position: relative;
+    overflow: hidden;
+    background: #111;
+  }
+  .editorial-image {
+    filter: contrast(1.15) brightness(0.7) grayscale(0.2);
+    transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), filter 0.8s ease;
+    will-change: transform;
+  }
+  .editorial-image:hover {
+    filter: contrast(1.2) brightness(0.9) grayscale(0);
+    transform: scale(1.04);
+  }
+  .vogue-line-vertical {
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.2), transparent);
+  }
+  .nav-link {
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    font-weight: 500;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+  }
+  .nav-link:hover {
+    opacity: 1;
+  }
 }

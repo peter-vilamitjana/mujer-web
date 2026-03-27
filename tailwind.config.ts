@@ -86,6 +86,7 @@ const config = {
         label: ["var(--font-inter)", ...fontFamily.sans],
         display: ["var(--font-manrope)", ...fontFamily.sans],
         sans: ["var(--font-inter)", ...fontFamily.sans],
+        vogue: ["'Playfair Display'", "serif"],
       },
       borderRadius: {
         "DEFAULT": "1rem",

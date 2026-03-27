@@ -14,10 +14,18 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import type { Usuario } from "@/lib/types";
+import { useTenant } from "@/contexts/TenantContext";
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  
+  let tenantId = null;
+  try {
+    const tenantCtx = useTenant();
+    tenantId = tenantCtx?.tenantId;
+  } catch (e) {}
+
   const [email, setEmail] = useState('clienta@mujer.com');
   const [password, setPassword] = useState('password123');
   const [isLoading, setIsLoading] = useState(false);
@@ -52,11 +60,13 @@ export default function LoginPage() {
             createdAt: new Date(),
             photoURL: null
           });
-          // Also Create Membership
-          await setDoc(doc(db, 'users', userCredential.user.uid, 'memberships', 'demo-salon'), {
-            role: 'clienta',
-            tenantId: 'demo-salon'
-          });
+          // Also Create Membership if tenant is active
+          if (tenantId) {
+            await setDoc(doc(db, 'users', userCredential.user.uid, 'memberships', tenantId), {
+              role: 'clienta',
+              tenantId: tenantId
+            });
+          }
           toast({ title: "Cuenta de prueba creada", description: "Se ha creado una clienta de prueba para que puedas ingresar." });
           // Let the layout handle redirection
           return;

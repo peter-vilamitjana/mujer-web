@@ -42,23 +42,35 @@ export async function POST(req: NextRequest) {
         }
 
         // 2. Identify Tenant (User -> Tenant)
-        // We assume 1 tenant per user for now, or use `salonId` from profile
-        // Strategy: Check 'users/{userId}' for 'salonId' or 'memberships'
-        let tenantId = 'demo-salon'; // Fallback
+        let targetTenant = null;
 
         const userRef = doc(db, 'users', userId);
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
             const userData = userSnap.data();
-            if (userData.salonId) tenantId = userData.salonId;
+            if (userData.salonId) targetTenant = userData.salonId;
         } else {
             // Fallback Legacy check
             const legacyUserSnap = await getDoc(doc(db, 'usuarios', userId));
             if (legacyUserSnap.exists() && legacyUserSnap.data().salonId) {
-                tenantId = legacyUserSnap.data().salonId;
+                targetTenant = legacyUserSnap.data().salonId;
             }
         }
+
+        if (!targetTenant) {
+            const membershipsSnap = await getDocs(collection(db, 'users', userId, 'memberships'));
+            if (!membershipsSnap.empty) {
+                targetTenant = membershipsSnap.docs[0].id;
+            }
+        }
+
+        if (!targetTenant) {
+            console.warn('Webhook no tenant linked for user.');
+            return NextResponse.json({ message: 'No tenant' }, { status: 400 });
+        }
+        
+        const tenantId = targetTenant;
 
         // 3. Get Tokens (New Path -> Old Path)
         let tokenData = null;

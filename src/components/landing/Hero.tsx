@@ -1,115 +1,59 @@
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
-import { ScrollReveal } from './ScrollReveal';
+import { Search, MapPin } from 'lucide-react';
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-[#F2F2F7]/50 md:bg-transparent">
-      {/* Desktop Background (Hidden on mobile) */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0 hidden md:block"
-        style={{ backgroundImage: "url('https://cdn.thumbor.leadformance.com/media/clients/5e15eee0ec40d1c7741dd946/501bd8ef-356a-4e1d-97e4-1f2456c30390-loreal-professionnel-6.jpg')" }}
-      >
-        <div className="absolute inset-0 bg-black/50" />
+    <section className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black pb-32">
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        {/* TODO: reemplazar con next/image y assets propios */}
+        <img 
+          alt="Dramatic Lifestyle" 
+          className="w-full h-full object-cover object-top scale-110 origin-top brightness-[0.55] contrast-[1.1]" 
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjS9LSsGTPztQ9TCUsdN8xwWCiNJFUWAnLy5UEvWNIFarfFXo-7NKfdu8AoD2AqIlaB9O9zr__02G2eCSCxbmxnAMCpfJqTaRd6qqLEBxV8D9Z3tMBhLRjU_CJlO_wiFsHvWR0LQM6IAGZQljwE7QUXvXg-WY_XRiquIX1MU7pBcr9VTKOKv1K3Ubmy5j91LNPmfX3qq-LqEti5GU93_GOR3qflFnXP0TBMSpFA9PeDHOaL9-fz2EoGU06tmJPAy-AGff8hkVWd6wz"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/40 to-black/90"></div>
+      </div>
+      
+      <div className="relative z-10 text-center max-w-7xl px-6 mt-20">
+        <p className="text-[11px] uppercase tracking-[1em] mb-12 opacity-60 font-medium text-white">
+          Innovation Meets High Aesthetic
+        </p>
+        <h2 className="font-vogue hero-title italic text-white text-center">
+          La Nouvelle <br/>
+          <span className="not-italic text-white">Présence</span>
+        </h2>
+        <div className="mt-16 flex flex-col items-center">
+          <p className="text-white/40 text-xs md:text-sm font-light tracking-[0.4em] uppercase max-w-lg leading-relaxed">
+            Redefiniendo el santuario del bienestar moderno con precisión absoluta.
+          </p>
+        </div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 pt-28 pb-12 md:py-0 md:h-[80vh] md:min-h-[500px] flex items-center justify-center">
-        <div className="max-w-3xl mx-auto w-full">
-          {/* Mobile view content (Visible only on mobile) */}
-          <div className="md:hidden flex flex-col items-center justify-center w-full">
-            <ScrollReveal direction="down" className="w-full flex justify-center">
-
-              {/* Scaled Group Wrapper */}
-              {/* Using 640px reference logic to essentially "zoom out" the strip on all mobile screens */}
-              {/* This guarantees side visibility even on very narrow devices */}
-              <div className="w-full overflow-visible flex justify-center py-4 relative">
-
-                {/* The "Stage" - Fixed design width (640px reference) */}
-                {/* INLINE STYLE applied to guarantee scale works regardless of Tailwind class support */}
-                {/* Math: scale = 100vw / 640. Minimized to 1.0 to prevent upscaling. */}
-                <div
-                  className="flex items-center justify-center gap-8 origin-center transition-transform duration-300 ease-out"
-                  style={{
-                    width: '640px',
-                    flexShrink: 0,
-                    transform: 'scale(min(1, calc(100vw / 640px)))'
-                  }}
-                >
-
-                  {/* Left Card (Fixed Pixel Size) */}
-                  <div className="relative w-[200px] h-[360px] rounded-[2rem] overflow-hidden shrink-0 select-none pointer-events-none shadow-sm">
-                    <img
-                      src="/landing/hero-left.png"
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  {/* Center Card (Fixed Pixel Size - Original) */}
-                  <div className="relative z-20 w-[320px] aspect-[4/5] shadow-xl rounded-[2rem] overflow-hidden shrink-0">
-                    <img
-                      src="/landing/hero-mobile.jpg"
-                      alt="Mujer disfrutando"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  {/* Right Card (Fixed Pixel Size) */}
-                  <div className="relative w-[200px] h-[360px] rounded-[2rem] overflow-hidden shrink-0 select-none pointer-events-none shadow-sm">
-                    <img
-                      src="/landing/hero-right.png"
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                </div>
-              </div>
-
-            </ScrollReveal>
-
-            <ScrollReveal delay={0.2} className="w-full flex flex-col items-center">
-              <div className="text-center mb-4">
-                <h1 className="font-serif text-3xl leading-tight text-black">
-                  Tu belleza, <br />
-                  <span className="text-[#9D6EFE] italic">nuestra pasión.</span>
-                </h1>
-              </div>
-              <p className="text-muted-foreground text-xs max-w-[260px] mx-auto mb-8 leading-relaxed text-center">
-                Expertas en resaltar tu esencia con servicios exclusivos y atención personalizada en un ambiente de lujo accesible.
-              </p>
-            </ScrollReveal>
-
-            <ScrollReveal delay={0.4} direction="up" className="w-full">
-              <div className="w-full max-w-[320px] mx-auto">
-                <Link href="/login" className="w-full">
-                  <Button size="lg" className="w-full bg-[#9D6EFE] hover:bg-[#8B5CF6] text-white rounded-full py-6 text-sm font-bold uppercase tracking-widest shadow-lg shadow-primary/20 transition-all duration-300 active:scale-95 flex items-center justify-center gap-3">
-                    RESERVAR TURNO
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            </ScrollReveal>
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-[900px] px-6 z-20">
+        <div className="liquid-glass rounded-full p-2 flex flex-col md:flex-row items-center">
+          <div className="flex-[1.2] flex items-center px-8 py-4 w-full">
+            <Search className="text-white/30 mr-4 w-5 h-5 font-light" />
+            <input 
+              className="w-full bg-transparent border-none text-white placeholder-white/20 text-[10px] tracking-[0.3em] uppercase no-ring p-0 font-medium focus:ring-0" 
+              placeholder="QUÉ BUSCAS" 
+              type="text"
+            />
           </div>
-
-          {/* Desktop view content (Hidden on mobile) */}
-          <div className="hidden md:block text-white text-center">
-            <ScrollReveal direction="down">
-              <h1 className="font-serif text-5xl md:text-7xl font-bold tracking-tight mb-6 drop-shadow-sm uppercase">MUJER</h1>
-            </ScrollReveal>
-            <ScrollReveal delay={0.2}>
-              <p className="text-xl md:text-2xl font-light mb-10 tracking-widest uppercase opacity-90 drop-shadow-sm">Estilo & Belleza Profesional</p>
-            </ScrollReveal>
-            <ScrollReveal delay={0.4} direction="up">
-              <Link href="/login">
-                <Button size="lg" className="group bg-white text-primary hover:bg-white/90 rounded-full px-10 py-7 text-lg font-bold uppercase tracking-wider shadow-xl shadow-black/20 transition-all duration-500 hover:scale-105 active:scale-95">
-                  Reservar Turno
-                  <ArrowRight className="ml-3 h-6 w-6 transition-transform group-hover:translate-x-2" />
-                </Button>
-              </Link>
-            </ScrollReveal>
+          <div className="hidden md:block w-px h-10 bg-white/10"></div>
+          <div className="flex-1 flex items-center px-8 py-4 w-full">
+            <MapPin className="text-white/30 mr-4 w-5 h-5 font-light" />
+            <input 
+              className="w-full bg-transparent border-none text-white placeholder-white/20 text-[10px] tracking-[0.3em] uppercase no-ring p-0 font-medium focus:ring-0" 
+              placeholder="UBICACIÓN" 
+              type="text"
+            />
           </div>
+          <Link 
+            href="/login" 
+            className="w-full md:w-auto text-center bg-white text-black px-12 py-5 rounded-full text-[10px] font-black tracking-[0.3em] uppercase hover:bg-zinc-200 transition-all font-inter"
+          >
+            RESERVAR
+          </Link>
         </div>
       </div>
     </section>

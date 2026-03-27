@@ -28,6 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2, PlusCircle } from 'lucide-react';
+import { useTenant } from '@/contexts/TenantContext';
 
 const formSchema = z.object({
   nombre: z.string().min(2, { message: 'El nombre es requerido.' }),
@@ -39,6 +40,7 @@ export default function NewServiceForm() {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { tenantId } = useTenant();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -52,8 +54,7 @@ export default function NewServiceForm() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      // Use hardcoded tenant for now or context if available. Form usually used in Admin context.
-      const tenantId = 'demo-salon';
+      if (!tenantId) throw new Error("No hay un salón activo en el contexto.");
       await addDoc(collection(db, 'tenants', tenantId, 'services'), {
         nombre: values.nombre,
         precio: values.precio,
