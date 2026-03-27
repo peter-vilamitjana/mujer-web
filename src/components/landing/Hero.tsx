@@ -4,26 +4,25 @@ import { Search, MapPin } from 'lucide-react';
 export default function Hero() {
   return (
     <section className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black pb-32">
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        {/* TODO: reemplazar con next/image y assets propios */}
+      <div className="absolute inset-0 z-0">
         <img 
           alt="Dramatic Lifestyle" 
-          className="w-full h-full object-cover object-top scale-110 origin-top brightness-[0.55] contrast-[1.1]" 
+          className="w-full h-full object-cover object-[center_38%] scale-110" 
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjS9LSsGTPztQ9TCUsdN8xwWCiNJFUWAnLy5UEvWNIFarfFXo-7NKfdu8AoD2AqIlaB9O9zr__02G2eCSCxbmxnAMCpfJqTaRd6qqLEBxV8D9Z3tMBhLRjU_CJlO_wiFsHvWR0LQM6IAGZQljwE7QUXvXg-WY_XRiquIX1MU7pBcr9VTKOKv1K3Ubmy5j91LNPmfX3qq-LqEti5GU93_GOR3qflFnXP0TBMSpFA9PeDHOaL9-fz2EoGU06tmJPAy-AGff8hkVWd6wz"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/40 to-black/90"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-black"></div>
       </div>
       
-      <div className="relative z-10 text-center max-w-7xl px-6 mt-20">
-        <p className="text-[11px] uppercase tracking-[1em] mb-12 opacity-60 font-medium text-white">
+      <div className="relative z-10 text-center max-w-7xl px-6">
+        <p className="text-[9px] uppercase tracking-[1.2em] mb-10 opacity-70 font-medium text-white/90">
           Innovation Meets High Aesthetic
         </p>
         <h2 className="font-vogue hero-title italic text-white text-center">
           La Nouvelle <br/>
           <span className="not-italic text-white">Présence</span>
         </h2>
-        <div className="mt-16 flex flex-col items-center">
-          <p className="text-white/40 text-xs md:text-sm font-light tracking-[0.4em] uppercase max-w-lg leading-relaxed">
+        <div className="mt-12 flex flex-col items-center">
+          <p className="text-white/50 text-[10px] md:text-[11px] font-light tracking-[0.5em] uppercase max-w-md leading-relaxed">
             Redefiniendo el santuario del bienestar moderno con precisión absoluta.
           </p>
         </div>
