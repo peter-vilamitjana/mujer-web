@@ -84,16 +84,20 @@
     font-family: var(--font-inter), 'Inter', sans-serif;
     overflow-x: hidden;
     letter-spacing: -0.01em;
+    transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   html {
     @apply scroll-smooth;
     scroll-padding-top: 5rem;
     overflow-x: hidden;
+    transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
-/* ─── Animaciones del admin (no tocar) ─────────────────────── */
+  .theme-transition {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 @keyframes scroll-waveform {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }

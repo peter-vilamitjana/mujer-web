@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export default function LandingFooter() {
   return (
-    <footer className="py-32 bg-brand-bg border-t border-glass-border">
+    <footer className="py-32 bg-brand-bg border-t border-glass-border theme-transition">
       <div className="max-w-[1600px] mx-auto px-8 lg:px-24">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-20 mb-32">
           <div className="md:col-span-2">
@@ -27,7 +27,7 @@ export default function LandingFooter() {
             </ul>
           </div>
         </div>
-        <div className="flex flex-col md:flex-row justify-between items-center pt-20 border-t border-glass-border gap-8">
+        <div className="flex flex-col md:flex-row justify-between items-center pt-20 border-t border-glass-border gap-8 theme-transition">
           <p className="text-[9px] tracking-[0.5em] uppercase text-brand-primary/20 font-bold font-inter">© {new Date().getFullYear()} MujerApp. Excellence in Curation.</p>
           <div className="flex gap-12">
             <Link className="text-brand-primary/20 hover:text-brand-primary transition-colors text-[9px] tracking-[0.3em] font-bold uppercase font-inter" href="#">Privacy</Link>

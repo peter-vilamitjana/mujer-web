@@ -34,7 +34,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${inter.variable} ${playfair.variable} ${manrope.variable}`} suppressHydrationWarning>
-      <body className="bg-surface font-body text-on-surface selection:bg-primary/20 antialiased">
+      <body className="font-body selection:bg-primary/20 antialiased">
         <Providers>
           {children}
           <Toaster />

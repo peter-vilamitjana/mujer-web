@@ -6,7 +6,7 @@ export default function MarketplaceLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col bg-brand-bg text-brand-primary transition-colors duration-500">
+    <div className="min-h-screen flex flex-col">
       <LandingHeader />
       <main className="flex-1">{children}</main>
     </div>
