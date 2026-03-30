@@ -106,14 +106,20 @@ export default function LandingHeader() {
 
             <Link
               className={cn(
-                "text-[10px] uppercase tracking-[0.3em] font-bold px-8 py-3 rounded-full hover:opacity-90 transition-all duration-300 font-inter",
+                "relative text-[10px] uppercase tracking-[0.3em] font-bold px-8 py-3 rounded-full font-inter overflow-hidden group",
+                "transition-all duration-500 ease-out hover:px-12",
                 textWhite
-                  ? "bg-white text-black"
-                  : "bg-[#1A1A1A] text-white"
+                  ? "bg-white/15 backdrop-blur-md border border-white/25 text-white hover:bg-white/25 hover:border-white/40 hover:shadow-[0_0_24px_rgba(255,255,255,0.15)]"
+                  : "bg-black/10 backdrop-blur-md border border-black/20 text-[#1A1A1A] hover:bg-black/20 hover:border-black/30 hover:shadow-[0_0_24px_rgba(0,0,0,0.1)]"
               )}
               href={loginUrl}
             >
-              Sign In
+              {/* Brillo superior */}
+              <span className="absolute inset-x-0 top-0 h-px rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-white/50" />
+              {/* Texto */}
+              <span className="relative z-10 group-hover:tracking-[0.45em] transition-all duration-500">
+                Sign In
+              </span>
             </Link>
           </nav>
           <button className={cn(
