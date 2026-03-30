@@ -14,20 +14,20 @@ export default function Hero() {
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjS9LSsGTPztQ9TCUsdN8xwWCiNJFUWAnLy5UEvWNIFarfFXo-7NKfdu8AoD2AqIlaB9O9zr__02G2eCSCxbmxnAMCpfJqTaRd6qqLEBxV8D9Z3tMBhLRjU_CJlO_wiFsHvWR0LQM6IAGZQljwE7QUXvXg-WY_XRiquIX1MU7pBcr9VTKOKv1K3Ubmy5j91LNPmfX3qq-LqEti5GU93_GOR3qflFnXP0TBMSpFA9PeDHOaL9-fz2EoGU06tmJPAy-AGff8hkVWd6wz"
         />
         {/* Cross-fade overlays */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/10 to-white/95 opacity-100 dark:opacity-0 transition-opacity duration-1000 ease-in-out z-0"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-white/40 opacity-100 dark:opacity-0 transition-opacity duration-1000 ease-in-out z-0"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-black/85 opacity-0 dark:opacity-100 transition-opacity duration-1000 ease-in-out z-0"></div>
       </div>
       
       <div className="relative z-10 text-center max-w-7xl px-6">
-        <p className="text-[9px] uppercase tracking-[1.2em] mb-10 opacity-70 font-medium text-brand-primary/90">
+        <p className="text-[9px] uppercase tracking-[1.2em] mb-10 opacity-70 font-medium text-white/90">
           Innovation Meets High Aesthetic
         </p>
-        <h2 className="font-vogue hero-title italic text-brand-primary text-center transition-colors duration-500">
+        <h2 className="font-vogue hero-title italic text-white text-center transition-colors duration-500">
           La Nouvelle <br/>
-          <span className="not-italic text-brand-primary transition-colors duration-500">Présence</span>
+          <span className="not-italic text-white transition-colors duration-500">Présence</span>
         </h2>
         <div className="mt-12 flex flex-col items-center">
-          <p className="text-brand-primary/50 text-[10px] md:text-[11px] font-light tracking-[0.5em] uppercase max-w-md leading-relaxed">
+          <p className="text-white/60 text-[10px] md:text-[11px] font-light tracking-[0.5em] uppercase max-w-md leading-relaxed">
             Redefiniendo el santuario del bienestar moderno con precisión absoluta.
           </p>
         </div>
