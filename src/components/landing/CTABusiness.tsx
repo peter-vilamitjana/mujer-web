@@ -178,7 +178,7 @@ export default function CTABusiness() {
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link
                     href="/business/register"
-                    className="group relative overflow-hidden px-10 h-14 rounded-full font-inter transition-all duration-500 ease-out hover:px-14 flex items-center justify-center hover:bg-[#0a1a0a] bg-white hover:shadow-[0_0_40px_rgba(34,197,94,0.35)]"
+                    className="group relative overflow-hidden px-10 h-14 rounded-full font-inter transition-all duration-[800ms] ease-in-out hover:px-14 flex items-center justify-center hover:bg-[#0a1a0a] bg-white hover:shadow-[0_0_40px_rgba(34,197,94,0.35)]"
                   >
                     {/* Borde traceado exacto del contenedor calculando el radio matemáticamente (h-14 -> 56px, rx -> 28px) */}
                     <svg className="absolute inset-0 w-full h-full pointer-events-none">
@@ -188,13 +188,14 @@ export default function CTABusiness() {
                         fill="none"
                         stroke="#22c55e"
                         strokeWidth="4"
-                        strokeDasharray="1000"
-                        strokeDashoffset="1000"
-                        className="transition-none group-hover:[transition:stroke-dashoffset_0.6s_ease-out] group-hover:![stroke-dashoffset:0]"
+                        pathLength="1"
+                        strokeDasharray="1"
+                        strokeDashoffset="-1"
+                        className="transition-none group-hover:[transition:stroke-dashoffset_0.5s_linear] group-hover:![stroke-dashoffset:0]"
                       />
                     </svg>
 
-                    <span className="relative z-10 text-[10px] font-black uppercase tracking-widest text-black group-hover:text-green-400 transition-colors duration-300 whitespace-nowrap">
+                    <span className="relative z-10 text-[10px] font-black uppercase tracking-widest text-black group-hover:text-green-400 transition-colors duration-[800ms] whitespace-nowrap">
                       <span className="inline-block group-hover:hidden">Sumá tu salón</span>
                       <span className="hidden group-hover:inline-block">Potenciando tu negocio</span>
                     </span>

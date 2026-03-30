@@ -14,7 +14,7 @@
     --color-accent: #C5A059;
     --color-bg: #FFFFFF;
     --color-surface: #F9F9F9;
-    --color-glass: rgba(255, 255, 255, 0.9);
+    --color-glass: rgba(255, 255, 255, 0.25);
     --color-glass-border: rgba(0, 0, 0, 0.12);
     --glass-blur: 8px;
 

@@ -13,8 +13,7 @@ export default function Hero() {
                      transition-all duration-1000 ease-in-out" 
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjS9LSsGTPztQ9TCUsdN8xwWCiNJFUWAnLy5UEvWNIFarfFXo-7NKfdu8AoD2AqIlaB9O9zr__02G2eCSCxbmxnAMCpfJqTaRd6qqLEBxV8D9Z3tMBhLRjU_CJlO_wiFsHvWR0LQM6IAGZQljwE7QUXvXg-WY_XRiquIX1MU7pBcr9VTKOKv1K3Ubmy5j91LNPmfX3qq-LqEti5GU93_GOR3qflFnXP0TBMSpFA9PeDHOaL9-fz2EoGU06tmJPAy-AGff8hkVWd6wz"
         />
-        {/* Cross-fade overlays */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-white/40 opacity-100 dark:opacity-0 transition-opacity duration-1000 ease-in-out z-0"></div>
+        {/* Solo overlay oscuro con fade-in cinematográfico */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-black/85 opacity-0 dark:opacity-100 transition-opacity duration-1000 ease-in-out z-0"></div>
       </div>
       
