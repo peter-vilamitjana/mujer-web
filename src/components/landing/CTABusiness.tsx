@@ -178,13 +178,30 @@ export default function CTABusiness() {
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link
                     href="/business/register"
-                    className="bg-white text-black px-10 py-4 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-white/90 transition-all duration-300 font-inter"
+                    className="group relative overflow-hidden px-10 h-14 rounded-full font-inter transition-all duration-500 ease-out hover:px-14 flex items-center justify-center hover:bg-[#0a1a0a] bg-white hover:shadow-[0_0_40px_rgba(34,197,94,0.35)]"
                   >
-                    Sumá tu salón
+                    {/* Borde traceado exacto del contenedor calculando el radio matemáticamente (h-14 -> 56px, rx -> 28px) */}
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                      <rect
+                        width="100%" height="100%"
+                        rx="28"
+                        fill="none"
+                        stroke="#22c55e"
+                        strokeWidth="4"
+                        strokeDasharray="1000"
+                        strokeDashoffset="1000"
+                        className="transition-none group-hover:[transition:stroke-dashoffset_0.6s_ease-out] group-hover:![stroke-dashoffset:0]"
+                      />
+                    </svg>
+
+                    <span className="relative z-10 text-[10px] font-black uppercase tracking-widest text-black group-hover:text-green-400 transition-colors duration-300 whitespace-nowrap">
+                      <span className="inline-block group-hover:hidden">Sumá tu salón</span>
+                      <span className="hidden group-hover:inline-block">Potenciando tu negocio</span>
+                    </span>
                   </Link>
                   <Link
                     href="/explore"
-                    className="border border-white/15 text-white/60 px-10 py-4 rounded-full text-[10px] font-bold uppercase tracking-widest hover:border-white/30 hover:text-white transition-all duration-300 font-inter"
+                    className="border border-white/15 text-white/60 px-10 h-14 flex items-center justify-center rounded-full text-[10px] font-bold uppercase tracking-widest hover:border-white/30 hover:text-white transition-all duration-300 font-inter"
                   >
                     Ver la plataforma
                   </Link>
