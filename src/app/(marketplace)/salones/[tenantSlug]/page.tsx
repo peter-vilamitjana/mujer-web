@@ -9,11 +9,12 @@ import MapAndReviews from '@/components/landing/MapAndReviews';
 import Footer from '@/components/landing/Footer';
 
 interface Props {
-  params: { tenantSlug: string };
+  params: Promise<{ tenantSlug: string }>;
 }
 
 export async function generateMetadata({ params }: Props) {
-  const salon = await getSalonBySlug(params.tenantSlug);
+  const { tenantSlug } = await params;
+  const salon = await getSalonBySlug(tenantSlug);
   if (!salon) return { title: 'Salón no encontrado' };
   return {
     title: `${salon.name} | MujerApp`,
@@ -22,24 +23,25 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function SalonPage({ params }: Props) {
-  const salon = await getSalonBySlug(params.tenantSlug);
+  const { tenantSlug } = await params;
+  const salon = await getSalonBySlug(tenantSlug);
   if (!salon) notFound();
 
   return (
     <div className="min-h-screen">
       <SalonHero
-        tenantSlug={params.tenantSlug}
+        tenantSlug={tenantSlug}
         salonName={salon.name}
       />
       <InfoBar />
       <SalonFeaturedServices
         tenantId={salon.id}
-        tenantSlug={params.tenantSlug}
+        tenantSlug={tenantSlug}
       />
-      <PromoSection tenantSlug={params.tenantSlug} />
+      <PromoSection tenantSlug={tenantSlug} />
       <Testimonials />
       <MapAndReviews />
-      <Footer tenantSlug={params.tenantSlug} />
+      <Footer tenantSlug={tenantSlug} />
     </div>
   );
 }
