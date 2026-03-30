@@ -5,83 +5,73 @@
 @tailwind utilities;
 
 @layer base {
+  /* ─── LIGHT MODE (default :root) ───────────────────────────────
+     Fuente de verdad: HTML Stitch light mode
+  */
   :root {
-    --color-primary: #FFFFFF;
-    --color-accent: #8E8E93;
-    --color-bg: #050505;
-    --color-charcoal: #0F0F0F;
-    --color-glass: rgba(15, 15, 15, 0.65);
-    --color-glass-border: rgba(255, 255, 255, 0.08);
+    /* Tokens del design system editorial */
+    --color-primary: #1A1A1A;
+    --color-accent: #C5A059;
+    --color-bg: #FFFFFF;
+    --color-surface: #F9F9F9;
+    --color-glass: rgba(255, 255, 255, 0.9);
+    --color-glass-border: rgba(0, 0, 0, 0.12);
+    --glass-blur: 8px;
 
+    /* Tokens shadcn — necesarios para el admin, NO tocar */
     --background: 240 5% 96%;
     --foreground: 225 25% 9%;
-    /* Negro azulado - text.light: #111827 */
-
     --card: 0 0% 100%;
-    /* Blanco puro - surface.light: #FFFFFF */
     --card-foreground: 225 25% 9%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 225 25% 9%;
-
     --primary: 258 98% 71%;
-    /* #9D6EFE */
     --primary-foreground: 0 0% 100%;
-
     --secondary: 220 13% 91%;
     --secondary-foreground: 225 25% 9%;
-
     --muted: 220 13% 91%;
     --muted-foreground: 220 9% 46%;
-
     --accent: 258 98% 97%;
-    /* Un lavanda muy pálido para acentos sutiles */
     --accent-foreground: 258 82% 57%;
-
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-
     --border: 220 13% 88%;
     --input: 220 13% 94%;
     --ring: 258 82% 57%;
-
     --radius: 1.25rem;
   }
 
+  /* ─── DARK MODE (.dark class en <html>) ────────────────────────
+     Fuente de verdad: HTML Stitch dark mode
+  */
   .dark {
+    /* Tokens del design system editorial */
+    --color-primary: #FFFFFF;
+    --color-accent: #8E8E93;
+    --color-bg: #050505;
+    --color-surface: #0F0F0F;
+    --color-glass: rgba(15, 15, 15, 0.55);
+    --color-glass-border: rgba(255, 255, 255, 0.08);
+    --glass-blur: 32px;
+
+    /* Tokens shadcn — dark overrides */
     --background: 240 4% 8%;
-    /* #121214 */
     --foreground: 0 0% 90%;
-    /* #E5E5EA */
-
     --card: 240 2% 12%;
-    /* #1C1C1E */
     --card-foreground: 0 0% 90%;
-    /* #E5E5EA */
-
     --popover: 240 2% 12%;
     --popover-foreground: 0 0% 90%;
-
     --primary: 258 98% 71%;
-    /* #9D6EFE - Acento violeta más brillante */
     --primary-foreground: 0 0% 100%;
-
     --secondary: 240 2% 18%;
     --secondary-foreground: 0 0% 98%;
-
     --muted: 240 2% 18%;
-    /* Gris para fondos sutiles */
     --muted-foreground: 240 1% 56%;
-    /* #8E8E93 - Texto secundario */
-
     --accent: 258 98% 71%;
     --accent-foreground: 0 0% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-
     --border: 240 2% 22%;
-    /* #2C2C2E */
     --input: 240 2% 18%;
     --ring: 258 98% 71%;
   }
@@ -90,10 +80,10 @@
 @layer base {
   body {
     background-color: var(--color-bg);
-    color: #FFFFFF;
-    letter-spacing: -0.01em;
-    font-family: 'Inter', sans-serif;
+    color: var(--color-primary);
+    font-family: var(--font-inter), 'Inter', sans-serif;
     overflow-x: hidden;
+    letter-spacing: -0.01em;
   }
 
   html {
@@ -103,14 +93,10 @@
   }
 }
 
+/* ─── Animaciones del admin (no tocar) ─────────────────────── */
 @keyframes scroll-waveform {
-  from {
-    transform: translateX(0);
-  }
-
-  to {
-    transform: translateX(-50%);
-  }
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 
 .waveform-container {
@@ -144,10 +130,7 @@
   background-image: linear-gradient(to right, #7B61FF, #A78BFA);
 }
 
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
+.hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -157,10 +140,12 @@
   background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(243,244,245,0.5) 100%);
 }
 
+/* ─── Material Symbols (admin) ──────────────────────────────── */
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
+/* ─── Utilidades del admin ──────────────────────────────────── */
 .glass-effect {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -170,47 +155,77 @@
   box-shadow: 0 32px 64px -12px rgba(25, 28, 29, 0.04);
 }
 
+/* ─── Design System Editorial — Capa 1 ─────────────────────── */
 @layer utilities {
+
+  /* Tipografía editorial */
   .font-vogue {
-    font-family: 'Playfair Display', serif;
+    font-family: var(--font-playfair), 'Playfair Display', serif;
     letter-spacing: -0.04em;
   }
+
+  /* Hero title — tamaño exacto del HTML de Stitch */
+  .hero-title {
+    font-size: clamp(3.5rem, 12vw, 9rem);
+    line-height: 0.85;
+    font-weight: 900;
+  }
+
   .liquid-glass {
     background: var(--color-glass);
     backdrop-filter: blur(32px) saturate(150%);
     -webkit-backdrop-filter: blur(32px) saturate(150%);
     border: 1px solid var(--color-glass-border);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), 0 24px 48px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1),
+                0 24px 48px rgba(0, 0, 0, 0.5);
   }
-  .hero-title {
-    font-size: clamp(2.5rem, 8vw, 6rem);
-    line-height: 0.9;
-    font-weight: 900;
-  }
+
+  /* Input sin outline — usado en el buscador del hero */
   .no-ring {
     outline: none !important;
     box-shadow: none !important;
     border: none !important;
     border-color: transparent !important;
   }
+
+  /* Contenedor de imágenes editoriales */
+  /* Light: fondo surface (#F9F9F9) | Dark: fondo #111 */
   .editorial-image-container {
     position: relative;
     overflow: hidden;
+    background: var(--color-surface);
+  }
+
+  .dark .editorial-image-container {
     background: #111;
   }
+
+  /* Filtros de imagen — light: natural | dark: dramático */
   .editorial-image {
-    filter: contrast(1.15) brightness(0.7) grayscale(0.2);
+    filter: contrast(1.05) brightness(1.02);
     transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), filter 0.8s ease;
     will-change: transform;
   }
+
+  .dark .editorial-image {
+    filter: contrast(1.15) brightness(0.7) grayscale(0.2);
+  }
+
   .editorial-image:hover {
-    filter: contrast(1.2) brightness(0.9) grayscale(0);
     transform: scale(1.04);
   }
+
+  .dark .editorial-image:hover {
+    filter: contrast(1.2) brightness(0.9) grayscale(0);
+  }
+
+  /* Línea vertical decorativa */
   .vogue-line-vertical {
     width: 1px;
     background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.2), transparent);
   }
+
+  /* Nav links del header editorial */
   .nav-link {
     font-size: 10px;
     letter-spacing: 0.35em;
@@ -219,6 +234,7 @@
     opacity: 0.6;
     transition: opacity 0.3s ease;
   }
+
   .nav-link:hover {
     opacity: 1;
   }

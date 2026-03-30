@@ -74,6 +74,14 @@ const config = {
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         foreground: "hsl(var(--foreground))",
+        // Brand Theming (Editorial Layer 1)
+        'brand-primary': 'var(--color-primary)',
+        'brand-bg': 'var(--color-bg)',
+        'brand-accent': 'var(--color-accent)',
+        'brand-surface': 'var(--color-surface)',
+        'glass': 'var(--color-glass)',
+        'glass-border': 'var(--color-glass-border)',
+
         brand: {
           rose: '#7b514f',
           gold: '#775a19',
@@ -86,7 +94,7 @@ const config = {
         label: ["var(--font-inter)", ...fontFamily.sans],
         display: ["var(--font-manrope)", ...fontFamily.sans],
         sans: ["var(--font-inter)", ...fontFamily.sans],
-        vogue: ["'Playfair Display'", "serif"],
+        vogue: ["var(--font-playfair)", "serif"],
       },
       borderRadius: {
         "DEFAULT": "1rem",

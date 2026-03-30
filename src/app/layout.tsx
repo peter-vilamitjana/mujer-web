@@ -5,9 +5,22 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "@/components/Providers";
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const playfair = Playfair_Display({ subsets: ['latin'], weight: ['700'], variable: '--font-playfair' });
-const manrope = Manrope({ subsets: ['latin'], weight: ['500', '600'], variable: '--font-manrope' });
+const inter = Inter({ 
+  subsets: ['latin'], 
+  weight: ['300', '400', '500'],
+  variable: '--font-inter' 
+});
+const playfair = Playfair_Display({ 
+  subsets: ['latin'], 
+  weight: ['400', '700', '900'], 
+  style: ['normal', 'italic'],
+  variable: '--font-playfair' 
+});
+const manrope = Manrope({ 
+  subsets: ['latin'], 
+  weight: ['500', '600'], 
+  variable: '--font-manrope' 
+});
 
 export const metadata: Metadata = {
   title: 'Mujer | Estilismo y Belleza',
@@ -20,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${inter.variable} ${playfair.variable} ${manrope.variable}`}>
+    <html lang="es" className={`${inter.variable} ${playfair.variable} ${manrope.variable}`} suppressHydrationWarning>
       <body className="bg-surface font-body text-on-surface selection:bg-primary/20 antialiased">
         <Providers>
           {children}
