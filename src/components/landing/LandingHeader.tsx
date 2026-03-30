@@ -7,6 +7,7 @@ import { useTheme } from 'next-themes';
 
 export default function LandingHeader() {
   const [scrolled, setScrolled] = useState(false);
+  const [overHero, setOverHero] = useState(true);
   const [mounted, setMounted] = useState(false);
   const params = useParams();
   const tenantSlug = params?.tenantSlug as string | undefined;
@@ -16,47 +17,74 @@ export default function LandingHeader() {
   useEffect(() => {
     setMounted(true);
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
+      const scrollY = window.scrollY;
+      setScrolled(scrollY > 50);
+      // El hero ocupa 100vh — cuando scrolleamos más allá estamos en sección blanca
+      setOverHero(scrollY < window.innerHeight * 0.85);
     };
     window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
+  // En dark mode: siempre texto blanco
+  // En light mode: blanco sobre hero, oscuro sobre secciones blancas
+  const isLight = mounted && theme === 'light';
+  const textWhite = !isLight || overHero;
+
+  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
   return (
-    <header 
-        className={cn(
-            "fixed top-0 w-full z-50 transition-transform duration-700 pt-6 px-6",
-            scrolled ? "-translate-y-[10px]" : "translate-y-0"
-        )} 
-        id="main-header"
+    <header
+      className={cn(
+        "fixed top-0 w-full z-50 transition-transform duration-700 pt-6 px-6",
+        scrolled ? "-translate-y-[10px]" : "translate-y-0"
+      )}
+      id="main-header"
     >
       <div className="max-w-[1600px] mx-auto">
-        <div className="liquid-glass rounded-full px-10 py-5 flex justify-between items-center theme-transition">
+        <div className="liquid-glass rounded-full px-10 py-5 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <span className="font-vogue text-3xl font-black tracking-tighter uppercase text-brand-primary">Mujer</span>
-            <div className="w-px h-6 bg-black/20 dark:bg-white/20"></div>
-            <span className="text-[9px] tracking-[0.5em] uppercase opacity-40 font-bold hidden sm:block text-brand-primary">Volume No. 01</span>
+            <span className={cn(
+              "font-vogue text-3xl font-black tracking-tighter uppercase transition-colors duration-300",
+              textWhite ? "text-white" : "text-[#1A1A1A]"
+            )}>Mujer</span>
+            <div className={cn(
+              "w-px h-6 transition-colors duration-300",
+              textWhite ? "bg-white/20" : "bg-black/20"
+            )}></div>
+            <span className={cn(
+              "text-[9px] tracking-[0.5em] uppercase opacity-40 font-bold hidden sm:block transition-colors duration-300",
+              textWhite ? "text-white" : "text-[#1A1A1A]"
+            )}>Volume No. 01</span>
           </div>
           <nav className="hidden md:flex gap-12 items-center">
-            <a className="nav-link text-brand-primary" href="#">L'Atelier</a>
-            <a className="nav-link text-brand-primary" href="#">Édition</a>
-            <a className="nav-link text-brand-primary" href="#">Membres</a>
+            {['L\'Atelier', 'Édition', 'Membres'].map((item) => (
+              <a
+                key={item}
+                href="#"
+                className={cn(
+                  "relative px-4 py-2 rounded-full text-[10px] tracking-[0.35em] uppercase font-medium transition-all duration-300",
+                  "before:absolute before:inset-0 before:rounded-full before:opacity-0 before:transition-all before:duration-300",
+                  "hover:before:opacity-100",
+                  textWhite
+                    ? "text-white/60 hover:text-white before:bg-white/10 before:backdrop-blur-sm before:border before:border-white/20"
+                    : "text-[#1A1A1A]/60 hover:text-[#1A1A1A] before:bg-black/5 before:backdrop-blur-sm before:border before:border-black/10"
+                )}
+              >
+                <span className="relative z-10">{item}</span>
+              </a>
+            ))}
 
-            {/* Toggle dark/light — solo se renderiza después del mount para evitar hydration mismatch */}
             {mounted && (
               <button
                 onClick={toggleTheme}
                 aria-label="Alternar tema"
-                className="w-8 h-8 flex items-center justify-center rounded-full text-brand-primary opacity-60 hover:opacity-100 transition-opacity"
+                className={cn(
+                  "w-8 h-8 flex items-center justify-center rounded-full opacity-60 hover:opacity-100 transition-all duration-300",
+                  textWhite ? "text-white" : "text-[#1A1A1A]"
+                )}
               >
                 {theme === 'dark' ? (
-                  // Ícono sol — indica que clickear va a light
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="5"/>
                     <line x1="12" y1="1" x2="12" y2="3"/>
@@ -69,7 +97,6 @@ export default function LandingHeader() {
                     <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
                   </svg>
                 ) : (
-                  // Ícono luna — indica que clickear va a dark
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
                   </svg>
@@ -77,14 +104,22 @@ export default function LandingHeader() {
               </button>
             )}
 
-            <Link 
-                className="text-[10px] uppercase tracking-[0.3em] font-bold bg-[#1A1A1A] text-white dark:bg-white dark:text-black px-8 py-3 rounded-full hover:opacity-90 transition-all font-inter theme-transition" 
-                href={loginUrl}
+            <Link
+              className={cn(
+                "text-[10px] uppercase tracking-[0.3em] font-bold px-8 py-3 rounded-full hover:opacity-90 transition-all duration-300 font-inter",
+                textWhite
+                  ? "bg-white text-black"
+                  : "bg-[#1A1A1A] text-white"
+              )}
+              href={loginUrl}
             >
-                Sign In
+              Sign In
             </Link>
           </nav>
-          <button className="md:hidden text-brand-primary">
+          <button className={cn(
+            "md:hidden transition-colors duration-300",
+            textWhite ? "text-white" : "text-[#1A1A1A]"
+          )}>
             <span className="material-symbols-outlined">menu</span>
           </button>
         </div>
