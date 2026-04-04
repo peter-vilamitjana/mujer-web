@@ -6,28 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Logo from "@/components/Logo";
 import { useRouter } from "next/navigation";
-import { auth, db } from "@/lib/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
 import { signIn } from "next-auth/react";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import type { Usuario } from "@/lib/types";
-import { useTenant } from "@/contexts/TenantContext";
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  
-  let tenantId = null;
-  try {
-    const tenantCtx = useTenant();
-    tenantId = tenantCtx?.tenantId;
-  } catch (e) {}
 
-  const [email, setEmail] = useState('clienta@mujer.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -46,37 +35,7 @@ export default function LoginPage() {
       
       router.push('/dashboard');
     } catch (error: any) {
-      // If user does not exist and it's the test clienta email, create it.
-      if ((error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') && email === 'clienta@mujer.com') {
-        try {
-          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-          const clientaData: Omit<Usuario, 'id'> = {
-            nombre: 'Valeria', // Example name
-            email: email,
-            rol: 'clienta',
-          };
-          await setDoc(doc(db, 'users', userCredential.user.uid), {
-            ...clientaData,
-            createdAt: new Date(),
-            photoURL: null
-          });
-          // Also Create Membership if tenant is active
-          if (tenantId) {
-            await setDoc(doc(db, 'users', userCredential.user.uid, 'memberships', tenantId), {
-              role: 'clienta',
-              tenantId: tenantId
-            });
-          }
-          toast({ title: "Cuenta de prueba creada", description: "Se ha creado una clienta de prueba para que puedas ingresar." });
-          // Let the layout handle redirection
-          return;
-        } catch (creationError: any) {
-          console.error("Error al crear usuaria de prueba:", creationError);
-          toast({ variant: "destructive", title: "Error", description: "No se pudo crear la usuaria de prueba." });
-        }
-      } else {
-        handleAuthError(error);
-      }
+      handleAuthError(error);
     } finally {
       setIsLoading(false);
     }
@@ -179,11 +138,6 @@ export default function LoginPage() {
             </p>
           </CardContent>
         </Card>
-        <div className="text-center text-xs text-muted-foreground p-4 border rounded-lg">
-          <p className="font-bold">Datos de prueba:</p>
-          <p><span className="font-semibold">Admin:</span> admin@mujer.com / password123</p>
-          <p><span className="font-semibold">Clienta:</span> clienta@mujer.com / password123</p>
-        </div>
       </div>
     </div>
   );

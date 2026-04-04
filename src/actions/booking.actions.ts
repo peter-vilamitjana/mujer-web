@@ -1,6 +1,6 @@
 'use server';
 
-import { collection, query, where, getDocs, doc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, setDoc, serverTimestamp, Timestamp, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -78,6 +78,16 @@ export interface BookingPayload {
   durationMinutes: number;
 }
 
+async function getDefaultBranchId(tenantId: string): Promise<string> {
+  const branchesRef = collection(db, 'tenants', tenantId, 'branches');
+  const q = query(branchesRef, where('active', '==', true), limit(1));
+  const snap = await getDocs(q);
+  if (!snap.empty) return snap.docs[0].id;
+  // Fallback: any branch
+  const allSnap = await getDocs(query(branchesRef, limit(1)));
+  return allSnap.empty ? 'default' : allSnap.docs[0].id;
+}
+
 export async function createBooking(
   payload: BookingPayload
 ): Promise<{ success: boolean; appointmentId?: string; error?: string }> {
@@ -101,7 +111,7 @@ export async function createBooking(
     const appointmentData = {
       id: appointmentRef.id,
       tenantId: payload.tenantId,
-      branchId: 'sucursal_centro', // TODO: dinámico cuando existan múltiples branches
+      branchId: await getDefaultBranchId(payload.tenantId),
       clientId: uid,
       clientName: userName,
       staffId: payload.staffId,

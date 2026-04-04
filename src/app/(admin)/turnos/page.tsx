@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc, setDoc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc, setDoc, Timestamp, where, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loader2, Calendar as CalendarIcon, Clock, User, Tag, ArrowLeft, Check, CheckCircle, Users, Scissors, Info, Search } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
@@ -39,6 +39,15 @@ import type { Staff } from '@/lib/schema';
 
 
 const MONTO_SEÑA_PORCENTAJE = 0.15; // 15%
+
+async function getDefaultBranchId(tenantId: string): Promise<string> {
+  const branchesRef = collection(db, 'tenants', tenantId, 'branches');
+  const q = query(branchesRef, where('active', '==', true), limit(1));
+  const snap = await getDocs(q);
+  if (!snap.empty) return snap.docs[0].id;
+  const allSnap = await getDocs(query(branchesRef, limit(1)));
+  return allSnap.empty ? 'default' : allSnap.docs[0].id;
+}
 
 const timeSlots = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00"];
 
@@ -173,8 +182,8 @@ function TurnosContent() {
               apellido: data.lastName || data.apellido,
               email: data.email,
               telefono: data.phone || data.telefono,
-              fechaRegistro: data.createdAt ? new Date(data.createdAt.toDate()) : new Date(), // Assuming createdAt exists
-            } as Cliente;
+              fechaRegistro: data.createdAt ? new Date(data.createdAt.toDate()) : new Date(),
+            } as unknown as Cliente;
           });
           setClients(clientsData);
 
@@ -296,13 +305,13 @@ function TurnosContent() {
         return name;
       }).join(', ');
 
-      const newTurnoRef = doc(collection(db, 'tenants', tenantId, 'appointments'));
+      const newTurnoRef = doc(collection(db, 'tenants', tenantId!, 'appointments'));
 
       // Create appointment object matching schema
       const newAppointmentData = {
         id: newTurnoRef.id,
         tenantId,
-        branchId: 'sucursal_centro', // TODO: Get from context when generic branch support is added
+        branchId: await getDefaultBranchId(tenantId!),
         clientId: selectedClient.id,
         clientName: `${selectedClient.nombre} ${selectedClient.apellido || ''}`.trim(),
         staffId: selectedProfessional.id,

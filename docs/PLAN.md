@@ -67,7 +67,7 @@ src/
 | **Analytics / Métricas** | 🔴 ~30% | Alta | Hooks existen, pipeline de datos incompleto |
 | **AI (Genkit)** | 🔴 ~5% | Alta | Solo configurado, no conectado a ninguna UI |
 | **Tests** | 🔴 0% | Media | Cero cobertura |
-| **CI/CD** | 🔴 Parcial | Media | Firebase App Hosting configurado, sin pipeline |
+| **CI/CD** | ✅ Configurado | Media | GitHub Actions: lint + typecheck + build en verde |
 
 ---
 
@@ -228,26 +228,29 @@ FASE 4                                                             │ Growth & 
 
 ---
 
-### FASE 0 — Cimientos Estables (Semanas 1–2)
+### ✅ FASE 0 — Cimientos Estables (Semanas 1–2) — COMPLETADA
+
+> **Estado**: ✅ COMPLETADA — 2026-04-04
+> CI configurado y en verde (exit code 0). Código limpio de credenciales hardcodeadas y errores TypeScript silenciados. Base production-ready lista para Fase 1.
 
 **Objetivo**: Código production-ready. Cero errores silenciados, cero credenciales hardcodeadas, CI funcionando.
 
-| # | Tarea | Días | Done cuando... |
-|---|-------|------|----------------|
-| 0.1 | Eliminar `ignoreBuildErrors` + corregir todos los errores TS | 3 | `tsc --noEmit` pasa limpio |
-| 0.2 | Eliminar credenciales de test del código fuente | 0.5 | No hay emails/passwords hardcodeados |
-| 0.3 | Crear `.env.example` documentado | 0.5 | Archivo existe con todas las variables |
-| 0.4 | Corregir `userRole = 'admin'` → leer de sesión | 1 | Clientes/turnos usan rol real del usuario |
-| 0.5 | Desacoplar `branchId` hardcodeado → leer de TenantContext | 2 | 0 ocurrencias de `'sucursal_centro'` literal |
-| 0.6 | Proteger `/admin/seed` y `/admin/migrate` en middleware | 0.5 | Rutas devuelven 401 sin sesión admin |
-| 0.7 | Cubrir rutas marketplace autenticadas en middleware | 0.5 | `/salones/*/dashboard` protegido |
-| 0.8 | Setup CI/CD (GitHub Actions: lint + typecheck + build) | 1 | PR no mergeable si CI falla |
-| 0.9 | Configurar Sentry para error tracking | 0.5 | Errores llegan al dashboard de Sentry |
-| 0.10 | Configurar staging environment | 1 | URL staging funcional con datos de prueba |
+| # | Tarea | Días | Done cuando... | Estado |
+|---|-------|------|----------------|--------|
+| ~~0.1~~ | ~~Eliminar `ignoreBuildErrors` + corregir todos los errores TS~~ | ~~3~~ | ~~`tsc --noEmit` pasa limpio~~ | ✅ |
+| ~~0.2~~ | ~~Eliminar credenciales de test del código fuente~~ | ~~0.5~~ | ~~No hay emails/passwords hardcodeados~~ | ✅ |
+| ~~0.3~~ | ~~Crear `.env.example` documentado~~ | ~~0.5~~ | ~~Archivo existe con todas las variables~~ | ✅ |
+| ~~0.4~~ | ~~Corregir `userRole = 'admin'` → leer de sesión~~ | ~~1~~ | ~~Clientes/turnos usan rol real del usuario~~ | ✅ |
+| ~~0.5~~ | ~~Desacoplar `branchId` hardcodeado → leer de TenantContext~~ | ~~2~~ | ~~0 ocurrencias de `'sucursal_centro'` literal~~ | ✅ |
+| ~~0.6~~ | ~~Proteger `/admin/seed` y `/admin/migrate` en middleware~~ | ~~0.5~~ | ~~Rutas devuelven 401 sin sesión admin~~ | ✅ |
+| ~~0.7~~ | ~~Cubrir rutas marketplace autenticadas en middleware~~ | ~~0.5~~ | ~~`/salones/*/dashboard` protegido~~ | ✅ |
+| ~~0.8~~ | ~~Setup CI/CD (GitHub Actions: lint + typecheck + build)~~ | ~~1~~ | ~~PR no mergeable si CI falla~~ | ✅ |
+| 0.9 | Configurar Sentry para error tracking | 0.5 | Errores llegan al dashboard de Sentry | ⏳ Fase 1 |
+| 0.10 | Configurar staging environment | 1 | URL staging funcional con datos de prueba | ⏳ Fase 1 |
 
 **Total**: ~10 días → **2 semanas**
 
-**Criterios de done**: CI verde en cada PR, cero credenciales hardcodeadas, branchId dinámico, roles reales leídos de sesión.
+**Criterios de done**: ✅ CI verde en cada PR, ✅ cero credenciales hardcodeadas, ✅ branchId dinámico, ✅ roles reales leídos de sesión.
 
 ---
 

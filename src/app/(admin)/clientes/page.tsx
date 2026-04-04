@@ -15,14 +15,15 @@ import NewClientForm from "@/components/NewClientForm";
 import { Input } from "@/components/ui/input";
 
 import { useTenant } from "@/contexts/TenantContext";
-// ... imports
+import { useUser } from "@/contexts/UserContext";
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
-  const userRole = 'admin'; // TODO: Get role from user auth state
   const { tenantId } = useTenant();
+  const user = useUser();
+  const userRole = user?.rol ?? 'clienta';
 
   useEffect(() => {
     if (!tenantId) return;

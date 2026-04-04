@@ -1,9 +1,8 @@
 'use client';
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area, Defs, linearGradient, Stop } from 'recharts';
+import { XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area } from 'recharts';
 import { useOcupacionEnVivo } from '@/hooks/useOcupacionEnVivo';
 import type { Firestore } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
 import { format, fromUnixTime } from 'date-fns';

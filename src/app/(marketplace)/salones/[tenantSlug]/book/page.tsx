@@ -6,18 +6,19 @@ import { notFound } from 'next/navigation';
 import BookingFlow from '@/components/marketplace/BookingFlow';
 
 interface Props {
-  params: { tenantSlug: string };
+  params: Promise<{ tenantSlug: string }>;
 }
 
 export default async function BookPage({ params }: Props) {
+  const { tenantSlug } = await params;
   // Verificar sesión en el servidor — si no hay sesión, redirigir a login
   const session = await getServerSession(authOptions);
   if (!session) {
-    redirect(`/login?callbackUrl=/${params.tenantSlug}/book`);
+    redirect(`/login?callbackUrl=/${tenantSlug}/book`);
   }
 
   // Obtener datos del salón
-  const salon = await getSalonBySlug(params.tenantSlug);
+  const salon = await getSalonBySlug(tenantSlug);
   if (!salon) notFound();
 
   const [services, staff] = await Promise.all([

@@ -19,13 +19,15 @@ import { useToast } from '@/hooks/use-toast';
 import { safeFormatDate } from '@/lib/utils';
 
 import { useTenant } from "@/contexts/TenantContext";
-// ... imports
+import { useUser } from "@/contexts/UserContext";
 
 export default function ClienteDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const { toast } = useToast();
   const { tenantId } = useTenant();
+  const user = useUser();
+  const userRole: UserRole = user?.rol ?? 'clienta';
 
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [formData, setFormData] = useState<Partial<Cliente>>({});
@@ -35,8 +37,6 @@ export default function ClienteDetailPage() {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // TODO: Replace with actual role from user authentication
-  const userRole = 'admin' as UserRole;
   const isReadOnly = userRole === 'clienta';
   const canEditFicha = userRole === 'admin';
 

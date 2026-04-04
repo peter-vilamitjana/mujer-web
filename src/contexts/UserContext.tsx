@@ -39,8 +39,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         const membershipSnap = await getDoc(doc(db, 'users', uid, 'memberships', tenantId));
         if (membershipSnap.exists()) {
           rol = membershipSnap.data().role as UserRole;
-        } else if (email === 'admin@mujer.com') {
-          rol = 'admin';
         }
       } catch (e) {
         console.error('Error leyendo membership:', e);

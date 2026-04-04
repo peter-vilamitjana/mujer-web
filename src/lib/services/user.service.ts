@@ -36,17 +36,6 @@ export async function getUserProfile(uid: string, email: string | null): Promise
       return newProfileData;
     }
 
-    // Seed admin si corresponde
-    if (email === 'admin@mujer.com') {
-      console.log('[SEED] Creando perfil admin...');
-      const adminData = {
-        displayName: 'Administradora',
-        email: 'admin@mujer.com',
-        createdAt: new Date(),
-      };
-      await setDoc(newProfileRef, adminData);
-      return adminData;
-    }
   } catch (err) {
     console.error('[LEGACY] Error en migración:', err);
   }

@@ -46,7 +46,7 @@ export default function RegisterPage() {
                 password: formData.password,
                 fullName: formData.fullName,
                 phone: formData.phone,
-                tenantId: tenantId,
+                tenantId: tenantId ?? '',
                 photo: selectedFile || undefined,
                 photoBase64: photoBase64 || undefined
             });

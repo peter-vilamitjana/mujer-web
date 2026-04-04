@@ -35,23 +35,16 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     return null;
   }
 
-  const user = {
-    id: (session.user as any).id || 'client',
-    nombre: session.user.name || 'Clienta',
-    email: session.user.email || '',
-    rol: 'clienta' as const,
-  };
-
   return (
-    <UserProvider user={user as unknown as any}>
+    <UserProvider>
       <div className="flex min-h-screen w-full flex-col bg-muted/40">
-        <SalonSidebar 
-           isOpen={sidebarOpen} 
-           onClose={() => setSidebarOpen(false)} 
-           tenantSlug={tenantSlug} 
+        <SalonSidebar
+           isOpen={sidebarOpen}
+           onClose={() => setSidebarOpen(false)}
+           tenantSlug={tenantSlug}
         />
         <div className="flex flex-col md:pl-64 transition-all duration-300">
-          <Header onMenuClick={() => setSidebarOpen(true)} />
+          <Header />
           <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
         </div>
       </div>

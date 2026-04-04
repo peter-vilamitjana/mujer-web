@@ -123,8 +123,8 @@ export const authOptions: NextAuthOptions = {
             session.accessToken = token.accessToken as string;
             session.error = token.error as string;
 
-            // Guardar tokens de Google Calendar — lógica existente, SIN cambios en el bloque
-            if (session.user?.email === 'admin@mujer.com' && token.refreshToken) {
+            // Guardar tokens de Google Calendar para usuarios con Google OAuth conectado
+            if (token.refreshToken && (session.user as any).uid) {
                 const tokenData = {
                     accessToken: token.accessToken,
                     refreshToken: token.refreshToken,
@@ -141,7 +141,7 @@ export const authOptions: NextAuthOptions = {
 
             return session;
         },
-        async signIn({ user, account }) {
+        async signIn({ account }) {
             if (account?.provider === "google" || account?.provider === "credentials") {
                 return true; // Todos pueden autenticarse. Los roles se manejan con Memberships.
             }

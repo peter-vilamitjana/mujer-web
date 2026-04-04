@@ -17,5 +17,6 @@ export const config = {
     '/servicios/:path*',
     '/turnos/:path*',
     '/mis-turnos/:path*',
+    '/admin/:path*',
   ],
 };

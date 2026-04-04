@@ -77,9 +77,7 @@ export default function BusinessCTA() {
         </div>
 
         {/* Footer mínimo */}
-        <div className="mt-20 pt-10 flex flex-col md:flex-row justify-between items-center gap-6"
-          style={{ borderTop: '1px solid rgba(0,0,0,0.05)' }}
-          className="border-t border-black/[0.05] dark:border-white/[0.05]"
+        <div className="mt-20 pt-10 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-black/[0.05] dark:border-white/[0.05]"
         >
           <span className="font-vogue text-xl italic text-[#0a0a0a]/50 dark:text-white/35">
             MujerApp Pro
