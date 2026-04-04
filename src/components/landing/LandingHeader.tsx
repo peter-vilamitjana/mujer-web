@@ -6,7 +6,6 @@ import { useParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
 
 export default function LandingHeader() {
-  const [scrolled, setScrolled] = useState(false);
   const [overHero, setOverHero] = useState(true);
   const [mounted, setMounted] = useState(false);
   const params = useParams();
@@ -16,13 +15,19 @@ export default function LandingHeader() {
 
   useEffect(() => {
     setMounted(true);
+    const header = document.getElementById('main-header');
+
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      setScrolled(scrollY > 50);
-      // El hero ocupa 100vh — cuando scrolleamos más allá estamos en sección blanca
+      // Transform directo al DOM — sin React state, sin re-render
+      if (header) {
+        header.style.transform = scrollY > 50 ? 'translateY(-10px)' : 'translateY(0)';
+      }
+      // overHero sí puede usar state porque no afecta el header element
       setOverHero(scrollY < window.innerHeight * 0.85);
     };
-    window.addEventListener('scroll', handleScroll);
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -35,11 +40,9 @@ export default function LandingHeader() {
 
   return (
     <header
-      className={cn(
-        "fixed top-0 w-full z-50 transition-transform duration-700 pt-6 px-6",
-        scrolled ? "-translate-y-[10px]" : "translate-y-0"
-      )}
+      className="fixed top-0 w-full z-50 transition-transform duration-700 pt-6 px-6"
       id="main-header"
+      suppressHydrationWarning
     >
       <div className="max-w-[1600px] mx-auto">
         <div className="liquid-glass rounded-full px-10 py-5 flex justify-between items-center">
