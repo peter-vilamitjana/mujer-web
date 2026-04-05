@@ -16,7 +16,8 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      - run: npm ci
+          cache-dependency-path: package-lock.json
+      - run: npm install
       - run: npx tsc --noEmit
 
   lint:
@@ -28,7 +29,8 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      - run: npm ci
+          cache-dependency-path: package-lock.json
+      - run: npm install
       - run: npm run lint
 
   build:
@@ -48,5 +50,6 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      - run: npm ci
+          cache-dependency-path: package-lock.json
+      - run: npm install
       - run: npm run build
