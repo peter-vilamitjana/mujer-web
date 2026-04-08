@@ -111,7 +111,16 @@ export interface Staff {
     }; // day: "monday", "tuesday", etc.
 }
 
-export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show' | 'pending_payment';
+export type AppointmentStatus =
+    | 'pending'
+    | 'confirmed'
+    | 'completed'
+    | 'cancelled'
+    | 'no_show'
+    | 'pending_payment'
+    | 'cobrado'; // Spanish intentional — core LATAM business term for "collected/charged"
+
+export type PaymentMethod = 'efectivo' | 'mercadopago' | 'tarjeta' | 'transferencia';
 
 export interface Appointment {
     id: string;
@@ -134,6 +143,12 @@ export interface Appointment {
     createdAt: Timestamp;
     createdBy: string; // User ID
     googleEventId?: string;
+    // ── Campos de Checkout Local (Pivot LATAM) ──────────────────
+    amountPaid?: number;              // Monto real cobrado al cerrar caja
+    paymentMethod?: PaymentMethod;    // Cómo pagó la clienta
+    commissionCalculated?: number;    // Comisión calculada al staff (si aplica)
+    checkoutAt?: Timestamp;           // Cuándo se cerró el cobro
+    checkoutBy?: string;              // UID del admin que cobró
 }
 
 export interface Customer {
