@@ -104,6 +104,9 @@ const config = {
         xl: "3rem",
         full: "9999px"
       },
+      boxShadow: {
+        'card-glow': '0 0 40px -10px rgba(255, 255, 255, 0.05), 0 0 10px -5px rgba(255, 255, 255, 0.02)',
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

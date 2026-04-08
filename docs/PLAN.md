@@ -1,6 +1,6 @@
 # MujerApp — Análisis Técnico y Plan de Proyecto
 
-**Rama analizada**: `database-config` | **Fecha**: 2026-04-03
+**Rama analizada**: `database-config` | **Fecha**: 2026-04-03 | **Pivot LATAM**: 2026-04-08
 
 ---
 
@@ -69,11 +69,11 @@ src/
 | **Onboarding wizard** | ✅ ~95% | Alta | 5 pasos, localStorage, batch atómico |
 | **Booking Flow** | 🟡 ~65% | Alta | Multi-step wizard. Falta confirmación/pago real |
 | **Google Calendar** | ✅ ~80% | Alta | Bidireccional: App→GCal + GCal→App webhook. Token refresh |
-| **Email (Resend)** | 🟡 ~70% | Baja | Confirmation + welcome. Sin templates HTML |
+| ~~**Email (Resend)**~~ | ❌ **Eliminado** | — | **Pivot**: reemplazado por WhatsApp nativo. Sin emails en el flujo de notificaciones. |
 | **Portal Cliente** | 🔴 ~20% | Media | Rutas existen, contenido no implementado |
 | **Analytics / Métricas** | ✅ ~80% | Alta | Datos reales: ingresos mes, ocupación, top servicios, próximos turnos |
 | **Loading states** | ✅ 100% | Baja | 8 skeletons + error boundary global |
-| **AI (Genkit)** | 🔴 ~5% | Alta | Solo configurado, no conectado a ninguna UI |
+| ~~**AI (Genkit)**~~ | ❌ **Eliminado** | — | **Pivot**: removido del roadmap. Dependencia muerta a desinstalar. |
 | **Tests** | 🔴 0% | Media | Cero cobertura |
 | **CI/CD** | ✅ Configurado | Media | GitHub Actions: lint + typecheck + build en verde |
 
@@ -100,7 +100,7 @@ src/
 #### Media
 
 11. 4 TODOs de imágenes pendientes (`ColeccionCurada.tsx` ×3, `ElevaTuVision.tsx` ×1).
-12. Genkit configurado sin uso — dependencia activa muerta.
+12. ~~Genkit configurado sin uso — dependencia activa muerta.~~ → **Acción**: `npm uninstall @genkit-ai/googleai genkit` + borrar `src/ai/`
 13. `patch-package` en devDependencies — verificar qué parche aplica.
 14. `shim-storage.ts` importado en `next.config.ts` — workaround que debería ser innecesario.
 
@@ -176,15 +176,15 @@ src/
 
 | Integración | Prioridad | Complejidad | Impacto |
 |-------------|-----------|-------------|---------|
-| **Pagos** (Stripe / MercadoPago) | P0 | Alta | Sin monetización → sin viabilidad |
+| **Módulo Financiero Local** (efectivo / transferencia / MercadoPago nativo) | **🔴 P0 URGENTE** | Alta | Core diferencial vs Fresha/Wonoma en LATAM. Sin pasarelas internacionales forzadas. |
+| **WhatsApp Business API** (Twilio WABA o Meta Cloud API) | **🔴 P0 URGENTE** | Media | Mata el No-Show. Reemplaza 100% el flujo de email (Resend eliminado). |
 | **Google Calendar** (completar bidireccional) | P0 | Alta | Core feature para B2B |
 | **Error Tracking** (Sentry) | P1 | Baja | Sin alertas en producción = ciego |
 | **Analytics** (PostHog / Mixpanel) | P1 | Baja | Sin datos → no hay iteración informada |
-| **Push Notifications** (FCM / web push) | P1 | Media | Recordatorios de cita |
-| **SMS** (Twilio) | P1 | Baja | Confirmaciones fuera de app |
-| **CDN / Media** (Firebase Storage) | P2 | Baja | Performance e imágenes de salones |
+| **CDN / Media** (Firebase Storage) | P1 | Baja | Performance e imágenes de salones |
 | **Mapas** (Google Maps API) | P2 | Media | UX de exploración de salones |
-| **AI features** (Genkit ya configurado) | P2 | Alta | Diferenciación futura |
+| **Stripe** (para salones con terminal internacional) | P2 | Alta | Solo para el segmento premium/internacional. No es el core de LATAM. |
+| ~~**AI features** (Genkit)~~ | ❌ **Pospuesto** | — | Eliminado del roadmap activo. Sin uso en producción, dependencia muerta. |
 
 ### 2.4 Riesgos Técnicos Priorizados
 
@@ -305,9 +305,11 @@ FASE 4                                                             │ Growth & 
 
 ---
 
-### FASE 2 — Marketplace MVP (Semanas 7–9)
+### FASE 2 — Marketplace MVP + WhatsApp First (Semanas 7–9)
 
-**Objetivo**: Una clienta puede descubrir salones, reservar y recibir confirmación.
+> **🔴 Pivot LATAM (2026-04-08):** El email queda eliminado del flujo de notificaciones. El diferencial es WhatsApp nativo: cero No-Shows, cero fricción. La tarea 2.7 original (Resend) se reemplaza íntegramente por WhatsApp Business API.
+
+**Objetivo**: Una clienta puede descubrir salones, reservar y recibir confirmación por WhatsApp. Cero emails.
 
 | # | Tarea | Días | Depende de | Done cuando... |
 |---|-------|------|-----------|----------------|
@@ -317,35 +319,40 @@ FASE 4                                                             │ Growth & 
 | 2.4 | Portal cliente completo (`/salones/[slug]/dashboard`) | 3 | Auth marketplace | Clienta ve sus citas activas |
 | 2.5 | Historial de citas del cliente | 2 | 2.4 | Clienta ve historial completo |
 | 2.6 | Cancellation flow (clienta cancela cita) | 2 | Reglas definidas | Clienta puede cancelar con confirmación |
-| 2.7 | Recordatorios email automáticos (24h antes del turno) | 2 | Resend + cron | Emails automáticos sin intervención |
+| **2.7** | **🔴 Notificaciones nativas por WhatsApp** (confirmación inmediata + recordatorio 24h) | **4** | **WhatsApp Business API (Twilio WABA o Meta Cloud API)** | **Clienta recibe WhatsApp al reservar y 24h antes. Cero emails en el flujo.** |
 | 2.8 | Analytics de producto (PostHog) | 1 | — | Funnel de booking trackeado |
 
-**Total**: ~18 días → **~3 semanas** con 2–3 devs
+**Total**: ~20 días → **~3 semanas** con 2–3 devs
 
-**Criterios de done**: Una clienta externa puede llegar, descubrir, reservar y recibir confirmación sin fricción.
+**Criterios de done**: Una clienta externa puede llegar, descubrir, reservar y recibir confirmación por WhatsApp sin fricción. Tasa de no-show reducible con recordatorio automático.
 
 ---
 
-### FASE 3 — Monetización (Semanas 10–12)
+### FASE 3 — Monetización Local + CRM (Semanas 10–12)
 
-**Objetivo**: Modelo de ingresos funcional. Clientas pagan. Salones tienen planes.
+> **🔴 Pivot LATAM (2026-04-08):** El Módulo Financiero Local es P0 urgente. Los salones en LATAM cobran en efectivo, con transferencias bancarias y QR de MercadoPago — no con Stripe. Soportar esto de forma nativa es el diferencial de "Cierre de Caja" vs Fresha/Wonoma.
+
+**Objetivo**: Modelo de ingresos funcional con la realidad del mercado local. Salones cierran caja en efectivo/transferencia. Planes SaaS.
 
 | # | Tarea | Días | Depende de | Done cuando... |
 |---|-------|------|-----------|----------------|
-| 3.1 | Integración Stripe (o MercadoPago para LATAM) | 5 | Cuenta activada | Pagos con tarjeta funcionan |
-| 3.2 | Depósito en reserva (pago parcial al momento de booking) | 3 | 3.1 | Clienta paga depósito al reservar |
-| 3.3 | Webhook de pagos (Stripe → Firestore → email) | 2 | 3.1 | Status de cita actualizado automáticamente |
-| 3.4 | Planes SaaS para salones (Free / Pro / Enterprise) | 3 | 3.1 | Salones tienen plan asignado |
-| 3.5 | Feature flags por plan de suscripción | 2 | 3.4 | Features desbloqueadas según plan |
-| 3.6 | Dashboard de ingresos del salón | 2 | 3.3 | Salón ve ingresos reales en su dashboard |
+| **3.0** | **🔴 URGENTE — Módulo Financiero Local: schema + cierre de caja** (`amountPaid`, `paymentMethod`, `commissionCalculated`, status `cobrado`) | **3** | **schema.ts extendido** | **Admin puede cerrar un turno como "cobrado en efectivo/transferencia/MercadoPago". Caja cuadra.** |
+| **3.1** | **🔴 URGENTE — UI de Checkout Barrani** en pantalla de turno (selección método de pago + monto cobrado) | **3** | **3.0** | **Desde agenda, admin selecciona turno → cobra → status cambia a `cobrado`** |
+| 3.2 | MercadoPago QR nativo (Checkout Pro para cobros presenciales) | 4 | Cuenta MP activada | Clienta escanea QR en mostrador, pago confirmado en app |
+| 3.3 | Webhook MercadoPago → Firestore (status de cita automático) | 2 | 3.2 | Pago confirmado actualiza turno automáticamente |
+| 3.4 | Dashboard de cierre de caja diario (efectivo + transferencias + MP) | 3 | 3.0 | Admin ve resumen de caja del día desglosado por método |
+| 3.5 | Planes SaaS para salones (Free / Pro / Enterprise) | 3 | — | Salones tienen plan asignado |
+| 3.6 | Feature flags por plan de suscripción | 2 | 3.5 | Features desbloqueadas según plan |
 
-**Total**: ~17 días → **~3 semanas**
+**Total**: ~20 días → **~3–4 semanas**
 
-**Criterios de done**: Salón cobra depósito en reservas. MujerApp cobra suscripción a salones.
+**Criterios de done**: Salón cierra caja diaria en efectivo, transferencia y MercadoPago sin depender de pasarelas internacionales. MujerApp cobra suscripción a salones.
 
 ---
 
 ### FASE 4 — Growth & Scale (Semanas 13–16)
+
+> **🔴 Pivot LATAM (2026-04-08):** IA (Genkit) eliminada del roadmap activo. El foco es SEO, performance móvil, reviews y test suite para escalar con confianza.
 
 **Objetivo**: Plataforma lista para adquirir usuarios masivamente y escalar.
 
@@ -355,14 +362,13 @@ FASE 4                                                             │ Growth & 
 | 4.2 | SEO: metadata dinámica, OG tags, sitemap, robots.txt | 2 | Google indexa páginas de salón |
 | 4.3 | Performance: imágenes, code splitting, ISR | 3 | Lighthouse > 80 en móvil |
 | 4.4 | Accesibilidad (a11y) audit y correcciones | 3 | 0 errores críticos en axe-core |
-| 4.5 | AI: recomendaciones personalizadas de servicios (Genkit) | 5 | Clienta ve sugerencias relevantes |
-| 4.6 | Test suite (Vitest unit + Playwright e2e) | 5 | Flujos críticos cubiertos en CI |
-| 4.7 | Notificaciones push web (FCM) | 3 | Recordatorio push en navegador móvil |
-| 4.8 | Documentación técnica (ADRs, README actualizado) | 2 | Nuevo dev onboardea en < 1 día |
+| 4.5 | Test suite (Vitest unit + Playwright e2e) | 5 | Flujos críticos cubiertos en CI |
+| 4.6 | Documentación técnica (ADRs, README actualizado) | 2 | Nuevo dev onboardea en < 1 día |
+| ~~4.x~~ | ~~AI: recomendaciones personalizadas (Genkit)~~ | ~~5~~ | ~~**Eliminado del roadmap.** Genkit queda como dependencia muerta a remover.~~ |
 
-**Total**: ~26 días → **~4 semanas** con equipo completo
+**Total**: ~18 días → **~3 semanas** con equipo completo
 
-**Criterios de done**: Plataforma con SEO, performance, tests y documentación lista para escalar con marketing.
+**Criterios de done**: Plataforma con SEO, performance, tests y documentación lista para escalar con marketing. Sin deuda de IA activa.
 
 ---
 

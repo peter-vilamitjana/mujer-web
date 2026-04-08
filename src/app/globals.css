@@ -54,25 +54,25 @@
     --color-glass-border: rgba(255, 255, 255, 0.08);
     --glass-blur: 32px;
 
-    /* Tokens shadcn — dark overrides */
-    --background: 240 4% 8%;
-    --foreground: 0 0% 90%;
-    --card: 240 2% 12%;
-    --card-foreground: 0 0% 90%;
-    --popover: 240 2% 12%;
-    --popover-foreground: 0 0% 90%;
+    /* Tokens shadcn — dark overrides (Rich Dark Vogue x Apple) */
+    --background: 240 10% 4%; /* zinc-950 */
+    --foreground: 0 0% 100%; /* text-white */
+    --card: 240 10% 4%; /* zinc-950 */
+    --card-foreground: 0 0% 100%;
+    --popover: 240 10% 4%;
+    --popover-foreground: 0 0% 100%;
     --primary: 258 98% 71%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 2% 18%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 2% 18%;
-    --muted-foreground: 240 1% 56%;
-    --accent: 258 98% 71%;
-    --accent-foreground: 0 0% 98%;
+    --secondary: 240 6% 10%; /* zinc-900 */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 240 6% 10%; /* zinc-900 */
+    --muted-foreground: 240 5% 65%; /* zinc-400 */
+    --accent: 240 6% 10%; /* hover states => zinc-900 */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 2% 22%;
-    --input: 240 2% 18%;
+    --border: 240 4% 16%; /* zinc-800 */
+    --input: 240 6% 10%; /* zinc-900 */
     --ring: 258 98% 71%;
   }
 }
