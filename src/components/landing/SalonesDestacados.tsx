@@ -11,7 +11,7 @@ const mockSalones = [
     slug: 'demo-salon',
     address: 'Palermo, Buenos Aires',
     category: 'Hair & Color',
-    logoUrl: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=800&q=80',
+    logoUrl: '',
   },
   {
     id: 'mock-2',
@@ -19,7 +19,7 @@ const mockSalones = [
     slug: 'demo-salon',
     address: 'Recoleta, Buenos Aires',
     category: 'Skin & Spa',
-    logoUrl: 'https://images.unsplash.com/photo-1560066984-138daaa0c0e1?w=800&q=80',
+    logoUrl: '',
   },
   {
     id: 'mock-3',
@@ -27,7 +27,7 @@ const mockSalones = [
     slug: 'demo-salon',
     address: 'Belgrano, Buenos Aires',
     category: 'Estética Integral',
-    logoUrl: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&q=80',
+    logoUrl: '',
   },
 ];
 
@@ -97,11 +97,15 @@ export default function SalonesDestacados({ salones }: Props) {
 
                   {/* Imagen */}
                   <div className="relative aspect-[4/3] overflow-hidden bg-brand-surface">
-                    <img
-                      src={salon.logoUrl || 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=800&q=80'}
-                      alt={salon.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
+                    {salon.logoUrl ? (
+                      <img
+                        src={salon.logoUrl}
+                        alt={salon.name}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-700 transition-transform duration-700 group-hover:scale-105" />
+                    )}
                     {/* Overlay con CTA */}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors duration-500" />
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">

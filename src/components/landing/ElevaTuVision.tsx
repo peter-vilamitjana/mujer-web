@@ -20,12 +20,7 @@ export default function ElevaTuVision() {
         </div>
         <div className="relative">
           <div className="aspect-[4/5] w-full bg-background overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)]">
-            {/* TODO: reemplazar con next/image y assets propios */}
-            <img 
-                alt="Luxury Studio" 
-                className="w-full h-full object-cover filter contrast-125 brightness-75" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSbVLGSgUMjLAerCCq9Iri4qRgQfoIIQAs9QPddcskX_1NQjt9HIagO_878eclOgdcA2q3r8eMf4HTtQeCGqmBZOXY0w-WYpLTaspBJjzAvjWRTPV_uusOtHb31_IbS4V1btydpx9ffGSKThuG3e-URNRTsHr1LGOCA_fbdCzyR8RIUYefkEsow5tF1RI2h-Td2Oi_Nr4x0FyLitF2drEX4oUZcd5OUkJ_qUwU2IhRV6KT3LXKpqxJUYLOmXy25pynp6m-pDW8ogpb"
-            />
+            <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-900" />
           </div>
           <div className="absolute -top-10 -right-10 w-48 h-px bg-glass-border hidden lg:block"></div>
           <div className="absolute -top-10 -right-10 w-px h-48 bg-glass-border hidden lg:block"></div>

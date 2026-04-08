@@ -5,14 +5,7 @@ export default function Hero() {
   return (
     <section className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-brand-bg pb-32">
       <div className="absolute inset-0 z-0">
-        <img 
-          alt="Dramatic Lifestyle" 
-          className="w-full h-full object-cover object-center scale-105 
-                     brightness-[0.65] contrast-[1.05]
-                     dark:brightness-[0.65] dark:contrast-[1.05]
-                     transition-all duration-1000 ease-in-out" 
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjS9LSsGTPztQ9TCUsdN8xwWCiNJFUWAnLy5UEvWNIFarfFXo-7NKfdu8AoD2AqIlaB9O9zr__02G2eCSCxbmxnAMCpfJqTaRd6qqLEBxV8D9Z3tMBhLRjU_CJlO_wiFsHvWR0LQM6IAGZQljwE7QUXvXg-WY_XRiquIX1MU7pBcr9VTKOKv1K3Ubmy5j91LNPmfX3qq-LqEti5GU93_GOR3qflFnXP0TBMSpFA9PeDHOaL9-fz2EoGU06tmJPAy-AGff8hkVWd6wz"
-        />
+        <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-950" />
         {/* Solo overlay oscuro con fade-in cinematográfico */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-black/85 opacity-0 dark:opacity-100 transition-opacity duration-1000 ease-in-out z-0"></div>
       </div>

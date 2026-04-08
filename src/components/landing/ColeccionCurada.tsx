@@ -20,12 +20,7 @@ export default function ColeccionCurada() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-32 items-start">
           <article className="md:col-span-7 flex flex-col">
             <div className="editorial-image-container aspect-[4/5] mb-12">
-              {/* TODO: reemplazar con next/image y assets propios */}
-              <img 
-                alt="Atelier I" 
-                className="w-full h-full object-cover editorial-image" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAeh3_-2lKcPyRDVcrg0qVwOXB-xpYLxdIigYwK6lApIgM0qoOebI-4Ctvaz290akOaKbM_nyzUloybTZgn5gKNhdeYiAJwkyMSTgbgv-l_oJUZTtiDEXJT0deBs4IBwkVHlzRbuwI9HllbfJPXjC1oj7Pxl940ehzaLC4EQgniT1uByFWAfT5eJy1yqj5a9mcHyDTay-txodLjpVnrXMyrE3B079nSgVWwyH2HuyIr1i9rp9huz1u1G2xDd1qs8z_oNjeS1dx97p3"
-              />
+              <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-900" />
             </div>
             <div className="flex flex-col max-w-md">
               <span className="text-[9px] tracking-[0.5em] uppercase text-brand-primary/30 font-bold mb-4 font-inter">Architecture • 01</span>
@@ -41,12 +36,7 @@ export default function ColeccionCurada() {
           
           <article className="md:col-span-5 flex flex-col md:mt-48">
             <div className="editorial-image-container aspect-[3/4] mb-12">
-              {/* TODO: reemplazar con next/image y assets propios */}
-              <img 
-                alt="Atelier II" 
-                className="w-full h-full object-cover editorial-image" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAz2fdTEMJFxHq7ybQmaYq11tmA_ZWyzQ-Sj01xOfi0-W9caktCRAgQLtbg-ENJay-ByB1xkVigns06YgX9NsajU5oAR9ommn7iDD7mCJBKxwRjdIyksNxbKBUIiSacrvYvD4ifYZhtoFvW6LRI4_2ozoKL_e4i1-7KwlHRDavYlXlEnPC9EZEDXDEtA-EWntOqkFkzsTt-2bYu7zGSjdXCFOneSZ9i_G_KDmiJ9gzVKSGW4acKWnwDAXHsshCoKfxbBxw0xtBALdb"
-              />
+              <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-900" />
             </div>
             <div className="flex flex-col">
               <span className="text-[9px] tracking-[0.5em] uppercase text-brand-primary/30 font-bold mb-4 font-inter">Therapy • 02</span>
@@ -60,12 +50,7 @@ export default function ColeccionCurada() {
           
           <article className="md:col-span-8 md:col-start-3 flex flex-col md:mt-32">
             <div className="editorial-image-container aspect-[16/9] mb-12">
-              {/* TODO: reemplazar con next/image y assets propios */}
-              <img 
-                alt="Atelier III" 
-                className="w-full h-full object-cover editorial-image" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuC99viM6uZI_VKe21zb6UxSIAMN_4RtTd-4s7u8B7Vt0pHL8_SOURAZkMYHzD-8YVwgkDI6M5P5Ot2LgE5XLxDtVnohHUMXhYsIlMQN1wwJagB-zlt3TEaSlg0jZ7dvaQB6ZFLkDWtdE7xyud3UqVU96bAS_ozbVaSjtYjtA-HhDzYjZJrqGBIVA0uCXZLmHe5Y6OlOu1cM19jDgqvy7M3EeVL1tjoqdMNTAz447DgshcWbebX12n_i6Sc9QVc-K28sEYOZxafU9F_V"
-              />
+              <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-900" />
             </div>
             <div className="flex justify-between items-start">
               <div className="max-w-md">

@@ -123,11 +123,15 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
                 <ScrollReveal key={service.id} delay={index * 0.1}>
                   <div className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/[0.03]">
                     <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-6">
-                      <img
-                        src={service.imagen || 'https://placehold.co/600x800.png'}
-                        alt={service.nombre}
-                        className="object-cover w-full h-full"
-                      />
+                      {service.imagen ? (
+                        <img
+                          src={service.imagen}
+                          alt={service.nombre}
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-700" />
+                      )}
                       {service.badge && (
                         <div className="absolute top-3 right-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full shadow-sm">
                           <span className="text-[8px] font-bold text-[#9D6EFE] uppercase tracking-widest leading-none block">{service.badge}</span>
@@ -167,11 +171,15 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
                         <div className="group relative flex h-full flex-col overflow-hidden rounded-[2.5rem] transition-all duration-500 p-8 bg-white shadow-[0_10px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(163,127,255,0.12)] border border-black/5">
                           <div className="relative mb-8 flex-shrink-0">
                             <div className="overflow-hidden rounded-3xl transition-all duration-500">
-                              <img
-                                src={service.imagen || 'https://placehold.co/600x800.png'}
-                                alt={service.nombre}
-                                className="object-cover w-full h-80 group-hover:scale-105 transition-transform duration-700"
-                              />
+                              {service.imagen ? (
+                                <img
+                                  src={service.imagen}
+                                  alt={service.nombre}
+                                  className="object-cover w-full h-80 group-hover:scale-105 transition-transform duration-700"
+                                />
+                              ) : (
+                                <div className="w-full h-80 bg-gradient-to-br from-zinc-800 to-zinc-700 group-hover:scale-105 transition-transform duration-700" />
+                              )}
                             </div>
                             {service.badge && (
                               <div className="absolute top-4 right-4 px-5 py-2 rounded-full bg-[#9D6EFE] shadow-[0_0_20px_rgba(157,110,254,0.4)]">

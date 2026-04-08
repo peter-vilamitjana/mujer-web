@@ -110,12 +110,7 @@ export default function BusinessFeatures() {
               </div>
               <div className="flex-1 w-full">
                 <div className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
-                  <img
-                    src="https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=800&q=80"
-                    alt="Gestión automatizada"
-                    className="w-full h-full object-cover"
-                    style={{ filter: 'contrast(1.1) brightness(0.55) grayscale(0.3)' }}
-                  />
+                  <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-900" />
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(5,5,5,0.5) 0%, transparent 100%)' }} />
                 </div>
               </div>

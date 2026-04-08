@@ -82,12 +82,7 @@ export default function BusinessHero() {
           {/* Imagen */}
           <div className="relative hidden lg:block h-full py-16">
             <div className="relative h-full min-h-[580px] rounded-[2.5rem] overflow-hidden">
-              <img
-                src="https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=900&q=80"
-                alt="Salón de belleza moderno"
-                className="w-full h-full object-cover"
-                style={{ filter: 'contrast(1.08) brightness(0.75)' }}
-              />
+              <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-900" />
               <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-white/50 dark:to-[#050505]/50" />
               <div className="absolute inset-0 bg-gradient-to-t from-white/60 dark:from-[#050505]/60 via-transparent to-transparent" />
 

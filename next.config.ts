@@ -14,39 +14,14 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'placehold.co',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'cdn.thumbor.leadformance.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'instagram.faep14-2.fna.fbcdn.net',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'firebasestorage.googleapis.com',
         pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: 'instagram.fros9-1.fna.fbcdn.net',
+        hostname: 'lh3.googleusercontent.com',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'instagram.faep14-3.fna.fbcdn.net',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        pathname: '/**',
-      }
     ],
   },
   env: {

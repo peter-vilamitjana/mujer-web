@@ -7,7 +7,7 @@ const testimonials = [
   {
     name: "Laura G.",
     text: "El trato es increíble y los resultados siempre superan mis expectativas. Carolina es una verdadera artista.",
-    avatar: "https://placehold.co/100x100.png",
+    avatar: "",
     hint: "woman portrait"
   },
   {
@@ -19,7 +19,7 @@ const testimonials = [
   {
     name: "Sofía R.",
     text: "Un ambiente súper relajante y profesional. Salgo renovada cada vez que voy. ¡Lo recomiendo al 100%!",
-    avatar: "https://placehold.co/100x100.png",
+    avatar: "",
     hint: "woman happy"
   },
 ]
