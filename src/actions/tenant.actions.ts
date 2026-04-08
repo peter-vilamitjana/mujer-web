@@ -1,5 +1,10 @@
 'use server';
 
+// TECH DEBT P1: Uses Firebase Client SDK instead of Firestore REST API.
+// Works in development but may fail in production due to Firestore security rules.
+// Fix: Migrate to REST API with service account token before production deploy.
+// Tracked: https://github.com/[repo]/issues/[n]
+
 import { doc, getDoc, updateDoc, getDocs, collection, query, where, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
