@@ -1,7 +1,8 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowUp, Users, Scissors, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Users, Scissors, Loader2, TrendingUp, Clock } from "lucide-react";
 import { PopularServicesChart } from "@/components/charts/PopularServicesChart";
 import { db } from "@/lib/firebase";
 import VolumenTiempoReal from "@/components/VolumenTiempoReal";
@@ -11,6 +12,8 @@ import { MonthlyVolumeChart } from "@/components/charts/MonthlyVolumeChart";
 import { WeeklyTurnosChart } from "@/components/charts/WeeklyTurnosChart";
 import { useUser } from "@/contexts/UserContext";
 import { useMetrics } from "@/hooks/useMetrics";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 export default function DashboardPage() {
   const user = useUser();
@@ -22,6 +25,9 @@ export default function DashboardPage() {
     volumenMensual,
     horaPico,
     ingresosSemana,
+    ingresosDelMes,
+    ocupacion,
+    proximosTurnos,
     loading
   } = useMetrics();
 
@@ -42,36 +48,82 @@ export default function DashboardPage() {
         <p className="text-muted-foreground mt-1">Resumen de la actividad y rendimiento de tu salón.</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Pass props if supported, otherwise it might still use mock. We'll check next. */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <IngresosSemanalesCard total={ingresosSemana.total} tendencia={ingresosSemana.tendencia} />
 
         <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold flex items-center justify-between">
-              <span>Turnos de Hoy</span>
+          <CardHeader className="pb-2">
+            <CardDescription className="text-sm">Ingresos del mes</CardDescription>
+            <CardTitle className="text-2xl font-bold text-primary">
+              {ingresosDelMes > 0
+                ? new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(ingresosDelMes)
+                : <span className="text-muted-foreground text-base font-normal">Sin datos aún</span>
+              }
             </CardTitle>
-            <CardDescription className="text-sm">Total de citas programadas para la jornada.</CardDescription>
           </CardHeader>
-          <CardContent className="flex items-end justify-between">
-            <p className="text-4xl font-bold">{turnosHoy}</p>
-            <Scissors className="h-6 w-6 text-muted-foreground" />
+          <CardContent>
+            <p className="text-xs text-muted-foreground">Solo turnos completados</p>
+            <TrendingUp className="h-5 w-5 text-muted-foreground mt-2" />
           </CardContent>
         </Card>
 
         <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold flex items-center justify-between">
-              <span>Total de Clientes</span>
-            </CardTitle>
-            <CardDescription className="text-sm">Clientes registrados en el sistema.</CardDescription>
+          <CardHeader className="pb-2">
+            <CardDescription className="text-sm">Turnos de hoy</CardDescription>
+            <CardTitle className="text-4xl font-bold">{turnosHoy}</CardTitle>
           </CardHeader>
-          <CardContent className="flex items-end justify-between">
-            <p className="text-4xl font-bold">{totalClientes}</p>
-            <Users className="h-6 w-6 text-muted-foreground" />
+          <CardContent className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">Citas programadas</p>
+            <Scissors className="h-5 w-5 text-muted-foreground" />
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+          <CardHeader className="pb-2">
+            <CardDescription className="text-sm">Total de clientes</CardDescription>
+            <CardTitle className="text-4xl font-bold">{totalClientes}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">
+              Ocupación: {ocupacion > 0 ? `${ocupacion}%` : 'Sin datos'}
+            </p>
+            <Users className="h-5 w-5 text-muted-foreground" />
           </CardContent>
         </Card>
       </div>
+
+      {/* Próximos turnos */}
+      <Card className="shadow-sm rounded-2xl">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Próximos turnos
+          </CardTitle>
+          <CardDescription>Citas en las próximas 3 horas.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {proximosTurnos.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic">Sin turnos en las próximas 3 horas.</p>
+          ) : (
+            <div className="space-y-2">
+              {proximosTurnos.map((t) => (
+                <div key={t.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">{t.clientName}</p>
+                    <p className="text-xs text-muted-foreground">{t.serviceNames} · {t.staffName}</p>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant="outline" className="text-xs">
+                      {format(t.date, 'HH:mm', { locale: es })}
+                    </Badge>
+                    <p className="text-xs text-muted-foreground mt-1">{t.durationMinutes} min</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <Card className="lg:col-span-3 shadow-sm hover:shadow-md transition-shadow rounded-2xl">

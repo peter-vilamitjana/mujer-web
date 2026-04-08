@@ -1,15 +1,27 @@
 import { useState, useEffect, useMemo } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, where, onSnapshot, Timestamp, getCountFromServer } from 'firebase/firestore';
-import { startOfDay, endOfDay, startOfWeek, endOfWeek, isSameDay, subMonths, startOfMonth, format } from 'date-fns';
+import { collection, query, where, onSnapshot, Timestamp, getCountFromServer, getDocs } from 'firebase/firestore';
+import { startOfWeek, endOfWeek, isSameDay, subMonths, startOfMonth, endOfMonth, addHours, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Appointment } from '@/lib/schema';
 import { useTenant } from '@/contexts/TenantContext';
 
+export interface ProximoTurno {
+    id: string;
+    clientName: string;
+    serviceNames: string;
+    staffName: string;
+    date: Date;
+    durationMinutes: number;
+}
+
 export interface DashboardMetrics {
     turnosHoy: number;
     turnosSemana: { dia: string; cantidad: number }[];
-    ingresosSemana: { total: number; tendencia: number }; // Tendencia dummy por ahora
+    ingresosSemana: { total: number; tendencia: number };
+    ingresosDelMes: number;
+    ocupacion: number; // 0-100 percentage
+    proximosTurnos: ProximoTurno[];
     totalClientes: number;
     serviciosTop: { nombre: string; porcentaje: number; deltaPct: number }[];
     volumenMensual: { mes: string; total: number }[];
@@ -21,6 +33,7 @@ export function useMetrics() {
     const { tenantId } = useTenant();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [totalClientes, setTotalClientes] = useState(0);
+    const [staffCount, setStaffCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -53,6 +66,21 @@ export function useMetrics() {
         };
         fetchCustomersCount();
 
+        // 3. Fetch Active Staff Count (One-off, for ocupacion metric)
+        const fetchStaffCount = async () => {
+            try {
+                const q = query(
+                    collection(db, 'tenants', tenantId, 'staff'),
+                    where('active', '==', true)
+                );
+                const snap = await getDocs(q);
+                setStaffCount(snap.size);
+            } catch (e) {
+                console.error("Error fetching staff count:", e);
+            }
+        };
+        fetchStaffCount();
+
         return () => unsubscribe();
     }, [tenantId]);
 
@@ -66,6 +94,23 @@ export function useMetrics() {
             isSameDay(a.date.toDate(), now) && a.status !== 'cancelled'
         ).length;
 
+        // A2. Próximos turnos (próximas 3 horas)
+        const threeHoursLater = addHours(now, 3);
+        const proximosTurnos: ProximoTurno[] = appointments
+            .filter(a => {
+                const d = a.date.toDate();
+                return d >= now && d <= threeHoursLater && a.status !== 'cancelled' && a.status !== 'completed';
+            })
+            .sort((a, b) => a.date.toMillis() - b.date.toMillis())
+            .map(a => ({
+                id: a.id,
+                clientName: a.clientName,
+                serviceNames: a.serviceNames,
+                staffName: a.staffName,
+                date: a.date.toDate(),
+                durationMinutes: a.durationMinutes,
+            }));
+
         // B. Ingresos Semana
         const turnosThisWeek = appointments.filter(a => {
             const d = a.date.toDate();
@@ -73,6 +118,22 @@ export function useMetrics() {
         });
 
         const ingresosTotal = turnosThisWeek.reduce((sum, a) => sum + (a.priceFinal || a.priceEstimated || 0), 0);
+
+        // B2. Ingresos del mes (solo completados)
+        const monthStart = startOfMonth(now);
+        const monthEnd = endOfMonth(now);
+        const ingresosDelMes = appointments
+            .filter(a => {
+                const d = a.date.toDate();
+                return d >= monthStart && d <= monthEnd && a.status === 'completed';
+            })
+            .reduce((sum, a) => sum + (a.priceFinal || a.priceEstimated || 0), 0);
+
+        // B3. Ocupación (turnos hoy / staff activo × 8 horas disponibles)
+        const capacidadDiaria = staffCount * 8; // horas estimadas
+        const ocupacion = capacidadDiaria > 0
+            ? Math.min(100, Math.round((turnosHoy / capacidadDiaria) * 100))
+            : 0;
 
         // C. Turnos Por Dia (Semana)
         const weekDaysMap = new Map<string, number>();
@@ -138,6 +199,9 @@ export function useMetrics() {
             turnosHoy,
             turnosSemana,
             ingresosSemana: { total: ingresosTotal, tendencia: 0 },
+            ingresosDelMes,
+            ocupacion,
+            proximosTurnos,
             totalClientes,
             serviciosTop,
             volumenMensual,
@@ -145,7 +209,7 @@ export function useMetrics() {
             loading
         };
 
-    }, [appointments, totalClientes, loading]);
+    }, [appointments, totalClientes, staffCount, loading]);
 
     return metrics;
 }

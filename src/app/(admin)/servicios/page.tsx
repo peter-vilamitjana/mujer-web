@@ -1,283 +1,368 @@
 'use client';
-import { useState, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Clock, Info, Loader2 } from "lucide-react";
-import NewServiceForm from "@/components/NewServiceForm";
-import { useUser } from "@/contexts/UserContext";
-import { cn } from "@/lib/utils";
-import type { Servicio, LargoPelo } from "@/lib/types";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useCatalog } from "@/hooks/useCatalog";
 
-type SelectedServiceWithLargo = Servicio & { largo?: LargoPelo };
+import { useState, useEffect, useTransition } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useTenant } from '@/contexts/TenantContext';
+import { createService, updateService, toggleServiceActive } from '@/actions/services.actions';
+import type { Service } from '@/lib/schema';
 
-const LengthPopoverContent = () => (
-  <PopoverContent className="w-64 text-sm" onClick={(e) => e.stopPropagation()}>
-    <h4 className="font-bold mb-2">Cómo definimos el largo</h4>
-    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-      <li><span className="font-semibold text-foreground">Corto:</span> hasta el mentón</li>
-      <li><span className="font-semibold text-foreground">Mediano:</span> hasta los hombros</li>
-      <li><span className="font-semibold text-foreground">Largo:</span> por debajo de los hombros</li>
-    </ul>
-    <p className="mt-4 text-xs text-muted-foreground">
-      <span className="font-bold">Nota:</span> El precio mostrado es a partir de según diagnóstico al llegar.
-    </p>
-  </PopoverContent>
-);
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { PlusCircle, Pencil, Clock, DollarSign } from 'lucide-react';
 
-const LengthPopoverTrigger = () => (
-  <Popover>
-    <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
-      <Button variant="ghost" size="icon" className="h-4 w-4 text-muted-foreground ml-1" aria-label="Información sobre largo">
-        <Info className="h-4 w-4" />
-      </Button>
-    </PopoverTrigger>
-    <LengthPopoverContent />
-  </Popover>
-);
+const serviceSchema = z.object({
+  name: z.string().min(1, 'Nombre requerido'),
+  description: z.string().optional(),
+  durationMinutes: z.coerce.number().min(1, 'Duración mínima 1 min').max(480, 'Duración máxima 8 horas'),
+  price: z.coerce.number().min(0, 'El precio no puede ser negativo'),
+  categoryId: z.string().optional(),
+});
 
+type ServiceFormValues = z.infer<typeof serviceSchema>;
 
-export default function ServiciosPage() {
-  const { services: catalogServices, loading } = useCatalog();
+function ServiceFormSheet({
+  open,
+  onOpenChange,
+  service,
+  tenantId,
+  onSuccess,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  service: Service | null;
+  tenantId: string;
+  onSuccess: () => void;
+}) {
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const isEditing = service !== null;
 
-  const services = useMemo(() => {
-    return catalogServices.map(s => ({
-      id: s.id,
-      nombre: s.name,
-      descripcion: s.description || '',
-      precio: typeof s.price === 'number' ? s.price : undefined,
-      precios: typeof s.price === 'object' ? s.price : undefined,
-      duracion: s.durationMinutes,
-      requiereLargo: s.requiresLengthSelection,
-      variable: s.variablePrice,
-      preciosHasta: s.priceHasta
-    } as Servicio));
-  }, [catalogServices]);
+  const form = useForm<ServiceFormValues>({
+    resolver: zodResolver(serviceSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      durationMinutes: 60,
+      price: 0,
+      categoryId: '',
+    },
+  });
 
-  const [selectedServices, setSelectedServices] = useState<SelectedServiceWithLargo[]>([]);
-  const [showLengthError, setShowLengthError] = useState(false);
-  const user = useUser();
-  const userRole = user?.rol;
-  const router = useRouter();
+  useEffect(() => {
+    if (service) {
+      form.reset({
+        name: service.name,
+        description: service.description ?? '',
+        durationMinutes: service.durationMinutes,
+        price: typeof service.price === 'number' ? service.price : 0,
+        categoryId: service.categoryId ?? '',
+      });
+    } else {
+      form.reset({ name: '', description: '', durationMinutes: 60, price: 0, categoryId: '' });
+    }
+  }, [service, form]);
 
-  const handleServiceToggle = (service: Servicio) => {
-    setSelectedServices(prev => {
-      const isSelected = prev.some(s => s.id === service.id);
-      if (isSelected) {
-        return prev.filter(s => s.id !== service.id);
+  const onSubmit = (values: ServiceFormValues) => {
+    startTransition(async () => {
+      const payload: Omit<Service, 'id'> = {
+        name: values.name,
+        description: values.description,
+        durationMinutes: values.durationMinutes,
+        price: values.price,
+        categoryId: values.categoryId || undefined,
+        active: service?.active ?? true,
+        requiresLengthSelection: service?.requiresLengthSelection ?? false,
+        variablePrice: service?.variablePrice ?? false,
+      };
+
+      const result = isEditing
+        ? await updateService(tenantId, service.id, payload)
+        : await createService(tenantId, payload);
+
+      if (result.success) {
+        toast({ title: isEditing ? 'Servicio actualizado' : 'Servicio creado' });
+        onOpenChange(false);
+        onSuccess();
       } else {
-        // Al seleccionar, no pre-definimos un largo. El usuario debe elegir.
-        return [...prev, { ...service, largo: undefined }];
+        toast({ variant: 'destructive', title: 'Error', description: result.error });
       }
     });
-    setShowLengthError(false); // Reset error on change
   };
-
-  const handleLargoChange = (serviceId: string, largo: LargoPelo) => {
-    setSelectedServices(prev => prev.map(s => s.id === serviceId ? { ...s, largo } : s));
-    setShowLengthError(false); // Reset error on change
-  };
-
-  const getServicePrice = (service: SelectedServiceWithLargo): { from: number; to?: number } => {
-    if (service.requiereLargo && !service.largo) return { from: 0, to: 0 };
-    if (service.precios && service.largo) {
-      const fromPrice = service.precios[service.largo];
-      const toPrice = service.variable && service.preciosHasta ? service.preciosHasta[service.largo] : undefined;
-      return { from: fromPrice, to: toPrice };
-    }
-    return { from: service.precio || 0 };
-  }
-
-  const isContinueDisabled = useMemo(() => {
-    if (selectedServices.length === 0) return true;
-    return selectedServices.some(s => s.requiereLargo && !s.largo);
-  }, [selectedServices]);
-
-  const handleContinue = () => {
-    if (isContinueDisabled) {
-      setShowLengthError(true);
-      return;
-    }
-    const params = new URLSearchParams();
-    selectedServices.forEach(service => {
-      params.append('servicioId', service.id);
-      if (service.largo) {
-        params.append(`largo_${service.id}`, service.largo);
-      }
-    });
-    router.push(`/turnos?${params.toString()}`);
-  }
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price);
-  }
-
-  const { totalFrom, totalTo, hasRange } = useMemo(() => {
-    let from = 0;
-    let to = 0;
-    let range = false;
-    selectedServices.forEach(s => {
-      const price = getServicePrice(s);
-      from += price.from;
-      if (price.to) {
-        to += price.to;
-        range = true;
-      } else {
-        to += price.from;
-      }
-    });
-    return { totalFrom: from, totalTo: to, hasRange: range && to > from };
-  }, [selectedServices]);
-
-  const totalDuration = useMemo(() => selectedServices.reduce((acc, s) => {
-    if (s.requiereLargo && !s.largo) return acc;
-    return acc + (s.duracion || 0);
-  }, 0), [selectedServices]);
-
-  const servicesSummary = useMemo(() => {
-    if (selectedServices.length === 0) return '';
-    const names = selectedServices.map(s => s.nombre);
-    const limit = 3;
-    let summary = names.slice(0, limit).join(', ');
-    if (names.length > limit) {
-      summary += ` +${names.length - limit} más`;
-    }
-    return summary;
-  }, [selectedServices]);
 
   return (
-    <div className="space-y-6 pb-24">
-      <div className="flex items-center justify-between gap-4">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="sm:max-w-md overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>{isEditing ? 'Editar servicio' : 'Nuevo servicio'}</SheetTitle>
+        </SheetHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ej: Corte y peinado" {...field} disabled={isPending} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descripción <span className="text-muted-foreground">(opcional)</span></FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Describe el servicio..." {...field} disabled={isPending} rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Precio (ARS)</FormLabel>
+                    <FormControl>
+                      <Input type="number" min={0} placeholder="0" {...field} disabled={isPending} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="durationMinutes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duración (min)</FormLabel>
+                    <FormControl>
+                      <Input type="number" min={1} max={480} placeholder="60" {...field} disabled={isPending} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name="categoryId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Categoría <span className="text-muted-foreground">(opcional)</span></FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ej: Coloración, Tratamientos..." {...field} disabled={isPending} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <SheetFooter className="pt-4">
+              <Button type="submit" disabled={isPending} className="w-full">
+                {isPending ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear servicio'}
+              </Button>
+            </SheetFooter>
+          </form>
+        </Form>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function ServiceCard({
+  service,
+  tenantId,
+  onEdit,
+  onToggle,
+}: {
+  service: Service;
+  tenantId: string;
+  onEdit: (s: Service) => void;
+  onToggle: (s: Service, active: boolean) => void;
+}) {
+  const price = typeof service.price === 'number' ? service.price : 0;
+
+  const formatPrice = (p: number) =>
+    new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(p);
+
+  return (
+    <Card className={`transition-opacity ${!service.active ? 'opacity-60' : ''}`}>
+      <CardHeader className="pb-2">
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="text-base leading-tight">{service.name}</CardTitle>
+          <Badge variant={service.active ? 'default' : 'secondary'} className="shrink-0 text-xs">
+            {service.active ? 'Activo' : 'Inactivo'}
+          </Badge>
+        </div>
+        {service.description && (
+          <p className="text-sm text-muted-foreground line-clamp-2">{service.description}</p>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center gap-4 text-sm">
+          <span className="flex items-center gap-1 font-semibold text-primary">
+            <DollarSign className="h-4 w-4" />
+            {formatPrice(price)}
+          </span>
+          <span className="flex items-center gap-1 text-muted-foreground">
+            <Clock className="h-4 w-4" />
+            {service.durationMinutes} min
+          </span>
+        </div>
+        {service.categoryId && (
+          <Badge variant="outline" className="text-xs">{service.categoryId}</Badge>
+        )}
+        <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={service.active}
+              onCheckedChange={(checked) => onToggle(service, checked)}
+              aria-label={service.active ? 'Desactivar servicio' : 'Activar servicio'}
+            />
+            <span className="text-xs text-muted-foreground">
+              {service.active ? 'Activo' : 'Inactivo'}
+            </span>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => onEdit(service)}>
+            <Pencil className="h-4 w-4 mr-1" />
+            Editar
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function ServiciosAdminPage() {
+  const { tenantId } = useTenant();
+  const { toast } = useToast();
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [, startTransition] = useTransition();
+
+  const fetchServices = async () => {
+    if (!tenantId) return;
+    setLoading(true);
+    try {
+      const snap = await getDocs(collection(db, 'tenants', tenantId, 'services'));
+      const data = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Service));
+      setServices(data.sort((a, b) => a.name.localeCompare(b.name)));
+    } catch (err) {
+      console.error('[fetchServices]', err);
+      toast({ variant: 'destructive', title: 'Error', description: 'No se pudieron cargar los servicios.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchServices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantId]);
+
+  const handleEdit = (service: Service) => {
+    setEditingService(service);
+    setSheetOpen(true);
+  };
+
+  const handleNew = () => {
+    setEditingService(null);
+    setSheetOpen(true);
+  };
+
+  const handleToggle = (service: Service, active: boolean) => {
+    if (!tenantId) return;
+    // Optimistic update
+    setServices((prev) => prev.map((s) => (s.id === service.id ? { ...s, active } : s)));
+    startTransition(async () => {
+      const result = await toggleServiceActive(tenantId, service.id, active);
+      if (!result.success) {
+        // Revert
+        setServices((prev) => prev.map((s) => (s.id === service.id ? { ...s, active: !active } : s)));
+        toast({ variant: 'destructive', title: 'Error', description: result.error });
+      } else {
+        toast({ title: active ? 'Servicio activado' : 'Servicio archivado' });
+      }
+    });
+  };
+
+  if (!tenantId) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground">No hay un salón activo en la sesión.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Servicios</h1>
-          <p className="text-muted-foreground">
-            Paso 1: Elige uno o más servicios para tu turno.
-          </p>
+          <p className="text-muted-foreground">Gestioná el catálogo de servicios de tu salón.</p>
         </div>
-        {userRole === 'admin' && <NewServiceForm />}
+        <Button onClick={handleNew}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Nuevo servicio
+        </Button>
       </div>
 
-      <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
-        {loading ? <div className="col-span-full flex justify-center py-10"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div> : services.map(servicio => {
-          const isSelected = selectedServices.some(s => s.id === servicio.id);
-          const selectedData = selectedServices.find(s => s.id === servicio.id);
-          const price = getServicePrice(selectedData || servicio);
-
-          return (
-            <div
-              key={servicio.id}
-              onClick={() => handleServiceToggle(servicio)}
-              className={cn(
-                "flex flex-col rounded-2xl bg-card shadow-sm border-2 cursor-pointer transition-all duration-300 h-full p-6",
-                "hover:shadow-lg dark:hover:shadow-primary/10",
-                isSelected
-                  ? "border-primary shadow-lg ring-2 ring-primary/20 dark:ring-primary/40 dark:border-primary/50"
-                  : "border-border/50 dark:border-border/30"
-              )}
-            >
-              <div className="flex-grow">
-                <h3 className="text-xl font-semibold mb-2 text-foreground">{servicio.nombre}</h3>
-                <p className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                  <Clock className="h-4 w-4" />
-                  <span>{servicio.duracion} min.</span>
-                </p>
-
-                <div className="my-4 flex items-center justify-center min-h-[56px]">
-                  {servicio.requiereLargo && !isSelected ? (
-                    <div className="flex items-center gap-1 text-lg text-center text-muted-foreground/80 italic">
-                      <span>Precio variable</span>
-                      <LengthPopoverTrigger />
-                    </div>
-                  ) : (
-                    <p className="text-4xl font-bold text-primary text-center">{formatPrice(price.from)}</p>
-                  )}
-                </div>
-              </div>
-
-              {servicio.requiereLargo && (
-                <div
-                  className="mt-auto space-y-3"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <RadioGroup
-                    value={selectedData?.largo}
-                    onValueChange={(value) => handleLargoChange(servicio.id, value as LargoPelo)}
-                    className="grid grid-cols-3 gap-2"
-                    disabled={!isSelected}
-                  >
-                    {(Object.keys(servicio.precios!) as LargoPelo[]).map(largo => (
-                      <div key={largo}>
-                        <RadioGroupItem value={largo} id={`${servicio.id}-${largo}`} className="sr-only" />
-                        <Label htmlFor={`${servicio.id}-${largo}`} className={cn(
-                          "block p-2 text-center text-xs border rounded-md cursor-pointer transition-all",
-                          selectedData?.largo === largo ? "border-primary bg-primary/10 text-primary dark:bg-primary/20" : "border-border",
-                          !isSelected && "cursor-not-allowed opacity-50"
-                        )}>
-                          <span className="font-semibold capitalize">{largo}</span>
-                          <span className="block text-muted-foreground">{formatPrice(servicio.precios![largo])}</span>
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                  <p className="text-xs text-muted-foreground text-center flex items-center justify-center">
-                    Precio desde. Se confirma en el local según diagnóstico.
-                    <LengthPopoverTrigger />
-                  </p>
-                  {showLengthError && isSelected && !selectedData?.largo && <p className="text-xs text-red-500 font-semibold text-center mt-1">Elegí un largo para continuar.</p>}
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
-
-      {userRole !== 'admin' && (
-        <div className="fixed bottom-0 left-0 right-0 z-20 p-4 bg-background/80 backdrop-blur-lg border-t dark:border-border/50">
-          <div className="container mx-auto flex items-center justify-between">
-            <div className="max-w-md">
-              {selectedServices.length > 0 ? (
-                <div>
-                  <p className="text-sm font-semibold">
-                    Total estimado:
-                    <span className="text-2xl font-bold text-primary ml-2">
-                      {hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)}
-                    </span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">{selectedServices.length} servicio(s) seleccionado(s) - {totalDuration} min.</p>
-                  <p className="text-sm text-foreground mt-2 truncate">
-                    <span className="font-semibold">Serv:</span> {servicesSummary}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Estimado. Puede variar según diagnóstico (+ insumos).</p>
-                </div>
-              ) : (
-                <div>
-                  <p className="font-bold">Selecciona un servicio</p>
-                  <p className="text-sm text-muted-foreground">Elige uno o más servicios para continuar.</p>
-                </div>
-              )}
-              {showLengthError && <p className="text-sm text-red-500 font-semibold mt-2">Elegí un largo para continuar.</p>}
-            </div>
-            <Button
-              size="lg"
-              onClick={handleContinue}
-              disabled={isContinueDisabled}
-              className="w-full max-w-xs rounded-full py-6 text-lg"
-            >
-              Continuar
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </div>
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 rounded-xl" />
+          ))}
+        </div>
+      ) : services.length === 0 ? (
+        <div className="flex flex-col items-center justify-center min-h-[300px] gap-3 border-2 border-dashed rounded-xl">
+          <p className="text-muted-foreground">Aún no hay servicios registrados.</p>
+          <Button variant="outline" onClick={handleNew}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Crear primer servicio
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {services.map((service) => (
+            <ServiceCard
+              key={service.id}
+              service={service}
+              tenantId={tenantId}
+              onEdit={handleEdit}
+              onToggle={handleToggle}
+            />
+          ))}
         </div>
       )}
+
+      <ServiceFormSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        service={editingService}
+        tenantId={tenantId}
+        onSuccess={fetchServices}
+      />
     </div>
   );
 }

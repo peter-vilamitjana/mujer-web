@@ -4,6 +4,7 @@ import { collection, query, where, getDocs, doc, setDoc, serverTimestamp, Timest
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { syncAppointmentToCalendar } from './calendar.actions';
 
 // ─────────────────────────────────────────────
 // ACTION 1: getAvailableSlots
@@ -143,6 +144,11 @@ export async function createBooking(
     };
     // setDoc con merge: true → crea si no existe, actualiza si ya existe sin borrar campos previos
     await setDoc(customerRef, customerData, { merge: true });
+
+    // 4. Sync to Google Calendar (best-effort — no lanza si falla)
+    syncAppointmentToCalendar(payload.tenantId, appointmentRef.id).catch((err) =>
+      console.error('[createBooking] GCal sync error:', err)
+    );
 
     return { success: true, appointmentId: appointmentRef.id };
   } catch (error) {

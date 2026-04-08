@@ -1,0 +1,59 @@
+'use server';
+
+import { doc, getDoc, updateDoc, getDocs, collection, query, where, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import type { Tenant } from '@/lib/schema';
+
+type ActionResult = { success: true } | { success: false; error: string };
+
+async function requireAdminSession() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) throw new Error('No autenticado.');
+  return session;
+}
+
+export async function updateTenantSettings(
+  tenantId: string,
+  data: Partial<Omit<Tenant, 'id' | 'createdAt'>>
+): Promise<ActionResult> {
+  try {
+    await requireAdminSession();
+    await updateDoc(doc(db, 'tenants', tenantId), {
+      ...data,
+      updatedAt: serverTimestamp(),
+    });
+    return { success: true };
+  } catch (err) {
+    console.error('[updateTenantSettings]', err);
+    return { success: false, error: 'No se pudo guardar la configuración.' };
+  }
+}
+
+export async function checkSlugAvailability(
+  slug: string,
+  currentTenantId: string
+): Promise<{ available: boolean }> {
+  try {
+    if (!slug || slug.length < 3) return { available: false };
+    const q = query(collection(db, 'tenants'), where('slug', '==', slug));
+    const snap = await getDocs(q);
+    const available = snap.empty || snap.docs.every((d) => d.id === currentTenantId);
+    return { available };
+  } catch (err) {
+    console.error('[checkSlugAvailability]', err);
+    return { available: false };
+  }
+}
+
+export async function getTenantSettings(tenantId: string): Promise<Tenant | null> {
+  try {
+    const snap = await getDoc(doc(db, 'tenants', tenantId));
+    if (!snap.exists()) return null;
+    return { id: snap.id, ...snap.data() } as Tenant;
+  } catch (err) {
+    console.error('[getTenantSettings]', err);
+    return null;
+  }
+}

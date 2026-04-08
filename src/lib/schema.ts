@@ -24,9 +24,21 @@ export interface Tenant {
     id: string;
     name: string;
     slug: string;
+    description?: string;
+    phone?: string;
+    address?: string;
     logoUrl?: string;
+    coverImageUrl?: string;
     isActivePublicly?: boolean;
     createdAt: Timestamp;
+    socialLinks?: {
+        instagram?: string;
+        facebook?: string;
+        whatsapp?: string;
+    };
+    businessHours?: {
+        [day: string]: { open: string; close: string; isOpen: boolean };
+    };
     settings: {
         primaryColor?: string;
         currency: string;
@@ -41,7 +53,7 @@ export interface Branch {
     phone?: string;
     active: boolean;
     schedule?: {
-        [key: string]: { open: string; close: string }; // e.g., "monday": { open: "09:00", close: "18:00" }
+        [key: string]: { open: string; close: string; isOpen: boolean };
     };
 }
 
@@ -91,6 +103,12 @@ export interface Staff {
     role: string; // Display role (e.g. "Estilista Senior")
     assignedBranchIds: string[];
     active: boolean;
+    email?: string;
+    phone?: string;
+    services?: string[]; // IDs de servicios que puede realizar
+    schedule?: {
+        [day: string]: { start: string; end: string; available: boolean };
+    }; // day: "monday", "tuesday", etc.
 }
 
 export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show' | 'pending_payment';

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, User, Menu } from 'lucide-react';
 import Logo from './Logo';
+import BranchSelector from './BranchSelector';
 import { useUser } from '@/contexts/UserContext';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
@@ -58,6 +59,7 @@ export default function Header() {
       </div>
 
       <div className="flex items-center gap-2">
+        <BranchSelector />
         <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

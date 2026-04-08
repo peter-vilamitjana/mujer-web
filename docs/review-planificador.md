@@ -1,10 +1,13 @@
 # Review del Plan de Proyecto MujerApp
 
 **Fecha**: 2026-04-03 | **Reviewer**: Agente Planificador
+**Última actualización**: 2026-04-08 | **Estado**: Fase 0 ✅ + Fase 1 ✅ completadas
+
+> Los hallazgos marcados con ✅ han sido resueltos. Los marcados con ⏳ están pendientes para Fase 2+.
 
 ---
 
-## 1. Priorización de Fase 0 -- Ajustes recomendados
+## 1. Priorización de Fase 0 -- Ajustes recomendados ✅ RESUELTO
 
 ### 1.1 Reordenar tareas por criticidad y desbloqueo
 
@@ -44,7 +47,7 @@ Estimacion mas realista: **3-4 dias**, especialmente si hay que resolver como pe
 
 ---
 
-## 2. Dependencias no expresadas en el plan
+## 2. Dependencias no expresadas en el plan ✅ PARCIALMENTE RESUELTO
 
 El plan declara dependencias vagas ("Depende de Fase 0") pero no las hace explicitas. Dependencias criticas faltantes:
 
@@ -58,16 +61,17 @@ El plan declara dependencias vagas ("Depende de Fase 0") pero no las hace explic
 - **1.8 (Metricas reales) dice "Depende de Firestore real"**, lo cual es vago. Depende de 0.5 (branch dinamico) + 1.1 (servicios reales) + datos de appointments reales en Firestore. Sin datos, las metricas son ceros.
 - **2.4 (Portal cliente) dice "Auth marketplace"**, pero eso no es una tarea del plan. Deberia decir "depende de 0.7 (middleware marketplace)" y de un flujo de registro de cliente que no esta listado en ninguna fase.
 - **2.1 (Explore) dice "Datos reales"** -- depende de que al menos 2-3 salones tengan datos completos (servicios, staff, horarios). Esto a su vez depende de 1.1, 1.2, y 1.3.
-- **3.1 (Stripe) dice "Cuenta activada"** -- esto es un bloqueante externo (registro en Stripe/MercadoPago, verificacion KYC) que puede tomar 1-4 semanas. Debe iniciarse en Fase 1, no en Fase 3.
+- **3.1 (Stripe) dice "Cuenta activada"** -- esto es un bloqueante externo (registro en Stripe/MercadoPago, verificacion KYC) que puede tomar 1-4 semanas. Debe iniciarse en Fase 1, no en Fase 3. ⏳ **PENDIENTE** — iniciar gestiones en paralelo con Fase 2.
 
-### Dependencia critica no mencionada: Registro de salones
+### Dependencia critica no mencionada: Registro de salones ✅ RESUELTO
 El plan asume que los salones existen en Firestore. La tarea 1.6 (Onboarding wizard) crea el flujo de registro, pero depende de 1.1 (servicios) y 1.3 (sucursales), que estan en la misma fase. Esto crea un problema circular: necesitas el onboarding para tener datos, pero necesitas los CRUDs para que el onboarding funcione. **Solucion**: priorizar 1.1 y 1.3 antes de 1.6, y tener un script de seed actualizado como puente.
+> ✅ Ejecutado en orden correcto: 1.1 (Semana 1) → 1.3 (Semana 2) → 1.6 (Semana 4). `createTenantWithAdmin` es batch atómico que crea tenant + branch + primer servicio + membership en una sola operación.
 
 ---
 
 ## 3. Riesgos adicionales no contemplados
 
-### R11 -- Autenticacion de clientes B2C no disenada
+### R11 -- Autenticacion de clientes B2C no disenada ⏳ PENDIENTE — Fase 2
 El plan menciona "Auth marketplace" como dependencia pero nunca define como se autentican las clientas. Actualmente solo hay auth para admins. Preguntas sin responder:
 - Se usa el mismo NextAuth con un rol diferente?
 - Registro por email, Google, o ambos?
@@ -75,17 +79,18 @@ El plan menciona "Auth marketplace" como dependencia pero nunca define como se a
 
 **Impacto**: Bloquea Fase 2 completa. Deberia ser tarea explicita en Fase 1.
 
-### R12 -- Migracion de datos legacy
+### R12 -- Migracion de datos legacy ✅ PARCIALMENTE RESUELTO
 El plan menciona mezcla de `types.ts` / `schema.ts` como deuda media (item 9), pero no hay tarea para resolverlo. Si Fase 1 construye CRUDs sobre un schema ambiguo, se duplica la deuda.
 
 **Impacto**: Medio. Cada CRUD necesita saber cual es el schema canonico.
+> ✅ Decisión ejecutada: todos los CRUDs de Fase 1 usan `schema.ts` como schema canónico (Service, Staff, Branch, Tenant). Los actions y hooks nuevos importan solo de `@/lib/schema`. `types.ts` queda como legacy para el booking flow B2C existente hasta que se migre en Fase 2.
 
-### R13 -- Rate limiting ausente
+### R13 -- Rate limiting ausente ⏳ PENDIENTE — Fase 2
 Listado como pendiente en 2.2 (Backend/API) pero no aparece en ninguna tarea de ninguna fase. Sin rate limiting, un booking flow publico es vulnerable a abuso.
 
 **Impacto**: Bloquea lanzamiento publico. Deberia estar en Fase 2 como tarea explicita.
 
-### R14 -- Ausencia de backups de Firestore
+### R14 -- Ausencia de backups de Firestore ⏳ PENDIENTE — Configurar antes de Fase 2 launch
 No se menciona en ningun lugar. Firestore tiene backups automaticos solo en plan Blaze con configuracion explicita.
 
 **Impacto**: Alto. Perdida de datos en produccion sin recuperacion posible.
@@ -110,15 +115,15 @@ El plan lo lista como deuda alta (item 6) y tiene tarea 2.3, pero mientras tanto
 
 ## 4. Ajustes de estimacion
 
-| Tarea | Estimacion plan | Estimacion ajustada | Razon |
-|-------|----------------|--------------------|-------|
-| 0.1 (Fix TS errors) | 3 dias | 4-5 dias | Magnitud desconocida. Mezcla de schemas agrega complejidad |
-| 0.5 (branchId dinamico) | 2 dias | 3-4 dias | Requiere cambios en contexto, acciones, y UI. Testing e2e manual |
-| 1.6 (Onboarding wizard) | 3 dias | 5 dias | Multi-step wizard con validacion, requiere que 1.1 y 1.3 esten estables |
-| 1.7 (Google Calendar sync) | 5 dias | 7 dias | Sync bidireccional con conflictos es notoriamente dificil. Edge cases de timezone, eventos recurrentes, cancelaciones parciales |
-| 2.1 (Explore con filtros) | 4 dias | 5-6 dias | Queries compuestos en Firestore requieren indices. Filtros por zona necesitan geopoints no mencionados en schema |
-| 3.1 (Stripe) | 5 dias | 7 dias | Incluye manejo de errores, retries, idempotencia, testing con webhooks locales |
-| 4.6 (Test suite) | 5 dias | 8-10 dias | Configurar Playwright + Vitest desde cero en un proyecto sin tests, mas escribir tests de flujos criticos, es al menos 2 semanas |
+| Tarea | Estimacion plan | Estimacion ajustada | Real ejecutado | Razon |
+|-------|----------------|--------------------|----------------|-------|
+| 0.1 (Fix TS errors) | 3 dias | 4-5 dias | ✅ ~3 dias | Magnitud acotada. Schema mezcla mitigada con decision de canonical |
+| 0.5 (branchId dinamico) | 2 dias | 3-4 dias | ✅ ~2 dias | TenantContext ya tenia infraestructura. Cambio quirúrgico |
+| 1.6 (Onboarding wizard) | 3 dias | 5 dias | ✅ ~1 sesion | Batch atómico. Wizard 5 pasos con localStorage |
+| 1.7 (Google Calendar sync) | 5 dias | 7 dias | ✅ ~1 sesion | App→GCal implementado. Helper con token refresh. Best-effort para no romper booking flow |
+| 2.1 (Explore con filtros) | 4 dias | 5-6 dias | ⏳ Pendiente | Queries compuestos en Firestore requieren indices. Filtros por zona necesitan geopoints no mencionados en schema |
+| 3.1 (Stripe) | 5 dias | 7 dias | ⏳ Pendiente | Incluye manejo de errores, retries, idempotencia, testing con webhooks locales |
+| 4.6 (Test suite) | 5 dias | 8-10 dias | ⏳ Pendiente | Configurar Playwright + Vitest desde cero en un proyecto sin tests, mas escribir tests de flujos criticos, es al menos 2 semanas |
 
 ### Impacto en timeline total
 
@@ -169,7 +174,7 @@ El plan lista 6 acciones inmediatas. Orden revisado con justificacion:
 
 ## 6. Observaciones adicionales
 
-### 6.1 Falta un "Definition of Done" para el MVP
+### 6.1 Falta un "Definition of Done" para el MVP ⏳ PENDIENTE
 
 El plan dice "MVP Launchable" al final de Fase 2, pero no define que significa "launchable":
 - Cuantos salones deben estar onboarded?
@@ -178,11 +183,11 @@ El plan dice "MVP Launchable" al final de Fase 2, pero no define que significa "
 
 Sin esto, el MVP se convierte en un target movil.
 
-### 6.2 Testing demasiado tarde
+### 6.2 Testing demasiado tarde ⏳ PENDIENTE — agregar tests básicos en Fase 2
 
 Tests estan en Fase 4 (semana 13+). Para entonces habra 12 semanas de codigo sin cobertura. El costo de escribir tests retroactivamente es 3-4x mayor que escribirlos junto al feature. Recomendacion: agregar tests de integracion basicos para cada CRUD en Fase 1, y tests e2e del booking flow en Fase 2. No esperar a Fase 4.
 
-### 6.3 Falta estrategia de datos de prueba
+### 6.3 Falta estrategia de datos de prueba ⏳ PENDIENTE
 
 El plan no menciona como se populan datos para desarrollo y staging. El script de seed existe (`/admin/seed`) pero:
 - Esta desprotegido (se arregla en 0.6)
@@ -191,7 +196,7 @@ El plan no menciona como se populan datos para desarrollo y staging. El script d
 
 Recomendacion: incluir en Fase 0 una tarea de "revisar y mejorar seed script" (~0.5 dias).
 
-### 6.4 La Fase 4 mezcla prioridades
+### 6.4 La Fase 4 mezcla prioridades ⏳ PENDIENTE — aplicar en planificación de Fase 2
 
 SEO (4.2) y Performance (4.3) deberian estar en Fase 2 o inicio de Fase 3 -- son prerequisitos para que el marketplace tenga traccion organica. Dejarlos para Fase 4 significa lanzar un marketplace sin discoverability. En cambio, AI (4.5) y Push Notifications (4.7) si son correctamente Fase 4.
 
@@ -199,9 +204,13 @@ SEO (4.2) y Performance (4.3) deberian estar en Fase 2 o inicio de Fase 3 -- son
 
 ## Resumen de hallazgos clave
 
-1. **Seguridad primero**: Las acciones inmediatas deben empezar por credenciales y endpoints expuestos, no por errores TS.
-2. **Dependencias ocultas**: Auth B2C, cuenta Stripe, y datos de seed son bloqueantes no planificados que pueden agregar 2-4 semanas al timeline.
-3. **Estimaciones optimistas**: Google Calendar sync, test suite, y fix de TS errors estan subestimados. Timeline real es ~15-18 semanas para v1.0 con 2 devs.
-4. **Testing demasiado tarde**: Esperar a Fase 4 para tests multiplica el costo y el riesgo de regresiones.
-5. **MVP sin definicion clara**: "Launchable" necesita criterios medibles.
-6. **SEO/Performance fuera de lugar**: Deberian estar antes del launch del marketplace, no despues.
+| # | Hallazgo | Estado |
+|---|----------|--------|
+| 1 | **Seguridad primero**: Las acciones inmediatas deben empezar por credenciales y endpoints expuestos, no por errores TS. | ✅ Resuelto en Fase 0 |
+| 2 | **Dependencias ocultas**: Auth B2C, cuenta Stripe, y datos de seed son bloqueantes no planificados. | ⚠️ Stripe + Auth B2C pendientes — iniciar en paralelo con Fase 2 |
+| 3 | **Estimaciones optimistas**: Google Calendar sync, test suite, fix TS errors subestimados. | ✅ GCal resuelto. TS limpio. Tests: ⏳ Fase 4 |
+| 4 | **Testing demasiado tarde**: Esperar a Fase 4 para tests multiplica costo y riesgo de regresiones. | ⏳ Agregar tests básicos de CRUD en Fase 2 |
+| 5 | **MVP sin definicion clara**: "Launchable" necesita criterios medibles. | ⏳ Definir antes de iniciar Fase 2 |
+| 6 | **SEO/Performance fuera de lugar**: Deberian estar antes del launch del marketplace. | ⏳ Incorporar en planificacion de Fase 2 |
+| 7 | **Dependencia circular 1.1/1.3 → 1.6**: Onboarding depende de CRUDs de la misma fase. | ✅ Resuelto: orden de ejecución 1.1 → 1.3 → 1.6 |
+| 8 | **Schema canonical ambiguo**: `types.ts` vs `schema.ts`. | ✅ Decision: `schema.ts` es canónico para Fase 1+. `types.ts` es legacy B2C |
