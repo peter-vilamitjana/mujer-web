@@ -5,6 +5,8 @@ import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { syncAppointmentToCalendar } from './calendar.actions';
+import { sendWhatsAppMessage } from '@/lib/whatsapp';
+import { buildConfirmationMessage } from '@/lib/whatsapp-templates';
 
 // ─────────────────────────────────────────────
 // ACTION 1: getAvailableSlots
@@ -131,6 +133,33 @@ export async function createBooking(
       notes: '',
     };
     await setDoc(appointmentRef, appointmentData);
+
+    // WhatsApp confirmation — non-blocking, does not affect booking success
+    const clientPhone = (session.user as { phone?: string }).phone ?? null;
+    if (clientPhone) {
+      // Note: phone comes from customer profile if available.
+      // For now, we skip if no phone is available in the session.
+      // The customer's phone will be wired up when the Customer profile lookup is added.
+      const dateStr = appointmentDateTime.toLocaleDateString('es-AR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      });
+      const timeStr = payload.time;
+      sendWhatsAppMessage(
+        buildConfirmationMessage({
+          clientName: userName,
+          salonName: 'tu salón', // TODO: replace with real tenant name lookup before go-live
+          date: dateStr,
+          time: timeStr,
+          serviceName: payload.serviceNames,
+          staffName: payload.staffName,
+          clientPhone,
+        })
+      ).catch((err) =>
+        console.error('[createBooking] WhatsApp notification failed:', err)
+      );
+    }
 
     // 3. ESCRITURA 2: Crear o actualizar customer en el CRM privado del tenant
     // Usamos el uid como ID del documento para garantizar unicidad por usuario global
