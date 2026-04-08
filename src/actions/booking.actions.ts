@@ -1,6 +1,6 @@
 'use server';
 
-import { collection, query, where, getDocs, doc, setDoc, serverTimestamp, Timestamp, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp, Timestamp, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -105,6 +105,13 @@ export async function createBooking(
   const userName = session.user.name ?? 'Cliente';
 
   try {
+    // TODO 3: RBAC — verificar que el tenant está activo antes de crear la reserva
+    const tenantSnap = await getDoc(doc(db, 'tenants', payload.tenantId));
+    if (!tenantSnap.exists() || tenantSnap.data().isActivePublicly !== true) {
+      return { success: false, error: 'Este salón no está disponible para reservas en este momento.' };
+    }
+    const tenantName: string = tenantSnap.data().name ?? 'tu salón'; // TODO 1 resolved
+
     const [hour, minute] = payload.time.split(':').map(Number);
     const appointmentDateTime = new Date(payload.date);
     appointmentDateTime.setHours(hour, minute, 0, 0);
@@ -135,11 +142,17 @@ export async function createBooking(
     await setDoc(appointmentRef, appointmentData);
 
     // WhatsApp confirmation — non-blocking, does not affect booking success
-    const clientPhone = (session.user as { phone?: string }).phone ?? null;
+    // TODO 2: Look up phone from customer profile (session doesn't carry phone)
+    let clientPhone: string | null = (session.user as any).phone ?? null;
+    if (!clientPhone && uid) {
+      try {
+        const customerSnap = await getDoc(doc(db, 'tenants', payload.tenantId, 'customers', uid));
+        if (customerSnap.exists()) clientPhone = customerSnap.data().phone ?? null;
+      } catch {
+        // phone lookup is best-effort
+      }
+    }
     if (clientPhone) {
-      // Note: phone comes from customer profile if available.
-      // For now, we skip if no phone is available in the session.
-      // The customer's phone will be wired up when the Customer profile lookup is added.
       const dateStr = appointmentDateTime.toLocaleDateString('es-AR', {
         weekday: 'long',
         day: 'numeric',
@@ -149,7 +162,7 @@ export async function createBooking(
       sendWhatsAppMessage(
         buildConfirmationMessage({
           clientName: userName,
-          salonName: 'tu salón', // TODO: replace with real tenant name lookup before go-live
+          salonName: tenantName,
           date: dateStr,
           time: timeStr,
           serviceName: payload.serviceNames,

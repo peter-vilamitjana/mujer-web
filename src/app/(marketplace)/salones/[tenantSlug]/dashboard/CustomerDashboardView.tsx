@@ -35,13 +35,15 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import type { DashboardAppointment } from '@/lib/services/customer.service';
 import type { AppointmentStatus } from '@/lib/schema';
+import { cancelAppointment } from '@/actions/customer.actions';
 
 interface ProximoTurnoCardProps {
   appointment: DashboardAppointment;
   onCancel: (id: string) => void;
+  isCancelling: boolean;
 }
 
-function ProximoTurnoCard({ appointment, onCancel }: ProximoTurnoCardProps) {
+function ProximoTurnoCard({ appointment, onCancel, isCancelling }: ProximoTurnoCardProps) {
   const services = appointment.serviceName.split(',').map((s) => s.trim());
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -113,8 +115,11 @@ function ProximoTurnoCard({ appointment, onCancel }: ProximoTurnoCardProps) {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Volver</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onCancel(appointment.id)}>
-                  Sí, cancelar turno
+                <AlertDialogAction
+                  onClick={() => onCancel(appointment.id)}
+                  disabled={isCancelling}
+                >
+                  {isCancelling ? 'Cancelando...' : 'Sí, cancelar turno'}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -183,9 +188,12 @@ export function CustomerDashboardView({
 }: CustomerDashboardViewProps) {
   const [filter, setFilter] = useState('month');
   const [visibleCount, setVisibleCount] = useState(10);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [cancelledIds, setCancelledIds] = useState<Set<string>>(new Set());
 
   const upcoming = appointments.filter((a) =>
-    ['pending', 'confirmed', 'pending_payment'].includes(a.status)
+    ['pending', 'confirmed', 'pending_payment'].includes(a.status) &&
+    !cancelledIds.has(a.id)
   );
 
   const history = useMemo(() => {
@@ -205,9 +213,20 @@ export function CustomerDashboardView({
 
   const visibleHistory = history.slice(0, visibleCount);
 
-  const handleCancel = (id: string) => {
-    // Agent C wira la cancelación real
-    console.log('[CustomerDashboardView] Cancel appointment:', id);
+  const handleCancel = async (id: string) => {
+    setCancellingId(id);
+    try {
+      const result = await cancelAppointment(id, tenantSlug);
+      if (result.success) {
+        setCancelledIds((prev) => new Set(prev).add(id));
+      } else {
+        console.error('[handleCancel] Error:', result.error);
+      }
+    } catch (err) {
+      console.error('[handleCancel] Unexpected error:', err);
+    } finally {
+      setCancellingId(null);
+    }
   };
 
   return (
@@ -239,7 +258,12 @@ export function CustomerDashboardView({
           </CardHeader>
           <CardContent className="space-y-4">
             {upcoming.map((appt) => (
-              <ProximoTurnoCard key={appt.id} appointment={appt} onCancel={handleCancel} />
+              <ProximoTurnoCard
+                key={appt.id}
+                appointment={appt}
+                onCancel={handleCancel}
+                isCancelling={cancellingId === appt.id}
+              />
             ))}
           </CardContent>
         </Card>

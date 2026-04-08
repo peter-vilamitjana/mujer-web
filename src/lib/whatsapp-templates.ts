@@ -38,3 +38,18 @@ export function buildReminderMessage(vars: ReminderVars): WhatsAppMessage {
         body: `Hola ${vars.clientName}! 👋\n\n⏰ *Recordatorio de turno — mañana en ${vars.salonName}*\n\n📅 ${vars.date} a las ${vars.time}h\n💇 ${vars.serviceName} con ${vars.staffName}`,
     };
 }
+
+interface CancellationVars {
+    clientName: string;
+    salonName: string;
+    date: string;       // "viernes 11 de abril"
+    serviceName: string;
+    clientPhone: string;
+}
+
+export function buildCancellationMessage(vars: CancellationVars): WhatsAppMessage {
+    return {
+        to: vars.clientPhone,
+        body: `Hola ${vars.clientName} 👋\n\n❌ *Tu turno en ${vars.salonName} fue cancelado*\n\n💇 ${vars.serviceName} — ${vars.date}\n\nSi querés volver a reservar, ingresá a la app. ¡Hasta pronto!`,
+    };
+}
