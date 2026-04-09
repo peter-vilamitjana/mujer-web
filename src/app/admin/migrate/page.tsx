@@ -1,5 +1,6 @@
 'use client';
 
+import { notFound } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -9,6 +10,8 @@ import { Loader2, CheckCircle, AlertTriangle, PlayCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function MigrationPage() {
+    if (process.env.NODE_ENV !== 'development') notFound();
+
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<string>('');
     const [error, setError] = useState<string>('');
