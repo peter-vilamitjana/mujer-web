@@ -1,6 +1,7 @@
 import { SalonCard } from '@/components/marketplace/SalonCard';
+import { SalonMap } from '@/components/marketplace/SalonMap';
 import { getPublicSalons } from '@/lib/services/marketplace.service';
-import { Map, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 export default async function ExplorePage({
   searchParams,
@@ -78,13 +79,17 @@ export default async function ExplorePage({
             )}
           </div>
 
-          {/* Right Map Placeholder (40%) */}
+          {/* Right Map (40%) */}
           <div className="hidden lg:block lg:w-[40%] relative">
-            <div className="sticky top-48 h-[calc(100vh-14rem)] bg-zinc-900 rounded-2xl border border-white/10 flex flex-col items-center justify-center p-8 overflow-hidden">
-               <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-              <Map className="h-14 w-14 text-zinc-700 mb-5 relative z-10" />
-              <h3 className="text-white font-inter font-medium relative z-10 text-lg">Mapa disponible próximamente</h3>
-              <p className="text-zinc-500 text-sm text-center mt-2 relative z-10">La integración con Google Maps será realizada en el próximo paso.</p>
+            <div className="sticky top-48 h-[calc(100vh-14rem)] overflow-hidden">
+              <SalonMap
+                salons={salonCards.map(s => ({
+                  name: s.name,
+                  slug: s.slug,
+                  address: s.address,
+                  // lat/lng not available yet — SalonMap ignores salons without coords
+                }))}
+              />
             </div>
           </div>
         </div>

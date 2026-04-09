@@ -79,6 +79,7 @@ export interface BookingPayload {
   totalTo: number;
   depositAmount: number;
   durationMinutes: number;
+  clientPhone: string;
 }
 
 async function getDefaultBranchId(tenantId: string): Promise<string> {
@@ -141,17 +142,26 @@ export async function createBooking(
     };
     await setDoc(appointmentRef, appointmentData);
 
-    // WhatsApp confirmation — non-blocking, does not affect booking success
-    // TODO 2: Look up phone from customer profile (session doesn't carry phone)
-    let clientPhone: string | null = (session.user as any).phone ?? null;
-    if (!clientPhone && uid) {
-      try {
-        const customerSnap = await getDoc(doc(db, 'tenants', payload.tenantId, 'customers', uid));
-        if (customerSnap.exists()) clientPhone = customerSnap.data().phone ?? null;
-      } catch {
-        // phone lookup is best-effort
-      }
+    // 3. ESCRITURA 2: Crear o actualizar customer en el CRM privado del tenant
+    // Usamos el uid como ID del documento para garantizar unicidad por usuario global
+    const customerRef = doc(db, 'tenants', payload.tenantId, 'customers', uid);
+    const customerData: Record<string, unknown> = {
+      userId: uid,
+      fullName: userName,
+      email: userEmail,
+      createdAt: serverTimestamp(),
+      // metrics se actualiza separadamente — no calcular acá
+    };
+    // Guardar teléfono en customer profile (para futuros lookups)
+    if (payload.clientPhone && uid) {
+      customerData.phone = payload.clientPhone;
+      customerData.updatedAt = serverTimestamp();
     }
+    // setDoc con merge: true → crea si no existe, actualiza si ya existe sin borrar campos previos
+    await setDoc(customerRef, customerData, { merge: true });
+
+    // WhatsApp confirmation — non-blocking, does not affect booking success
+    const clientPhone = payload.clientPhone || null;
     if (clientPhone) {
       const dateStr = appointmentDateTime.toLocaleDateString('es-AR', {
         weekday: 'long',
@@ -173,19 +183,6 @@ export async function createBooking(
         console.error('[createBooking] WhatsApp notification failed:', err)
       );
     }
-
-    // 3. ESCRITURA 2: Crear o actualizar customer en el CRM privado del tenant
-    // Usamos el uid como ID del documento para garantizar unicidad por usuario global
-    const customerRef = doc(db, 'tenants', payload.tenantId, 'customers', uid);
-    const customerData = {
-      userId: uid,
-      fullName: userName,
-      email: userEmail,
-      createdAt: serverTimestamp(),
-      // metrics se actualiza separadamente — no calcular acá
-    };
-    // setDoc con merge: true → crea si no existe, actualiza si ya existe sin borrar campos previos
-    await setDoc(customerRef, customerData, { merge: true });
 
     // 4. Sync to Google Calendar (best-effort — no lanza si falla)
     syncAppointmentToCalendar(payload.tenantId, appointmentRef.id).catch((err) =>

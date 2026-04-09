@@ -1,8 +1,8 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Header from '@/components/Header';
 import SalonSidebar from '@/components/salon/SalonSidebar';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Loader2 } from 'lucide-react';
 import { UserProvider } from '@/contexts/UserContext';
@@ -10,18 +10,9 @@ import { SessionProvider } from 'next-auth/react';
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const router = useRouter();
   const params = useParams();
   const tenantSlug = params?.tenantSlug as string;
   const { data: session, status } = useSession();
-
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      if (tenantSlug) {
-        router.push(`/salones/${tenantSlug}/login`);
-      }
-    }
-  }, [status, router, tenantSlug]);
 
   if (status === 'loading') {
     return (
@@ -31,8 +22,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // Unauthenticated: render children directly so PhoneSearchView shows
   if (status === 'unauthenticated' || !session?.user) {
-    return null;
+    return <>{children}</>;
   }
 
   return (

@@ -40,6 +40,7 @@ import {
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useCatalog } from "@/hooks/useCatalog";
 import { useTenant } from "@/contexts/TenantContext";
+import { CheckoutDrawer } from "@/components/admin/CheckoutDrawer";
 
 
 async function setupGoogleCalendarWatch() {
@@ -162,6 +163,7 @@ function TurnCard({ turno }: { turno: Turno }) {
   const { tenantId } = useTenant(); // Get tenantId
   const [status, setStatus] = useState(turno.estado);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   const handleUpdateStatus = async (newStatus: 'realizado' | 'cancelado') => {
     if (!turno.id || !tenantId) return;
@@ -192,10 +194,10 @@ function TurnCard({ turno }: { turno: Turno }) {
 
   const statusInfo = useMemo(() => {
     switch (status) {
-      case 'realizado': return { text: 'Realizado', className: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300 ring-green-600/20' };
+      case 'realizado': return { text: 'Cobrado', className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-400/10 dark:text-emerald-400 ring-emerald-400/20' };
       case 'cancelado': return { text: 'Cancelado', className: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300 ring-red-600/20' };
       case 'pendiente_pago': return { text: 'Pend. Pago', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 ring-orange-600/20' };
-      default: return { text: 'Pendiente', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400 ring-yellow-600/20' };
+      default: return { text: 'Confirmado', className: 'bg-amber-100 text-amber-800 dark:bg-amber-400/10 dark:text-amber-400 ring-amber-400/20' };
     }
   }, [status]);
 
@@ -240,10 +242,19 @@ function TurnCard({ turno }: { turno: Turno }) {
           </div>
 
           <div className="flex sm:flex-col items-end justify-between sm:justify-start gap-4 w-full sm:w-auto mt-4 sm:mt-0 pl-0 sm:pl-4">
-            <Badge className={cn("text-xs font-bold w-24 justify-center py-1 ring-1 ring-inset", statusInfo.className)}>
+            <Badge className={cn("text-xs font-bold w-24 justify-center py-1 ring-1 ring-inset transition-all duration-300", statusInfo.className)}>
               {statusInfo.text}
             </Badge>
-            <div className="flex gap-1.5 mt-0 sm:mt-2">
+            <div className="flex flex-col sm:flex-row items-center gap-1.5 mt-0 sm:mt-2">
+              {status !== 'realizado' && status !== 'cancelado' && (
+                <Button
+                  onClick={() => setIsCheckoutOpen(true)}
+                  variant="outline"
+                  className="border-emerald-400/30 text-emerald-400 hover:bg-emerald-400/10 rounded-full px-4 py-1.5 text-sm h-auto transition-all"
+                >
+                  Cobrar
+                </Button>
+              )}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -278,6 +289,20 @@ function TurnCard({ turno }: { turno: Turno }) {
             </div>
           </div>
         </div>
+        <CheckoutDrawer
+          open={isCheckoutOpen}
+          onOpenChange={setIsCheckoutOpen}
+          tenantId={tenantId ?? ''}
+          appointment={{
+            id: turno.id || "0",
+            serviceName: turno.servicio,
+            clientName: turno.clienteNombre,
+            staffName: turno.empleadaNombre,
+            priceEstimated: turno.precio || 0,
+            date: format(parseISO(turno.fecha), "eeee d 'de' MMMM", { locale: es })
+          }}
+          onSuccess={() => setStatus('realizado')}
+        />
       </Collapsible>
     </TooltipProvider>
   );
