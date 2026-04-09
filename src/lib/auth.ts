@@ -104,6 +104,14 @@ export const authOptions: NextAuthOptions = {
                 } catch {
                     token.tenantIds = [];
                 }
+
+                // Determinar rol: sin memberships → cliente B2C
+                if (token.tenantIds && (token.tenantIds as string[]).length > 0) {
+                    if (!token.role) token.role = 'employee';
+                } else {
+                    token.role = 'customer';
+                }
+
                 return token;
             }
 
@@ -118,6 +126,7 @@ export const authOptions: NextAuthOptions = {
         async session({ session, token }) {
             session.user = token.user as any;
             (session.user as any).uid = token.uid;
+            (session.user as any).role = token.role;
             (session.user as any).tenantIds = (token.tenantIds as string[]) ?? [];
             (session.user as any).salonId = ((token.tenantIds as string[]) ?? [])[0] ?? null;
             session.accessToken = token.accessToken as string;
