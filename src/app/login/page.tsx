@@ -113,7 +113,7 @@ export default function LoginPage() {
     if (result?.ok) {
       setSuccess(true);
       const session = await getSession();
-      setTimeout(() => router.push(session?.user?.role === 'customer' ? '/explore' : '/dashboard'), 1400);
+      setTimeout(() => router.push(session?.user?.role === 'customer' ? '/perfil' : '/dashboard'), 1400);
     }
   };
 
@@ -126,7 +126,7 @@ export default function LoginPage() {
     if (!result.success) { setIsLoading(false); setError(result.error); return; }
     const signInResult = await signIn('credentials', { email: registerEmail, password: registerPassword, redirect: false });
     setIsLoading(false);
-    if (signInResult?.ok) { setSuccess(true); setTimeout(() => router.push('/explore'), 1400); }
+    if (signInResult?.ok) { setSuccess(true); setTimeout(() => router.push('/perfil'), 1400); }
     else { setError('CUENTA CREADA. INICIÁ SESIÓN.'); setMode('login'); setLoginEmail(registerEmail); }
   };
 
