@@ -160,8 +160,9 @@ export interface Customer {
     createdAt: Timestamp;
     metrics?: {
         totalVisits: number;
-        lastVisit?: Timestamp;
         totalSpent: number;
+        firstVisit?: Timestamp;
+        lastVisit?: Timestamp;
     }
 }
 
