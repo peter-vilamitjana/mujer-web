@@ -150,39 +150,21 @@ export default function LoginPage() {
           alt="Editorial fashion portrait"
           src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjS9LSsGTPztQ9TCUsdN8xwWCiNJFUWAnLy5UEvWNIFarfFXo-7NKfdu8AoD2AqIlaB9O9zr__02G2eCSCxbmxnAMCpfJqTaRd6qqLEBxV8D9Z3tMBhLRjU_CJlO_wiFsHvWR0LQM6IAGZQljwE7QUXvXg-WY_XRiquIX1MU7pBcr9VTKOKv1K3Ubmy5j91LNPmfX3qq-LqEti5GU93_GOR3qflFnXP0TBMSpFA9PeDHOaL9-fz2EoGU06tmJPAy-AGff8hkVWd6wz"
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ filter: 'brightness(0.38) saturate(0.8) contrast(1.1)' }}
+          style={{ filter: 'brightness(0.58) saturate(0.85) contrast(1.05)' }}
         />
 
         {/* Depth vignette */}
         <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-transparent to-black/60" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
 
-        {/* Ambient orbs — give the VisionOS depth feel */}
+        {/* Ambient orb — warm neutral depth, no color tint */}
         <div
           className="absolute pointer-events-none"
           style={{
-            top: '-10%', right: '5%',
-            width: '55vw', height: '55vw',
-            background: 'radial-gradient(circle, rgba(180,100,255,0.18) 0%, transparent 70%)',
+            top: '20%', left: '15%',
+            width: '40vw', height: '40vw',
+            background: 'radial-gradient(circle, rgba(255,240,220,0.05) 0%, transparent 70%)',
             filter: 'blur(80px)',
-          }}
-        />
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            bottom: '-5%', left: '10%',
-            width: '45vw', height: '45vw',
-            background: 'radial-gradient(circle, rgba(236,72,153,0.14) 0%, transparent 70%)',
-            filter: 'blur(100px)',
-          }}
-        />
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            top: '30%', left: '20%',
-            width: '30vw', height: '30vw',
-            background: 'radial-gradient(circle, rgba(255,200,100,0.07) 0%, transparent 70%)',
-            filter: 'blur(60px)',
           }}
         />
       </div>
