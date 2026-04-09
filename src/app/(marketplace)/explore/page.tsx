@@ -37,7 +37,7 @@ export default async function ExplorePage({
     <div className="min-h-screen bg-zinc-950 font-inter relative pb-24 lg:pb-0">
       {/* Header & Filters */}
       <div className="border-b border-white/10">
-        <div className="container mx-auto px-4 pt-32 pb-8 max-w-7xl">
+        <div className="container mx-auto px-4 pt-48 lg:pt-40 pb-8 max-w-7xl">
           <h1 className="font-playfair text-4xl lg:text-5xl text-white mb-2">Descubrí tu salón</h1>
           <p className="text-zinc-400 mb-8 max-w-2xl text-lg">Reservá turnos en los mejores salones y spas de la ciudad. Todo en un solo lugar.</p>
 
