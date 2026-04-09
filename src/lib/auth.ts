@@ -1,7 +1,7 @@
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { db, auth } from '@/lib/firebase';
-import { doc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, getDocs } from 'firebase/firestore';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
@@ -101,9 +101,24 @@ export const authOptions: NextAuthOptions = {
                     const membershipsRef = collection(db, 'users', user.id, 'memberships');
                     const snap = await getDocs(membershipsRef);
                     token.tenantIds = snap.docs.map(d => d.id);
+
+                    // Rol según memberships: sin salón → clienta B2C, con salón → staff
+                    token.role = snap.docs.length === 0 ? 'customer' : 'staff';
                 } catch {
                     token.tenantIds = [];
+                    token.role = 'customer';
                 }
+
+                // Leer phone del documento de usuario
+                try {
+                    const userRef = doc(db, 'users', user.id);
+                    const userSnap = await getDoc(userRef);
+                    const phone = userSnap.data()?.phone;
+                    if (phone) token.phone = phone;
+                } catch {
+                    // phone es opcional, no fallar
+                }
+
                 return token;
             }
 
@@ -120,6 +135,8 @@ export const authOptions: NextAuthOptions = {
             (session.user as any).uid = token.uid;
             (session.user as any).tenantIds = (token.tenantIds as string[]) ?? [];
             (session.user as any).salonId = ((token.tenantIds as string[]) ?? [])[0] ?? null;
+            (session.user as any).role = token.role ?? 'customer';
+            if (token.phone) (session.user as any).phone = token.phone;
             session.accessToken = token.accessToken as string;
             session.error = token.error as string;
 

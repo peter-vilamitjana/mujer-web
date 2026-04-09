@@ -10,7 +10,7 @@ export default function LandingHeader() {
   const [mounted, setMounted] = useState(false);
   const params = useParams();
   const tenantSlug = params?.tenantSlug as string | undefined;
-  const loginUrl = tenantSlug ? `/salones/${tenantSlug}/login` : '/login';
+  const loginUrl = '/login';
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
