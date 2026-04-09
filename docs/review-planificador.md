@@ -1,7 +1,7 @@
 # Review del Plan de Proyecto MujerApp
 
 **Fecha**: 2026-04-03 | **Reviewer**: Agente Planificador
-**Última actualización**: 2026-04-08 | **Estado**: Fase 0 ✅ + Fase 1 ✅ completadas
+**Última actualización**: 2026-04-09 | **Estado**: Fase 0 ✅ + Fase 1 ✅ + Fase 2 ✅ + Fase 3 🟡 (3.0–3.1 done) + Fase 3.5 ✅ completadas
 
 > Los hallazgos marcados con ✅ han sido resueltos. Los marcados con ⏳ están pendientes para Fase 2+.
 
@@ -16,7 +16,7 @@ El plan actual ordena las tareas de Fase 0 en un orden que no refleja las depend
 | Prioridad | Tarea original | Justificación del reorden |
 |-----------|---------------|---------------------------|
 | **1a (Hora 1)** | 0.2 -- Eliminar credenciales hardcodeadas | Riesgo de seguridad activo. Si el repo es publico o se filtra, hay acceso inmediato. No tiene dependencias, se hace en minutos. |
-| **1b (Hora 1)** | 0.6 -- Proteger `/admin/seed` y `/admin/migrate` | Mismo motivo: endpoint destructivo expuesto. Trivial de cerrar. |
+| **1b (Hora 1)** | ~~0.6 -- Proteger `/admin/seed` y `/admin/migrate`~~ ✅ | Resuelto en Fase 3.5-A: `notFound()` en producción — 404 si `NODE_ENV !== 'development'`. |
 | **2** | 0.3 -- Crear `.env.example` | Prerequisito implicito de 0.2 (las credenciales eliminadas necesitan un lugar documentado). Tambien desbloquea onboarding de cualquier nuevo dev. |
 | **3** | 0.1 -- Eliminar `ignoreBuildErrors` + fix TS errors | El plan lo pone primero, pero es la tarea mas larga (3 dias). No deberia bloquear los fixes de seguridad. Sin embargo, es prerequisito real de CI (0.8), porque un CI que no puede hacer typecheck no sirve. |
 | **4** | 0.4 -- Corregir `userRole` hardcodeado | Necesita que el build pase limpio primero (o al menos que los archivos afectados compilen). |
@@ -71,13 +71,16 @@ El plan asume que los salones existen en Firestore. La tarea 1.6 (Onboarding wiz
 
 ## 3. Riesgos adicionales no contemplados
 
-### R11 -- Autenticacion de clientes B2C no disenada ⏳ PENDIENTE — Fase 2
-El plan menciona "Auth marketplace" como dependencia pero nunca define como se autentican las clientas. Actualmente solo hay auth para admins. Preguntas sin responder:
-- Se usa el mismo NextAuth con un rol diferente?
-- Registro por email, Google, o ambos?
-- Como se vincula una clienta con sus citas en multiples salones?
+### R11 -- Autenticacion de clientes B2C ⚠️ PARCIALMENTE RESUELTO — Fase 3.5-C
+El plan mencionaba "Auth marketplace" como dependencia sin definir cómo se autentican las clientas. Preguntas respondidas:
+- ✅ Mismo NextAuth con rol `'customer'` (nuevo valor en `UserRole`)
+- ✅ Registro por email (`registerCustomer()` via Firebase Auth REST API) + Google OAuth (`signIn('google')`)
+- ✅ JWT lleva `role` — admins/empleados por memberships, B2C por ausencia de memberships
+- ✅ `/registro` (form + Google) y `/perfil` (shell) implementados
+- ⏳ Perfil no wired a Firestore real — muestra mock data
+- ⏳ Vinculación de clienta con citas en múltiples salones: resuelto a nivel de búsqueda por teléfono. JWT no lleva multi-salon B2C aún.
 
-**Impacto**: Bloquea Fase 2 completa. Deberia ser tarea explicita en Fase 1.
+**Impacto residual**: Bajo. Auth funciona. Perfil editable queda para Fase 4.
 
 ### R12 -- Migracion de datos legacy ✅ PARCIALMENTE RESUELTO
 El plan menciona mezcla de `types.ts` / `schema.ts` como deuda media (item 9), pero no hay tarea para resolverlo. Si Fase 1 construye CRUDs sobre un schema ambiguo, se duplica la deuda.
@@ -108,8 +111,8 @@ Salones almacenan datos de clientes (nombre, telefono, historial de servicios). 
 
 **Impacto**: Legal. Puede bloquear lanzamiento en mercados con regulacion de datos.
 
-### R17 -- Dependencia de dominios de imagenes externos
-El plan lo lista como deuda alta (item 6) y tiene tarea 2.3, pero mientras tanto, si placehold.co o Unsplash cambian URLs, la landing se rompe visualmente. Deberia haber un fix temporal en Fase 0 (imagenes locales en `/public`).
+### R17 -- Dependencia de dominios de imagenes externos ✅ RESUELTO — Fase 2
+El plan lo listaba como deuda alta (item 6). Resuelto en Fase 2: todas las imágenes externas (placehold.co, Unsplash, lh3.googleusercontent.com/aida-public) reemplazadas por gradientes `bg-gradient-to-br from-zinc-800 to-zinc-900` locales. `remotePatterns` en `next.config.ts` reducido a 2 dominios controlados (`firebasestorage.googleapis.com`, `lh3.googleusercontent.com` para fotos de perfil Google OAuth).
 
 ---
 
@@ -206,11 +209,15 @@ SEO (4.2) y Performance (4.3) deberian estar en Fase 2 o inicio de Fase 3 -- son
 
 | # | Hallazgo | Estado |
 |---|----------|--------|
-| 1 | **Seguridad primero**: Las acciones inmediatas deben empezar por credenciales y endpoints expuestos, no por errores TS. | ✅ Resuelto en Fase 0 |
-| 2 | **Dependencias ocultas**: Auth B2C, cuenta Stripe, y datos de seed son bloqueantes no planificados. | ⚠️ Stripe + Auth B2C pendientes — iniciar en paralelo con Fase 2 |
+| 1 | **Seguridad primero**: Las acciones inmediatas deben empezar por credenciales y endpoints expuestos, no por errores TS. | ✅ Resuelto en Fases 0 + 3.5-A |
+| 2 | **Dependencias ocultas**: Auth B2C, cuenta Stripe, y datos de seed son bloqueantes no planificados. | ⚠️ Auth B2C resuelto en 3.5-C. Stripe: ⏳ Fase 3 restante |
 | 3 | **Estimaciones optimistas**: Google Calendar sync, test suite, fix TS errors subestimados. | ✅ GCal resuelto. TS limpio. Tests: ⏳ Fase 4 |
-| 4 | **Testing demasiado tarde**: Esperar a Fase 4 para tests multiplica costo y riesgo de regresiones. | ⏳ Agregar tests básicos de CRUD en Fase 2 |
-| 5 | **MVP sin definicion clara**: "Launchable" necesita criterios medibles. | ⏳ Definir antes de iniciar Fase 2 |
-| 6 | **SEO/Performance fuera de lugar**: Deberian estar antes del launch del marketplace. | ⏳ Incorporar en planificacion de Fase 2 |
+| 4 | **Testing demasiado tarde**: Esperar a Fase 4 para tests multiplica costo y riesgo de regresiones. | ⏳ Agregar tests básicos en Fase 3 restante |
+| 5 | **MVP sin definicion clara**: "Launchable" necesita criterios medibles. | ⏳ Definir antes de Fase 3.2 (MercadoPago) |
+| 6 | **SEO/Performance fuera de lugar**: Deberian estar antes del launch del marketplace. | ⏳ Incorporar en Fase 3 restante |
 | 7 | **Dependencia circular 1.1/1.3 → 1.6**: Onboarding depende de CRUDs de la misma fase. | ✅ Resuelto: orden de ejecución 1.1 → 1.3 → 1.6 |
-| 8 | **Schema canonical ambiguo**: `types.ts` vs `schema.ts`. | ✅ Decision: `schema.ts` es canónico para Fase 1+. `types.ts` es legacy B2C |
+| 8 | **Schema canonical ambiguo**: `types.ts` vs `schema.ts`. | ✅ `schema.ts` es canónico. `types.ts` legacy B2C |
+| 9 | **Endpoints destructivos expuestos** (`/admin/seed`, `/admin/migrate`) | ✅ Resuelto en Fase 3.5-A: `notFound()` en producción |
+| 10 | **Imágenes externas no controladas** (placehold.co, Unsplash, AIDA CDN) | ✅ Resuelto en Fase 2: gradientes locales, 0 dominios externos |
+| 11 | **Auth B2C no diseñada** | ✅ Resuelto en Fase 3.5-C: `customer` role, `registerCustomer()`, `/registro`, `/perfil` |
+| 12 | **CRM metrics incompletas** (sin `firstVisit`, sin incremento en checkout) | ✅ Resuelto en Fase 3.5-B: métricas escritas en booking + checkout |

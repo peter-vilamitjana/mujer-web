@@ -1,6 +1,6 @@
 # MujerApp — Análisis Técnico y Plan de Proyecto
 
-**Rama analizada**: `database-config` | **Fecha**: 2026-04-03 | **Pivot LATAM**: 2026-04-08
+**Rama analizada**: `database-config` | **Fecha**: 2026-04-03 | **Pivot LATAM**: 2026-04-08 | **Última actualización**: 2026-04-09
 
 ---
 
@@ -8,7 +8,7 @@
 
 MujerApp es una plataforma SaaS B2B2C multi-tenant para la gestión de salones de belleza. El stack es sólido y moderno (Next.js 15, TypeScript, Firestore, NextAuth v4), con una arquitectura multi-tenant bien diseñada a nivel de schema y reglas Firestore.
 
-**Estado actual (2026-04-08)**: ✅ Fase 0 + ✅ Fase 1 completadas. El core admin está 100% operativo: CRUD de servicios/staff/sucursales, configuración del salón, onboarding wizard, Google Calendar sync bidireccional, dashboard con métricas reales y loading states. Build y TypeScript limpios. Próximo paso: **Fase 2 — Marketplace MVP**.
+**Estado actual (2026-04-09)**: ✅ Fase 0 + ✅ Fase 1 + ✅ Fase 2 + ✅ Fase 3 (parcial) + ✅ Fase 3.5 completadas. Portal B2C, booking flow con teléfono, checkout de caja, CRM con métricas, auth B2C con rol `customer`, `/registro` y `/perfil`. Build y TypeScript limpios. Próximo paso: **Fase 3 restante — MercadoPago + cierre de caja dashboard**.
 
 La hoja de ruta para un MVP launchable es de **10–14 semanas** para un equipo de 2–3 devs (~6 semanas completadas).
 
@@ -53,11 +53,11 @@ src/
 |--------|--------|-------------|-------|
 | **NextAuth** | 🟡 Funcional con deuda | Alta | Google OAuth + Credentials. Token refresh OK. Memberships no reactivas. |
 | **Firestore REST (SSR)** | ✅ Funcional | Baja | Usado correctamente en Server Components |
-| **Middleware** | 🟡 Parcial | Baja | Protege rutas admin. No protege `/salones/*/dashboard` |
+| **Middleware** | ✅ Completo | Baja | Protege rutas admin + `/salones/*/dashboard`. `/admin/seed` + `/admin/migrate` → 404 en prod. |
 | **UI / shadcn** | ✅ Completo | Baja | 35 componentes, Tailwind dark/light con MD3 colors |
 | **Framer Motion** | ✅ Activo | Baja | Landing y /business con animaciones premium |
 | **next-themes** | ✅ Funcional | Baja | defaultTheme="dark", toggle funcional |
-| **Landing Global** | 🟡 ~80% | Baja | 12 secciones. Usa imágenes placeholder externas |
+| **Landing Global** | ✅ ~95% | Baja | 12 secciones. Todas las imágenes externas reemplazadas por gradientes locales |
 | **Landing /business** | 🟡 ~70% | Baja | Bug en Safari conocido |
 | **Dashboard Admin** | ✅ ~90% | Alta | Métricas reales (ingresos mes, ocupación, próximos turnos) |
 | **Agenda / Turnos** | 🟡 ~60% | Alta | UI existe, branchId dinámico resuelto |
@@ -67,10 +67,12 @@ src/
 | **Sucursales** | ✅ ~90% | Alta | CRUD + selector en header + localStorage |
 | **Configuración salón** | ✅ ~90% | Media | 4 tabs, slug validation, horarios de atención |
 | **Onboarding wizard** | ✅ ~95% | Alta | 5 pasos, localStorage, batch atómico |
-| **Booking Flow** | 🟡 ~65% | Alta | Multi-step wizard. Falta confirmación/pago real |
+| **Booking Flow** | ✅ ~85% | Alta | Multi-step con captura de teléfono (WhatsApp), WhatsApp on booking. Falta disponibilidad real de staff. |
 | **Google Calendar** | ✅ ~80% | Alta | Bidireccional: App→GCal + GCal→App webhook. Token refresh |
 | ~~**Email (Resend)**~~ | ❌ **Eliminado** | — | **Pivot**: reemplazado por WhatsApp nativo. Sin emails en el flujo de notificaciones. |
-| **Portal Cliente** | 🔴 ~20% | Media | Rutas existen, contenido no implementado |
+| **Portal Cliente** | ✅ ~75% | Media | Dashboard real (citas, historial, filtros), cancelación, vista guest por teléfono. Perfil: shell con mock data. |
+| **Checkout / Caja** | ✅ ~70% | Media | `CheckoutDrawer` en agenda, `closeAppointment()`, métricas CRM incrementadas. Falta cierre de caja diario. |
+| **Auth B2C** | ✅ ~60% | Media | `UserRole` incluye `'customer'`, JWT lleva `role`, `registerCustomer()`, páginas `/registro` + `/perfil`. Perfil no wired a Firestore. |
 | **Analytics / Métricas** | ✅ ~80% | Alta | Datos reales: ingresos mes, ocupación, top servicios, próximos turnos |
 | **Loading states** | ✅ 100% | Baja | 8 skeletons + error boundary global |
 | ~~**AI (Genkit)**~~ | ❌ **Eliminado** | — | **Pivot**: removido del roadmap. Dependencia muerta a desinstalar. |
@@ -87,11 +89,11 @@ src/
 2. Credenciales de test hardcodeadas en login: `admin@mujer.com / password123`, `clienta@mujer.com / password123`.
 3. `branchId: 'sucursal_centro'` hardcodeado en 3+ archivos (`booking.actions.ts`, `turnos/page.tsx`…).
 4. `const userRole = 'admin'` hardcodeado en `clientes/page.tsx` y `clientes/[id]/page.tsx`.
-5. Rutas `/admin/seed` y `/admin/migrate` sin protección en middleware.
+5. ~~Rutas `/admin/seed` y `/admin/migrate` sin protección en middleware.~~ ✅ Resuelto — devuelven 404 en producción vía `notFound()`.
 
 #### Alta
 
-6. Imágenes de landing usando dominios externos no controlados (placehold.co, Unsplash, Instagram CDN).
+6. ~~Imágenes de landing usando dominios externos no controlados (placehold.co, Unsplash, Instagram CDN).~~ ✅ Resuelto — reemplazadas por gradientes locales. `remotePatterns` reducido a 2 dominios.
 7. Middleware no cubre rutas de marketplace autenticadas.
 8. Sin error boundaries ni estados de loading consistentes.
 9. Mezcla de schema legacy (`types.ts`) / nuevo (`schema.ts`) sin capa de abstracción clara.
@@ -192,7 +194,7 @@ src/
 |----|--------|-----------|------------|
 | R1 | Credenciales de test hardcodeadas en código | **P0** | Eliminar en Día 1, mover a `.env.local` |
 | R2 | Build errors silenciados — bugs latentes en producción | **P0** | Activar `ignoreBuildErrors: false`, resolver todos |
-| R3 | `/admin/seed` y `/admin/migrate` sin protección | **P0** | Añadir al matcher del middleware |
+| ~~R3~~ | ~~`/admin/seed` y `/admin/migrate` sin protección~~ | ~~P0~~ | ✅ `notFound()` en producción — devuelven 404 si `NODE_ENV !== 'development'` |
 | R4 | `branchId` hardcodeado — rompe multi-tenant real | **P0** | Propagar desde TenantContext |
 | R5 | Sin integración de pagos | **P0** | Integrar Stripe/MercadoPago en Fase 3 |
 | R6 | NextAuth v4 en mantenimiento | **P1** | Planear migración a Auth.js v5 post-MVP |
@@ -305,48 +307,81 @@ FASE 4                                                             │ Growth & 
 
 ---
 
-### FASE 2 — Marketplace MVP + WhatsApp First (Semanas 7–9)
+### ✅ FASE 2 — Marketplace MVP + WhatsApp First (Semanas 7–9) — COMPLETADA
+
+> **Estado**: ✅ COMPLETADA — 2026-04-09
+> Portal B2C operativo con datos reales. Google Maps integrado con fallback elegante. Todas las imágenes externas eliminadas. Booking flow captura teléfono. WhatsApp estructural activo (necesita API key para producción).
 
 > **🔴 Pivot LATAM (2026-04-08):** El email queda eliminado del flujo de notificaciones. El diferencial es WhatsApp nativo: cero No-Shows, cero fricción. La tarea 2.7 original (Resend) se reemplaza íntegramente por WhatsApp Business API.
 
 **Objetivo**: Una clienta puede descubrir salones, reservar y recibir confirmación por WhatsApp. Cero emails.
 
-| # | Tarea | Días | Depende de | Done cuando... |
-|---|-------|------|-----------|----------------|
-| 2.1 | Página `/explore` con filtros (categoría, zona, precio) | 4 | Datos reales | Clientas pueden buscar salones |
-| 2.2 | Integrar Google Maps en `/explore` y página de salón | 2 | API key Maps | Mapa funcional |
-| 2.3 | Reemplazar todas las imágenes placeholder con assets reales | 2 | Assets de diseño | 0 requests a dominios externos no controlados |
-| 2.4 | Portal cliente completo (`/salones/[slug]/dashboard`) | 3 | Auth marketplace | Clienta ve sus citas activas |
-| 2.5 | Historial de citas del cliente | 2 | 2.4 | Clienta ve historial completo |
-| 2.6 | Cancellation flow (clienta cancela cita) | 2 | Reglas definidas | Clienta puede cancelar con confirmación |
-| **2.7** | **🔴 Notificaciones nativas por WhatsApp** (confirmación inmediata + recordatorio 24h) | **4** | **WhatsApp Business API (Twilio WABA o Meta Cloud API)** | **Clienta recibe WhatsApp al reservar y 24h antes. Cero emails en el flujo.** |
-| 2.8 | Analytics de producto (PostHog) | 1 | — | Funnel de booking trackeado |
+| # | Tarea | Días | Depende de | Done cuando... | Estado |
+|---|-------|------|-----------|----------------|--------|
+| ~~2.1~~ | ~~Página `/explore` con filtros (categoría, zona, precio)~~ | ~~4~~ | ~~Datos reales~~ | ~~Clientas pueden buscar salones~~ | ✅ (`getPublicSalons()` real, filtros básicos) |
+| ~~2.2~~ | ~~Integrar Google Maps en `/explore` y página de salón~~ | ~~2~~ | ~~API key Maps~~ | ~~Mapa funcional~~ | ✅ (`SalonMap.tsx` con dark theme, fallback sin API key) |
+| ~~2.3~~ | ~~Reemplazar todas las imágenes placeholder con assets reales~~ | ~~2~~ | ~~Assets de diseño~~ | ~~0 requests a dominios externos no controlados~~ | ✅ (gradientes locales, `remotePatterns` → 2 dominios) |
+| ~~2.4~~ | ~~Portal cliente completo (`/salones/[slug]/dashboard`)~~ | ~~3~~ | ~~Auth marketplace~~ | ~~Clienta ve sus citas activas~~ | ✅ (datos reales, vista guest por teléfono) |
+| ~~2.5~~ | ~~Historial de citas del cliente~~ | ~~2~~ | ~~2.4~~ | ~~Clienta ve historial completo~~ | ✅ (filtros semana/mes/3 meses/todo) |
+| ~~2.6~~ | ~~Cancellation flow (clienta cancela cita)~~ | ~~2~~ | ~~Reglas definidas~~ | ~~Clienta puede cancelar con confirmación~~ | ✅ (`cancelAppointment` + WhatsApp notification) |
+| **2.7** | **🔴 Notificaciones nativas por WhatsApp** (confirmación + recordatorio 24h) | **4** | **WhatsApp Business API key** | **Clienta recibe WhatsApp al reservar y 24h antes** | ⚠️ Estructural listo (`whatsapp.ts` + templates). Necesita `WHATSAPP_TOKEN` en prod. |
+| 2.8 | Analytics de producto (PostHog) | 1 | — | Funnel de booking trackeado | ⏳ Pendiente |
 
-**Total**: ~20 días → **~3 semanas** con 2–3 devs
+**Total**: ~20 días → ejecutado en ~4 sesiones paralelas
 
-**Criterios de done**: Una clienta externa puede llegar, descubrir, reservar y recibir confirmación por WhatsApp sin fricción. Tasa de no-show reducible con recordatorio automático.
+**Criterios de done**: ✅ Clienta puede descubrir, reservar y recibir confirmación. ⚠️ WhatsApp real pendiente de API key.
+
+**Archivos clave entregados**:
+- `src/lib/services/customer.service.ts` — `getAppointmentsByClientId`, `getCustomerByPhone`, `getAppointmentsByPhone`
+- `src/actions/customer.actions.ts` — `getMyAppointments`, `searchAppointmentsByPhone`, `cancelAppointment`
+- `src/app/(marketplace)/salones/[tenantSlug]/dashboard/CustomerDashboardView.tsx` — historia + cancelación
+- `src/app/(marketplace)/salones/[tenantSlug]/dashboard/PhoneSearchView.tsx` — vista guest
+- `src/components/marketplace/SalonMap.tsx` — Google Maps con dark zinc + fallback
+- `src/lib/whatsapp.ts` + `src/lib/whatsapp-templates.ts` — estructura WhatsApp Business API
 
 ---
 
-### FASE 3 — Monetización Local + CRM (Semanas 10–12)
+### 🟡 FASE 3 — Monetización Local + CRM (Semanas 10–12) — EN CURSO
+
+> **Estado**: 🟡 EN CURSO — 3.0 y 3.1 completados (2026-04-09). Pendiente: MercadoPago, cierre de caja diario, planes SaaS.
 
 > **🔴 Pivot LATAM (2026-04-08):** El Módulo Financiero Local es P0 urgente. Los salones en LATAM cobran en efectivo, con transferencias bancarias y QR de MercadoPago — no con Stripe. Soportar esto de forma nativa es el diferencial de "Cierre de Caja" vs Fresha/Wonoma.
 
 **Objetivo**: Modelo de ingresos funcional con la realidad del mercado local. Salones cierran caja en efectivo/transferencia. Planes SaaS.
 
-| # | Tarea | Días | Depende de | Done cuando... |
-|---|-------|------|-----------|----------------|
-| **3.0** | **🔴 URGENTE — Módulo Financiero Local: schema + cierre de caja** (`amountPaid`, `paymentMethod`, `commissionCalculated`, status `cobrado`) | **3** | **schema.ts extendido** | **Admin puede cerrar un turno como "cobrado en efectivo/transferencia/MercadoPago". Caja cuadra.** |
-| **3.1** | **🔴 URGENTE — UI de Checkout Barrani** en pantalla de turno (selección método de pago + monto cobrado) | **3** | **3.0** | **Desde agenda, admin selecciona turno → cobra → status cambia a `cobrado`** |
-| 3.2 | MercadoPago QR nativo (Checkout Pro para cobros presenciales) | 4 | Cuenta MP activada | Clienta escanea QR en mostrador, pago confirmado en app |
-| 3.3 | Webhook MercadoPago → Firestore (status de cita automático) | 2 | 3.2 | Pago confirmado actualiza turno automáticamente |
-| 3.4 | Dashboard de cierre de caja diario (efectivo + transferencias + MP) | 3 | 3.0 | Admin ve resumen de caja del día desglosado por método |
-| 3.5 | Planes SaaS para salones (Free / Pro / Enterprise) | 3 | — | Salones tienen plan asignado |
-| 3.6 | Feature flags por plan de suscripción | 2 | 3.5 | Features desbloqueadas según plan |
+| # | Tarea | Días | Depende de | Done cuando... | Estado |
+|---|-------|------|-----------|----------------|--------|
+| ~~**3.0**~~ | ~~Módulo Financiero Local: schema + cierre de caja~~ (`amountPaid`, `paymentMethod`, status `cobrado`) | ~~3~~ | ~~schema.ts~~ | ~~Admin puede cerrar un turno como "cobrado"~~ | ✅ |
+| ~~**3.1**~~ | ~~UI de Checkout en pantalla de turno~~ | ~~3~~ | ~~3.0~~ | ~~Admin cobra → status `cobrado`~~ | ✅ (`CheckoutDrawer` + `closeAppointment()` + CRM metrics) |
+| 3.2 | MercadoPago QR nativo (Checkout Pro para cobros presenciales) | 4 | Cuenta MP activada | Clienta escanea QR en mostrador, pago confirmado en app | ⏳ |
+| 3.3 | Webhook MercadoPago → Firestore (status de cita automático) | 2 | 3.2 | Pago confirmado actualiza turno automáticamente | ⏳ |
+| 3.4 | Dashboard de cierre de caja diario (efectivo + transferencias + MP) | 3 | 3.0 | Admin ve resumen de caja del día desglosado por método | ⏳ |
+| 3.5 | Planes SaaS para salones (Free / Pro / Enterprise) | 3 | — | Salones tienen plan asignado | ⏳ |
+| 3.6 | Feature flags por plan de suscripción | 2 | 3.5 | Features desbloqueadas según plan | ⏳ |
 
 **Total**: ~20 días → **~3–4 semanas**
 
 **Criterios de done**: Salón cierra caja diaria en efectivo, transferencia y MercadoPago sin depender de pasarelas internacionales. MujerApp cobra suscripción a salones.
+
+**Archivos clave entregados (3.0–3.1)**:
+- `src/components/admin/CheckoutDrawer.tsx` — Sheet de cobro (efectivo/MP/tarjeta/transferencia)
+- `src/actions/checkout.actions.ts` — `closeAppointment()` con incremento de CRM metrics
+- `src/lib/schema.ts` — `PaymentMethod`, status `cobrado`, `Customer.metrics` con `firstVisit`
+
+---
+
+### ✅ FASE 3.5 — Consolidación y Auth B2C (2026-04-09) — COMPLETADA
+
+> Fase intercalada para cerrar deuda crítica antes de continuar con 3.2+. No estaba en el roadmap original.
+
+| # | Tarea | Done cuando... | Estado |
+|---|-------|----------------|--------|
+| ~~3.5-A~~ | ~~Proteger `/admin/seed` + `/admin/migrate` en producción~~ | ~~Rutas devuelven 404 en prod~~ | ✅ (`notFound()` guard, build limpio) |
+| ~~3.5-B~~ | ~~CRM metrics: `firstVisit`, `totalVisits`, `totalSpent`~~ | ~~Métricas escritas en booking + checkout~~ | ✅ (booking: init metrics; checkout: `increment()`) |
+| ~~3.5-C~~ | ~~Auth B2C: `UserRole` + JWT `role` + `registerCustomer()`~~ | ~~Clientas B2C tienen rol `customer` en JWT~~ | ✅ (`/registro` + `/perfil` + `auth.actions.ts`) |
+| ~~3.5-D~~ | ~~Eliminar `ExploreClient.tsx` (dead code)~~ | ~~0 referencias en codebase~~ | ✅ (92 líneas eliminadas) |
+
+**Branches**: `feat/fase3.5-security-fix`, `feat/fase3.5-crm-metrics`, `feat/fase3.5-b2c-auth`, `feat/fase3.5-cleanup`
 
 ---
 
