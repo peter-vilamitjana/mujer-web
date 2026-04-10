@@ -92,7 +92,7 @@ export const authOptions: NextAuthOptions = {
             if (account && user) {
                 token.accessToken = account.access_token;
                 token.refreshToken = account.refresh_token;
-                token.accessTokenExpires = account.expires_at! * 1000;
+                token.accessTokenExpires = (account.expires_at || 0) * 1000;
                 token.user = user;
                 token.uid = user.id; // UID explícito en el token
 
@@ -133,6 +133,7 @@ export const authOptions: NextAuthOptions = {
         async session({ session, token }) {
             session.user = token.user as any;
             (session.user as any).uid = token.uid;
+            (session.user as any).role = token.role;
             (session.user as any).tenantIds = (token.tenantIds as string[]) ?? [];
             (session.user as any).salonId = ((token.tenantIds as string[]) ?? [])[0] ?? null;
             (session.user as any).role = token.role ?? 'customer';

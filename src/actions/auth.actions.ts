@@ -10,9 +10,12 @@ export async function registerCustomer(data: {
   phone: string
 }): Promise<{ success: true; uid: string } | { success: false; error: string }> {
   try {
+    const apiKey = FIREBASE_API_KEY || process.env.FIREBASE_API_KEY;
+    if (!apiKey) throw new Error('Firebase API key not configured');
+
     // 1. Crear usuario en Firebase Auth via REST API
     const authRes = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`,
+      `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -28,11 +31,12 @@ export async function registerCustomer(data: {
     const authData = await authRes.json()
 
     if (!authRes.ok) {
-      if (authData.error?.message === 'EMAIL_EXISTS') {
+      const msg = authData.error?.message;
+      if (msg === 'EMAIL_EXISTS') {
         return { success: false, error: 'ESTE EMAIL YA TIENE UNA CUENTA' }
       }
-      if (authData.error?.message?.startsWith('WEAK_PASSWORD')) {
-        return { success: false, error: 'CONTRASEÑA MUY DÉBIL' }
+      if (msg?.startsWith('WEAK_PASSWORD')) {
+        return { success: false, error: 'CONTRASEÑA MUY DÉBIL (MÍNIMO 6 CARACTERES)' }
       }
       return { success: false, error: 'ERROR AL CREAR LA CUENTA' }
     }

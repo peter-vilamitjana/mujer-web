@@ -64,7 +64,6 @@ export default function PerfilPage() {
   )
 }
 
-// FIX 9: confirmación de logout con useState
 function Sidebar() {
   const [confirmLogout, setConfirmLogout] = useState(false)
 
@@ -72,7 +71,7 @@ function Sidebar() {
     <aside className="w-64 bg-[#0d0d0d] border-r border-white/[0.06] flex flex-col h-screen sticky top-0 shrink-0">
       <div className="p-8 flex flex-col items-center text-center">
 
-        {/* FIX 2: Avatar con ring gradiente emerald */}
+        {/* Avatar con ring gradiente emerald */}
         <div className="relative mb-5">
           <div
             className="w-20 h-20 rounded-full p-[2px]"
@@ -93,7 +92,6 @@ function Sidebar() {
         <h2 className="text-lg font-semibold text-white">{MOCK_USER.name}</h2>
         <p className="text-[11px] text-zinc-500 mt-1 mb-8">{MOCK_USER.email}</p>
 
-        {/* FIX 7: NavItem con Link y hrefs reales */}
         <nav className="w-full space-y-1">
           <NavItem icon={Calendar} label="Panel de Turnos" href="/perfil" active />
           <NavItem icon={Clock} label="Historial de Citas" href="/perfil/historial" />
@@ -102,7 +100,6 @@ function Sidebar() {
         </nav>
       </div>
 
-      {/* FIX 9: botón cerrar sesión con confirmación */}
       <div className="mt-auto p-6 border-t border-white/[0.06]">
         {confirmLogout ? (
           <div className="space-y-2">
@@ -136,7 +133,6 @@ function Sidebar() {
   )
 }
 
-// FIX 7: NavItem usa Link con href prop
 function NavItem({
   icon: Icon,
   label,
@@ -165,11 +161,9 @@ function NavItem({
 
 function MainContent() {
   return (
-    // FIX 1: flex-1 min-w-0 sin max-w en el main, inner div controla el ancho
     <main className="flex-1 min-w-0 px-12 py-12">
       <div className="max-w-4xl">
 
-        {/* FIX 3: header contextual "Mi Panel" */}
         <header className="flex justify-between items-center mb-12">
           <div>
             <p className="text-[9px] text-zinc-600 uppercase tracking-[0.4em] font-bold mb-1">
@@ -183,7 +177,6 @@ function MainContent() {
           </button>
         </header>
 
-        {/* FIX 4: sección con más aire, badge y línea divisora */}
         <section className="mb-12">
           <div className="flex items-end justify-between">
             <div>
@@ -199,7 +192,6 @@ function MainContent() {
           <div className="mt-6 border-t border-white/[0.04]" />
         </section>
 
-        {/* FIX 8: estado vacío cuando no hay turnos */}
         <div className="space-y-6">
           {MOCK_APPOINTMENTS.length > 0 ? (
             MOCK_APPOINTMENTS.map((appt) => (
@@ -219,7 +211,6 @@ function MainContent() {
             </div>
           )}
         </div>
-
       </div>
     </main>
   )
@@ -249,7 +240,6 @@ function BoardingPass({
         boxShadow: '0 20px 60px -10px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)',
       }}
     >
-      {/* Muescas externas izquierda y derecha */}
       <div
         className="absolute z-10"
         style={{
@@ -275,7 +265,6 @@ function BoardingPass({
         }}
       />
 
-      {/* Lado izquierdo — datos del turno */}
       <div className="flex-1 p-7 flex flex-col justify-between">
         <div className="flex justify-between items-start">
           <div>
@@ -300,7 +289,6 @@ function BoardingPass({
           </div>
         </div>
 
-        {/* FIX 5: grid de 5 columnas con botón Cancelar */}
         <div className="grid grid-cols-5 gap-3 border-t border-white/[0.06] pt-4">
           {[
             { label: 'CON', value: staffName },
@@ -323,7 +311,6 @@ function BoardingPass({
         </div>
       </div>
 
-      {/* FIX 6: divisor con muescas top/bottom y línea más visible */}
       <div className="relative flex items-stretch">
         <div
           className="absolute"
@@ -355,7 +342,6 @@ function BoardingPass({
         />
       </div>
 
-      {/* Lado derecho — QR */}
       <div className="w-44 flex flex-col items-center justify-center p-6 bg-white/[0.02] shrink-0">
         <p className="text-[7px] text-zinc-600 font-bold tracking-[0.2em] uppercase text-center leading-relaxed mb-3">
           CHECK-IN CODE
@@ -366,7 +352,7 @@ function BoardingPass({
             <rect x="10" y="10" width="14" height="14" rx="1" fill="white" />
             <rect x="13" y="13" width="8" height="8" fill="black" />
             <rect x="44" y="6" width="22" height="22" rx="2" fill="black" />
-            <rect x="48" y="10" width="14" height="14" rx="1" fill="white" />
+            <rect x="10" y="10" width="14" height="14" rx="1" fill="white" />
             <rect x="51" y="13" width="8" height="8" fill="black" />
             <rect x="6" y="44" width="22" height="22" rx="2" fill="black" />
             <rect x="10" y="48" width="14" height="14" rx="1" fill="white" />
@@ -391,7 +377,6 @@ function BoardingPass({
         <p className="text-[9px] font-mono text-zinc-500 mt-2.5">{checkInCode}</p>
       </div>
 
-      {/* Hover glow sutil */}
       <div
         className="absolute inset-0 rounded-[20px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         style={{ boxShadow: 'inset 0 0 0 1px rgba(52,211,153,0.08)' }}

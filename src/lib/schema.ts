@@ -10,7 +10,7 @@ export interface UserProfile {
     createdAt: Timestamp;
 }
 
-export type UserRole = 'admin' | 'employee' | 'client';
+export type UserRole = 'admin' | 'employee' | 'client' | 'customer';
 
 export interface Membership {
     tenantId: string;

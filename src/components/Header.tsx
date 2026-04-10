@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,9 +81,11 @@ export default function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled>
-              <User className="mr-2 h-4 w-4" />
-              <span>Mi Perfil</span>
+            <DropdownMenuItem asChild>
+              <Link href="/perfil" className="flex items-center w-full cursor-pointer">
+                <User className="mr-2 h-4 w-4" />
+                <span>Mi Perfil</span>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
