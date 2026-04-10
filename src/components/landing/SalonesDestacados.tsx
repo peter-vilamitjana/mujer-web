@@ -11,7 +11,7 @@ const mockSalones = [
     slug: 'demo-salon',
     address: 'Palermo, Buenos Aires',
     category: 'Hair & Color',
-    logoUrl: '',
+    logoUrl: '/hero-salon.png',
   },
   {
     id: 'mock-2',
@@ -19,7 +19,7 @@ const mockSalones = [
     slug: 'demo-salon',
     address: 'Recoleta, Buenos Aires',
     category: 'Skin & Spa',
-    logoUrl: '',
+    logoUrl: '/salon-card-1.png',
   },
   {
     id: 'mock-3',
@@ -27,7 +27,7 @@ const mockSalones = [
     slug: 'demo-salon',
     address: 'Belgrano, Buenos Aires',
     category: 'Estética Integral',
-    logoUrl: '',
+    logoUrl: '/salon-card-2.png',
   },
 ];
 
