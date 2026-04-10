@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { Search, MapPin } from 'lucide-react';
 
@@ -5,9 +6,14 @@ export default function Hero() {
   return (
     <section className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-brand-bg pb-32">
       <div className="absolute inset-0 z-0">
-        <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-950" />
-        {/* Solo overlay oscuro con fade-in cinematográfico */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-black/85 opacity-0 dark:opacity-100 transition-opacity duration-1000 ease-in-out z-0"></div>
+        <Image 
+          src="/hero-salon.png" 
+          alt="Luxury Salon Interior" 
+          fill 
+          priority 
+          className="object-cover" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-black/95 z-10"></div>
       </div>
       
       <div className="relative z-10 text-center max-w-7xl px-6">
