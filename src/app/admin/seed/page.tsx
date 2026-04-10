@@ -1,5 +1,6 @@
 'use client';
 
+import { notFound } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -35,6 +36,8 @@ const BRANCHES = [
 ];
 
 export default function SeedPage() {
+    if (process.env.NODE_ENV !== 'development') notFound();
+
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
     const [user, setUser] = useState<User | null>(null);
