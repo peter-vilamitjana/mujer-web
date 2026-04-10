@@ -1,6 +1,6 @@
 'use server';
 
-import { collection, query, where, getDocs, doc, getDoc, setDoc, serverTimestamp, Timestamp, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, setDoc, updateDoc, serverTimestamp, Timestamp, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -159,6 +159,26 @@ export async function createBooking(
     }
     // setDoc con merge: true → crea si no existe, actualiza si ya existe sin borrar campos previos
     await setDoc(customerRef, customerData, { merge: true });
+
+    // Update customer metrics after booking
+    const customerSnap = await getDoc(customerRef);
+    if (customerSnap.exists() && customerSnap.data()?.metrics) {
+      // Returning customer: update lastVisit (totalVisits/totalSpent incremented at checkout)
+      await updateDoc(customerRef, {
+        'metrics.lastVisit': serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    } else {
+      // First booking: initialize metrics with firstVisit
+      await setDoc(customerRef, {
+        metrics: {
+          totalVisits: 0,
+          totalSpent: 0,
+          firstVisit: serverTimestamp(),
+          lastVisit: serverTimestamp(),
+        },
+      }, { merge: true });
+    }
 
     // WhatsApp confirmation — non-blocking, does not affect booking success
     const clientPhone = payload.clientPhone || null;

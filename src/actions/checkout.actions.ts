@@ -1,6 +1,6 @@
 'use server';
 
-import { doc, updateDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp, getDoc, increment } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -43,6 +43,7 @@ export async function closeAppointment(
         if (snap.data()?.status === 'cobrado') {
             return { success: false, error: 'Este turno ya fue cobrado.' };
         }
+        const appointmentData = snap.data();
         await updateDoc(appointmentRef, {
             status,
             amountPaid: payload.amountPaid,
@@ -51,6 +52,18 @@ export async function closeAppointment(
             checkoutAt: serverTimestamp(),
             checkoutBy: uid,
         });
+
+        // Increment customer metrics on checkout
+        if (appointmentData.clientId) {
+            const customerRef = doc(db, 'tenants', tenantId, 'customers', appointmentData.clientId);
+            await updateDoc(customerRef, {
+                'metrics.totalVisits': increment(1),
+                'metrics.totalSpent': increment(payload.amountPaid),
+                'metrics.lastVisit': serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            });
+        }
+
         return { success: true };
     } catch (err) {
         console.error('[closeAppointment]', err);
