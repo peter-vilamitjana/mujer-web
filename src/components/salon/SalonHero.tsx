@@ -14,7 +14,7 @@ export default function SalonHero({ tenantSlug, salonName }: SalonHeroProps) {
       {/* Desktop Background (Hidden on mobile) */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0 hidden md:block"
-        style={{ backgroundImage: "url('https://cdn.thumbor.leadformance.com/media/clients/5e15eee0ec40d1c7741dd946/501bd8ef-356a-4e1d-97e4-1f2456c30390-loreal-professionnel-6.jpg')" }}
+        style={{ backgroundImage: "url('/hero-salon.png')" }}
       >
         <div className="absolute inset-0 bg-black/50" />
       </div>
