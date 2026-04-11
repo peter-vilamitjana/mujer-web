@@ -50,9 +50,10 @@ export default function RegistroPage() {
     setError(null);
 
     const result = await registerCustomer({
-      displayName: formData.nombre,
+      name: formData.nombre,
       email: formData.email,
       password: formData.password,
+      phone: formData.phone,
     });
 
     if (!result.success) {

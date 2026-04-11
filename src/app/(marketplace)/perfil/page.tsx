@@ -68,8 +68,11 @@ function Sidebar() {
   const [confirmLogout, setConfirmLogout] = useState(false)
 
   return (
+    // FIX 1: h-screen sticky + flex flex-col — el div interior tiene flex-1
     <aside className="w-64 bg-[#0d0d0d] border-r border-white/[0.06] flex flex-col h-screen sticky top-0 shrink-0">
-      <div className="p-8 flex flex-col items-center text-center">
+
+      {/* FIX 1: flex-1 + overflow-y-auto para que ocupe todo el alto disponible */}
+      <div className="flex-1 p-8 flex flex-col items-center text-center overflow-y-auto">
 
         {/* Avatar con ring gradiente emerald */}
         <div className="relative mb-5">
@@ -80,7 +83,8 @@ function Sidebar() {
             }}
           >
             <div className="w-full h-full rounded-full bg-zinc-900 flex items-center justify-center">
-              <span className="font-playfair text-2xl text-white">{MOCK_USER.initials}</span>
+              {/* FIX 2: font-vogue es la clase correcta para Playfair Display */}
+              <span className="font-vogue text-2xl text-white">{MOCK_USER.initials}</span>
             </div>
           </div>
           <div className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0d0d0d]" />
@@ -92,7 +96,8 @@ function Sidebar() {
         <h2 className="text-lg font-semibold text-white">{MOCK_USER.name}</h2>
         <p className="text-[11px] text-zinc-500 mt-1 mb-8">{MOCK_USER.email}</p>
 
-        <nav className="w-full space-y-1">
+        {/* FIX 1: nav con flex-1 empuja el logout al fondo */}
+        <nav className="w-full space-y-1 flex-1">
           <NavItem icon={Calendar} label="Panel de Turnos" href="/perfil" active />
           <NavItem icon={Clock} label="Historial de Citas" href="/perfil/historial" />
           <NavItem icon={User} label="Mi Perfil" href="/perfil/cuenta" />
@@ -100,7 +105,8 @@ function Sidebar() {
         </nav>
       </div>
 
-      <div className="mt-auto p-6 border-t border-white/[0.06]">
+      {/* Logout — queda anclado al fondo naturalmente */}
+      <div className="p-6 border-t border-white/[0.06]">
         {confirmLogout ? (
           <div className="space-y-2">
             <p className="text-[11px] text-zinc-500 text-center mb-3">¿Cerrar sesión?</p>
@@ -149,7 +155,7 @@ function NavItem({
       href={href}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
         active
-          ? 'bg-emerald-400/[0.08] text-emerald-400'
+          ? 'bg-emerald-950/50 text-emerald-400'
           : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]'
       }`}
     >
@@ -169,7 +175,8 @@ function MainContent() {
             <p className="text-[9px] text-zinc-600 uppercase tracking-[0.4em] font-bold mb-1">
               MujerApp
             </p>
-            <h1 className="font-playfair text-2xl text-white tracking-tight">Mi Panel</h1>
+            {/* FIX 2: font-vogue para el título del panel */}
+            <h1 className="font-vogue text-2xl text-white tracking-tight">Mi Panel</h1>
           </div>
           <button className="relative p-2 text-zinc-500 hover:text-white transition-colors rounded-xl hover:bg-white/[0.04] cursor-pointer">
             <Bell className="w-5 h-5" />
@@ -183,9 +190,11 @@ function MainContent() {
               <p className="text-[9px] text-zinc-600 uppercase tracking-[0.4em] font-bold mb-2">
                 PRÓXIMOS
               </p>
-              <h2 className="font-playfair text-3xl text-white">Mis Turnos</h2>
+              {/* FIX 2: font-vogue font-normal (400) — estética Vogue sin bold */}
+              <h2 className="font-vogue font-normal text-3xl text-white">Mis Turnos</h2>
             </div>
-            <span className="text-[11px] font-bold text-emerald-400 bg-emerald-400/[0.08] px-3 py-1.5 rounded-full border border-emerald-400/[0.15] mb-1">
+            {/* FIX 3: badge dorado premium — amber en lugar de emerald */}
+            <span className="text-[11px] font-bold text-amber-300 bg-amber-950/50 px-3 py-1.5 rounded-full border border-amber-400/20 mb-1">
               {MOCK_APPOINTMENTS.length} confirmados
             </span>
           </div>
@@ -200,7 +209,7 @@ function MainContent() {
           ) : (
             <div className="flex flex-col items-center justify-center py-24 border border-white/[0.04] rounded-2xl bg-white/[0.01]">
               <Calendar className="w-10 h-10 text-zinc-700 mb-4" />
-              <p className="font-playfair text-xl text-zinc-500 mb-2">Sin turnos próximos</p>
+              <p className="font-vogue text-xl text-zinc-500 mb-2">Sin turnos próximos</p>
               <p className="text-sm text-zinc-600 mb-6">Todavía no tenés reservas confirmadas.</p>
               <Link
                 href="/explore"
@@ -211,6 +220,7 @@ function MainContent() {
             </div>
           )}
         </div>
+
       </div>
     </main>
   )
@@ -230,7 +240,7 @@ function BoardingPass({
 }: Appointment) {
   return (
     <div
-      className="relative flex h-48 cursor-pointer transition-all duration-300 hover:scale-[1.015] group"
+      className="relative flex cursor-pointer transition-all duration-300 hover:scale-[1.015] group"
       style={{
         backgroundColor: '#141414',
         backgroundImage: 'radial-gradient(rgba(255,255,255,0.035) 1px, transparent 0)',
@@ -240,6 +250,7 @@ function BoardingPass({
         boxShadow: '0 20px 60px -10px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)',
       }}
     >
+      {/* Muescas externas izquierda y derecha */}
       <div
         className="absolute z-10"
         style={{
@@ -265,13 +276,17 @@ function BoardingPass({
         }}
       />
 
+      {/* Lado izquierdo — datos del turno */}
       <div className="flex-1 p-7 flex flex-col justify-between">
+
         <div className="flex justify-between items-start">
           <div>
-            <p className="text-[9px] text-zinc-500 font-bold tracking-[0.35em] uppercase mb-1">
+            {/* FIX 3: salonType — text-zinc-400 tracking-widest */}
+            <p className="text-[9px] text-zinc-400 font-bold tracking-widest uppercase mb-1.5">
               {salonType}
             </p>
-            <h3 className="font-playfair text-[1.6rem] font-black text-white leading-none tracking-tight">
+            {/* FIX 2+3: font-vogue tracking-widest, text-white puro — máxima jerarquía */}
+            <h3 className="font-vogue text-[1.55rem] font-bold text-white leading-none tracking-widest">
               {salonName}
             </h3>
           </div>
@@ -281,7 +296,8 @@ function BoardingPass({
               <p className="text-[9px] text-zinc-500 font-bold tracking-[0.3em] uppercase mb-0.5">
                 FECHA
               </p>
-              <span className="font-playfair text-4xl font-black text-white leading-none">{day}</span>
+              {/* FIX 3: número de fecha en dorado metálico sutil */}
+              <span className="font-vogue text-4xl font-black text-amber-300/70 leading-none">{day}</span>
               <span className="text-[11px] tracking-[0.3em] uppercase text-zinc-400 font-bold ml-1">
                 {month}
               </span>
@@ -289,70 +305,56 @@ function BoardingPass({
           </div>
         </div>
 
-        <div className="grid grid-cols-5 gap-3 border-t border-white/[0.06] pt-4">
-          {[
-            { label: 'CON', value: staffName },
-            { label: 'SERVICIO', value: serviceName },
-            { label: 'HORA', value: time },
-            { label: 'LUGAR', value: location },
-          ].map(({ label, value }) => (
-            <div key={label}>
-              <p className="text-[8px] text-zinc-600 font-bold tracking-[0.25em] uppercase mb-0.5">
-                {label}
-              </p>
-              <p className="text-[13px] font-semibold text-white">{value}</p>
-            </div>
-          ))}
+        {/* FIX 3: jerarquía de color diferenciada por campo */}
+        <div className="grid grid-cols-5 gap-3 border-t border-white/5 pt-4 mt-4">
+          {/* CON — nombre del profesional: text-white puro */}
+          <div>
+            <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">CON</p>
+            <p className="text-sm font-medium text-white">{staffName}</p>
+          </div>
+          {/* SERVICIO, HORA, LUGAR — text-zinc-300 */}
+          <div>
+            <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">SERVICIO</p>
+            <p className="text-sm font-medium text-zinc-300">{serviceName}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">HORA</p>
+            <p className="text-sm font-medium text-zinc-300">{time}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">LUGAR</p>
+            <p className="text-sm font-medium text-zinc-300">{location}</p>
+          </div>
+
+          {/* Cancelar — acción destructiva rose */}
           <div className="flex items-end justify-end">
-            <button className="text-[10px] text-zinc-600 hover:text-red-400 border border-white/[0.06] hover:border-red-400/30 px-3 py-1.5 rounded-full font-medium transition-all duration-200 hover:bg-red-400/[0.05] cursor-pointer">
+            <button className="text-[10px] text-rose-400/70 hover:text-rose-400 border border-rose-400/20 hover:border-rose-400/40 px-3 py-1.5 rounded-full font-medium transition-all duration-200 hover:bg-rose-950 cursor-pointer">
               Cancelar
             </button>
           </div>
         </div>
       </div>
 
-      <div className="relative flex items-stretch">
-        <div
-          className="absolute"
-          style={{
-            width: '20px',
-            height: '20px',
-            backgroundColor: '#09090b',
-            borderRadius: '50%',
-            top: '-10px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-          }}
-        />
-        <div
-          className="absolute"
-          style={{
-            width: '20px',
-            height: '20px',
-            backgroundColor: '#09090b',
-            borderRadius: '50%',
-            bottom: '-10px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-          }}
-        />
-        <div
-          className="w-px self-stretch"
-          style={{ borderLeft: '1.5px dashed rgba(255,255,255,0.12)' }}
-        />
-      </div>
+      {/* FIX 3: divisor dorado sutil — gradient vertical evoca separador metálico */}
+      <div
+        className="w-px my-6"
+        style={{
+          background: 'linear-gradient(to bottom, transparent, rgba(212,175,55,0.2), transparent)',
+        }}
+      />
 
-      <div className="w-44 flex flex-col items-center justify-center p-6 bg-white/[0.02] shrink-0">
+      {/* Lado derecho — QR */}
+      <div className="w-44 flex flex-col items-center justify-center px-6 py-7 shrink-0">
         <p className="text-[7px] text-zinc-600 font-bold tracking-[0.2em] uppercase text-center leading-relaxed mb-3">
           CHECK-IN CODE
         </p>
-        <div className="bg-white rounded-lg p-2.5">
+        <div className="bg-zinc-100 border border-zinc-200 rounded-xl p-2.5">
           <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
             <rect x="6" y="6" width="22" height="22" rx="2" fill="black" />
             <rect x="10" y="10" width="14" height="14" rx="1" fill="white" />
             <rect x="13" y="13" width="8" height="8" fill="black" />
             <rect x="44" y="6" width="22" height="22" rx="2" fill="black" />
-            <rect x="10" y="10" width="14" height="14" rx="1" fill="white" />
+            <rect x="48" y="10" width="14" height="14" rx="1" fill="white" />
             <rect x="51" y="13" width="8" height="8" fill="black" />
             <rect x="6" y="44" width="22" height="22" rx="2" fill="black" />
             <rect x="10" y="48" width="14" height="14" rx="1" fill="white" />
@@ -374,9 +376,11 @@ function BoardingPass({
             <rect x="50" y="62" width="4" height="4" fill="black" />
           </svg>
         </div>
-        <p className="text-[9px] font-mono text-zinc-500 mt-2.5">{checkInCode}</p>
+        {/* FIX 3: código QR en dorado — número de serie de lujo */}
+        <p className="text-[9px] font-mono text-amber-300/60 mt-2.5">{checkInCode}</p>
       </div>
 
+      {/* Hover glow sutil */}
       <div
         className="absolute inset-0 rounded-[20px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         style={{ boxShadow: 'inset 0 0 0 1px rgba(52,211,153,0.08)' }}

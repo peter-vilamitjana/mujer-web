@@ -18,5 +18,6 @@ export const config = {
     '/turnos/:path*',
     '/mis-turnos/:path*',
     '/admin/:path*',
+    '/perfil/:path*',
   ],
 };
