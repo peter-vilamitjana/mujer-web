@@ -2,404 +2,378 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Calendar, Clock, User, Heart, LogOut, Bell, Scissors, Sparkles, Hand } from 'lucide-react'
-
-const MOCK_USER = {
-  name: 'Sofia R.',
-  email: 'sofia.r@email.com',
-  initials: 'S',
-}
+import { Calendar, Scissors, Sparkles, Hand, X } from 'lucide-react'
+import { DashboardSidebar } from './_components/DashboardSidebar'
 
 const MOCK_APPOINTMENTS = [
   {
     id: '1',
     salonType: 'SALÓN',
-    salonName: 'CASA BLANCA',
+    salonName: 'Casa Blanca',
     Icon: Scissors,
     day: '21',
     month: 'AGO',
+    year: '2026',
     staffName: 'Martina Soto',
     serviceName: 'Balayage',
-    time: '10:30am',
+    time: '10:30 am',
     location: 'Silla 1',
     checkInCode: '#MB-CB01',
+    status: 'confirmed' as const,
   },
   {
     id: '2',
     salonType: 'SPA',
-    salonName: 'AURA WELLNESS',
+    salonName: 'Aura Wellness',
     Icon: Sparkles,
     day: '23',
     month: 'AGO',
+    year: '2026',
     staffName: 'Javier Gomez',
     serviceName: 'Facial Premium',
-    time: '3:00pm',
+    time: '3:00 pm',
     location: 'Lounge 4',
     checkInCode: '#MB-AW02',
+    status: 'confirmed' as const,
   },
   {
     id: '3',
     salonType: 'STUDIO',
-    salonName: 'STUDIO MINIMAL',
+    salonName: 'Studio Minimal',
     Icon: Hand,
     day: '26',
     month: 'AGO',
+    year: '2026',
     staffName: 'Ana Lopez',
     serviceName: 'Manicure Gel',
-    time: '11:15am',
+    time: '11:15 am',
     location: 'Puesto 2',
     checkInCode: '#MB-SM03',
+    status: 'confirmed' as const,
   },
 ]
 
 type Appointment = (typeof MOCK_APPOINTMENTS)[0]
 
-export default function PerfilPage() {
+// QR SVG inline — no external URLs
+function QRCode({ size = 80 }: { size?: number }) {
   return (
-    <div className="flex min-h-screen bg-[#09090b]">
-      <Sidebar />
-      <MainContent />
-      <BackgroundGlow />
+    <svg width={size} height={size} viewBox="0 0 72 72" fill="none">
+      <rect x="6" y="6" width="22" height="22" rx="2" fill="currentColor" />
+      <rect x="10" y="10" width="14" height="14" rx="1" fill="#1A1C20" />
+      <rect x="13" y="13" width="8" height="8" fill="currentColor" />
+      <rect x="44" y="6" width="22" height="22" rx="2" fill="currentColor" />
+      <rect x="48" y="10" width="14" height="14" rx="1" fill="#1A1C20" />
+      <rect x="51" y="13" width="8" height="8" fill="currentColor" />
+      <rect x="6" y="44" width="22" height="22" rx="2" fill="currentColor" />
+      <rect x="10" y="48" width="14" height="14" rx="1" fill="#1A1C20" />
+      <rect x="13" y="51" width="8" height="8" fill="currentColor" />
+      <rect x="32" y="6" width="4" height="4" fill="currentColor" />
+      <rect x="38" y="6" width="4" height="4" fill="currentColor" />
+      <rect x="32" y="12" width="4" height="4" fill="currentColor" />
+      <rect x="38" y="18" width="4" height="4" fill="currentColor" />
+      <rect x="32" y="32" width="4" height="4" fill="currentColor" />
+      <rect x="38" y="32" width="4" height="4" fill="currentColor" />
+      <rect x="44" y="32" width="4" height="4" fill="currentColor" />
+      <rect x="32" y="38" width="4" height="4" fill="currentColor" />
+      <rect x="44" y="38" width="4" height="4" fill="currentColor" />
+      <rect x="50" y="38" width="4" height="4" fill="currentColor" />
+      <rect x="56" y="44" width="4" height="4" fill="currentColor" />
+      <rect x="62" y="44" width="4" height="4" fill="currentColor" />
+      <rect x="56" y="50" width="4" height="4" fill="currentColor" />
+      <rect x="62" y="56" width="4" height="4" fill="currentColor" />
+      <rect x="50" y="62" width="4" height="4" fill="currentColor" />
+    </svg>
+  )
+}
+
+// QR Check-in Modal
+function QRModal({
+  appointment,
+  onClose,
+}: {
+  appointment: Appointment | null
+  onClose: () => void
+}) {
+  if (!appointment) return null
+
+  return (
+    // Overlay — click outside closes
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{
+        backgroundColor: 'rgba(0,0,0,0.75)',
+        animation: 'fadeIn 0.2s ease-out',
+      }}
+      onClick={onClose}
+    >
+      <style>{`@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }`}</style>
+
+      {/* Modal card — stop propagation so clicking inside doesn't close */}
+      <div
+        className="relative flex flex-col items-center p-10 rounded-[12px]"
+        style={{
+          width: '400px',
+          backgroundColor: '#1A1C20',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
+          animation: 'scaleIn 0.2s ease-out',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <style>{`@keyframes scaleIn { from { opacity: 0; transform: scale(0.95) } to { opacity: 1; transform: scale(1) } }`}</style>
+
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-[#8A8F98] hover:text-[#F4F4F5] transition-colors cursor-pointer p-1"
+          aria-label="Cerrar"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Header */}
+        <p className="text-[10px] text-[#8A8F98] uppercase tracking-[0.3em] mb-1">
+          {appointment.salonType}
+        </p>
+        <h2 className="font-vogue text-xl text-[#F4F4F5] mb-1">{appointment.salonName}</h2>
+        <p className="text-[#8A8F98] text-sm mb-8">
+          {appointment.day} {appointment.month} · {appointment.time}
+        </p>
+
+        {/* QR enlarged 250x250 */}
+        <div
+          className="rounded-xl p-4 mb-6"
+          style={{ backgroundColor: '#F4F4F5' }}
+        >
+          <div style={{ color: '#0F1012' }}>
+            <QRCode size={210} />
+          </div>
+        </div>
+
+        {/* Code */}
+        <p
+          className="text-sm font-mono font-medium tracking-wider"
+          style={{ color: '#D4AF37' }}
+        >
+          {appointment.checkInCode}
+        </p>
+        <p className="text-[11px] text-[#8A8F98] mt-1">
+          Mostrá este código en recepción
+        </p>
+      </div>
     </div>
   )
 }
 
-function Sidebar() {
-  const [confirmLogout, setConfirmLogout] = useState(false)
-
-  return (
-    // FIX 1: h-screen sticky + flex flex-col — el div interior tiene flex-1
-    <aside className="w-64 bg-[#0d0d0d] border-r border-white/[0.06] flex flex-col h-screen sticky top-0 shrink-0">
-
-      {/* FIX 1: flex-1 + overflow-y-auto para que ocupe todo el alto disponible */}
-      <div className="flex-1 p-8 flex flex-col items-center text-center overflow-y-auto">
-
-        {/* Avatar con ring gradiente emerald */}
-        <div className="relative mb-5">
-          <div
-            className="w-20 h-20 rounded-full p-[2px]"
-            style={{
-              background: 'linear-gradient(135deg, rgba(52,211,153,0.4), rgba(52,211,153,0.05))',
-            }}
-          >
-            <div className="w-full h-full rounded-full bg-zinc-900 flex items-center justify-center">
-              {/* FIX 2: font-vogue es la clase correcta para Playfair Display */}
-              <span className="font-vogue text-2xl text-white">{MOCK_USER.initials}</span>
-            </div>
-          </div>
-          <div className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-emerald-400 rounded-full border-2 border-[#0d0d0d]" />
-        </div>
-
-        <span className="text-[9px] tracking-[0.4em] font-bold text-emerald-400 uppercase mb-1">
-          BIENVENIDA
-        </span>
-        <h2 className="text-lg font-semibold text-white">{MOCK_USER.name}</h2>
-        <p className="text-[11px] text-zinc-500 mt-1 mb-8">{MOCK_USER.email}</p>
-
-        {/* FIX 1: nav con flex-1 empuja el logout al fondo */}
-        <nav className="w-full space-y-1 flex-1">
-          <NavItem icon={Calendar} label="Panel de Turnos" href="/perfil" active />
-          <NavItem icon={Clock} label="Historial de Citas" href="/perfil/historial" />
-          <NavItem icon={User} label="Mi Perfil" href="/perfil/cuenta" />
-          <NavItem icon={Heart} label="Favoritos" href="/perfil/favoritos" />
-        </nav>
-      </div>
-
-      {/* Logout — queda anclado al fondo naturalmente */}
-      <div className="p-6 border-t border-white/[0.06]">
-        {confirmLogout ? (
-          <div className="space-y-2">
-            <p className="text-[11px] text-zinc-500 text-center mb-3">¿Cerrar sesión?</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setConfirmLogout(false)}
-                className="flex-1 text-[11px] font-medium text-zinc-500 border border-white/[0.08] py-2 rounded-xl hover:bg-white/[0.04] transition-all cursor-pointer"
-              >
-                No
-              </button>
-              <button
-                onClick={() => {/* conectar signOut() */}}
-                className="flex-1 text-[11px] font-medium text-red-400 border border-red-400/20 py-2 rounded-xl hover:bg-red-400/[0.06] transition-all cursor-pointer"
-              >
-                Sí, salir
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => setConfirmLogout(true)}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-[13px] font-medium text-zinc-500 hover:text-red-400 hover:bg-red-400/[0.06] transition-all cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-            Cerrar Sesión
-          </button>
-        )}
-      </div>
-    </aside>
-  )
-}
-
-function NavItem({
-  icon: Icon,
-  label,
-  active = false,
-  href = '#',
+// Ticket card component
+function TicketCard({
+  appointment,
+  onQRClick,
 }: {
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  active?: boolean
-  href?: string
+  appointment: Appointment
+  onQRClick: (appt: Appointment) => void
 }) {
-  return (
-    <Link
-      href={href}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
-        active
-          ? 'bg-emerald-950/50 text-emerald-400'
-          : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]'
-      }`}
-    >
-      <Icon className="w-4 h-4" />
-      {label}
-    </Link>
-  )
-}
+  const { salonType, salonName, Icon, day, month, staffName, serviceName, time, location, checkInCode } =
+    appointment
 
-function MainContent() {
-  return (
-    <main className="flex-1 min-w-0 px-12 py-12">
-      <div className="max-w-4xl">
-
-        <header className="flex justify-between items-center mb-12">
-          <div>
-            <p className="text-[9px] text-zinc-600 uppercase tracking-[0.4em] font-bold mb-1">
-              MujerApp
-            </p>
-            {/* FIX 2: font-vogue para el título del panel */}
-            <h1 className="font-vogue text-2xl text-white tracking-tight">Mi Panel</h1>
-          </div>
-          <button className="relative p-2 text-zinc-500 hover:text-white transition-colors rounded-xl hover:bg-white/[0.04] cursor-pointer">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-emerald-400 rounded-full" />
-          </button>
-        </header>
-
-        <section className="mb-12">
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="text-[9px] text-zinc-600 uppercase tracking-[0.4em] font-bold mb-2">
-                PRÓXIMOS
-              </p>
-              {/* FIX 2: font-vogue font-normal (400) — estética Vogue sin bold */}
-              <h2 className="font-vogue font-normal text-3xl text-white">Mis Turnos</h2>
-            </div>
-            {/* FIX 3: badge dorado premium — amber en lugar de emerald */}
-            <span className="text-[11px] font-bold text-amber-300 bg-amber-950/50 px-3 py-1.5 rounded-full border border-amber-400/20 mb-1">
-              {MOCK_APPOINTMENTS.length} confirmados
-            </span>
-          </div>
-          <div className="mt-6 border-t border-white/[0.04]" />
-        </section>
-
-        <div className="space-y-6">
-          {MOCK_APPOINTMENTS.length > 0 ? (
-            MOCK_APPOINTMENTS.map((appt) => (
-              <BoardingPass key={appt.id} {...appt} />
-            ))
-          ) : (
-            <div className="flex flex-col items-center justify-center py-24 border border-white/[0.04] rounded-2xl bg-white/[0.01]">
-              <Calendar className="w-10 h-10 text-zinc-700 mb-4" />
-              <p className="font-vogue text-xl text-zinc-500 mb-2">Sin turnos próximos</p>
-              <p className="text-sm text-zinc-600 mb-6">Todavía no tenés reservas confirmadas.</p>
-              <Link
-                href="/explore"
-                className="text-[11px] font-bold text-emerald-400 border border-emerald-400/20 px-5 py-2.5 rounded-full hover:bg-emerald-400/[0.06] transition-all uppercase tracking-widest"
-              >
-                Descubrir salones
-              </Link>
-            </div>
-          )}
-        </div>
-
-      </div>
-    </main>
-  )
-}
-
-function BoardingPass({
-  salonType,
-  salonName,
-  Icon,
-  day,
-  month,
-  staffName,
-  serviceName,
-  time,
-  location,
-  checkInCode,
-}: Appointment) {
   return (
     <div
-      className="relative flex cursor-pointer transition-all duration-300 hover:scale-[1.015] group"
+      className="flex w-full rounded-[12px] overflow-hidden cursor-pointer transition-colors duration-200 group"
       style={{
-        backgroundColor: '#141414',
-        backgroundImage: 'radial-gradient(rgba(255,255,255,0.035) 1px, transparent 0)',
-        backgroundSize: '20px 20px',
-        borderRadius: '20px',
-        overflow: 'hidden',
-        boxShadow: '0 20px 60px -10px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)',
+        backgroundColor: '#1A1C20',
+        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)',
+        maxWidth: '800px',
       }}
+      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.backgroundColor = '#22252A')}
+      onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.backgroundColor = '#1A1C20')}
     >
-      {/* Muescas externas izquierda y derecha */}
-      <div
-        className="absolute z-10"
-        style={{
-          width: '24px',
-          height: '24px',
-          backgroundColor: '#09090b',
-          borderRadius: '50%',
-          top: '50%',
-          left: '-12px',
-          transform: 'translateY(-50%)',
-        }}
-      />
-      <div
-        className="absolute z-10"
-        style={{
-          width: '24px',
-          height: '24px',
-          backgroundColor: '#09090b',
-          borderRadius: '50%',
-          top: '50%',
-          right: '-12px',
-          transform: 'translateY(-50%)',
-        }}
-      />
+      {/* Left — 75% */}
+      <div className="flex-[3] p-6 flex flex-col justify-between">
 
-      {/* Lado izquierdo — datos del turno */}
-      <div className="flex-1 p-7 flex flex-col justify-between">
-
+        {/* Top row: salon name + date */}
         <div className="flex justify-between items-start">
           <div>
-            {/* FIX 3: salonType — text-zinc-400 tracking-widest */}
-            <p className="text-[9px] text-zinc-400 font-bold tracking-widest uppercase mb-1.5">
+            <p
+              className="text-[9px] font-medium uppercase tracking-widest mb-1.5"
+              style={{ color: '#8A8F98' }}
+            >
               {salonType}
             </p>
-            {/* FIX 2+3: font-vogue tracking-widest, text-white puro — máxima jerarquía */}
-            <h3 className="font-vogue text-[1.55rem] font-bold text-white leading-none tracking-widest">
+            <h3 className="font-vogue text-xl leading-tight" style={{ color: '#F4F4F5' }}>
               {salonName}
             </h3>
+            {/* Status badge */}
+            <span
+              className="inline-flex items-center mt-3 px-3 py-1 rounded-sm text-[11px] font-medium tracking-wide"
+              style={{ backgroundColor: '#3C5A45', color: '#F4F4F5' }}
+            >
+              Confirmado
+            </span>
           </div>
-          <div className="flex items-start gap-5">
-            <Icon className="w-5 h-5 text-emerald-400 mt-1" />
-            <div className="text-right">
-              <p className="text-[9px] text-zinc-500 font-bold tracking-[0.3em] uppercase mb-0.5">
-                FECHA
-              </p>
-              {/* FIX 3: número de fecha en dorado metálico sutil */}
-              <span className="font-vogue text-4xl font-black text-amber-300/70 leading-none">{day}</span>
-              <span className="text-[11px] tracking-[0.3em] uppercase text-zinc-400 font-bold ml-1">
-                {month}
-              </span>
+
+          {/* Date block */}
+          <div className="text-right shrink-0 ml-6">
+            <p
+              className="font-vogue text-4xl font-semibold leading-none"
+              style={{ color: '#D4AF37' }}
+            >
+              {day}
+            </p>
+            <p
+              className="text-[11px] uppercase tracking-widest mt-1"
+              style={{ color: '#8A8F98' }}
+            >
+              {month}
+            </p>
+            <div className="flex justify-end mt-2">
+              <Icon className="w-4 h-4" style={{ color: '#8A8F98' } as React.CSSProperties} />
             </div>
           </div>
         </div>
 
-        {/* FIX 3: jerarquía de color diferenciada por campo */}
-        <div className="grid grid-cols-5 gap-3 border-t border-white/5 pt-4 mt-4">
-          {/* CON — nombre del profesional: text-white puro */}
-          <div>
-            <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">CON</p>
-            <p className="text-sm font-medium text-white">{staffName}</p>
-          </div>
-          {/* SERVICIO, HORA, LUGAR — text-zinc-300 */}
-          <div>
-            <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">SERVICIO</p>
-            <p className="text-sm font-medium text-zinc-300">{serviceName}</p>
-          </div>
-          <div>
-            <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">HORA</p>
-            <p className="text-sm font-medium text-zinc-300">{time}</p>
-          </div>
-          <div>
-            <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">LUGAR</p>
-            <p className="text-sm font-medium text-zinc-300">{location}</p>
-          </div>
-
-          {/* Cancelar — acción destructiva rose */}
-          <div className="flex items-end justify-end">
-            <button className="text-[10px] text-rose-400/70 hover:text-rose-400 border border-rose-400/20 hover:border-rose-400/40 px-3 py-1.5 rounded-full font-medium transition-all duration-200 hover:bg-rose-950 cursor-pointer">
-              Cancelar
-            </button>
-          </div>
+        {/* Bottom row: metadata */}
+        <div
+          className="grid grid-cols-4 gap-4 pt-5 mt-5"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+        >
+          {[
+            { label: 'CON', value: staffName, highlight: true },
+            { label: 'SERVICIO', value: serviceName, highlight: false },
+            { label: 'HORA', value: time, highlight: false },
+            { label: 'LUGAR', value: location, highlight: false },
+          ].map(({ label, value, highlight }) => (
+            <div key={label}>
+              <p
+                className="text-[10px] uppercase tracking-wider mb-1"
+                style={{ color: '#8A8F98' }}
+              >
+                {label}
+              </p>
+              <p
+                className="text-[13px] font-medium"
+                style={{ color: highlight ? '#F4F4F5' : '#8A8F98' }}
+              >
+                {value}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* FIX 3: divisor dorado sutil — gradient vertical evoca separador metálico */}
+      {/* Dashed divider — spec: 1px dashed #8A8F98 */}
       <div
-        className="w-px my-6"
-        style={{
-          background: 'linear-gradient(to bottom, transparent, rgba(212,175,55,0.2), transparent)',
+        className="my-5 shrink-0"
+        style={{ width: '1px', borderLeft: '1px dashed #8A8F98', opacity: 0.4 }}
+      />
+
+      {/* Right — 25%, clickable for QR modal */}
+      <div
+        className="flex-1 flex flex-col items-center justify-center p-6 gap-3"
+        onClick={(e) => {
+          e.stopPropagation()
+          onQRClick(appointment)
         }}
-      />
-
-      {/* Lado derecho — QR */}
-      <div className="w-44 flex flex-col items-center justify-center px-6 py-7 shrink-0">
-        <p className="text-[7px] text-zinc-600 font-bold tracking-[0.2em] uppercase text-center leading-relaxed mb-3">
-          CHECK-IN CODE
-        </p>
-        <div className="bg-zinc-100 border border-zinc-200 rounded-xl p-2.5">
-          <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
-            <rect x="6" y="6" width="22" height="22" rx="2" fill="black" />
-            <rect x="10" y="10" width="14" height="14" rx="1" fill="white" />
-            <rect x="13" y="13" width="8" height="8" fill="black" />
-            <rect x="44" y="6" width="22" height="22" rx="2" fill="black" />
-            <rect x="48" y="10" width="14" height="14" rx="1" fill="white" />
-            <rect x="51" y="13" width="8" height="8" fill="black" />
-            <rect x="6" y="44" width="22" height="22" rx="2" fill="black" />
-            <rect x="10" y="48" width="14" height="14" rx="1" fill="white" />
-            <rect x="13" y="51" width="8" height="8" fill="black" />
-            <rect x="32" y="6" width="4" height="4" fill="black" />
-            <rect x="38" y="6" width="4" height="4" fill="black" />
-            <rect x="32" y="12" width="4" height="4" fill="black" />
-            <rect x="38" y="18" width="4" height="4" fill="black" />
-            <rect x="32" y="32" width="4" height="4" fill="black" />
-            <rect x="38" y="32" width="4" height="4" fill="black" />
-            <rect x="44" y="32" width="4" height="4" fill="black" />
-            <rect x="32" y="38" width="4" height="4" fill="black" />
-            <rect x="44" y="38" width="4" height="4" fill="black" />
-            <rect x="50" y="38" width="4" height="4" fill="black" />
-            <rect x="56" y="44" width="4" height="4" fill="black" />
-            <rect x="62" y="44" width="4" height="4" fill="black" />
-            <rect x="56" y="50" width="4" height="4" fill="black" />
-            <rect x="62" y="56" width="4" height="4" fill="black" />
-            <rect x="50" y="62" width="4" height="4" fill="black" />
-          </svg>
+      >
+        <div
+          className="rounded-lg p-2 transition-opacity duration-150 group-hover:opacity-90"
+          style={{ backgroundColor: '#F4F4F5', color: '#0F1012' }}
+        >
+          <QRCode size={80} />
         </div>
-        {/* FIX 3: código QR en dorado — número de serie de lujo */}
-        <p className="text-[9px] font-mono text-amber-300/60 mt-2.5">{checkInCode}</p>
+        <div className="text-center">
+          <p
+            className="text-[9px] font-mono tracking-wider"
+            style={{ color: '#D4AF37' }}
+          >
+            {checkInCode}
+          </p>
+          <p className="text-[10px] mt-1" style={{ color: '#8A8F98' }}>
+            Toque para check-in
+          </p>
+        </div>
       </div>
-
-      {/* Hover glow sutil */}
-      <div
-        className="absolute inset-0 rounded-[20px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-        style={{ boxShadow: 'inset 0 0 0 1px rgba(52,211,153,0.08)' }}
-      />
     </div>
   )
 }
 
-function BackgroundGlow() {
+export default function MiPanelPage() {
+  const [activeQR, setActiveQR] = useState<Appointment | null>(null)
+
   return (
-    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      <div
-        className="absolute top-[15%] right-[5%] w-[500px] h-[500px] rounded-full blur-[150px]"
-        style={{ background: 'radial-gradient(circle, rgba(52,211,153,0.07), transparent)' }}
-      />
-      <div
-        className="absolute bottom-[5%] left-[10%] w-[400px] h-[400px] rounded-full blur-[120px]"
-        style={{ background: 'rgba(255,255,255,0.025)' }}
-      />
+    <div className="flex min-h-screen" style={{ backgroundColor: '#0F1012' }}>
+      <DashboardSidebar />
+
+      {/* Main content */}
+      <main className="flex-1 min-w-0 px-12 py-10">
+        <div className="max-w-[860px]">
+
+          {/* Page header */}
+          <header className="mb-10">
+            <p
+              className="text-[10px] uppercase tracking-[0.4em] font-medium mb-2"
+              style={{ color: '#8A8F98' }}
+            >
+              PRÓXIMOS
+            </p>
+            <div className="flex items-end justify-between">
+              <h2 className="font-vogue text-[32px] font-semibold leading-none" style={{ color: '#F4F4F5' }}>
+                Mis Turnos
+              </h2>
+              <span
+                className="text-[11px] font-medium px-3 py-1.5 rounded-full border mb-0.5"
+                style={{
+                  color: '#D4AF37',
+                  backgroundColor: 'rgba(212,175,55,0.08)',
+                  borderColor: 'rgba(212,175,55,0.2)',
+                }}
+              >
+                {MOCK_APPOINTMENTS.length} confirmados
+              </span>
+            </div>
+            <div className="mt-5" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }} />
+          </header>
+
+          {/* Ticket list */}
+          <div className="space-y-4">
+            {MOCK_APPOINTMENTS.length > 0 ? (
+              MOCK_APPOINTMENTS.map((appt) => (
+                <TicketCard key={appt.id} appointment={appt} onQRClick={setActiveQR} />
+              ))
+            ) : (
+              /* Empty state */
+              <div
+                className="flex flex-col items-center justify-center py-24 rounded-[12px]"
+                style={{
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  backgroundColor: '#1A1C20',
+                }}
+              >
+                <Calendar className="w-10 h-10 mb-4" style={{ color: '#8A8F98' }} />
+                <p className="font-vogue text-xl mb-2" style={{ color: '#8A8F98' }}>
+                  No tenés turnos próximos
+                </p>
+                <p className="text-sm mb-8" style={{ color: '#8A8F98', opacity: 0.6 }}>
+                  Reservá en tus salones favoritos.
+                </p>
+                <Link
+                  href="/explore"
+                  className="text-[11px] font-semibold uppercase tracking-widest px-6 py-3 rounded-[6px] transition-colors duration-150 cursor-pointer"
+                  style={{
+                    backgroundColor: '#D4AF37',
+                    color: '#0F1012',
+                  }}
+                >
+                  Explorar Salones
+                </Link>
+              </div>
+            )}
+          </div>
+
+        </div>
+      </main>
+
+      {/* QR Modal */}
+      <QRModal appointment={activeQR} onClose={() => setActiveQR(null)} />
     </div>
   )
 }
