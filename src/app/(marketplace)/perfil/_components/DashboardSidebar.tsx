@@ -17,7 +17,7 @@ export function DashboardSidebar() {
   const [confirmLogout, setConfirmLogout] = useState(false)
 
   return (
-    <aside className="w-[280px] bg-[#1A1C20] flex flex-col h-screen sticky top-0 shrink-0">
+    <aside className="w-[280px] liquid-glass-floating flex flex-col h-screen sticky top-0 shrink-0">
 
       {/* Brand */}
       <div className="px-8 py-7 border-b border-white/[0.06]">

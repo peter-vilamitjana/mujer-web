@@ -89,9 +89,9 @@ const config = {
         },
       },
       fontFamily: {
-        headline: ["var(--font-manrope)", ...fontFamily.sans],
-        body: ["var(--font-inter)", ...fontFamily.sans],
-        label: ["var(--font-inter)", ...fontFamily.sans],
+        headline: ["Newsreader", "serif"],
+        body: ["Inter", "sans-serif"],
+        label: ["Inter", "sans-serif"],
         display: ["var(--font-manrope)", ...fontFamily.sans],
         sans: ["var(--font-inter)", ...fontFamily.sans],
         vogue: ["var(--font-playfair)", "serif"],

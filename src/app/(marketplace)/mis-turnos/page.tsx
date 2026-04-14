@@ -3,17 +3,16 @@
 import React from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import {
-  LayoutDashboard,
-  Calendar,
-  CalendarDays,
-  Heart,
-  User,
-  Settings,
-  LogOut,
-  Search,
-  Bell,
-  Plus
+import { 
+  LayoutDashboard, 
+  Calendar, 
+  Heart, 
+  User, 
+  Settings, 
+  LogOut, 
+  Search, 
+  Bell, 
+  Plus 
 } from 'lucide-react';
 
 type Appointment = {
@@ -77,7 +76,6 @@ const appointments: Appointment[] = [
 export default function MisTurnosPage() {
   const { data: session } = useSession();
   const userName = session?.user?.name || 'Sofia R.';
-  const userInitial = userName.charAt(0).toUpperCase();
   const confirmedCount = appointments.filter(a => a.status === 'confirmado').length;
 
   return (
@@ -90,43 +88,43 @@ export default function MisTurnosPage() {
     >
       <div className="mesh-glow"></div>
 
-      {/* Sidebar — flotante, centrado, hover-expand */}
-      <aside className="fixed left-6 top-1/2 -translate-y-1/2 h-auto w-[72px] hover:w-[200px] transition-all duration-500 ease-in-out z-50 group">
-        <div className="liquid-glass-floating h-full w-full rounded-[2rem] flex flex-col py-6 px-3 overflow-hidden">
+      {/* Sidebar — FIX 1: panel fijo siempre visible, icon-only + tooltips */}
+      <aside className="fixed left-0 top-0 h-screen w-[88px] z-50">
+        <div className="liquid-glass-floating rounded-r-[2rem] h-full flex flex-col py-8 px-4">
           {/* Logo */}
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#f1c97d] to-amber-700 flex items-center justify-center mx-auto mb-10 flex-shrink-0">
+          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#f1c97d] to-amber-700 flex items-center justify-center mx-auto mb-10 flex-shrink-0">
             <span className="text-[#080808] font-headline italic text-lg">M</span>
           </div>
 
           {/* Nav */}
-          <nav className="flex flex-col space-y-1">
-            <Link href="/dashboard" className="flex items-center gap-4 px-3 py-3 rounded-2xl text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <LayoutDashboard size={22} className="flex-shrink-0" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-label whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Panel</span>
+          <nav className="flex flex-col space-y-2">
+            <Link href="/dashboard" aria-label="Panel" className="relative group flex items-center justify-center py-3 px-3 rounded-2xl text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+              <LayoutDashboard size={22} />
+              <span className="absolute left-full ml-3 bg-[#1a1a1a] border border-white/10 text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity duration-200 z-50">Panel</span>
             </Link>
-            <Link href="/perfil" className="flex items-center gap-4 px-3 py-3 rounded-2xl text-[#f1c97d] bg-white/[0.08] cursor-pointer">
-              <CalendarDays size={22} className="flex-shrink-0" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-label whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Mis Turnos</span>
+            <Link href="/mis-turnos" aria-label="Turnos" className="relative group flex items-center justify-center py-3 px-3 rounded-2xl text-[#f1c97d] bg-white/[0.08] cursor-pointer">
+              <Calendar size={22} />
+              <span className="absolute left-full ml-3 bg-[#1a1a1a] border border-white/10 text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity duration-200 z-50">Turnos</span>
             </Link>
-            <Link href="/favoritos" className="flex items-center gap-4 px-3 py-3 rounded-2xl text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <Heart size={22} className="flex-shrink-0" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-label whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Favoritos</span>
+            <Link href="/favoritos" aria-label="Favoritos" className="relative group flex items-center justify-center py-3 px-3 rounded-2xl text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+              <Heart size={22} />
+              <span className="absolute left-full ml-3 bg-[#1a1a1a] border border-white/10 text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity duration-200 z-50">Favoritos</span>
             </Link>
-            <Link href="/perfil/cuenta" className="flex items-center gap-4 px-3 py-3 rounded-2xl text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <User size={22} className="flex-shrink-0" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-label whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Perfil</span>
+            <Link href="/perfil" aria-label="Perfil" className="relative group flex items-center justify-center py-3 px-3 rounded-2xl text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+              <User size={22} />
+              <span className="absolute left-full ml-3 bg-[#1a1a1a] border border-white/10 text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity duration-200 z-50">Perfil</span>
             </Link>
           </nav>
 
           {/* Footer */}
-          <div className="mt-auto border-t border-white/10 pt-4 flex flex-col space-y-1">
-            <Link href="/ajustes" className="flex items-center gap-4 px-3 py-3 rounded-2xl text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <Settings size={22} className="flex-shrink-0" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-label whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Ajustes</span>
+          <div className="mt-auto border-t border-white/10 pt-4 flex flex-col space-y-2">
+            <Link href="/ajustes" aria-label="Ajustes" className="relative group flex items-center justify-center py-3 px-3 rounded-2xl text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+              <Settings size={22} />
+              <span className="absolute left-full ml-3 bg-[#1a1a1a] border border-white/10 text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity duration-200 z-50">Ajustes</span>
             </Link>
-            <button className="flex items-center gap-4 px-3 py-3 rounded-2xl text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer w-full text-left">
-              <LogOut size={22} className="flex-shrink-0" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-label whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Salir</span>
+            <button aria-label="Salir" className="relative group flex items-center justify-center py-3 px-3 rounded-2xl text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer w-full">
+              <LogOut size={22} />
+              <span className="absolute left-full ml-3 bg-[#1a1a1a] border border-white/10 text-[10px] uppercase tracking-wider px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity duration-200 z-50">Salir</span>
             </button>
           </div>
         </div>
@@ -164,7 +162,7 @@ export default function MisTurnosPage() {
       </header>
 
       {/* Main Content */}
-      <main className="pl-[110px] pr-16 pt-32 pb-24 min-h-screen">
+      <main className="pl-[112px] pr-16 pt-32 pb-24 min-h-screen">
         <div className="max-w-6xl mx-auto">
           {/* Page Title */}
           <div className="flex justify-between items-end mb-20">
@@ -182,26 +180,26 @@ export default function MisTurnosPage() {
           {/* Tickets */}
           <div className="space-y-12">
             {appointments.map((appt) => (
-              <div key={appt.id} className="specular-highlight liquid-glass-rich ticket-mask rounded-[2rem] flex min-h-[160px] transition-all duration-700 hover:scale-[1.02] hover:bg-white/[0.05]">
-                {/* FECHA col */}
-                <div className="flex flex-col items-center justify-center min-w-[100px] px-6">
+              <div key={appt.id} className="specular-highlight liquid-glass-rich ticket-mask rounded-[2rem] flex min-h-[220px] transition-all duration-700 hover:scale-[1.02] hover:bg-white/[0.05]">
+                {/* FECHA col — FIX 2: bigger day + gold glow */}
+                <div className="flex flex-col items-center justify-center min-w-[120px] px-10">
                   <span
-                    className="text-6xl font-headline text-[#f1c97d]"
+                    className="text-7xl font-headline text-[#f1c97d]"
                     style={{ textShadow: '0 0 40px rgba(241,201,125,0.3)' }}
                   >{appt.day}</span>
                   <span className="text-[11px] font-label uppercase tracking-[0.3em] text-[#99907c] mt-2">{appt.month}</span>
                 </div>
 
-                {/* FIX 3 — separador gradiente dorado */}
+                {/* FIX 3: gradient separator */}
                 <div style={{
                   width: '1px',
                   alignSelf: 'stretch',
-                  margin: '20px 0',
-                  background: 'linear-gradient(to bottom, transparent, rgba(241,201,125,0.3), transparent)'
+                  margin: '24px 0',
+                  background: 'linear-gradient(to bottom, transparent, rgba(241,201,125,0.25), transparent)'
                 }} />
 
                 {/* INFO col */}
-                <div className="flex-grow px-8 py-6">
+                <div className="flex-grow p-10">
                   <div className="flex items-center gap-4 mb-4">
                     <h2 className="text-3xl font-headline tracking-wide">{appt.salonName}</h2>
                     {appt.status === 'confirmado' && (
@@ -210,7 +208,7 @@ export default function MisTurnosPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-[#99907c] text-lg font-headline italic mb-5">{appt.service}</p>
+                  <p className="text-[#99907c] text-lg font-headline italic mb-8">{appt.service}</p>
                   
                   <div className="grid grid-cols-3 gap-8">
                     <div className="flex items-center gap-3">
@@ -238,16 +236,16 @@ export default function MisTurnosPage() {
                   </div>
                 </div>
 
-                {/* QR col — FIX 4: compacto 80x80 */}
-                <div className="w-[160px] flex-shrink-0 flex flex-col items-center justify-center gap-3 border-l border-dashed border-white/15 px-6">
-                  <div className="bg-white/95 p-3 rounded-xl shadow-2xl transition-transform duration-500 hover:rotate-3">
-                    <div className="grid grid-cols-6 gap-[3px] w-[80px] h-[80px] opacity-90">
+                {/* QR col */}
+                <div className="w-80 p-10 flex items-center justify-center border-l border-dashed border-white/10 relative">
+                  <div className="bg-white/95 p-4 rounded-2xl shadow-2xl transition-transform duration-500 hover:rotate-3">
+                    <div className="grid grid-cols-6 gap-1 w-28 h-28 opacity-90">
                       {appt.qrPattern.map((isFilled, idx) => (
                         <div key={idx} className={isFilled ? "bg-black" : "bg-transparent"}></div>
                       ))}
                     </div>
                   </div>
-                  <p className="text-[8px] text-[#99907c] uppercase tracking-[0.2em]">CHECK-IN QR CODE</p>
+                  <p className="absolute bottom-4 text-[8px] text-[#99907c] uppercase tracking-[0.2em]">CHECK-IN QR CODE</p>
                 </div>
               </div>
             ))}

@@ -50,8 +50,8 @@
     --color-accent: #8E8E93;
     --color-bg: #050505;
     --color-surface: #0F0F0F;
-    --color-glass: rgba(15, 15, 15, 0.55);
-    --color-glass-border: rgba(255, 255, 255, 0.08);
+    --color-glass: rgba(255, 255, 255, 0.10);
+    --color-glass-border: rgba(255, 255, 255, 0.18);
     --glass-blur: 32px;
 
     /* Tokens shadcn — dark overrides (Rich Dark Vogue x Apple) */
@@ -157,6 +157,56 @@
 
 .ambient-shadow {
   box-shadow: 0 32px 64px -12px rgba(25, 28, 29, 0.04);
+}
+
+/* ─── Dark Elegance — variantes glass para dashboard B2C ────── */
+/* Fuera de @layer utilities para evitar conflictos con PostCSS  */
+
+.liquid-glass-rich {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6),
+              inset 0 1px 0 rgba(255, 255, 255, 0.20);
+}
+
+.liquid-glass-floating {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5),
+              inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.ticket-mask {
+  border-radius: 2rem;
+}
+
+.specular-highlight {
+  position: relative;
+}
+.specular-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 5%;
+  right: 5%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), rgba(241, 201, 125, 0.5), rgba(255, 255, 255, 0.35), transparent);
+  z-index: 10;
+}
+
+.mesh-glow {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(241, 201, 125, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(241, 201, 125, 0.03) 0%, transparent 40%);
 }
 
 /* ─── Design System Editorial — Capa 1 ─────────────────────── */
