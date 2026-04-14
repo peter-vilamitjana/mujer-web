@@ -90,45 +90,44 @@ export default function MisTurnosPage() {
     >
       <div className="mesh-glow"></div>
 
-      {/* Sidebar — flotante, centrado, hover-expand */}
-      <aside className="fixed left-6 top-1/2 -translate-y-1/2 h-auto w-[72px] hover:w-[200px] transition-all duration-500 ease-in-out z-50 group">
-        <div className="liquid-glass-floating h-full w-full rounded-[2rem] flex flex-col py-6 px-3 overflow-hidden">
-          {/* Logo */}
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#f1c97d] to-amber-700 flex items-center justify-center mx-auto mb-10 flex-shrink-0">
-            <span className="text-[#080808] font-headline italic text-lg">M</span>
+      {/* Sidebar — cápsula flotante, solo íconos, estático */}
+      <aside className="fixed left-3 top-1/2 -translate-y-1/2 z-50">
+        <div className="liquid-glass-floating rounded-[2rem] flex flex-col items-center py-5 px-2 gap-1 w-[60px]">
+
+          {/* Logo M */}
+          <div className="w-9 h-9 rounded-full flex-shrink-0 mb-6 bg-gradient-to-br from-[#f1c97d] to-amber-700 flex items-center justify-center">
+            <span className="font-headline italic text-[#1a1008] text-sm font-semibold">M</span>
           </div>
 
-          {/* Nav */}
-          <nav className="flex flex-col space-y-1">
-            <Link href="/dashboard" className="flex items-center gap-4 px-3 py-3 rounded-2xl text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <LayoutDashboard size={22} className="flex-shrink-0" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-label whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Panel</span>
-            </Link>
-            <Link href="/perfil" className="flex items-center gap-4 px-3 py-3 rounded-2xl text-[#f1c97d] bg-white/[0.08] cursor-pointer">
-              <CalendarDays size={22} className="flex-shrink-0" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-label whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Mis Turnos</span>
-            </Link>
-            <Link href="/favoritos" className="flex items-center gap-4 px-3 py-3 rounded-2xl text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <Heart size={22} className="flex-shrink-0" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-label whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Favoritos</span>
-            </Link>
-            <Link href="/perfil/cuenta" className="flex items-center gap-4 px-3 py-3 rounded-2xl text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <User size={22} className="flex-shrink-0" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-label whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Perfil</span>
-            </Link>
+          {/* Nav items — solo íconos */}
+          <nav className="flex flex-col items-center gap-1 w-full">
+            <button className="w-10 h-10 rounded-xl flex items-center justify-center text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+              <LayoutDashboard size={19} />
+            </button>
+            <button className="w-10 h-10 rounded-xl flex items-center justify-center text-[#f1c97d] bg-white/[0.08] transition-all duration-200 cursor-pointer">
+              <CalendarDays size={19} />
+            </button>
+            <button className="w-10 h-10 rounded-xl flex items-center justify-center text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+              <Heart size={19} />
+            </button>
+            <button className="w-10 h-10 rounded-xl flex items-center justify-center text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+              <User size={19} />
+            </button>
           </nav>
 
-          {/* Footer */}
-          <div className="mt-auto border-t border-white/10 pt-4 flex flex-col space-y-1">
-            <Link href="/ajustes" className="flex items-center gap-4 px-3 py-3 rounded-2xl text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <Settings size={22} className="flex-shrink-0" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-label whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Ajustes</span>
-            </Link>
-            <button className="flex items-center gap-4 px-3 py-3 rounded-2xl text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer w-full text-left">
-              <LogOut size={22} className="flex-shrink-0" />
-              <span className="text-[10px] uppercase tracking-[0.15em] font-label whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Salir</span>
+          {/* Separador */}
+          <div className="w-8 h-px bg-white/10 my-2" />
+
+          {/* Footer íconos */}
+          <div className="flex flex-col items-center gap-1 w-full">
+            <button className="w-10 h-10 rounded-xl flex items-center justify-center text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+              <Settings size={19} />
+            </button>
+            <button className="w-10 h-10 rounded-xl flex items-center justify-center text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+              <LogOut size={19} />
             </button>
           </div>
+
         </div>
       </aside>
 
@@ -164,7 +163,7 @@ export default function MisTurnosPage() {
       </header>
 
       {/* Main Content */}
-      <main className="pl-[110px] pr-16 pt-32 pb-24 min-h-screen">
+      <main className="pl-[84px] pr-16 pt-32 pb-24 min-h-screen">
         <div className="max-w-6xl mx-auto">
           {/* Page Title */}
           <div className="flex justify-between items-end mb-20">
@@ -241,9 +240,9 @@ export default function MisTurnosPage() {
                 {/* QR col — FIX 4: compacto 80x80 */}
                 <div className="w-[160px] flex-shrink-0 flex flex-col items-center justify-center gap-3 border-l border-dashed border-white/15 px-6">
                   <div className="bg-white/95 p-3 rounded-xl shadow-2xl transition-transform duration-500 hover:rotate-3">
-                    <div className="grid grid-cols-6 gap-[3px] w-[80px] h-[80px] opacity-90">
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '3px', width: '80px', height: '80px', opacity: 0.9 }}>
                       {appt.qrPattern.map((isFilled, idx) => (
-                        <div key={idx} className={isFilled ? "bg-black" : "bg-transparent"}></div>
+                        <div key={idx} style={{ backgroundColor: isFilled ? '#000000' : 'transparent', width: '100%', height: '100%' }} />
                       ))}
                     </div>
                   </div>
