@@ -187,34 +187,15 @@ export default function MisTurnosPage() {
           {/* DASHBOARD PANEL */}
           {activeTab === 'panel' && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-              {/* HEADER */}
-              <div className="flex justify-between items-center mb-8">
+               {/* HEADER */}
+              <div className="flex justify-between items-center mb-10">
                 <div>
                   <h1 className="text-5xl font-headline italic text-[#e5e2e1] mb-2">Mi Panel</h1>
                   <p className="text-[#99907c] text-xs tracking-wide">Tu espacio personal de estética y bienestar</p>
                 </div>
-                <div className="liquid-glass-rich px-5 py-2 rounded-full border border-[#f1c97d]/20">
-                  <span className="text-[#f1c97d] text-[9px] font-bold uppercase tracking-[0.2em]">Premium Member</span>
-                </div>
               </div>
 
-              {/* FILA 1 — KPIs */}
-              <div className="grid grid-cols-3 gap-6 mb-8">
-                <div className="liquid-glass-rich rounded-[1.5rem] px-6 py-5 flex flex-col justify-center">
-                  <p className="text-[8px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-2">Salones Visitados</p>
-                  <span className="text-4xl font-headline italic text-[#f1c97d] leading-none">2</span>
-                </div>
-                <div className="liquid-glass-rich rounded-[1.5rem] px-6 py-5 flex flex-col justify-center">
-                  <p className="text-[8px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-2">Turnos Completados</p>
-                  <span className="text-4xl font-headline italic text-[#f1c97d] leading-none">5</span>
-                </div>
-                <div className="liquid-glass-rich rounded-[1.5rem] px-6 py-5 flex flex-col justify-center">
-                  <p className="text-[8px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-2">Invertido Este Año</p>
-                  <span className="text-4xl font-headline italic text-[#f1c97d] leading-none">$22.5k</span>
-                </div>
-              </div>
-
-              {/* FILA 2 — Grid 12 cols: 8 Lo Operativo / 4 El Perfil */}
+              {/* FILA 1 — Grid 12 cols: 8 Lo Operativo / 4 El Perfil */}
               <div className="grid grid-cols-12 gap-6 items-stretch">
 
                 {/* COL IZQUIERDA — span 8: Lo Operativo */}
@@ -339,8 +320,7 @@ export default function MisTurnosPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="relative z-10 mt-auto pt-4 border-t border-white/5 flex flex-col gap-1.5">
-                        <p className="text-[8px] text-[#99907c] font-label uppercase tracking-widest opacity-60">ID Clínico: #MC-0982-H</p>
+                      <div className="relative z-10 mt-auto pt-6 border-t border-white/5 flex flex-col gap-1.5">
                         <button className="text-[9px] uppercase tracking-widest text-[#f1c97d] hover:text-[#e5e2e1] transition-colors flex items-center gap-1 group/link font-label cursor-pointer">
                           Ver historial <span className="material-symbols-outlined text-[12px] group-hover/link:translate-x-1 transition-transform">arrow_forward</span>
                         </button>
