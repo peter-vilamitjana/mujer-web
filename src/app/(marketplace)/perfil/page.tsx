@@ -405,7 +405,7 @@ export default function MisTurnosPage() {
                 </div>
               </div>
 
-              {/* TUS SALONES — Mapa Elevado Visualmente */}
+              {/* TUS SALONES — Mapa Estilo Apple */}
               <div className="mt-8 mb-12">
                 <div className="flex justify-between items-center mb-4 ml-1">
                   <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] flex items-center gap-2">
@@ -416,105 +416,112 @@ export default function MisTurnosPage() {
                   </button>
                 </div>
                 
-                <div className="relative isolate z-0 overflow-hidden rounded-[2.5rem] border border-white/10 flex flex-col md:flex-row min-h-[290px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] group/mapcard transition-all duration-700 hover:border-white/20" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
+                <div className="relative isolate z-0 overflow-hidden rounded-[2.5rem] border border-white/5 flex flex-col md:flex-row min-h-[290px] shadow-[0_20px_50px_rgba(0,0,0,0.4)] group/mapcard transition-all duration-700 bg-[#151515]">
                   <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20"></div>
                   
-                  {/* MAPA PERSONAL (Sección Visual) */}
-                  <div className="flex-1 relative bg-[#080808] border-r border-white/5 overflow-hidden">
+                  {/* MAPA VECTORIAL (Estilo Apple Maps Dark Mode) */}
+                  <div className="flex-1 relative bg-[#0a0a0c] border-r border-white/5 overflow-hidden">
                     
-                    {/* Imagen de mapa aéreo oscurecida */}
-                    <div className="absolute inset-0 opacity-[0.25] mix-blend-luminosity max-w-none transition-transform duration-10000 group-hover/mapcard:scale-110 pointer-events-none z-0">
-                      <img 
-                        src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1200" 
-                        alt="Map Topography" 
-                        className="w-[120%] h-[120%] object-cover -translate-x-[10%] -translate-y-[10%]" 
-                      />
+                    {/* Trama de calles abstracta (Vector Grid) */}
+                    <div className="absolute inset-0 origin-center rotate-[-12deg] scale-[1.3] pointer-events-none z-0 opacity-40">
+                      {/* Calles principales */}
+                      <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.06) 2px, transparent 2px), linear-gradient(to bottom, rgba(255,255,255,0.06) 2px, transparent 2px)', backgroundSize: '140px 140px' }}></div>
+                      {/* Calles secundarias */}
+                      <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px)', backgroundSize: '35px 35px' }}></div>
+                      {/* Arteria principal / Avenida dorada */}
+                      <div className="absolute top-[30%] left-0 w-full h-[6px] bg-[#f1c97d]/10 shadow-[0_0_15px_rgba(241,201,125,0.1)] -rotate-6"></div>
                     </div>
-                    {/* Grid súper sutil encima */}
-                    <div className="absolute inset-0 opacity-10 pointer-events-none z-0" style={{ backgroundImage: 'radial-gradient(circle, #f1c97d 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
-                    {/* Overlay para suavizar y fusionar */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#080808] via-transparent to-[#080808]/80 pointer-events-none z-0"></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#080808]/80 via-transparent to-transparent pointer-events-none z-0"></div>
                     
-                    {/* Efecto Radar Sweep */}
-                    <div className="absolute top-[45%] left-[35%] w-[300px] h-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#f1c97d]/10 opacity-50 z-0">
-                      <div className="w-full h-full rounded-full animate-ping opacity-20 border border-[#f1c97d]"></div>
-                    </div>
+                    {/* Overlay para viñeta y suavidad (blur) */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0c] via-transparent to-[#0a0a0c]/80 pointer-events-none z-0"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c]/90 via-transparent to-[#0a0a0c]/40 pointer-events-none z-0"></div>
 
-                    {/* Pines Elevados */}
+                    {/* Pines Elevados (Estilo Apple Glass) */}
                     {mySalons.map((salon) => (
                       <div 
                         key={salon.id} 
-                        className="absolute group/pin cursor-pointer transition-all duration-500 hover:scale-110 hover:-translate-y-1 z-10" 
+                        className="absolute group/pin cursor-pointer transition-all duration-300 hover:scale-110 hover:-translate-y-1 z-10" 
                         style={{ left: salon.coords.x, top: salon.coords.y }}
                       >
-                        <div className="relative flex items-center justify-center">
-                          {/* Anillo que pulsa constantemente */}
-                          <div className="absolute w-[30px] h-[30px] bg-[#f1c97d]/20 rounded-full animate-ping"></div>
-                          <div className="absolute w-[45px] h-[45px] border border-[#f1c97d]/10 rounded-full animate-pulse"></div>
+                        <div className="relative flex flex-col items-center justify-center">
                           
-                          {/* Punto físico del marker */}
-                          <div className="w-2.5 h-2.5 bg-gradient-to-br from-[#f1c97d] to-amber-600 rounded-full shadow-[0_0_15px_rgba(241,201,125,1)] border-[1.5px] border-[#080808] relative z-10"></div>
+                          {/* Pin Container (Apple Maps Style) */}
+                          <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-[0_8px_16px_rgba(0,0,0,0.6)] relative z-10">
+                            {/* Inner Dot */}
+                            <div className="w-2.5 h-2.5 bg-gradient-to-br from-[#f1c97d] to-[#d4af37] rounded-full shadow-[0_0_10px_rgba(241,201,125,0.8)]"></div>
+                          </div>
+                          
+                          {/* Pin Pointer (El palito del pin) */}
+                          <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-white/30 -mt-[2px] opacity-80 z-0"></div>
+                          <div className="w-1.5 h-1.5 bg-black/40 rounded-full mt-1 blur-[2px]"></div>
                           
                           {/* Label persistente al lado del pin  */}
-                          <div className="absolute top-1/2 -translate-y-1/2 left-full ml-3 opacity-60 group-hover/pin:opacity-0 transition-opacity whitespace-nowrap pointer-events-none z-0">
-                            <span className="text-[8px] font-label uppercase tracking-[0.2em] text-[#e5e2e1] drop-shadow-md">{salon.name.split(' ')[0]}</span>
+                          <div className="absolute top-1/2 -translate-y-1/2 left-full ml-3 opacity-80 group-hover/pin:opacity-0 transition-opacity whitespace-nowrap pointer-events-none z-0">
+                            <span className="text-[10px] font-headline italic tracking-wide text-[#e5e2e1] drop-shadow-md">{salon.name.split(' ')[0]}</span>
                           </div>
 
-                          {/* Tooltip Premium on hover */}
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover/pin:opacity-100 transition-all duration-300 translate-y-2 group-hover/pin:translate-y-0 bg-[#121212]/95 border border-[#f1c97d]/40 px-4 py-2.5 rounded-xl backdrop-blur-xl pointer-events-none whitespace-nowrap z-20 shadow-[0_15px_30px_rgba(0,0,0,0.6),_0_0_20px_rgba(241,201,125,0.15)] flex flex-col items-center">
-                            <p className="text-[10px] text-[#e5e2e1] font-label uppercase tracking-widest mb-1">{salon.name}</p>
-                            <p className="text-[7.5px] text-[#f1c97d] font-label uppercase tracking-[0.2em] flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Disponible hoy
+                          {/* Tooltip Premium on hover (Apple Float) */}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 opacity-0 group-hover/pin:opacity-100 transition-all duration-300 translate-y-3 group-hover/pin:translate-y-0 bg-[#252528]/80 border border-white/10 px-4 py-3 rounded-2xl backdrop-blur-2xl pointer-events-none whitespace-nowrap z-20 shadow-[0_20px_40px_rgba(0,0,0,0.5)] flex flex-col items-center">
+                            <p className="text-[12px] text-[#e5e2e1] font-medium tracking-wide mb-1 flex items-center gap-1.5">
+                              {salon.name} <span className="material-symbols-outlined text-[12px] text-[#f1c97d]">verified</span>
                             </p>
-                            <div className="absolute -bottom-[5px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-[#121212]/95 border-b border-r border-[#f1c97d]/40 rotate-45"></div>
+                            <p className="text-[8px] text-[#63d297] font-medium uppercase tracking-[0.1em]">
+                              Disponible hoy
+                            </p>
+                            <div className="absolute -bottom-[6px] left-1/2 -translate-x-1/2 w-3 h-3 bg-[#252528]/80 border-b border-r border-white/10 rotate-45 backdrop-blur-2xl"></div>
                           </div>
                         </div>
                       </div>
                     ))}
                     
-                    {/* Botón flotante 'Ver Mapa Interactivo' */}
-                    <div className="absolute bottom-4 left-4 z-10">
-                      <button className="bg-[#080808]/50 backdrop-blur-md border border-white/10 hover:border-[#f1c97d]/30 hover:bg-[#f1c97d]/5 px-3 py-1.5 rounded-full text-[8.5px] font-label uppercase tracking-[0.1em] text-[#99907c] hover:text-[#f1c97d] transition-all cursor-pointer flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[12px]">fullscreen</span> Abrir mapa
-                      </button>
+                    {/* Botón flotante estilo Apple Maps Control */}
+                    <div className="absolute bottom-5 right-5 z-10 flex flex-col gap-2">
+                       <button className="w-8 h-8 bg-white/10 backdrop-blur-xl border border-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-[#e5e2e1] transition-all cursor-pointer shadow-lg">
+                         <span className="material-symbols-outlined text-[16px]">my_location</span>
+                       </button>
+                       <button className="w-8 h-8 bg-white/10 backdrop-blur-xl border border-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-[#e5e2e1] transition-all cursor-pointer shadow-lg">
+                         <span className="material-symbols-outlined text-[16px] transform rotate-45">navigation</span>
+                       </button>
                     </div>
                   </div>
 
-                  {/* LISTA DE SALONES (Columna Derecha) */}
-                  <div className="w-full md:w-[320px] p-0 flex flex-col relative z-10 bg-gradient-to-b from-[#1a1a1a]/40 to-[#080808]/80">
-                    <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-black/20">
-                       <span className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c]">Tus Ubicaciones Habituales</span>
+                  {/* LISTA DE SALONES (Columna Derecha Apple Style) */}
+                  <div className="w-full md:w-[320px] p-0 flex flex-col relative z-10 bg-[#121214] border-l border-white/5">
+                    <div className="px-6 py-5 border-b border-white/5 bg-[#0a0a0c]">
+                       <h3 className="text-xl font-headline italic text-[#e5e2e1]">Lugares Guardados</h3>
+                       <p className="text-[10px] font-label tracking-widest text-[#99907c] uppercase mt-1">Tu selección</p>
                     </div>
-                    <div className="flex flex-col flex-1 p-2 gap-1 overflow-y-auto stylish-scrollbar">
+                    <div className="flex flex-col flex-1 p-3 gap-2 overflow-y-auto stylish-scrollbar">
                       {mySalons.map((salon) => (
-                        <div key={salon.id} className="flex flex-col gap-1.5 group/item cursor-pointer p-4 rounded-2xl hover:bg-white/[0.04] transition-colors border border-transparent hover:border-white/5">
-                          <div className="flex justify-between items-start">
-                            <h4 className="text-[15px] font-headline italic text-[#e5e2e1] group-hover/item:text-[#f1c97d] transition-colors">{salon.name}</h4>
-                            <span className="text-[9px] text-[#99907c] font-label uppercase tracking-[0.1em] mt-1 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">{salon.visits} {salon.visits === 1 ? 'vis' : 'visitas'}</span>
+                        <div key={salon.id} className="flex gap-4 group/item cursor-pointer p-3 rounded-2xl hover:bg-white/[0.06] transition-colors border border-transparent">
+                          {/* Ikono estilo Apple Map icon */}
+                          <div className="w-10 h-10 mt-1 flex-shrink-0 bg-gradient-to-tr from-[#f1c97d]/20 to-[#f1c97d]/5 rounded-full flex items-center justify-center border border-[#f1c97d]/20">
+                             <span className="material-symbols-outlined text-[18px] text-[#f1c97d]">storefront</span>
                           </div>
-                          <div className="flex justify-between items-end mt-1">
-                            <div className="flex items-center gap-0.5">
-                              {[...Array(5)].map((_, i) => (
-                                <span 
-                                  key={i} 
-                                  className={`material-symbols-outlined text-[13px] ${i < salon.rating ? 'text-[#f1c97d]' : 'text-[#99907c]/20'} group-hover/item:drop-shadow-[0_0_5px_rgba(241,201,125,0.4)] transition-all`}
-                                >
-                                  star
-                                </span>
-                              ))}
+                          <div className="flex flex-col flex-1">
+                            <h4 className="text-[15px] font-medium text-[#e5e2e1] group-hover/item:text-[#f1c97d] transition-colors">{salon.name}</h4>
+                            <div className="flex items-center justify-between mt-1">
+                              <span className="text-[11px] text-[#99907c] flex items-center gap-1">A 2.5 km <span className="w-0.5 h-0.5 bg-[#99907c] rounded-full"></span> Activo</span>
+                              <span className="text-[9px] text-[#99907c] bg-white/10 px-2 py-0.5 rounded-full font-medium">{salon.visits} visitas</span>
                             </div>
-                            <span className="text-[10px] text-[#f1c97d] opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center font-label uppercase tracking-widest gap-0.5">
-                              Reservar <span className="material-symbols-outlined text-[12px]">chevron_right</span>
-                            </span>
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
+                                <div className="flex items-center gap-0.5">
+                                  {[...Array(5)].map((_, i) => (
+                                    <span 
+                                      key={i} 
+                                      className={`material-symbols-outlined text-[12px] ${i < salon.rating ? 'text-[#f1c97d]' : 'text-[#99907c]/20'} group-hover/item:drop-shadow-[0_0_5px_rgba(241,201,125,0.4)] transition-all`}
+                                    >
+                                      star
+                                    </span>
+                                  ))}
+                                </div>
+                                <span className="text-[11px] font-medium text-emerald-400 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center gap-0.5">
+                                  Reservar <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                                </span>
+                            </div>
                           </div>
                         </div>
                       ))}
-                    </div>
-                    <div className="mt-auto px-6 py-4 border-t border-white/5 bg-black/20">
-                      <p className="text-[8px] text-[#99907c] font-label leading-relaxed uppercase tracking-[0.15em] opacity-40">
-                        Espacios de confianza y calidad garantizada por MujerApp.
-                      </p>
                     </div>
                   </div>
                 </div>
