@@ -439,18 +439,28 @@ export default function MisTurnosPage() {
               {/* Tickets */}
               <div className="space-y-5">
                 {appointments.map((appt) => (
-                  <div key={appt.id} className="specular-highlight liquid-glass-rich ticket-mask rounded-[1.5rem] flex min-h-[120px] transition-all duration-700 hover:scale-[1.02] hover:bg-white/[0.05]">
+                  <div key={appt.id} className="relative group overflow-hidden specular-highlight liquid-glass-rich ticket-mask rounded-[1.5rem] flex min-h-[120px] transition-all duration-700 hover:scale-[1.02] hover:bg-white/[0.05]" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
+                    
+                    {/* Fondo Escenográfico (Depth Layer) - Refined with mask-image */}
+                    <div className="absolute inset-y-0 right-0 w-[40%] z-0 pointer-events-none [mask-image:linear-gradient(to_right,transparent,black_50%)]">
+                      <img 
+                        src="https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?q=80&w=800" 
+                        alt="Fondo Salón" 
+                        className="object-cover w-full h-full opacity-15 grayscale mix-blend-luminosity transition-transform duration-1000 group-hover:scale-110" 
+                      />
+                    </div>
+
                     {/* FECHA col */}
-                    <div className="flex flex-col items-center justify-center min-w-[90px] px-5 py-4">
+                    <div className="relative z-10 flex flex-col items-center justify-center min-w-[90px] px-5 py-4">
                       <span className="text-4xl font-headline text-[#f1c97d]" style={{ textShadow: '0 0 30px rgba(241,201,125,0.3)' }}>{appt.day}</span>
                       <span className="text-[9px] font-label uppercase tracking-[0.3em] text-[#99907c] mt-0.5">{appt.month}</span>
                     </div>
 
                     {/* Separador */}
-                    <div style={{ width: '1px', alignSelf: 'stretch', margin: '12px 0', background: 'linear-gradient(to bottom, transparent, rgba(241,201,125,0.3), transparent)' }} />
+                    <div className="relative z-10" style={{ width: '1px', alignSelf: 'stretch', margin: '12px 0', background: 'linear-gradient(to bottom, transparent, rgba(241,201,125,0.3), transparent)' }} />
 
                     {/* INFO col */}
-                    <div className="flex-grow px-7 py-4 flex flex-col justify-center">
+                    <div className="relative z-10 flex-grow px-7 py-4 flex flex-col justify-center">
                       <div className="flex items-center gap-3.5 mb-1.5">
                         <h2 className="text-2xl font-headline tracking-wide">{appt.salonName}</h2>
                         {appt.status === 'confirmado' && (
@@ -479,7 +489,7 @@ export default function MisTurnosPage() {
                     </div>
 
                     {/* QR col */}
-                    <div className="w-[120px] flex-shrink-0 flex flex-col items-center justify-center gap-1.5 border-l border-dashed border-white/15 px-3 py-3">
+                    <div className="relative z-10 w-[120px] flex-shrink-0 flex flex-col items-center justify-center gap-1.5 border-l border-dashed border-white/15 px-3 py-3">
                       <div className="bg-white/95 p-1.5 rounded-lg shadow-2xl transition-transform duration-500 hover:rotate-3">
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '2px', width: '58px', height: '58px', opacity: 0.9 }}>
                           {appt.qrPattern.map((isFilled, idx) => (
