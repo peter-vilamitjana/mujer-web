@@ -88,43 +88,72 @@ export default function MisTurnosPage() {
         backgroundAttachment: 'fixed'
       }}
     >
+      <style>{`
+        .mesh-glow {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: -1;
+          background: 
+            radial-gradient(circle at 20% 30%, rgba(241, 201, 125, 0.05) 0%, transparent 50%),
+            radial-gradient(circle at 80% 70%, rgba(241, 201, 125, 0.03) 0%, transparent 40%);
+        }
+        .sidebar-expand {
+          width: 60px !important;
+        }
+        .sidebar-expand:hover {
+          width: 220px !important;
+        }
+      `}</style>
       <div className="mesh-glow"></div>
 
-      {/* Sidebar — cápsula flotante, solo íconos, estático */}
-      <aside className="fixed left-3 top-1/2 -translate-y-1/2 z-50">
-        <div className="liquid-glass-floating rounded-[2rem] flex flex-col items-center py-5 px-2 gap-1 w-[60px]">
+      {/* Sidebar — hover expansible */}
+      <aside className="fixed left-3 top-1/2 -translate-y-1/2 z-50 transition-all duration-500 group sidebar-expand">
+        <div className="liquid-glass-floating rounded-[2rem] flex flex-col py-5 px-2 gap-1 w-full overflow-hidden">
 
           {/* Logo M */}
-          <div className="w-9 h-9 rounded-full flex-shrink-0 mb-6 bg-gradient-to-br from-[#f1c97d] to-amber-700 flex items-center justify-center">
-            <span className="font-headline italic text-[#1a1008] text-sm font-semibold">M</span>
+          <div className="flex items-center gap-4 px-[5px] mb-6">
+            <div className="w-9 h-9 rounded-full flex-shrink-0 bg-gradient-to-br from-[#f1c97d] to-amber-700 flex items-center justify-center">
+              <span className="font-headline italic text-[#1a1008] text-sm font-semibold">M</span>
+            </div>
+            <span className="text-xl font-headline italic text-[#f1c97d] opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">MujerApp</span>
           </div>
 
-          {/* Nav items — solo íconos */}
-          <nav className="flex flex-col items-center gap-1 w-full">
-            <button className="w-10 h-10 rounded-xl flex items-center justify-center text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <LayoutDashboard size={19} />
+          {/* Nav items */}
+          <nav className="flex flex-col gap-1 w-full">
+            <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+              <LayoutDashboard size={19} className="flex-shrink-0" />
+              <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Panel</span>
             </button>
-            <button className="w-10 h-10 rounded-xl flex items-center justify-center text-[#f1c97d] bg-white/[0.08] transition-all duration-200 cursor-pointer">
-              <CalendarDays size={19} />
+            <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#f1c97d] bg-white/[0.08] transition-all duration-200 cursor-pointer">
+              <CalendarDays size={19} className="flex-shrink-0" />
+              <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Turnos</span>
             </button>
-            <button className="w-10 h-10 rounded-xl flex items-center justify-center text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <Heart size={19} />
+            <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+              <Heart size={19} className="flex-shrink-0" />
+              <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Favoritos</span>
             </button>
-            <button className="w-10 h-10 rounded-xl flex items-center justify-center text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <User size={19} />
+            <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+              <User size={19} className="flex-shrink-0" />
+              <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Perfil</span>
             </button>
           </nav>
 
           {/* Separador */}
-          <div className="w-8 h-px bg-white/10 my-2" />
+          <div className="w-full h-px bg-white/10 my-2 opacity-50" />
 
           {/* Footer íconos */}
-          <div className="flex flex-col items-center gap-1 w-full">
-            <button className="w-10 h-10 rounded-xl flex items-center justify-center text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <Settings size={19} />
+          <div className="flex flex-col gap-1 w-full">
+            <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+              <Settings size={19} className="flex-shrink-0" />
+              <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Ajustes</span>
             </button>
-            <button className="w-10 h-10 rounded-xl flex items-center justify-center text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <LogOut size={19} />
+            <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+              <LogOut size={19} className="flex-shrink-0" />
+              <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Salir</span>
             </button>
           </div>
 
