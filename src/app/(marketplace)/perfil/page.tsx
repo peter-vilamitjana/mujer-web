@@ -14,6 +14,7 @@ type Appointment = {
   time: string;
   location: string;
   status: 'confirmado' | 'pendiente' | 'cancelado';
+  image: string;
   qrPattern: boolean[]; // array de 36 booleans para el grid 6x6
 };
 
@@ -28,6 +29,7 @@ const appointments: Appointment[] = [
     time: '15:30 HS',
     location: 'Recoleta, CABA',
     status: 'confirmado',
+    image: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?q=80&w=800',
     qrPattern: [true,true,false,true,true,true, true,false,true,false,true,false,
                 false,true,true,true,false,true, true,false,true,false,true,true,
                 true,true,false,true,false,true, true,false,true,true,true,true]
@@ -42,7 +44,8 @@ const appointments: Appointment[] = [
     time: '11:00 HS',
     location: 'Palermo Soho',
     status: 'confirmado',
-    qrPattern: [true,false,true,true,false,true, true,true,false,true,true,true,
+    image: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=800',
+    qrPattern: [true,true,false,true,true,false, false,true,true,false,true,true,true,
                 false,false,true,false,true,false, true,true,true,true,false,true,
                 true,false,true,true,true,true, true,true,false,false,true,true]
   },
@@ -56,6 +59,7 @@ const appointments: Appointment[] = [
     time: '17:00 HS',
     location: 'Jerónimo Salguero 2400, CABA',
     status: 'confirmado',
+    image: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?q=80&w=800',
     qrPattern: [false,true,true,false,true,true, true,false,false,true,false,true,
                 true,true,false,true,true,false, false,true,true,false,true,true,
                 true,false,true,true,false,true, true,true,false,true,true,false]
@@ -220,7 +224,16 @@ export default function MisTurnosPage() {
                   <div>
                     <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-3 ml-1">Tu próximo turno</p>
                     <div className="relative isolate z-0 overflow-hidden rounded-[2rem] p-0 flex flex-row w-full transition-all duration-700 hover:scale-[1.01] hover:bg-white/[0.02] border border-white/10 group" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
-                      <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
+                      <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20"></div>
+                      
+                      {/* Fondo Escenográfico (Depth Layer) - Maison de Beauté */}
+                      <div className="absolute inset-y-0 right-0 w-[45%] z-0 pointer-events-none [mask-image:linear-gradient(to_right,transparent,black_50%)]">
+                        <img 
+                          src="https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800" 
+                          alt="Maison de Beauté" 
+                          className="object-cover w-full h-full opacity-15 grayscale mix-blend-luminosity transition-transform duration-1000 group-hover:scale-110" 
+                        />
+                      </div>
 
                       {/* FECHA y HORA */}
                       <div className="flex flex-col items-center justify-center w-[150px] shrink-0 border-r border-dashed border-white/10 px-6 py-8 relative z-10">
@@ -442,11 +455,11 @@ export default function MisTurnosPage() {
                   <div key={appt.id} className="relative group overflow-hidden specular-highlight liquid-glass-rich ticket-mask rounded-[1.5rem] flex min-h-[120px] transition-all duration-700 hover:scale-[1.02] hover:bg-white/[0.05]" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
                     
                     {/* Fondo Escenográfico (Depth Layer) - Refined with mask-image */}
-                    <div className="absolute inset-y-0 right-0 w-[40%] z-0 pointer-events-none [mask-image:linear-gradient(to_right,transparent,black_50%)]">
+                    <div className="absolute inset-y-0 right-0 w-[42%] z-0 pointer-events-none [mask-image:linear-gradient(to_right,transparent,black_40%)]">
                       <img 
-                        src="https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?q=80&w=800" 
-                        alt="Fondo Salón" 
-                        className="object-cover w-full h-full opacity-15 grayscale mix-blend-luminosity transition-transform duration-1000 group-hover:scale-110" 
+                        src={appt.image} 
+                        alt={appt.salonName} 
+                        className="object-cover w-full h-full opacity-20 grayscale mix-blend-luminosity transition-transform duration-1000 group-hover:scale-110" 
                       />
                     </div>
 
