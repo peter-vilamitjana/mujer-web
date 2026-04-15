@@ -61,6 +61,10 @@ const appointments: Appointment[] = [
                 true,false,true,true,false,true, true,true,false,true,true,false]
   }
 ];
+const mySalons = [
+  { id: 1, name: 'Maison de Beauté', rating: 5, visits: 3, coords: { x: '35%', y: '45%' } },
+  { id: 2, name: 'Studio Lumière', rating: 4, visits: 1, coords: { x: '65%', y: '25%' } },
+];
 
 export default function MisTurnosPage() {
   const { data: session } = useSession();
@@ -347,6 +351,69 @@ export default function MisTurnosPage() {
                           </button>
                         ))}
                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* TUS SALONES — Mapa + Grilla (Anclado al fondo) */}
+              <div className="mt-8 mb-12">
+                <div className="flex justify-between items-center mb-3 ml-1">
+                  <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c]">Tus salones</p>
+                  <button className="text-[9px] uppercase tracking-widest text-[#f1c97d] hover:text-[#e5e2e1] transition-colors font-label cursor-pointer">Descubrir más</button>
+                </div>
+                
+                <div className="relative isolate overflow-hidden rounded-[2rem] border border-white/10 flex flex-col md:flex-row min-h-[260px]">
+                  <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
+                  
+                  {/* MAPA PERSONAL */}
+                  <div className="flex-1 relative bg-white/[0.02] border-r border-white/5 overflow-hidden">
+                    {/* Decoración de mapa — Grid sutil */}
+                    <div className="absolute inset-0 opacity-15" style={{ backgroundImage: 'radial-gradient(circle, #f1c97d 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-[#f1c97d]/3 to-transparent"></div>
+                    
+                    {/* Pines */}
+                    {mySalons.map((salon) => (
+                      <div 
+                        key={salon.id} 
+                        className="absolute group/pin cursor-pointer transition-transform hover:scale-110" 
+                        style={{ left: salon.coords.x, top: salon.coords.y }}
+                      >
+                        <div className="relative">
+                          <span className="material-symbols-outlined text-[#f1c97d] text-[22px] drop-shadow-[0_0_10px_rgba(241,201,125,0.6)]">location_on</span>
+                          {/* Tooltip on hover */}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover/pin:opacity-100 transition-opacity bg-[#080808]/90 border border-[#f1c97d]/20 px-3 py-1.5 rounded-lg backdrop-blur-md pointer-events-none whitespace-nowrap z-20">
+                            <p className="text-[9px] text-[#e5e2e1] font-label uppercase tracking-widest">{salon.name}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* LISTA DE SALONES */}
+                  <div className="w-full md:w-[300px] p-6 flex flex-col justify-center gap-5 relative z-10">
+                    {mySalons.map((salon) => (
+                      <div key={salon.id} className="flex flex-col gap-1 group/item cursor-pointer">
+                        <div className="flex justify-between items-start">
+                          <h4 className="text-sm font-headline italic text-[#e5e2e1] group-hover/item:text-[#f1c97d] transition-colors">{salon.name}</h4>
+                          <span className="text-[8px] text-[#99907c] font-label uppercase tracking-[0.1em] mt-1">{salon.visits} {salon.visits === 1 ? 'visita' : 'visitas'}</span>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <span 
+                              key={i} 
+                              className={`material-symbols-outlined text-[12px] ${i < salon.rating ? 'text-[#f1c97d]' : 'text-[#99907c]/20'}`}
+                            >
+                              star
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    <div className="mt-4 pt-4 border-t border-white/5">
+                      <p className="text-[8px] text-[#99907c] font-label leading-relaxed uppercase tracking-[0.15em] opacity-40">
+                        Espacios de confianza
+                      </p>
                     </div>
                   </div>
                 </div>
