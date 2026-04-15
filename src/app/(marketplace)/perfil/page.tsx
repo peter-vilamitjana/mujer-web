@@ -219,7 +219,7 @@ export default function MisTurnosPage() {
                   {/* Próximo Turno */}
                   <div>
                     <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-3 ml-1">Tu próximo turno</p>
-                    <div className="relative isolate overflow-hidden rounded-[2rem] p-0 flex flex-row w-full transition-all duration-700 hover:scale-[1.01] hover:bg-white/[0.02] border border-white/10 group">
+                    <div className="relative isolate z-0 overflow-hidden rounded-[2rem] p-0 flex flex-row w-full transition-all duration-700 hover:scale-[1.01] hover:bg-white/[0.02] border border-white/10 group" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
                       <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
 
                       {/* FECHA y HORA */}
@@ -256,7 +256,7 @@ export default function MisTurnosPage() {
                   </div>
 
                   {/* Sugerencia Valentina */}
-                  <div className="relative isolate rounded-[2rem] overflow-hidden min-h-[260px] flex flex-col justify-center group border border-white/10" style={{ boxShadow: '0 0 30px -10px rgba(255,255,255,0.05)' }}>
+                  <div className="relative isolate z-0 rounded-[2rem] overflow-hidden min-h-[260px] flex flex-col justify-center group border border-white/10" style={{ boxShadow: '0 0 30px -10px rgba(255,255,255,0.05)', WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
                     <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20"></div>
                     <div className="absolute top-0 right-0 w-64 h-64 bg-[#f1c97d]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 -z-10"></div>
                     <div className="relative z-10 max-w-[60%] pl-14 pr-4 py-8">
@@ -285,7 +285,7 @@ export default function MisTurnosPage() {
                     <img
                       src="https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800"
                       alt="Estilista"
-                      className="absolute right-0 top-0 h-full w-[45%] max-w-[280px] object-cover object-center translate-x-4 group-hover:translate-x-0 transition-transform duration-1000 opacity-50 mix-blend-luminosity -z-10"
+                      className="absolute right-0 top-0 h-full w-[45%] max-w-[280px] object-cover object-center translate-x-4 group-hover:translate-x-0 transition-transform duration-1000 opacity-50 mix-blend-luminosity -z-10 rounded-[inherit]"
                       style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 40%)', maskImage: 'linear-gradient(to right, transparent, black 40%)' }}
                     />
                   </div>
@@ -363,7 +363,7 @@ export default function MisTurnosPage() {
                   <button className="text-[9px] uppercase tracking-widest text-[#f1c97d] hover:text-[#e5e2e1] transition-colors font-label cursor-pointer">Descubrir más</button>
                 </div>
                 
-                <div className="relative isolate overflow-hidden rounded-[2rem] border border-white/10 flex flex-col md:flex-row min-h-[260px]">
+                <div className="relative isolate z-0 overflow-hidden rounded-[2rem] border border-white/10 flex flex-col md:flex-row min-h-[260px]" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
                   <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
                   
                   {/* MAPA PERSONAL */}
