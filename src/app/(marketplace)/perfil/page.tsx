@@ -3,24 +3,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
-import {
-  LayoutDashboard,
-  Calendar,
-  CalendarDays,
-  Heart,
-  User,
-  Settings,
-  LogOut,
-  Search,
-  Bell,
-  Plus,
-  ArrowRight,
-  ChevronRight,
-  Scissors,
-  Palette,
-  Sparkles,
-  Leaf,
-} from 'lucide-react';
 
 type Appointment = {
   id: string;
@@ -132,19 +114,19 @@ export default function MisTurnosPage() {
           {/* Nav items */}
           <nav className="flex flex-col gap-1 w-full">
             <button onClick={() => setActiveTab('panel')} className={`w-full h-10 rounded-xl flex items-center gap-4 px-2.5 transition-all duration-200 cursor-pointer ${activeTab === 'panel' ? 'text-[#f1c97d] bg-white/[0.08]' : 'text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5'}`}>
-              <LayoutDashboard size={19} className="flex-shrink-0" />
+              <span className="material-symbols-outlined text-[19px] flex-shrink-0">dashboard</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Panel</span>
             </button>
             <button onClick={() => setActiveTab('turnos')} className={`w-full h-10 rounded-xl flex items-center gap-4 px-2.5 transition-all duration-200 cursor-pointer ${activeTab === 'turnos' ? 'text-[#f1c97d] bg-white/[0.08]' : 'text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5'}`}>
-              <CalendarDays size={19} className="flex-shrink-0" />
+              <span className="material-symbols-outlined text-[19px] flex-shrink-0">calendar_month</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Turnos</span>
             </button>
             <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <Heart size={19} className="flex-shrink-0" />
+              <span className="material-symbols-outlined text-[19px] flex-shrink-0">favorite</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Favoritos</span>
             </button>
             <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <User size={19} className="flex-shrink-0" />
+              <span className="material-symbols-outlined text-[19px] flex-shrink-0">person</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Perfil</span>
             </button>
           </nav>
@@ -155,11 +137,11 @@ export default function MisTurnosPage() {
           {/* Footer íconos */}
           <div className="flex flex-col gap-1 w-full">
             <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <Settings size={19} className="flex-shrink-0" />
+              <span className="material-symbols-outlined text-[19px] flex-shrink-0">settings</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Ajustes</span>
             </button>
             <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <LogOut size={19} className="flex-shrink-0" />
+              <span className="material-symbols-outlined text-[19px] flex-shrink-0">logout</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Salir</span>
             </button>
           </div>
@@ -172,7 +154,7 @@ export default function MisTurnosPage() {
         <div className="flex items-center gap-8 pointer-events-auto">
           <div className="flex items-center gap-6 liquid-glass-rich px-4 py-2 rounded-full">
             <button className="relative flex items-center">
-              <Bell size={20} className="text-[#99907c] hover:text-[#f1c97d] transition-colors" />
+              <span className="material-symbols-outlined text-[#99907c] hover:text-[#f1c97d] transition-colors text-[20px]">notifications</span>
               <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-[#f1c97d] rounded-full shadow-[0_0_8px_rgba(241,201,125,0.8)]"></span>
             </button>
             <div className="flex items-center gap-4 border-l border-white/10 pl-4">
@@ -192,77 +174,77 @@ export default function MisTurnosPage() {
 
       {/* Main Content */}
       <main className="pl-[84px] pr-16 pt-32 pb-24 min-h-screen">
-        <div className="max-w-7xl mx-auto w-full relative transform-gpu">
+        <div className="max-w-6xl mx-auto w-full relative transform-gpu">
           
           {/* DASHBOARD PANEL */}
           {activeTab === 'panel' && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
               {/* HEADER */}
-              <div className="flex justify-between items-center mb-10">
+              <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h1 className="text-7xl font-headline italic text-[#e5e2e1] mb-3">Mi Panel</h1>
-                  <p className="text-[#99907c] text-sm tracking-wide">Tu espacio personal de estética y bienestar</p>
+                  <h1 className="text-5xl font-headline italic text-[#e5e2e1] mb-2">Mi Panel</h1>
+                  <p className="text-[#99907c] text-xs tracking-wide">Tu espacio personal de estética y bienestar</p>
                 </div>
-                <div className="liquid-glass-rich px-6 py-2.5 rounded-full border border-[#f1c97d]/20">
-                  <span className="text-[#f1c97d] text-[10px] font-bold uppercase tracking-[0.2em]">Premium Member</span>
+                <div className="liquid-glass-rich px-5 py-2 rounded-full border border-[#f1c97d]/20">
+                  <span className="text-[#f1c97d] text-[9px] font-bold uppercase tracking-[0.2em]">Premium Member</span>
                 </div>
               </div>
 
               {/* FILA 1 — KPIs */}
-              <div className="grid grid-cols-3 gap-6 mb-10">
-                <div className="liquid-glass-rich rounded-[2rem] px-7 py-6 flex flex-col justify-center">
-                  <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-3">Salones Visitados</p>
-                  <span className="text-5xl font-headline italic text-[#f1c97d] leading-none">2</span>
+              <div className="grid grid-cols-3 gap-6 mb-8">
+                <div className="liquid-glass-rich rounded-[1.5rem] px-6 py-5 flex flex-col justify-center">
+                  <p className="text-[8px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-2">Salones Visitados</p>
+                  <span className="text-4xl font-headline italic text-[#f1c97d] leading-none">2</span>
                 </div>
-                <div className="liquid-glass-rich rounded-[2rem] px-7 py-6 flex flex-col justify-center">
-                  <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-3">Turnos Completados</p>
-                  <span className="text-5xl font-headline italic text-[#f1c97d] leading-none">5</span>
+                <div className="liquid-glass-rich rounded-[1.5rem] px-6 py-5 flex flex-col justify-center">
+                  <p className="text-[8px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-2">Turnos Completados</p>
+                  <span className="text-4xl font-headline italic text-[#f1c97d] leading-none">5</span>
                 </div>
-                <div className="liquid-glass-rich rounded-[2rem] px-7 py-6 flex flex-col justify-center">
-                  <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-3">Invertido Este Año</p>
-                  <span className="text-5xl font-headline italic text-[#f1c97d] leading-none">$22.5k</span>
+                <div className="liquid-glass-rich rounded-[1.5rem] px-6 py-5 flex flex-col justify-center">
+                  <p className="text-[8px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-2">Invertido Este Año</p>
+                  <span className="text-4xl font-headline italic text-[#f1c97d] leading-none">$22.5k</span>
                 </div>
               </div>
 
               {/* FILA 2 — Grid 12 cols: 8 Lo Operativo / 4 El Perfil */}
-              <div className="grid grid-cols-12 gap-8 items-stretch">
+              <div className="grid grid-cols-12 gap-6 items-stretch">
 
                 {/* COL IZQUIERDA — span 8: Lo Operativo */}
-                <div className="col-span-8 flex flex-col gap-8 h-full">
+                <div className="col-span-8 flex flex-col gap-6 h-full">
 
                   {/* Próximo Turno */}
                   <div>
-                    <p className="text-[10px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-4 ml-1">Tu próximo turno</p>
-                    <div className="relative isolate overflow-hidden rounded-[2.5rem] p-0 flex flex-row w-full transition-all duration-700 hover:scale-[1.01] hover:bg-white/[0.02] border border-white/10 group">
+                    <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-3 ml-1">Tu próximo turno</p>
+                    <div className="relative isolate overflow-hidden rounded-[2rem] p-0 flex flex-row w-full transition-all duration-700 hover:scale-[1.01] hover:bg-white/[0.02] border border-white/10 group">
                       <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
 
                       {/* FECHA y HORA */}
-                      <div className="flex flex-col items-center justify-center w-[180px] shrink-0 border-r border-dashed border-white/10 px-6 py-10 relative z-10">
-                        <span className="text-[9px] font-label uppercase tracking-[0.3em] text-[#99907c] mb-2">Mañana</span>
-                        <span className="text-6xl font-headline text-[#f1c97d]" style={{ textShadow: '0 0 40px rgba(241,201,125,0.3)' }}>15</span>
-                        <span className="text-[10px] font-label uppercase tracking-[0.4em] text-[#99907c] mt-1">Abril</span>
-                        <span className="text-base font-headline italic text-[#e5e2e1] mt-4">10:30am</span>
+                      <div className="flex flex-col items-center justify-center w-[150px] shrink-0 border-r border-dashed border-white/10 px-6 py-8 relative z-10">
+                        <span className="text-[8px] font-label uppercase tracking-[0.3em] text-[#99907c] mb-2">Mañana</span>
+                        <span className="text-5xl font-headline text-[#f1c97d]" style={{ textShadow: '0 0 30px rgba(241,201,125,0.3)' }}>15</span>
+                        <span className="text-[9px] font-label uppercase tracking-[0.4em] text-[#99907c] mt-1">Abril</span>
+                        <span className="text-sm font-headline italic text-[#e5e2e1] mt-3">10:30am</span>
                       </div>
 
                       {/* INFO */}
-                      <div className="flex-1 px-10 py-8 flex flex-col justify-center relative z-10">
-                        <div className="flex items-center gap-3 mb-3">
-                          <p className="text-[11px] font-label uppercase tracking-[0.2em] text-[#f1c97d]">MAISON DE BEAUTÉ</p>
+                      <div className="flex-1 px-8 py-6 flex flex-col justify-center relative z-10">
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <p className="text-[10px] font-label uppercase tracking-[0.2em] text-[#f1c97d]">MAISON DE BEAUTÉ</p>
                           <span className="w-1 h-1 rounded-full bg-[#f1c97d]/30"></span>
-                          <p className="text-[#99907c] text-[11px] uppercase tracking-widest font-label flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[14px]">location_on</span> Palermo Soho
+                          <p className="text-[#99907c] text-[10px] uppercase tracking-widest font-label flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[13px]">location_on</span> Palermo Soho
                           </p>
                         </div>
-                        <h2 className="text-3xl font-headline italic text-[#e5e2e1] mb-2 leading-tight">Balayage con Valentina</h2>
-                        <div className="flex flex-wrap items-center gap-2 mt-6">
-                          <button className="h-9 px-5 rounded-full border border-white/10 hover:border-[#f1c97d]/30 hover:bg-[#f1c97d]/5 transition-all text-xs uppercase tracking-[0.1em] font-label text-[#99907c] hover:text-[#f1c97d] flex items-center gap-2 cursor-pointer">
-                            <span className="material-symbols-outlined text-[15px]">map</span> Ver en mapa
+                        <h2 className="text-2xl font-headline italic text-[#e5e2e1] mb-1 leading-tight">Balayage con Valentina</h2>
+                        <div className="flex flex-wrap items-center gap-2 mt-4">
+                          <button className="h-8 px-4 rounded-full border border-white/10 hover:border-[#f1c97d]/30 hover:bg-[#f1c97d]/5 transition-all text-[10px] uppercase tracking-[0.1em] font-label text-[#99907c] hover:text-[#f1c97d] flex items-center gap-2 cursor-pointer">
+                            <span className="material-symbols-outlined text-[14px]">map</span> Ver en mapa
                           </button>
-                          <button className="h-9 px-5 rounded-full border border-white/10 hover:border-white/30 hover:bg-white/5 transition-all text-xs uppercase tracking-[0.1em] font-label text-[#99907c] hover:text-[#e5e2e1] flex items-center gap-2 cursor-pointer">
-                            <span className="material-symbols-outlined text-[15px]">edit_calendar</span> Reagendar
+                          <button className="h-8 px-4 rounded-full border border-white/10 hover:border-white/30 hover:bg-white/5 transition-all text-[10px] uppercase tracking-[0.1em] font-label text-[#99907c] hover:text-[#e5e2e1] flex items-center gap-2 cursor-pointer">
+                            <span className="material-symbols-outlined text-[14px]">edit_calendar</span> Reagendar
                           </button>
-                          <button className="h-9 px-5 rounded-full border border-transparent hover:border-red-500/20 hover:bg-red-500/10 transition-all text-xs uppercase tracking-[0.1em] font-label text-[#99907c] hover:text-red-400 flex items-center gap-2 ml-auto cursor-pointer">
-                            <span className="material-symbols-outlined text-[15px]">close</span> Cancelar
+                          <button className="h-8 px-4 rounded-full border border-transparent hover:border-red-500/20 hover:bg-red-500/10 transition-all text-[10px] uppercase tracking-[0.1em] font-label text-[#99907c] hover:text-red-400 flex items-center gap-2 ml-auto cursor-pointer">
+                            <span className="material-symbols-outlined text-[14px]">close</span> Cancelar
                           </button>
                         </div>
                       </div>
@@ -270,30 +252,30 @@ export default function MisTurnosPage() {
                   </div>
 
                   {/* Sugerencia Valentina */}
-                  <div className="relative isolate rounded-[2.5rem] overflow-hidden min-h-[300px] flex flex-col justify-center group border border-white/10" style={{ boxShadow: '0 0 40px -10px rgba(255,255,255,0.05)' }}>
+                  <div className="relative isolate rounded-[2rem] overflow-hidden min-h-[260px] flex flex-col justify-center group border border-white/10" style={{ boxShadow: '0 0 30px -10px rgba(255,255,255,0.05)' }}>
                     <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20"></div>
-                    <div className="absolute top-0 right-0 w-72 h-72 bg-[#f1c97d]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 -z-10"></div>
-                    <div className="relative z-10 max-w-[60%] pl-16 pr-4 py-10">
-                      <div className="inline-flex px-4 py-1.5 bg-[#f1c97d]/10 border border-[#f1c97d]/25 rounded-full mb-5">
-                        <span className="text-[9px] font-label uppercase tracking-[0.2em] text-[#f1c97d]">PARA VOS</span>
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-[#f1c97d]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 -z-10"></div>
+                    <div className="relative z-10 max-w-[60%] pl-14 pr-4 py-8">
+                      <div className="inline-flex px-3.5 py-1.5 bg-[#f1c97d]/10 border border-[#f1c97d]/25 rounded-full mb-4">
+                        <span className="text-[8px] font-label uppercase tracking-[0.2em] text-[#f1c97d]">PARA VOS</span>
                       </div>
-                      <h2 className="text-3xl font-headline italic text-[#e5e2e1] mb-2 leading-tight">
+                      <h2 className="text-2xl font-headline italic text-[#e5e2e1] mb-2 leading-tight">
                         Valentina tiene disponibilidad el jueves
                       </h2>
-                      <p className="text-[#99907c] text-sm leading-relaxed mb-5 font-label tracking-wide uppercase">
+                      <p className="text-[#99907c] text-xs leading-relaxed mb-4 font-label tracking-wide uppercase">
                         <span className="text-[#f1c97d]/50">—</span> TU ESTILISTA HABITUAL EN MAISON
                       </p>
-                      <div className="flex items-center gap-4 mb-5">
-                        <div className="flex items-center gap-2 bg-[#080808]/50 border border-white/5 px-4 py-2 rounded-full backdrop-blur-md">
-                          <span className="material-symbols-outlined text-[#f1c97d] text-[16px]">schedule</span>
-                          <span className="text-xs text-[#e5e2e1] font-label tracking-wider">11:00 am</span>
+                      <div className="flex items-center gap-3.5 mb-4">
+                        <div className="flex items-center gap-2 bg-[#080808]/50 border border-white/5 px-3.5 py-1.5 rounded-full backdrop-blur-md">
+                          <span className="material-symbols-outlined text-[#f1c97d] text-[14px]">schedule</span>
+                          <span className="text-[10px] text-[#e5e2e1] font-label tracking-wider">11:00 am</span>
                         </div>
                         <span className="text-white/20">•</span>
                         <span className="text-sm font-headline italic text-[#e5e2e1] tracking-wide">$4.500</span>
                       </div>
-                      <button className="liquid-glass-floating h-11 px-7 flex items-center gap-2 rounded-[1.5rem] text-sm font-medium hover:bg-white/10 transition-all duration-300 group/btn border border-white/10 w-fit cursor-pointer">
+                      <button className="liquid-glass-floating h-10 px-6 flex items-center gap-2 rounded-[1.25rem] text-[13px] font-medium hover:bg-white/10 transition-all duration-300 group/btn border border-white/10 w-fit cursor-pointer">
                         <span className="text-[#e5e2e1] whitespace-nowrap">Reservar en un tap</span>
-                        <ArrowRight size={15} className="text-[#e5e2e1] group-hover/btn:translate-x-1 transition-transform shrink-0" />
+                        <span className="material-symbols-outlined text-[#e5e2e1] text-[16px] group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
                       </button>
                     </div>
                     <img
@@ -306,61 +288,61 @@ export default function MisTurnosPage() {
                 </div>
 
                 {/* COL DERECHA — span 4: El Perfil */}
-                <div className="col-span-4 flex flex-col gap-8 h-full">
+                <div className="col-span-4 flex flex-col gap-6 h-full">
                   {/* Tu Expediente */}
                   <div>
-                    <p className="text-[10px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-4 ml-1">Tu expediente</p>
-                    <div className="relative isolate overflow-hidden rounded-[2.5rem] p-8 flex flex-col border border-white/10">
+                    <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-3 ml-1">Tu expediente</p>
+                    <div className="relative isolate overflow-hidden rounded-[2rem] p-6 flex flex-col border border-white/10">
                       <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
-                      <h3 className="text-2xl font-headline italic text-[#e5e2e1] mb-2 flex items-center gap-3 relative z-10">
+                      <h3 className="text-xl font-headline italic text-[#e5e2e1] mb-1.5 flex items-center gap-2.5 relative z-10">
                         Tu Cabello
-                        <span className="inline-flex items-center justify-center p-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
-                          <span className="material-symbols-outlined text-[13px]">check</span>
+                        <span className="inline-flex items-center justify-center p-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.15)]">
+                          <span className="material-symbols-outlined text-[11px]">check</span>
                         </span>
                       </h3>
-                      <div className="flex flex-col gap-3 mt-4 mb-6 relative z-10">
+                      <div className="flex flex-col gap-2.5 mt-3 mb-5 relative z-10">
                         <div>
-                          <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-1">Último tratamiento</p>
-                          <p className="text-[#f1c97d] font-headline italic text-lg leading-tight">Balayage</p>
-                          <p className="text-[#e5e2e1] font-headline italic text-sm">hace 6 semanas</p>
+                          <p className="text-[8px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-1">Último tratamiento</p>
+                          <p className="text-[#f1c97d] font-headline italic text-base leading-tight">Balayage</p>
+                          <p className="text-[#e5e2e1] font-headline italic text-xs">hace 6 semanas</p>
                         </div>
                         <div>
-                          <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-1">Próxima recomendación</p>
-                          <p className="text-[#e5e2e1] font-headline italic text-lg leading-tight">en 2 semanas</p>
+                          <p className="text-[8px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-1">Próxima recomendación</p>
+                          <p className="text-[#e5e2e1] font-headline italic text-base leading-tight">en 2 semanas</p>
                         </div>
                       </div>
-                      <div className="relative z-10 mb-6">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-[10px] font-label uppercase tracking-[0.15em] text-[#f1c97d]">80%</p>
-                          <p className="text-[9px] text-[#99907c] font-label">Buen estado</p>
+                      <div className="relative z-10 mb-5">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <p className="text-[9px] font-label uppercase tracking-[0.15em] text-[#f1c97d]">80%</p>
+                          <p className="text-[8px] text-[#99907c] font-label">Buen estado</p>
                         </div>
-                        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                           <div className="h-full rounded-full relative overflow-hidden" style={{ width: '80%', background: 'linear-gradient(90deg, rgba(241,201,125,0.4) 0%, rgba(241,201,125,1) 100%)' }}>
                             <div className="absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-white/30"></div>
                           </div>
                         </div>
                       </div>
-                      <div className="relative z-10 mt-auto pt-5 border-t border-white/5 flex flex-col gap-2">
-                        <p className="text-[9px] text-[#99907c] font-label uppercase tracking-widest opacity-60">ID Clínico: #MC-0982-H</p>
-                        <button className="text-[10px] uppercase tracking-widest text-[#f1c97d] hover:text-[#e5e2e1] transition-colors flex items-center gap-1 group/link font-label cursor-pointer">
-                          Ver historial <span className="material-symbols-outlined text-[13px] group-hover/link:translate-x-1 transition-transform">arrow_forward</span>
+                      <div className="relative z-10 mt-auto pt-4 border-t border-white/5 flex flex-col gap-1.5">
+                        <p className="text-[8px] text-[#99907c] font-label uppercase tracking-widest opacity-60">ID Clínico: #MC-0982-H</p>
+                        <button className="text-[9px] uppercase tracking-widest text-[#f1c97d] hover:text-[#e5e2e1] transition-colors flex items-center gap-1 group/link font-label cursor-pointer">
+                          Ver historial <span className="material-symbols-outlined text-[12px] group-hover/link:translate-x-1 transition-transform">arrow_forward</span>
                         </button>
                       </div>
                     </div>
                   </div>
 
                   {/* DESCUBRIMIENTO */}
-                  <div className="relative isolate overflow-hidden rounded-[2.5rem] p-8 border border-white/10 flex flex-col justify-center min-h-[200px] flex-grow">
+                  <div className="relative isolate overflow-hidden rounded-[2rem] p-6 border border-white/10 flex flex-col justify-center min-h-[180px] flex-grow">
                     <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
                     <div className="relative z-10">
-                      <span className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-3 block">DESCUBRIMIENTO</span>
-                      <h3 className="text-xl lg:text-2xl font-headline italic text-[#e5e2e1] mb-6">¿Qué necesitás hoy?</h3>
+                      <span className="text-[8px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-2.5 block">DESCUBRIMIENTO</span>
+                      <h3 className="text-lg lg:text-xl font-headline italic text-[#e5e2e1] mb-5">¿Qué necesitás hoy?</h3>
                       <div className="flex flex-wrap gap-2">
-                        <button className="px-5 py-2.5 rounded-full border border-[#f1c97d]/30 bg-[#f1c97d]/10 hover:bg-[#f1c97d]/20 transition-all text-[10px] uppercase font-label tracking-[0.1em] text-[#f1c97d] cursor-pointer flex-grow text-center flex items-center justify-center gap-2 mb-2">
-                          <Calendar size={14} /> Agendar Turno
+                        <button className="px-4 py-2 rounded-full border border-[#f1c97d]/30 bg-[#f1c97d]/10 hover:bg-[#f1c97d]/20 transition-all text-[9px] uppercase font-label tracking-[0.1em] text-[#f1c97d] cursor-pointer flex-grow text-center flex items-center justify-center gap-1.5 mb-1.5">
+                          <span className="material-symbols-outlined text-[14px]">calendar_today</span> Agendar Turno
                         </button>
                         {['Corte', 'Color', 'Tratamiento', 'Uñas', 'Maquillaje'].map((tag) => (
-                          <button key={tag} className="px-4 py-2 rounded-full border border-white/10 bg-[#080808]/40 hover:border-[#f1c97d]/30 hover:bg-[#f1c97d]/5 transition-all text-[9px] uppercase font-label tracking-[0.1em] text-[#e5e2e1] hover:text-[#f1c97d] cursor-pointer flex-grow text-center">
+                          <button key={tag} className="px-3.5 py-1.5 rounded-full border border-white/10 bg-[#080808]/40 hover:border-[#f1c97d]/30 hover:bg-[#f1c97d]/5 transition-all text-[8px] uppercase font-label tracking-[0.1em] text-[#e5e2e1] hover:text-[#f1c97d] cursor-pointer flex-grow text-center">
                             {tag}
                           </button>
                         ))}
@@ -368,79 +350,77 @@ export default function MisTurnosPage() {
                     </div>
                   </div>
                 </div>
-
               </div>
-
             </div>
           )}
 
           {/* MIS TURNOS VIEW */}
           {activeTab === 'turnos' && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <div className="flex flex-col gap-4 mb-10">
-                <div className="flex items-center gap-6">
-                  <h1 className="text-7xl font-headline italic text-[#e5e2e1]">Mis Turnos</h1>
-                  <div className="liquid-glass-rich px-5 py-2 rounded-full border border-[#f1c97d]/20">
-                    <span className="text-[#f1c97d] text-[10px] font-bold uppercase tracking-[0.2em]">
+              <div className="flex flex-col gap-3 mb-8">
+                <div className="flex items-center gap-5">
+                  <h1 className="text-5xl font-headline italic text-[#e5e2e1]">Mis Turnos</h1>
+                  <div className="liquid-glass-rich px-4 py-1.5 rounded-full border border-[#f1c97d]/20">
+                    <span className="text-[#f1c97d] text-[9px] font-bold uppercase tracking-[0.2em]">
                       {confirmedCount} CONFIRMADOS
                     </span>
                   </div>
                 </div>
-                <p className="text-[#99907c] text-sm tracking-wide">Gestiona tus próximas citas de belleza.</p>
+                <p className="text-[#99907c] text-xs tracking-wide">Gestiona tus próximas citas de belleza.</p>
               </div>
 
               {/* Tickets */}
-              <div className="space-y-6">
+              <div className="space-y-5">
                 {appointments.map((appt) => (
-                  <div key={appt.id} className="specular-highlight liquid-glass-rich ticket-mask rounded-[2rem] flex min-h-[140px] transition-all duration-700 hover:scale-[1.02] hover:bg-white/[0.05]">
+                  <div key={appt.id} className="specular-highlight liquid-glass-rich ticket-mask rounded-[1.5rem] flex min-h-[120px] transition-all duration-700 hover:scale-[1.02] hover:bg-white/[0.05]">
                     {/* FECHA col */}
-                    <div className="flex flex-col items-center justify-center min-w-[100px] px-6 py-4">
-                      <span className="text-5xl font-headline text-[#f1c97d]" style={{ textShadow: '0 0 40px rgba(241,201,125,0.3)' }}>{appt.day}</span>
-                      <span className="text-[10px] font-label uppercase tracking-[0.3em] text-[#99907c] mt-1">{appt.month}</span>
+                    <div className="flex flex-col items-center justify-center min-w-[90px] px-5 py-4">
+                      <span className="text-4xl font-headline text-[#f1c97d]" style={{ textShadow: '0 0 30px rgba(241,201,125,0.3)' }}>{appt.day}</span>
+                      <span className="text-[9px] font-label uppercase tracking-[0.3em] text-[#99907c] mt-0.5">{appt.month}</span>
                     </div>
 
                     {/* Separador */}
-                    <div style={{ width: '1px', alignSelf: 'stretch', margin: '16px 0', background: 'linear-gradient(to bottom, transparent, rgba(241,201,125,0.3), transparent)' }} />
+                    <div style={{ width: '1px', alignSelf: 'stretch', margin: '12px 0', background: 'linear-gradient(to bottom, transparent, rgba(241,201,125,0.3), transparent)' }} />
 
                     {/* INFO col */}
-                    <div className="flex-grow px-8 py-4 flex flex-col justify-center">
-                      <div className="flex items-center gap-4 mb-2">
-                        <h2 className="text-3xl font-headline tracking-wide">{appt.salonName}</h2>
+                    <div className="flex-grow px-7 py-4 flex flex-col justify-center">
+                      <div className="flex items-center gap-3.5 mb-1.5">
+                        <h2 className="text-2xl font-headline tracking-wide">{appt.salonName}</h2>
                         {appt.status === 'confirmado' && (
-                          <span className="bg-emerald-500/10 text-emerald-400 text-[9px] px-3 py-1 rounded-full font-bold uppercase tracking-widest border border-emerald-500/20">
+                          <span className="bg-emerald-500/10 text-emerald-400 text-[8px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-widest border border-emerald-500/20">
                             Confirmado
                           </span>
                         )}
                       </div>
-                      <p className="text-[#99907c] text-lg font-headline italic mb-3">{appt.service}</p>
-                      <div className="grid grid-cols-3 gap-6">
-                        <div className="flex items-center gap-3">
-                          <User size={20} className="text-[#f1c97d]/60" />
+                      <p className="text-[#99907c] text-base font-headline italic mb-2.5">{appt.service}</p>
+                      <div className="grid grid-cols-3 gap-5">
+                        <div className="flex items-center gap-2.5">
+                          <span className="material-symbols-outlined text-[#f1c97d]/60 text-[18px]">person</span>
                           <div>
-                            <p className="text-[8px] text-[#99907c] uppercase tracking-widest">Profesional</p>
-                            <p className="text-[11px] uppercase tracking-wider font-medium">{appt.professional}</p>
+                            <p className="text-[7px] text-[#99907c] uppercase tracking-widest">Profesional</p>
+                            <p className="text-[10px] uppercase tracking-wider font-medium">{appt.professional}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#f1c97d]/60"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                        <div className="flex items-center gap-2.5">
+                          <span className="material-symbols-outlined text-[#f1c97d]/60 text-[18px]">location_on</span>
                           <div>
-                            <p className="text-[8px] text-[#99907c] uppercase tracking-widest">Ubicación</p>
-                            <p className="text-[11px] uppercase tracking-wider font-medium">{appt.location}</p>
+                            <p className="text-[7px] text-[#99907c] uppercase tracking-widest">Ubicación</p>
+                            <p className="text-[10px] uppercase tracking-wider font-medium">{appt.location}</p>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     {/* QR col */}
-                    <div className="w-[140px] flex-shrink-0 flex flex-col items-center justify-center gap-2 border-l border-dashed border-white/15 px-4 py-4">
-                      <div className="bg-white/95 p-2 rounded-xl shadow-2xl transition-transform duration-500 hover:rotate-3">
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '2px', width: '68px', height: '68px', opacity: 0.9 }}>
+                    <div className="w-[120px] flex-shrink-0 flex flex-col items-center justify-center gap-1.5 border-l border-dashed border-white/15 px-3 py-3">
+                      <div className="bg-white/95 p-1.5 rounded-lg shadow-2xl transition-transform duration-500 hover:rotate-3">
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '2px', width: '58px', height: '58px', opacity: 0.9 }}>
                           {appt.qrPattern.map((isFilled, idx) => (
                             <div key={idx} style={{ backgroundColor: isFilled ? '#000000' : 'transparent', width: '100%', height: '100%' }} />
                           ))}
                         </div>
                       </div>
-                      <p className="text-[7.5px] text-[#99907c] uppercase tracking-[0.2em] mt-1">CHECK-IN QR</p>
+                      <p className="text-[6.5px] text-[#99907c] uppercase tracking-[0.2em] mt-0.5">CHECK-IN QR</p>
                     </div>
                   </div>
                 ))}
@@ -449,19 +429,19 @@ export default function MisTurnosPage() {
           )}
 
           {/* Editorial Section */}
-          <section className="mt-48 pb-12">
-            <div className="grid grid-cols-12 gap-16 items-center">
+          <section className="mt-32 pb-12">
+            <div className="grid grid-cols-12 gap-10 items-center">
               <div className="col-span-6">
-                <p className="text-4xl font-headline italic text-[#f1c97d] leading-tight">
+                <p className="text-3xl font-headline italic text-[#f1c97d] leading-tight text-pretty">
                   "La belleza comienza en el momento en que decides ser tú misma."
                 </p>
-                <div className="mt-8 flex items-center gap-6">
-                  <div className="h-[1px] w-20 bg-[#f1c97d]/30"></div>
-                  <p className="text-[9px] font-label uppercase tracking-[0.4em] text-[#99907c]">Editorial MujerApp / SS24</p>
+                <div className="mt-6 flex items-center gap-5">
+                  <div className="h-[1px] w-16 bg-[#f1c97d]/30"></div>
+                  <p className="text-[8px] font-label uppercase tracking-[0.4em] text-[#99907c]">Editorial MujerApp / SS24</p>
                 </div>
               </div>
               <div className="col-span-6">
-                <div className="relative rounded-[3rem] overflow-hidden group aspect-[16/10]">
+                <div className="relative rounded-[2.5rem] overflow-hidden group aspect-[16/10]">
                   <img 
                     src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=80" 
                     alt="Salon Editorial" 
@@ -476,9 +456,8 @@ export default function MisTurnosPage() {
         </div>
       </main>
 
-      {/* FAB */}
-      <button className="fixed bottom-12 right-12 w-20 h-20 liquid-glass-floating rounded-full flex items-center justify-center text-[#f1c97d] group transition-all duration-500 hover:scale-110 hover:shadow-[0_0_40px_rgba(241,201,125,0.3)] z-50">
-        <Plus size={32} className="transition-transform duration-500 group-hover:rotate-90" />
+      <button className="fixed bottom-10 right-10 w-14 h-14 liquid-glass-floating rounded-full flex items-center justify-center text-[#f1c97d] group transition-all duration-500 hover:scale-110 hover:shadow-[0_0_30px_rgba(241,201,125,0.3)] z-50">
+        <span className="material-symbols-outlined text-[28px] transition-transform duration-500 group-hover:rotate-90">add</span>
       </button>
     </div>
   );
