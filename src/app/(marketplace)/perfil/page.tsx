@@ -117,7 +117,7 @@ export default function MisTurnosPage() {
   const userName = session?.user?.name || 'Sofia R.';
   const confirmedCount = appointments.filter(a => a.status === 'confirmado').length;
 
-  const [activeTab, setActiveTab] = React.useState<'panel' | 'turnos' | 'perfil' | 'ajustes'>('panel');
+  const [activeTab, setActiveTab] = React.useState<'panel' | 'turnos' | 'perfil' | 'ajustes' | 'explorar'>('panel');
 
   // Estados locales para el demo interactivo
   const [whatsapp, setWhatsapp] = React.useState('+54 911 5000-0000');
@@ -172,12 +172,15 @@ export default function MisTurnosPage() {
         <div className="liquid-glass-floating rounded-[2rem] flex flex-col py-5 px-2 gap-1 w-full overflow-hidden">
 
           {/* Logo M */}
-          <div className="flex items-center gap-4 px-[5px] mb-6">
-            <div className="w-9 h-9 rounded-full flex-shrink-0 bg-gradient-to-br from-[#f1c97d] to-amber-700 flex items-center justify-center">
-              <span className="font-headline italic text-[#1a1008] text-sm font-semibold">M</span>
+          <Link href="/" className="flex items-center gap-4 px-[5px] mb-6 group/logo cursor-pointer">
+            <div className="w-9 h-9 rounded-full flex-shrink-0 bg-gradient-to-b from-white/[0.15] to-transparent p-[1px] shadow-[0_4px_20px_rgba(0,0,0,0.5)] transition-all duration-500 group-hover/logo:shadow-[0_0_15px_rgba(241,201,125,0.15)] group-hover/logo:scale-105">
+              <div className="w-full h-full rounded-full bg-gradient-to-b from-[#1c1c1e] to-[#0a0a0c] flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[#f1c97d]/10 to-transparent opacity-0 group-hover/logo:opacity-100 transition-opacity duration-500"></div>
+                <span className="font-headline italic text-[#e5e2e1] text-[15px] tracking-widest relative z-10 transition-colors duration-500 group-hover/logo:text-[#f1c97d]">M</span>
+              </div>
             </div>
-            <span className="text-xl font-headline italic text-[#f1c97d] opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">MujerApp</span>
-          </div>
+            <span className="text-xl font-headline italic text-[#e5e2e1] group-hover/logo:text-[#f1c97d] opacity-0 group-hover:opacity-100 transition-all duration-500 whitespace-nowrap">MujerApp</span>
+          </Link>
 
           {/* Nav items */}
           <nav className="flex flex-col gap-1 w-full">
@@ -188,6 +191,10 @@ export default function MisTurnosPage() {
             <button onClick={() => setActiveTab('turnos')} className={`w-full h-10 rounded-xl flex items-center gap-4 px-2.5 transition-all duration-200 cursor-pointer ${activeTab === 'turnos' ? 'text-[#f1c97d] bg-white/[0.08]' : 'text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5'}`}>
               <span className="material-symbols-outlined text-[19px] flex-shrink-0">calendar_month</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Turnos</span>
+            </button>
+            <button onClick={() => setActiveTab('explorar')} className={`w-full h-10 rounded-xl flex items-center gap-4 px-2.5 transition-all duration-200 cursor-pointer ${activeTab === 'explorar' ? 'text-[#f1c97d] bg-white/[0.08]' : 'text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5'}`}>
+              <span className="material-symbols-outlined text-[19px] flex-shrink-0">explore</span>
+              <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Explorar</span>
             </button>
             <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
               <span className="material-symbols-outlined text-[19px] flex-shrink-0">favorite</span>
