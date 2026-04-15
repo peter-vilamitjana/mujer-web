@@ -166,42 +166,42 @@ export default function MisTurnosPage() {
       <main className="pl-[84px] pr-16 pt-32 pb-24 min-h-screen">
         <div className="max-w-6xl mx-auto">
           {/* Page Title */}
-          <div className="flex justify-between items-end mb-20">
-            <div>
-              <h1 className="text-7xl font-headline italic text-[#e5e2e1] mb-2">Mis Turnos</h1>
-              <p className="text-[#99907c] text-sm">Gestiona tus próximas citas de belleza.</p>
+          <div className="flex justify-between items-center mb-8">
+            <div className="flex items-center gap-6">
+              <h1 className="text-7xl font-headline italic text-[#e5e2e1]">Mis Turnos</h1>
+              <div className="liquid-glass-rich px-5 py-2 rounded-full border-[#f1c97d]/20 mt-3">
+                <span className="text-[#f1c97d] text-[10px] font-bold uppercase tracking-[0.2em]">
+                  {confirmedCount} CONFIRMADOS
+                </span>
+              </div>
             </div>
-            <div className="liquid-glass-rich px-6 py-2 rounded-full border-[#f1c97d]/20">
-              <span className="text-[#f1c97d] text-[10px] font-bold uppercase tracking-[0.2em]">
-                {confirmedCount} CONFIRMADOS
-              </span>
-            </div>
+            <p className="text-[#99907c] text-sm mt-4">Gestiona tus próximas citas de belleza.</p>
           </div>
 
           {/* Tickets */}
-          <div className="space-y-12">
+          <div className="space-y-6">
             {appointments.map((appt) => (
-              <div key={appt.id} className="specular-highlight liquid-glass-rich ticket-mask rounded-[2rem] flex min-h-[160px] transition-all duration-700 hover:scale-[1.02] hover:bg-white/[0.05]">
+              <div key={appt.id} className="specular-highlight liquid-glass-rich ticket-mask rounded-[2rem] flex min-h-[140px] transition-all duration-700 hover:scale-[1.02] hover:bg-white/[0.05]">
                 {/* FECHA col */}
-                <div className="flex flex-col items-center justify-center min-w-[100px] px-6">
+                <div className="flex flex-col items-center justify-center min-w-[100px] px-6 py-4">
                   <span
-                    className="text-6xl font-headline text-[#f1c97d]"
+                    className="text-5xl font-headline text-[#f1c97d]"
                     style={{ textShadow: '0 0 40px rgba(241,201,125,0.3)' }}
                   >{appt.day}</span>
-                  <span className="text-[11px] font-label uppercase tracking-[0.3em] text-[#99907c] mt-2">{appt.month}</span>
+                  <span className="text-[10px] font-label uppercase tracking-[0.3em] text-[#99907c] mt-1">{appt.month}</span>
                 </div>
 
                 {/* FIX 3 — separador gradiente dorado */}
                 <div style={{
                   width: '1px',
                   alignSelf: 'stretch',
-                  margin: '20px 0',
+                  margin: '16px 0',
                   background: 'linear-gradient(to bottom, transparent, rgba(241,201,125,0.3), transparent)'
                 }} />
 
                 {/* INFO col */}
-                <div className="flex-grow px-8 py-6">
-                  <div className="flex items-center gap-4 mb-4">
+                <div className="flex-grow px-8 py-4 flex flex-col justify-center">
+                  <div className="flex items-center gap-4 mb-2">
                     <h2 className="text-3xl font-headline tracking-wide">{appt.salonName}</h2>
                     {appt.status === 'confirmado' && (
                       <span className="bg-emerald-500/10 text-emerald-400 text-[9px] px-3 py-1 rounded-full font-bold uppercase tracking-widest border border-emerald-500/20">
@@ -209,9 +209,9 @@ export default function MisTurnosPage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-[#99907c] text-lg font-headline italic mb-5">{appt.service}</p>
+                  <p className="text-[#99907c] text-lg font-headline italic mb-3">{appt.service}</p>
                   
-                  <div className="grid grid-cols-3 gap-8">
+                  <div className="grid grid-cols-3 gap-6">
                     <div className="flex items-center gap-3">
                       <User size={20} className="text-[#f1c97d]/60" />
                       <div>
@@ -237,16 +237,16 @@ export default function MisTurnosPage() {
                   </div>
                 </div>
 
-                {/* QR col — FIX 4: compacto 80x80 */}
-                <div className="w-[160px] flex-shrink-0 flex flex-col items-center justify-center gap-3 border-l border-dashed border-white/15 px-6">
-                  <div className="bg-white/95 p-3 rounded-xl shadow-2xl transition-transform duration-500 hover:rotate-3">
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '3px', width: '80px', height: '80px', opacity: 0.9 }}>
+                {/* QR col — FIX 4: compacto 80x80 -> 68x68 */}
+                <div className="w-[140px] flex-shrink-0 flex flex-col items-center justify-center gap-2 border-l border-dashed border-white/15 px-4 py-4">
+                  <div className="bg-white/95 p-2 rounded-xl shadow-2xl transition-transform duration-500 hover:rotate-3">
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '2px', width: '68px', height: '68px', opacity: 0.9 }}>
                       {appt.qrPattern.map((isFilled, idx) => (
                         <div key={idx} style={{ backgroundColor: isFilled ? '#000000' : 'transparent', width: '100%', height: '100%' }} />
                       ))}
                     </div>
                   </div>
-                  <p className="text-[8px] text-[#99907c] uppercase tracking-[0.2em]">CHECK-IN QR CODE</p>
+                  <p className="text-[7.5px] text-[#99907c] uppercase tracking-[0.2em] mt-1">CHECK-IN QR</p>
                 </div>
               </div>
             ))}
