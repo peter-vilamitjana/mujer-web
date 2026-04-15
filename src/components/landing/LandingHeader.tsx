@@ -118,7 +118,7 @@ export default function LandingHeader() {
                   ? "bg-white/15 backdrop-blur-md border border-white/25 text-white hover:bg-white/25 hover:border-white/40 hover:shadow-[0_0_24px_rgba(255,255,255,0.15)]"
                   : "bg-black/10 backdrop-blur-md border border-black/20 text-[#1A1A1A] hover:bg-black/20 hover:border-black/30 hover:shadow-[0_0_24px_rgba(0,0,0,0.1)]"
               )}
-              href={status === 'authenticated' ? (session?.user?.role === 'customer' ? '/perfil' : '/dashboard') : loginUrl}
+              href={status === 'authenticated' ? '/perfil' : loginUrl}
             >
               <span className="absolute inset-x-0 top-0 h-px rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-white/50" />
               <span className="relative z-10 group-hover:tracking-[0.45em] transition-all duration-500">
