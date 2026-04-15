@@ -3,6 +3,48 @@
 import React from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { AlertTriangle, Target } from 'lucide-react';
+
+type HairHealthData = {
+  score: number;
+  status: 'excelente' | 'buen estado' | 'en tratamiento' | 'atención';
+  lastTreatment: string;
+  lastTreatmentWeeksAgo: number;
+  nextTurnIn: string;
+  nextTurnType: string;
+  frequency: string;
+  visitsPerYear: number;
+  evolution: { month: string; score: number }[];
+  allergy: string | null;
+  goal: string;
+  stylistRecommendation: string;
+  stylistName: string;
+  updatedWeeksAgo: number;
+};
+
+const mockHairHealth: HairHealthData = {
+  score: 80,
+  status: 'buen estado',
+  lastTreatment: 'Balayage',
+  lastTreatmentWeeksAgo: 2,
+  nextTurnIn: 'en 4 semanas',
+  nextTurnType: 'Retoque de color',
+  frequency: 'cada 6 sem',
+  visitsPerYear: 3,
+  evolution: [
+    { month: 'Oct', score: 65 },
+    { month: 'Nov', score: 55 },
+    { month: 'Dic', score: 60 },
+    { month: 'Ene', score: 70 },
+    { month: 'Feb', score: 75 },
+    { month: 'Abr', score: 80 }
+  ],
+  allergy: 'Amonio',
+  goal: 'Rubio platino progresivo',
+  stylistRecommendation: 'Continuar con hidratación semanal en casa antes del próximo tratamiento.',
+  stylistName: 'Valentina G.',
+  updatedWeeksAgo: 2
+};
 
 type Appointment = {
   id: string;
@@ -75,7 +117,25 @@ export default function MisTurnosPage() {
   const userName = session?.user?.name || 'Sofia R.';
   const confirmedCount = appointments.filter(a => a.status === 'confirmado').length;
 
-  const [activeTab, setActiveTab] = React.useState<'panel' | 'turnos'>('panel');
+  const [activeTab, setActiveTab] = React.useState<'panel' | 'turnos' | 'perfil' | 'ajustes'>('panel');
+
+  // Estados locales para el demo interactivo
+  const [whatsapp, setWhatsapp] = React.useState('+54 911 5000-0000');
+  const [preferredZone, setPreferredZone] = React.useState('Palermo');
+  const [hairProfile, setHairProfile] = React.useState({
+    health: 80,
+    type: 'Ondulado',
+    thickness: 'Fino',
+    state: 'Decolorado',
+    treatments: 'Keratina activa',
+    allergies: 'Alérgica al amonio',
+    goal: 'Quiero llegar al rubio platino sin romper mi cabello. Prefiero hacerlo progresivo.'
+  });
+  const [config, setConfig] = React.useState({
+    whatsappNotif: true,
+    reminderTime: '24hs',
+    preferredTime: 'Mañana'
+  });
 
   return (
     <div 
@@ -133,7 +193,7 @@ export default function MisTurnosPage() {
               <span className="material-symbols-outlined text-[19px] flex-shrink-0">favorite</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Favoritos</span>
             </button>
-            <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+            <button onClick={() => setActiveTab('perfil')} className={`w-full h-10 rounded-xl flex items-center gap-4 px-2.5 transition-all duration-200 cursor-pointer ${activeTab === 'perfil' ? 'text-[#f1c97d] bg-white/[0.08]' : 'text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5'}`}>
               <span className="material-symbols-outlined text-[19px] flex-shrink-0">person</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Perfil</span>
             </button>
@@ -144,10 +204,6 @@ export default function MisTurnosPage() {
 
           {/* Footer íconos */}
           <div className="flex flex-col gap-1 w-full">
-            <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
-              <span className="material-symbols-outlined text-[19px] flex-shrink-0">settings</span>
-              <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Ajustes</span>
-            </button>
             <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
               <span className="material-symbols-outlined text-[19px] flex-shrink-0">logout</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Salir</span>
@@ -497,6 +553,283 @@ export default function MisTurnosPage() {
               </div>
             </div>
           )}
+
+          {/* CONSOLIDATED PERFIL VIEW — 4 BLOCKS STRUCTURE */}
+          {activeTab === 'perfil' && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto">
+              {/* Encabezado */}
+              <div className="flex flex-col gap-2 mb-12">
+                <h1 className="text-6xl font-headline italic text-[#e5e2e1]">Mi Perfil</h1>
+                <p className="text-[#99907c] text-sm tracking-widest font-label uppercase">Tu expediente de belleza y configuraciones</p>
+              </div>
+
+              {/* Grid Principal — 4/8 Asymmetric */}
+              <div className="grid grid-cols-12 gap-10 items-start">
+                
+                {/* COL IZQUIERDA (span-4) — Identity & Sharing */}
+                <div className="col-span-4 flex flex-col gap-8">
+                  
+                  {/* BLOQUE 1: Identidad Básica */}
+                  <div className="relative isolate overflow-hidden rounded-[2.5rem] p-8 flex flex-col items-center text-center border border-white/10">
+                    <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
+                    
+                    <div className="relative mb-6 group">
+                      <div className="w-36 h-36 rounded-full border border-white/10 p-1.5 shadow-[0_0_50px_rgba(241,201,125,0.05)] overflow-hidden">
+                        <img 
+                          src={session?.user?.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuBHoq1ZEd8ECYymUh961ONjGj5-uoYjX-EsusAscLPzNTVIX3qpGotVv8E-oA-OBS0IuFV6oE3czpRiREq_xWMZyOj183drIeG2A35hWgTaf_AOCy7m4Fyl5vj134EOHDKKeZQpyHYqn3zntnyI3gdebSsjLUFkkvvb87bdZ9-_hziB5ZJ_iGLBgocDLFOGkO166KYHvqiYzUzS1WFIZuiMm92_9Wr8t7-meHoUb0-fR7EI23mcmlzrHpEgX2G9HUmBH0Qbt2MSPiA"} 
+                          alt={userName}
+                          className="w-full h-full rounded-full object-cover grayscale brightness-90 group-hover:grayscale-0 transition-all duration-700"
+                        />
+                      </div>
+                      <button className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer">
+                        <span className="material-symbols-outlined text-white text-2xl">photo_camera</span>
+                      </button>
+                    </div>
+
+                    <h2 className="text-3xl font-headline italic text-[#e5e2e1] mb-1">{userName}</h2>
+                    <div className="flex items-center gap-2 mb-8">
+                      <p className="text-[10px] text-[#99907c] font-label lowercase tracking-widest">{session?.user?.email}</p>
+                      <span className="material-symbols-outlined text-[13px] text-emerald-400">verified</span>
+                    </div>
+
+                    <div className="w-full flex flex-col gap-4 text-left border-t border-white/5 pt-8">
+                      <div className="group cursor-pointer">
+                        <p className="text-[8px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-1">WhatsApp / Confirmaciones</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-[#e5e2e1] font-body">{whatsapp}</p>
+                          <span className="material-symbols-outlined text-[16px] text-[#f1c97d] opacity-0 group-hover:opacity-100 transition-opacity">edit</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* LA IDEA QUE NINGUNA TIENE: Compartir mi perfil */}
+                  <div className="relative isolate overflow-hidden rounded-[2.5rem] p-8 border border-[#f1c97d]/20 bg-gradient-to-br from-[#f1c97d]/5 to-transparent group">
+                    <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
+                    <div className="flex flex-col items-center">
+                      <div className="mb-6 bg-white/[0.95] p-3 rounded-2xl transition-transform duration-700 group-hover:scale-105 group-hover:rotate-2">
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '2px', width: '90px', height: '90px', opacity: 0.9 }}>
+                          {[...Array(36)].map((_, i) => (
+                            <div key={i} className={`${Math.random() > 0.4 ? 'bg-black' : 'bg-transparent'} rounded-[1px]`} />
+                          ))}
+                        </div>
+                      </div>
+                      <h3 className="text-xl font-headline italic text-[#f1c97d] mb-2 text-center">Expediente Portable</h3>
+                      <p className="text-[10px] text-[#99907c] text-center leading-relaxed font-label uppercase tracking-widest px-4">
+                        Compartí tu historial con cualquier estilista nueva en un tap.
+                      </p>
+                      <button className="mt-6 w-full py-3 rounded-xl border border-white/10 hover:border-[#f1c97d]/30 text-[9px] font-label uppercase tracking-[0.2em] text-[#e5e2e1] hover:text-[#f1c97d] transition-all cursor-pointer">
+                        Copiar link de acceso
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* COL DERECHA (span-8) — Hair, Prefs, Account */}
+                <div className="col-span-8 flex flex-col gap-10">
+                  
+                  {/* BLOQUE 2: Tu perfil capilar (El Differentiator) */}
+                  <div className="relative isolate overflow-hidden p-6 rounded-[1.5rem]">
+                    <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
+                    <div className="relative z-10 w-full h-full">
+                      
+                      {/* HEADER DEL CARD */}
+                      <div className="flex flex-row justify-between items-center mb-6">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] uppercase tracking-[.12em] text-[#99907c] mb-1">Estado actual</span>
+                          <h3 className="font-headline text-[17px] text-[#e5e2e1]">Tu Cabello</h3>
+                        </div>
+                        <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] px-3 py-1 rounded-full">
+                          Buen estado
+                        </div>
+                      </div>
+
+                      {/* RING DE SALUD GENERAL */}
+                      <div className="flex flex-row items-center gap-6 mb-6">
+                        <div className="relative w-[80px] h-[80px] flex-shrink-0">
+                          <svg className="w-full h-full" viewBox="0 0 80 80">
+                            <circle cx="40" cy="40" r="34" stroke="rgba(255,255,255,0.08)" strokeWidth="7" fill="none" />
+                            <circle cx="40" cy="40" r="34" stroke="#4ade80" strokeWidth="7" strokeLinecap="round" fill="none" strokeDasharray="213.6" strokeDashoffset="42.7" transform="rotate(-90 40 40)" />
+                          </svg>
+                          <span className="absolute inset-0 flex items-center justify-center text-[18px] font-medium text-[#e5e2e1]">
+                            {mockHairHealth.score}%
+                          </span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[13px] font-medium text-[#e5e2e1] mb-1">Salud general</span>
+                          <span className="text-[11px] text-[#99907c]">Actualizado hace {mockHairHealth.updatedWeeksAgo} semanas</span>
+                          <span className="text-[11px] text-[#99907c]">por {mockHairHealth.stylistName}</span>
+                        </div>
+                      </div>
+
+                      {/* GRID 3 MÉTRICAS */}
+                      <div className="grid grid-cols-3 gap-3 mb-5">
+                        <div className="bg-white/5 rounded-xl p-3 flex flex-col">
+                          <span className="text-[10px] uppercase tracking-[.08em] text-[#99907c] mb-2">Último tratamiento</span>
+                          <span className="text-[15px] font-medium text-[#e5e2e1] mb-0.5">{mockHairHealth.lastTreatment}</span>
+                          <span className="text-[11px] text-[#99907c]">hace {mockHairHealth.lastTreatmentWeeksAgo} semanas</span>
+                        </div>
+                        <div className="bg-white/5 rounded-xl p-3 flex flex-col">
+                          <span className="text-[10px] uppercase tracking-[.08em] text-[#99907c] mb-2">Próximo turno ideal</span>
+                          <span className="text-[15px] font-medium text-[#e5e2e1] mb-0.5">{mockHairHealth.nextTurnIn}</span>
+                          <span className="text-[11px] text-[#99907c]">{mockHairHealth.nextTurnType}</span>
+                        </div>
+                        <div className="bg-white/5 rounded-xl p-3 flex flex-col">
+                          <span className="text-[10px] uppercase tracking-[.08em] text-[#99907c] mb-2">Frecuencia</span>
+                          <span className="text-[15px] font-medium text-[#e5e2e1] mb-0.5">{mockHairHealth.frequency}</span>
+                          <span className="text-[11px] text-[#99907c]">{mockHairHealth.visitsPerYear} visitas / año</span>
+                        </div>
+                      </div>
+
+                      {/* EVOLUCIÓN — SEPARADOR + MINI BARRAS */}
+                      <div className="border-t border-white/8 pt-5 mb-5 flex flex-col">
+                        <span className="text-[11px] uppercase tracking-[.1em] text-[#99907c] mb-4">Evolución — últimos 6 meses</span>
+                        <div className="flex items-end gap-2 h-[60px]">
+                          {mockHairHealth.evolution.map((evo, i) => {
+                            const isLast = i === mockHairHealth.evolution.length - 1;
+                            let barColor = isLast ? '#4ade80' : 'rgba(255,255,255,0.2)';
+                            if (!isLast) {
+                               if (evo.month === 'Ene') barColor = 'rgba(255,255,255,0.25)';
+                               if (evo.month === 'Feb') barColor = 'rgba(255,255,255,0.3)';
+                            }
+                            return (
+                              <div key={evo.month} className="flex-1 flex flex-col items-center gap-1">
+                                <div className="w-full bg-white/5 rounded h-[30px] relative overflow-hidden">
+                                  <div className="absolute bottom-0 w-full rounded transition-all duration-1000" style={{ height: `${evo.score}%`, backgroundColor: barColor }}></div>
+                                </div>
+                                <span className="text-[9px] text-[#99907c]">{evo.month}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* GRID 2 ALERTAS */}
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        {/* Celda 1 — Alergia */}
+                        <div className="bg-white/5 rounded-xl p-3 flex items-start gap-3">
+                          <div className="w-[32px] h-[32px] flex items-center justify-center rounded-lg bg-amber-500/10 flex-shrink-0">
+                            <AlertTriangle className="text-amber-400" size={16} strokeWidth={2} />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[11px] font-medium text-[#e5e2e1]">Alergia registrada</span>
+                            <span className="text-[11px] text-[#99907c]">{mockHairHealth.allergy} — tu estilista lo sabe</span>
+                          </div>
+                        </div>
+                        
+                        {/* Celda 2 — Objetivo */}
+                        <div className="bg-white/5 rounded-xl p-3 flex items-start gap-3">
+                          <div className="w-[32px] h-[32px] flex items-center justify-center rounded-lg bg-blue-500/10 flex-shrink-0">
+                            <Target className="text-blue-400" size={16} strokeWidth={2} />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[11px] font-medium text-[#e5e2e1]">Objetivo activo</span>
+                            <span className="text-[11px] text-[#99907c]">{mockHairHealth.goal}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* RECOMENDACIÓN DE ESTILISTA */}
+                      <div className="bg-white/5 rounded-xl p-4 flex items-center justify-between gap-3">
+                        <div className="flex flex-col">
+                          <span className="text-[12px] font-medium text-[#e5e2e1] mb-1">Recomendación de tu estilista</span>
+                          <span className="text-[11px] text-[#99907c] italic">"{mockHairHealth.stylistRecommendation}"</span>
+                        </div>
+                        <div className="w-[32px] h-[32px] rounded-full bg-white/10 border border-white/15 flex items-center justify-center flex-shrink-0">
+                          <span className="text-[11px] text-[#99907c]">{mockHairHealth.stylistName.charAt(0)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BLOQUE 3: Preferencias de Servicio */}
+                  <div className="relative isolate overflow-hidden rounded-[2.5rem] p-10 border border-white/10">
+                    <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
+                    <div className="mb-10">
+                      <p className="text-[9px] font-label uppercase tracking-[0.3em] text-[#f1c97d] mb-2">LOGÍSTICA Y ESTILO</p>
+                      <h3 className="text-3xl font-headline italic text-[#e5e2e1]">Preferencias</h3>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-10 mb-10 pb-10 border-b border-white/5">
+                      <div>
+                        <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-6">Barrio de preferencia</p>
+                        <div className="relative">
+                          <input 
+                            type="text" 
+                            value={preferredZone}
+                            onChange={(e) => setPreferredZone(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-[#e5e2e1] focus:outline-none focus:border-[#f1c97d]/30 transition-all font-body"
+                          />
+                          <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#99907c] text-lg">map</span>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-6">Horarios habituales</p>
+                        <div className="flex gap-2">
+                          {['Mañana', 'Tarde', 'Noche'].map(slot => (
+                            <button 
+                              key={slot} 
+                              onClick={() => setConfig({...config, preferredTime: slot})}
+                              className={`flex-1 py-3 rounded-xl border text-[9px] font-label uppercase tracking-widest transition-all cursor-pointer ${config.preferredTime === slot ? 'bg-[#f1c97d]/10 border-[#f1c97d]/30 text-[#f1c97d]' : 'bg-white/5 border-white/10 text-[#99907c] hover:border-white/20'}`}
+                            >
+                              {slot}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center bg-white/[0.02] p-6 rounded-2xl border border-white/5">
+                      <div>
+                        <p className="text-sm font-body text-[#e5e2e1]">Notificaciones vía WhatsApp</p>
+                        <p className="text-[9px] font-label text-[#99907c] uppercase mt-1 tracking-widest">Confirmaciones 24hs antes del turno</p>
+                      </div>
+                      <div 
+                        className={`w-12 h-6 ${config.whatsappNotif ? 'bg-[#f1c97d]/20 border-[#f1c97d]/40' : 'bg-white/5 border-white/10'} rounded-full relative transition-all duration-300 border cursor-pointer`}
+                        onClick={() => setConfig({...config, whatsappNotif: !config.whatsappNotif})}
+                      >
+                        <div className={`absolute top-1 w-3.5 h-3.5 rounded-full transition-all duration-300 ${config.whatsappNotif ? 'right-1 bg-[#f1c97d]' : 'left-1 bg-[#99907c]'}`}></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BLOQUE 4: Privacidad y cuenta */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="relative isolate overflow-hidden rounded-[2rem] p-8 border border-white/10">
+                      <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
+                      <h4 className="text-lg font-headline italic text-[#e5e2e1] mb-6">Seguridad</h4>
+                      <div className="space-y-4">
+                        <button className="w-full flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl text-[10px] font-label tracking-widest uppercase text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all text-left group cursor-pointer">
+                          Cambiar contraseña
+                          <span className="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">chevron_right</span>
+                        </button>
+                        <button className="w-full flex items-center justify-between p-4 bg-[#f1c97d]/5 border border-[#f1c97d]/10 rounded-xl text-[10px] font-label tracking-widest uppercase text-[#f1c97d] hover:bg-[#f1c97d]/10 transition-all text-left cursor-pointer group">
+                          <div>
+                            <p className="mb-1">Exportar historial</p>
+                            <p className="text-[7px] text-[#f1c97d]/60 font-medium">Generar PDF técnico</p>
+                          </div>
+                          <span className="material-symbols-outlined text-[18px]">download</span>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="relative isolate overflow-hidden rounded-[2rem] p-8 border border-white/10 group">
+                      <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
+                      <h4 className="text-lg font-headline italic text-red-400 mb-6">Zona de riesgo</h4>
+                      <p className="text-[10px] text-[#99907c] uppercase tracking-widest leading-relaxed mb-6 font-label">
+                        Si eliminás tu cuenta, perderás tu historial capilar y preferencias de forma irreversible.
+                      </p>
+                      <button className="w-full py-4 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 rounded-xl text-[10px] font-label tracking-[0.2em] font-bold uppercase text-red-400 transition-all cursor-pointer">
+                        Eliminar mi cuenta
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          )}
+
 
           {/* Editorial Section */}
           <section className="mt-32 pb-12">
