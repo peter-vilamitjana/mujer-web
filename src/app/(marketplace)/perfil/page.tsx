@@ -351,15 +351,17 @@ export default function MisTurnosPage() {
                   <div className="relative isolate overflow-hidden rounded-[2.5rem] p-8 md:p-10 border border-white/10 h-full flex flex-col justify-center">
                     <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
                     
-                    <span className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-4">Descubrimiento</span>
-                    <h3 className="text-3xl lg:text-4xl font-headline italic text-[#e5e2e1] mb-8">¿Qué necesitás hoy?</h3>
-                    
-                    <div className="flex flex-wrap gap-3">
-                      {['Corte', 'Color', 'Tratamiento', 'Uñas', 'Maquillaje'].map((tag) => (
-                        <button key={tag} className="px-5 py-3 rounded-full border border-white/10 bg-[#080808]/40 hover:border-[#f1c97d]/30 hover:bg-[#f1c97d]/5 transition-all text-xs uppercase font-label tracking-[0.1em] text-[#e5e2e1] hover:text-[#f1c97d] flex items-center justify-center cursor-pointer shadow-sm md:flex-grow text-center truncate">
-                          {tag}
-                        </button>
-                      ))}
+                    <div className="relative z-10 flex flex-col justify-center h-full">
+                      <span className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-4">Descubrimiento</span>
+                      <h3 className="text-3xl lg:text-4xl font-headline italic text-[#e5e2e1] mb-8">¿Qué necesitás hoy?</h3>
+                      
+                      <div className="flex flex-wrap gap-3">
+                        {['Corte', 'Color', 'Tratamiento', 'Uñas', 'Maquillaje'].map((tag) => (
+                          <button key={tag} className="px-5 py-3 rounded-full border border-white/10 bg-[#080808]/40 hover:border-[#f1c97d]/30 hover:bg-[#f1c97d]/5 transition-all text-xs uppercase font-label tracking-[0.1em] text-[#e5e2e1] hover:text-[#f1c97d] flex items-center justify-center cursor-pointer shadow-sm md:flex-grow text-center truncate">
+                            {tag}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
