@@ -405,63 +405,115 @@ export default function MisTurnosPage() {
                 </div>
               </div>
 
-              {/* TUS SALONES — Mapa + Grilla (Anclado al fondo) */}
+              {/* TUS SALONES — Mapa Elevado Visualmente */}
               <div className="mt-8 mb-12">
-                <div className="flex justify-between items-center mb-3 ml-1">
-                  <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c]">Tus salones</p>
-                  <button className="text-[9px] uppercase tracking-widest text-[#f1c97d] hover:text-[#e5e2e1] transition-colors font-label cursor-pointer">Descubrir más</button>
+                <div className="flex justify-between items-center mb-4 ml-1">
+                  <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[13px] text-[#f1c97d]">explore</span> Tus salones
+                  </p>
+                  <button className="text-[9px] uppercase tracking-widest text-[#f1c97d] hover:text-[#e5e2e1] transition-colors font-label cursor-pointer flex items-center gap-1 group/btn">
+                    Descubrir más <span className="material-symbols-outlined text-[14px] group-hover/btn:translate-x-1 transition-transform">arrow_forward_ios</span>
+                  </button>
                 </div>
                 
-                <div className="relative isolate z-0 overflow-hidden rounded-[2rem] border border-white/10 flex flex-col md:flex-row min-h-[260px]" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
-                  <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
+                <div className="relative isolate z-0 overflow-hidden rounded-[2.5rem] border border-white/10 flex flex-col md:flex-row min-h-[290px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] group/mapcard transition-all duration-700 hover:border-white/20" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
+                  <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20"></div>
                   
-                  {/* MAPA PERSONAL */}
-                  <div className="flex-1 relative bg-white/[0.02] border-r border-white/5 overflow-hidden">
-                    {/* Decoración de mapa — Grid sutil */}
-                    <div className="absolute inset-0 opacity-15" style={{ backgroundImage: 'radial-gradient(circle, #f1c97d 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
-                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-[#f1c97d]/3 to-transparent"></div>
+                  {/* MAPA PERSONAL (Sección Visual) */}
+                  <div className="flex-1 relative bg-[#080808] border-r border-white/5 overflow-hidden">
                     
-                    {/* Pines */}
+                    {/* Imagen de mapa aéreo oscurecida */}
+                    <div className="absolute inset-0 opacity-[0.25] mix-blend-luminosity max-w-none transition-transform duration-10000 group-hover/mapcard:scale-110 pointer-events-none z-0">
+                      <img 
+                        src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=1200" 
+                        alt="Map Topography" 
+                        className="w-[120%] h-[120%] object-cover -translate-x-[10%] -translate-y-[10%]" 
+                      />
+                    </div>
+                    {/* Grid súper sutil encima */}
+                    <div className="absolute inset-0 opacity-10 pointer-events-none z-0" style={{ backgroundImage: 'radial-gradient(circle, #f1c97d 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
+                    {/* Overlay para suavizar y fusionar */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#080808] via-transparent to-[#080808]/80 pointer-events-none z-0"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#080808]/80 via-transparent to-transparent pointer-events-none z-0"></div>
+                    
+                    {/* Efecto Radar Sweep */}
+                    <div className="absolute top-[45%] left-[35%] w-[300px] h-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#f1c97d]/10 opacity-50 z-0">
+                      <div className="w-full h-full rounded-full animate-ping opacity-20 border border-[#f1c97d]"></div>
+                    </div>
+
+                    {/* Pines Elevados */}
                     {mySalons.map((salon) => (
                       <div 
                         key={salon.id} 
-                        className="absolute group/pin cursor-pointer transition-transform hover:scale-110" 
+                        className="absolute group/pin cursor-pointer transition-all duration-500 hover:scale-110 hover:-translate-y-1 z-10" 
                         style={{ left: salon.coords.x, top: salon.coords.y }}
                       >
-                        <div className="relative">
-                          <span className="material-symbols-outlined text-[#f1c97d] text-[22px] drop-shadow-[0_0_10px_rgba(241,201,125,0.6)]">location_on</span>
-                          {/* Tooltip on hover */}
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover/pin:opacity-100 transition-opacity bg-[#080808]/90 border border-[#f1c97d]/20 px-3 py-1.5 rounded-lg backdrop-blur-md pointer-events-none whitespace-nowrap z-20">
-                            <p className="text-[9px] text-[#e5e2e1] font-label uppercase tracking-widest">{salon.name}</p>
+                        <div className="relative flex items-center justify-center">
+                          {/* Anillo que pulsa constantemente */}
+                          <div className="absolute w-[30px] h-[30px] bg-[#f1c97d]/20 rounded-full animate-ping"></div>
+                          <div className="absolute w-[45px] h-[45px] border border-[#f1c97d]/10 rounded-full animate-pulse"></div>
+                          
+                          {/* Punto físico del marker */}
+                          <div className="w-2.5 h-2.5 bg-gradient-to-br from-[#f1c97d] to-amber-600 rounded-full shadow-[0_0_15px_rgba(241,201,125,1)] border-[1.5px] border-[#080808] relative z-10"></div>
+                          
+                          {/* Label persistente al lado del pin  */}
+                          <div className="absolute top-1/2 -translate-y-1/2 left-full ml-3 opacity-60 group-hover/pin:opacity-0 transition-opacity whitespace-nowrap pointer-events-none z-0">
+                            <span className="text-[8px] font-label uppercase tracking-[0.2em] text-[#e5e2e1] drop-shadow-md">{salon.name.split(' ')[0]}</span>
+                          </div>
+
+                          {/* Tooltip Premium on hover */}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover/pin:opacity-100 transition-all duration-300 translate-y-2 group-hover/pin:translate-y-0 bg-[#121212]/95 border border-[#f1c97d]/40 px-4 py-2.5 rounded-xl backdrop-blur-xl pointer-events-none whitespace-nowrap z-20 shadow-[0_15px_30px_rgba(0,0,0,0.6),_0_0_20px_rgba(241,201,125,0.15)] flex flex-col items-center">
+                            <p className="text-[10px] text-[#e5e2e1] font-label uppercase tracking-widest mb-1">{salon.name}</p>
+                            <p className="text-[7.5px] text-[#f1c97d] font-label uppercase tracking-[0.2em] flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Disponible hoy
+                            </p>
+                            <div className="absolute -bottom-[5px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-[#121212]/95 border-b border-r border-[#f1c97d]/40 rotate-45"></div>
                           </div>
                         </div>
                       </div>
                     ))}
+                    
+                    {/* Botón flotante 'Ver Mapa Interactivo' */}
+                    <div className="absolute bottom-4 left-4 z-10">
+                      <button className="bg-[#080808]/50 backdrop-blur-md border border-white/10 hover:border-[#f1c97d]/30 hover:bg-[#f1c97d]/5 px-3 py-1.5 rounded-full text-[8.5px] font-label uppercase tracking-[0.1em] text-[#99907c] hover:text-[#f1c97d] transition-all cursor-pointer flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[12px]">fullscreen</span> Abrir mapa
+                      </button>
+                    </div>
                   </div>
 
-                  {/* LISTA DE SALONES */}
-                  <div className="w-full md:w-[300px] p-6 flex flex-col justify-center gap-5 relative z-10">
-                    {mySalons.map((salon) => (
-                      <div key={salon.id} className="flex flex-col gap-1 group/item cursor-pointer">
-                        <div className="flex justify-between items-start">
-                          <h4 className="text-sm font-headline italic text-[#e5e2e1] group-hover/item:text-[#f1c97d] transition-colors">{salon.name}</h4>
-                          <span className="text-[8px] text-[#99907c] font-label uppercase tracking-[0.1em] mt-1">{salon.visits} {salon.visits === 1 ? 'visita' : 'visitas'}</span>
-                        </div>
-                        <div className="flex items-center gap-0.5">
-                          {[...Array(5)].map((_, i) => (
-                            <span 
-                              key={i} 
-                              className={`material-symbols-outlined text-[12px] ${i < salon.rating ? 'text-[#f1c97d]' : 'text-[#99907c]/20'}`}
-                            >
-                              star
+                  {/* LISTA DE SALONES (Columna Derecha) */}
+                  <div className="w-full md:w-[320px] p-0 flex flex-col relative z-10 bg-gradient-to-b from-[#1a1a1a]/40 to-[#080808]/80">
+                    <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-black/20">
+                       <span className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c]">Tus Ubicaciones Habituales</span>
+                    </div>
+                    <div className="flex flex-col flex-1 p-2 gap-1 overflow-y-auto stylish-scrollbar">
+                      {mySalons.map((salon) => (
+                        <div key={salon.id} className="flex flex-col gap-1.5 group/item cursor-pointer p-4 rounded-2xl hover:bg-white/[0.04] transition-colors border border-transparent hover:border-white/5">
+                          <div className="flex justify-between items-start">
+                            <h4 className="text-[15px] font-headline italic text-[#e5e2e1] group-hover/item:text-[#f1c97d] transition-colors">{salon.name}</h4>
+                            <span className="text-[9px] text-[#99907c] font-label uppercase tracking-[0.1em] mt-1 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">{salon.visits} {salon.visits === 1 ? 'vis' : 'visitas'}</span>
+                          </div>
+                          <div className="flex justify-between items-end mt-1">
+                            <div className="flex items-center gap-0.5">
+                              {[...Array(5)].map((_, i) => (
+                                <span 
+                                  key={i} 
+                                  className={`material-symbols-outlined text-[13px] ${i < salon.rating ? 'text-[#f1c97d]' : 'text-[#99907c]/20'} group-hover/item:drop-shadow-[0_0_5px_rgba(241,201,125,0.4)] transition-all`}
+                                >
+                                  star
+                                </span>
+                              ))}
+                            </div>
+                            <span className="text-[10px] text-[#f1c97d] opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center font-label uppercase tracking-widest gap-0.5">
+                              Reservar <span className="material-symbols-outlined text-[12px]">chevron_right</span>
                             </span>
-                          ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                    <div className="mt-4 pt-4 border-t border-white/5">
+                      ))}
+                    </div>
+                    <div className="mt-auto px-6 py-4 border-t border-white/5 bg-black/20">
                       <p className="text-[8px] text-[#99907c] font-label leading-relaxed uppercase tracking-[0.15em] opacity-40">
-                        Espacios de confianza
+                        Espacios de confianza y calidad garantizada por MujerApp.
                       </p>
                     </div>
                   </div>
