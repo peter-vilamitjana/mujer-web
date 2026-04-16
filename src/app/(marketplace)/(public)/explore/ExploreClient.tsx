@@ -63,8 +63,8 @@ export default function ExploreClient({ salons }: { salons: Tenant[] }) {
           <footer className="mt-20 py-12 px-8 bg-zinc-50 dark:bg-zinc-950 border-t-0 tonal-shift rounded-3xl">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
               <div>
-                <span className="text-xl font-black text-[#191c1d] dark:text-white italic">MujerApp</span>
-                <p className="mt-4 text-zinc-500 font-body text-xs uppercase tracking-widest">© {new Date().getFullYear()} MujerApp. Sumate a la red de salones.</p>
+                <span className="text-xl font-black text-[#191c1d] dark:text-white italic">Ouleeh</span>
+                <p className="mt-4 text-zinc-500 font-body text-xs uppercase tracking-widest">© {new Date().getFullYear()} Ouleeh. Sumate a la red de salones.</p>
               </div>
               <div className="flex flex-col gap-3">
                 <h5 className="font-headline text-xs font-bold uppercase tracking-widest text-on-surface">Comunidad</h5>

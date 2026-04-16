@@ -11,7 +11,7 @@ export default function PublicHeader() {
       <div className="flex justify-between items-center px-4 sm:px-8 py-4 max-w-screen-2xl mx-auto">
         <div className="flex items-center gap-8">
           <Link href="/explore">
-            <span className="text-2xl font-semibold tracking-tighter text-[#191c1d] dark:text-white italic">MujerApp</span>
+            <span className="text-2xl font-semibold tracking-tighter text-[#191c1d] dark:text-white italic">Ouleeh</span>
           </Link>
           <div className="hidden md:flex gap-6 font-display font-medium text-sm tracking-tight text-on-surface">
             <Link href="/explore" className="text-primary font-bold border-b-2 border-primary pb-0.5">Explorar</Link>

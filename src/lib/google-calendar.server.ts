@@ -97,7 +97,7 @@ export async function createCalendarEvent(input: CalendarEventInput): Promise<st
       calendarId: 'primary',
       requestBody: {
         summary: `${input.clientName} — ${input.serviceNames}`,
-        description: `Turno reservado en MujerApp\nCliente: ${input.clientName}\nServicios: ${input.serviceNames}${input.notes ? `\nNotas: ${input.notes}` : ''}`,
+        description: `Turno reservado en Ouleeh\nCliente: ${input.clientName}\nServicios: ${input.serviceNames}${input.notes ? `\nNotas: ${input.notes}` : ''}`,
         start: { dateTime: input.startDate.toISOString(), timeZone: TIMEZONE },
         end: { dateTime: endDate.toISOString(), timeZone: TIMEZONE },
         extendedProperties: {

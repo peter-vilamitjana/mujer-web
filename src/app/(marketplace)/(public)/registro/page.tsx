@@ -80,7 +80,7 @@ export default function RegistroPage() {
       <div className="w-full max-w-md z-10 space-y-8 text-center">
         {/* Header */}
         <div>
-          <h1 className="font-vogue italic text-2xl text-white tracking-tight">✦ MujerApp</h1>
+          <h1 className="font-vogue italic text-2xl text-white tracking-tight">✦ Ouleeh</h1>
           <h2 className="font-vogue text-4xl text-white mt-8 tracking-tighter">Creá tu cuenta</h2>
           <p className="text-zinc-400 text-base mt-2 font-inter">Reservá en los mejores salones</p>
         </div>

@@ -21,7 +21,7 @@ export function DashboardSidebar() {
 
       {/* Brand */}
       <div className="px-8 py-7 border-b border-white/[0.06]">
-        <h1 className="font-vogue text-xl text-[#F4F4F5] tracking-wider">MujerApp</h1>
+        <h1 className="font-vogue text-xl text-[#F4F4F5] tracking-wider">Ouleeh</h1>
         <p className="text-[#8A8F98] text-[11px] mt-0.5 tracking-wide">Panel de Clienta</p>
       </div>
 

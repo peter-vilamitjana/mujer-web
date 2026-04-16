@@ -5,7 +5,7 @@ import BusinessCTA from '@/components/business/BusinessCTA';
 import LandingHeader from '@/components/landing/LandingHeader';
 
 export const metadata = {
-  title: 'Para Salones | MujerApp',
+  title: 'Para Salones | Ouleeh',
   description: 'La plataforma de gestión para peluquerías y salones de belleza.',
 };
 

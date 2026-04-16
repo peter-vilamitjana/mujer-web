@@ -104,12 +104,21 @@ export default function SalonesDestacados({ salones }: Props) {
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-700 transition-transform duration-700 group-hover:scale-105" />
+                      <div className="w-full h-full relative overflow-hidden transition-transform duration-700 group-hover:scale-105">
+                        <img
+                          src={salon.name.toLowerCase().includes('mi salón') || salon.name.toLowerCase().includes('mi salon') 
+                            ? '/images/salons/mi-salon.jpg' 
+                            : 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800'}
+                          alt={salon.name}
+                          className="w-full h-full object-cover brightness-[0.8] grayscale-[0.2]"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-brand-bg/80 via-transparent to-transparent" />
+                      </div>
                     )}
                     {/* Overlay con CTA */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors duration-500" />
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
-                      <span className="liquid-glass text-white px-6 py-2.5 rounded-full text-[9px] font-bold uppercase tracking-[0.25em] whitespace-nowrap font-inter">
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-brand-primary/[0.15] transition-colors duration-500" />
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500 z-10">
+                      <span className="liquid-glass text-white px-6 py-2.5 rounded-full text-[9px] font-bold uppercase tracking-[0.25em] whitespace-nowrap font-inter border border-white/20">
                         Ver vitrina
                       </span>
                     </div>

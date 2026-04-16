@@ -172,7 +172,7 @@ export default function LoginPage() {
       {/* ── Top bar ─────────────────────────────────────────────────────── */}
       <header className="relative z-20 flex items-center justify-between px-8 pt-7 pb-0 shrink-0">
         <div className="flex items-center gap-4">
-          <span className="font-vogue text-[26px] font-black tracking-tighter uppercase leading-none">Mujer</span>
+          <span className="font-vogue text-[26px] font-black tracking-tighter uppercase leading-none">Ouleeh</span>
           <div className="w-px h-5 bg-white/15" />
           <span className="text-[9px] tracking-[0.55em] uppercase text-white/35 font-semibold">Editorial Access</span>
         </div>
@@ -522,7 +522,7 @@ export default function LoginPage() {
       <footer className="relative z-20 flex items-center justify-between px-8 py-5 shrink-0">
         {/* Edition stamp */}
         <p className="text-[8px] tracking-[0.45em] uppercase text-white/18 font-bold">
-          © 2025 MujerApp — No. 01
+          © 2025 Ouleeh — No. 01
         </p>
         <div className="flex gap-6">
           <a href="#" className="text-[8px] tracking-[0.3em] uppercase text-white/20 hover:text-white/55 transition-colors duration-200 cursor-pointer">Instagram</a>

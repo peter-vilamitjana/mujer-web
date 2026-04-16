@@ -371,7 +371,7 @@ function TurnosContent() {
       if (user && user.email) {
         await notificationService.sendEmail({
           to: user.email,
-          subject: 'Confirmación de Turno - Mujer',
+          subject: 'Confirmación de Turno - Ouleeh',
           type: 'confirmation',
           data: {
             clientName: user.nombre,

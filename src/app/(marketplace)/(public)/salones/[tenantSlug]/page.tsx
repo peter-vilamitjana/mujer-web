@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props) {
   const salon = await getSalonBySlug(tenantSlug);
   if (!salon) return { title: 'Salón no encontrado' };
   return {
-    title: `${salon.name} | MujerApp`,
+    title: `${salon.name} | Ouleeh`,
     description: `Reservá tu turno en ${salon.name}`,
   };
 }

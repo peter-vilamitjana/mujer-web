@@ -21,7 +21,7 @@ export async function POST(request: Request) {
             `;
         } else if (type === 'welcome') {
             htmlContent = `
-                <h1>¡Bienvenida a Mujer!</h1>
+                <h1>¡Bienvenida a Ouleeh!</h1>
                 <p>Hola <strong>${data.name}</strong>,</p>
                 <p>Gracias por registrarte. Ahora puedes gestionar tus turnos de forma fácil y rápida.</p>
             `;
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
         }
 
         const dataRes = await resend.emails.send({
-            from: 'Mujer App <onboarding@resend.dev>',
+            from: 'Ouleeh <onboarding@resend.dev>',
             to: [to],
             subject: subject,
             html: htmlContent,

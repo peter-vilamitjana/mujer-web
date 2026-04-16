@@ -274,7 +274,7 @@ export function CustomerDashboardView({
             <h3 className="mt-4 text-xl font-semibold">No tenés próximos turnos</h3>
             <p className="text-muted-foreground mt-2 max-w-sm mx-auto">
               ¿Lista para tu próxima transformación? Animate a reservar tu cita y viví la
-              experiencia Mujer.
+              experiencia Ouleeh.
             </p>
             <Button asChild className="mt-6">
               <Link href={`/salones/${tenantSlug}/book`}>Agendar un turno</Link>

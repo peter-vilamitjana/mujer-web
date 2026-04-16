@@ -53,7 +53,7 @@ export default function LandingHeader() {
             <span className={cn(
               "font-vogue text-3xl font-black tracking-tighter uppercase transition-colors duration-300",
               textWhite ? "text-white" : "text-[#1A1A1A]"
-            )}>Mujer</span>
+            )}>Ouleeh</span>
             <div className={cn(
               "w-px h-6 transition-colors duration-300",
               textWhite ? "bg-white/20" : "bg-black/20"

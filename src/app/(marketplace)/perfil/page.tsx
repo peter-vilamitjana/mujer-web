@@ -179,7 +179,7 @@ export default function MisTurnosPage() {
                 <span className="font-headline italic text-[#e5e2e1] text-[15px] tracking-widest relative z-10 transition-colors duration-500 group-hover/logo:text-[#f1c97d]">M</span>
               </div>
             </div>
-            <span className="text-xl font-headline italic text-[#e5e2e1] group-hover/logo:text-[#f1c97d] opacity-0 group-hover:opacity-100 transition-all duration-500 whitespace-nowrap">MujerApp</span>
+            <span className="text-xl font-headline italic text-[#e5e2e1] group-hover/logo:text-[#f1c97d] opacity-0 group-hover:opacity-100 transition-all duration-500 whitespace-nowrap">Ouleeh</span>
           </Link>
 
           {/* Nav items */}
@@ -950,7 +950,7 @@ export default function MisTurnosPage() {
                 </p>
                 <div className="mt-6 flex items-center gap-5">
                   <div className="h-[1px] w-16 bg-[#f1c97d]/30"></div>
-                  <p className="text-[8px] font-label uppercase tracking-[0.4em] text-[#99907c]">Editorial MujerApp / SS24</p>
+                  <p className="text-[8px] font-label uppercase tracking-[0.4em] text-[#99907c]">Editorial Ouleeh / SS24</p>
                 </div>
               </div>
               <div className="col-span-6">

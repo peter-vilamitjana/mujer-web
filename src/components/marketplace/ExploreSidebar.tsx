@@ -40,7 +40,7 @@ export default function ExploreSidebar({
         </div>
 
         <h3 className="font-headline text-lg font-bold text-on-surface">
-          {session ? session.user?.name : 'Bienvenid@ a MujerApp'}
+          {session ? session.user?.name : 'Bienvenid@ a Ouleeh'}
         </h3>
         <p className="text-xs text-zinc-500 font-label tracking-widest uppercase">
           {session ? 'Buenos Aires, AR' : 'Tu red de belleza'}

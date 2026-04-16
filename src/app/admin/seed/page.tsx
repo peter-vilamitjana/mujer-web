@@ -82,7 +82,7 @@ export default function SeedPage() {
             const tenantRef = doc(db, 'tenants', tenantId);
             batch.set(tenantRef, {
                 id: tenantId,
-                name: 'Mujer | Estilismo y Belleza',
+                name: 'Ouleeh | Estilismo y Belleza',
                 slug: 'demo-salon',
                 createdAt: Timestamp.now(),
                 settings: { currency: 'ARS', timezone: 'America/Argentina/Buenos_Aires' }
@@ -240,7 +240,7 @@ export default function SeedPage() {
             batch.set(membershipRef, {
                 role: 'admin',
                 tenantId: tenantId,
-                tenantName: 'Mujer | Estilismo y Belleza'
+                tenantName: 'Ouleeh | Estilismo y Belleza'
             });
 
             await batch.commit();

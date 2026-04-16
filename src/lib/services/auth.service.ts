@@ -105,7 +105,7 @@ export const authService = {
         // 6. Send Welcome Notification (Non-blocking)
         notificationService.sendEmail({
             to: email,
-            subject: '¡Bienvenida a Mujer!',
+            subject: '¡Bienvenida a Ouleeh!',
             type: 'welcome',
             data: { name: fullName }
         }).catch(err => console.error("Background email error:", err));

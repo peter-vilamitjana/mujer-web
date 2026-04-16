@@ -28,7 +28,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: 'Mujer | Estilismo y Belleza',
+  title: 'Ouleeh | Estilismo y Belleza',
   description: 'Gestioná tu salón de forma sencilla y elegante.',
 };
 
