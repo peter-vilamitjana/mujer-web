@@ -253,7 +253,7 @@ export default function MisTurnosPage() {
                {/* HEADER */}
               <div className="flex justify-between items-center mb-10">
                 <div>
-                  <h1 className="text-5xl font-headline italic text-[#e5e2e1] mb-2">Mi Panel</h1>
+                  <h1 className="text-5xl font-body font-light text-[#e5e2e1] mb-2">Mi Panel</h1>
                   <p className="text-[#99907c] text-xs tracking-wide">Tu espacio personal de estética y bienestar</p>
                 </div>
               </div>
@@ -281,9 +281,8 @@ export default function MisTurnosPage() {
 
                       {/* FECHA y HORA */}
                       <div className="flex flex-col items-center justify-center w-[150px] shrink-0 border-r border-dashed border-white/10 px-6 py-8 relative z-10">
-                        <span className="text-[8px] font-label uppercase tracking-[0.3em] text-[#99907c] mb-2">Mañana</span>
-                        <span className="text-5xl font-headline text-[#f1c97d]" style={{ textShadow: '0 0 30px rgba(241,201,125,0.3)' }}>15</span>
-                        <span className="text-[9px] font-label uppercase tracking-[0.4em] text-[#99907c] mt-1">Abril</span>
+                        <span className="text-5xl font-headline text-[#f1c97d] leading-none" style={{ textShadow: '0 0 30px rgba(241,201,125,0.3)' }}>15</span>
+                        <span className="text-[10px] font-headline italic tracking-[0.1em] text-[#99907c] mt-2 lowercase">abril</span>
                         <span className="text-sm font-headline italic text-[#e5e2e1] mt-3">10:30am</span>
                       </div>
 
@@ -320,7 +319,7 @@ export default function MisTurnosPage() {
                       <div className="inline-flex px-3.5 py-1.5 bg-[#f1c97d]/10 border border-[#f1c97d]/25 rounded-full mb-4">
                         <span className="text-[8px] font-label uppercase tracking-[0.2em] text-[#f1c97d]">PARA VOS</span>
                       </div>
-                      <h2 className="text-2xl font-headline italic text-[#e5e2e1] mb-2 leading-tight">
+                      <h2 className="text-2xl font-body font-light text-[#e5e2e1] mb-2 leading-tight">
                         Valentina tiene disponibilidad el jueves
                       </h2>
                       <p className="text-[#99907c] text-xs leading-relaxed mb-4 font-label tracking-wide uppercase">
@@ -355,7 +354,7 @@ export default function MisTurnosPage() {
                     <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-3 ml-1">Tu expediente</p>
                     <div className="relative isolate overflow-hidden rounded-[2rem] p-6 flex flex-col border border-white/10">
                       <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
-                      <h3 className="text-xl font-headline italic text-[#e5e2e1] mb-1.5 flex items-center gap-2.5 relative z-10">
+                      <h3 className="text-xl font-body font-light text-[#e5e2e1] mb-1.5 flex items-center gap-2.5 relative z-10">
                         Tu Cabello
                         <span className="inline-flex items-center justify-center p-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.15)]">
                           <span className="material-symbols-outlined text-[11px]">check</span>
@@ -396,7 +395,7 @@ export default function MisTurnosPage() {
                     <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
                     <div className="relative z-10">
                       <span className="text-[8px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-2.5 block">DESCUBRIMIENTO</span>
-                      <h3 className="text-lg lg:text-xl font-headline italic text-[#e5e2e1] mb-5">¿Qué necesitás hoy?</h3>
+                      <h3 className="text-lg lg:text-xl font-body font-light text-[#e5e2e1] mb-5">¿Qué necesitás hoy?</h3>
                       <div className="flex flex-wrap gap-2">
                         <button className="px-4 py-2 rounded-full border border-[#f1c97d]/30 bg-[#f1c97d]/10 hover:bg-[#f1c97d]/20 transition-all text-[9px] uppercase font-label tracking-[0.1em] text-[#f1c97d] cursor-pointer flex-grow text-center flex items-center justify-center gap-1.5 mb-1.5">
                           <span className="material-symbols-outlined text-[14px]">calendar_today</span> Agendar Turno
@@ -495,7 +494,7 @@ export default function MisTurnosPage() {
                   {/* LISTA DE SALONES (Columna Derecha Apple Style) */}
                   <div className="w-full md:w-[320px] p-0 flex flex-col relative z-10 bg-[#121214] border-l border-white/5">
                     <div className="px-6 py-5 border-b border-white/5 bg-[#0a0a0c]">
-                       <h3 className="text-xl font-headline italic text-[#e5e2e1]">Lugares Guardados</h3>
+                       <h3 className="text-xl font-body font-light text-[#e5e2e1]">Lugares Guardados</h3>
                        <p className="text-[10px] font-label tracking-widest text-[#99907c] uppercase mt-1">Tu selección</p>
                     </div>
                     <div className="flex flex-col flex-1 p-3 gap-2 overflow-y-auto stylish-scrollbar">
@@ -541,7 +540,7 @@ export default function MisTurnosPage() {
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
               <div className="flex flex-col gap-3 mb-8">
                 <div className="flex items-center gap-5">
-                  <h1 className="text-5xl font-headline italic text-[#e5e2e1]">Mis Turnos</h1>
+                  <h1 className="text-5xl font-body font-light text-[#e5e2e1]">Mis Turnos</h1>
                   <div className="liquid-glass-rich px-4 py-1.5 rounded-full border border-[#f1c97d]/20">
                     <span className="text-[#f1c97d] text-[9px] font-bold uppercase tracking-[0.2em]">
                       {confirmedCount} CONFIRMADOS
@@ -577,7 +576,7 @@ export default function MisTurnosPage() {
                     {/* INFO col */}
                     <div className="relative z-10 flex-grow px-7 py-4 flex flex-col justify-center">
                       <div className="flex items-center gap-3.5 mb-1.5">
-                        <h2 className="text-2xl font-headline tracking-wide">{appt.salonName}</h2>
+                        <h2 className="text-2xl font-body font-light tracking-wide">{appt.salonName}</h2>
                         {appt.status === 'confirmado' && (
                           <span className="bg-emerald-500/10 text-emerald-400 text-[8px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-widest border border-emerald-500/20">
                             Confirmado
@@ -625,7 +624,7 @@ export default function MisTurnosPage() {
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto">
               {/* Encabezado */}
               <div className="flex flex-col gap-2 mb-12">
-                <h1 className="text-6xl font-headline italic text-[#e5e2e1]">Mi Perfil</h1>
+                <h1 className="text-6xl font-body font-light text-[#e5e2e1]">Mi Perfil</h1>
                 <p className="text-[#99907c] text-sm tracking-widest font-label uppercase">Tu expediente de belleza y configuraciones</p>
               </div>
 
@@ -655,7 +654,7 @@ export default function MisTurnosPage() {
                       </button>
                     </div>
 
-                    <h2 className="text-3xl font-headline italic text-[#e5e2e1] mb-1">{userName}</h2>
+                    <h2 className="text-3xl font-body font-light text-[#e5e2e1] mb-1">{userName}</h2>
                     <div className="flex items-center gap-2 mb-8">
                       <p className="text-[10px] text-[#99907c] font-label lowercase tracking-widest">{session?.user?.email}</p>
                       <span className="material-symbols-outlined text-[13px] text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">verified</span>
@@ -697,7 +696,7 @@ export default function MisTurnosPage() {
                           </div>
                         </div>
                       </div>
-                      <h3 className="text-xl font-headline italic text-[#f1c97d] mb-2 text-center group-hover:scale-105 transition-transform duration-500">Expediente Portable</h3>
+                      <h3 className="text-xl font-body font-light text-[#f1c97d] mb-2 text-center group-hover:scale-105 transition-transform duration-500">Expediente Portable</h3>
                       <p className="text-[10px] text-[#99907c] text-center leading-relaxed font-label uppercase tracking-widest px-4 group-hover:text-[#e5e2e1] transition-colors duration-500">
                         Compartí tu historial con cualquier estilista nueva en un tap.
                       </p>
@@ -720,7 +719,7 @@ export default function MisTurnosPage() {
                       <div className="flex flex-row justify-between items-center mb-6">
                         <div className="flex flex-col">
                           <span className="text-[10px] uppercase tracking-[.12em] text-[#99907c] mb-1">Estado actual</span>
-                          <h3 className="font-headline text-[17px] text-[#e5e2e1]">Tu Cabello</h3>
+                          <h3 className="font-body font-light text-[17px] text-[#e5e2e1]">Tu Cabello</h3>
                         </div>
                         <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] px-3 py-1 rounded-full">
                           Buen estado
@@ -858,7 +857,7 @@ export default function MisTurnosPage() {
                     <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
                     <div className="mb-10">
                       <p className="text-[9px] font-label uppercase tracking-[0.3em] text-[#f1c97d] mb-2">LOGÍSTICA Y ESTILO</p>
-                      <h3 className="text-3xl font-headline italic text-[#e5e2e1]">Preferencias</h3>
+                      <h3 className="text-3xl font-body font-light text-[#e5e2e1]">Preferencias</h3>
                     </div>
 
                     <div className="grid grid-cols-2 gap-10 mb-10 pb-10 border-b border-white/5">
@@ -908,7 +907,7 @@ export default function MisTurnosPage() {
                   <div className="grid grid-cols-2 gap-6">
                     <div className="relative isolate overflow-hidden rounded-[2rem] p-8 border border-white/10">
                       <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
-                      <h4 className="text-lg font-headline italic text-[#e5e2e1] mb-6">Seguridad</h4>
+                      <h4 className="text-lg font-body font-light text-[#e5e2e1] mb-6">Seguridad</h4>
                       <div className="space-y-4">
                         <button className="w-full flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl text-[10px] font-label tracking-widest uppercase text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all text-left group cursor-pointer">
                           Cambiar contraseña

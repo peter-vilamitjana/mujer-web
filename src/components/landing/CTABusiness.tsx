@@ -60,22 +60,23 @@ function AnimatedStat({
   return (
     <div
       ref={ref}
-      className="bg-white/5 border border-white/8 rounded-[1.75rem] p-6 backdrop-blur-sm
-        hover:bg-white/8 hover:border-white/15 transition-all duration-500 group"
+      className="bg-white/[0.03] border border-white/10 rounded-[1.5rem] p-5 backdrop-blur-md
+        hover:bg-white/[0.06] hover:border-[#f1c97d]/30 transition-all duration-500 group relative overflow-hidden"
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-10 h-10 rounded-xl bg-white/8 flex items-center justify-center
-          group-hover:bg-white/12 transition-colors duration-300">
-          <Icon className="w-5 h-5 text-white/50 group-hover:text-white/70 transition-colors duration-300" strokeWidth={1.5} />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#f1c97d]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      <div className="flex items-start justify-between mb-4 relative z-10">
+        <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center
+          group-hover:bg-[#f1c97d]/10 transition-colors duration-300 border border-white/5 group-hover:border-[#f1c97d]/20">
+          <Icon className="w-5 h-5 text-[#99907c] group-hover:text-[#f1c97d] transition-colors duration-300" strokeWidth={1.5} />
         </div>
-        <div className="w-1.5 h-1.5 rounded-full bg-green-400/60 mt-1" />
+        <div className="w-1.5 h-1.5 rounded-full bg-[#f1c97d]/60 mt-1 shadow-[0_0_8px_rgba(241,201,125,0.4)] animate-pulse" />
       </div>
-      <div className="font-vogue text-3xl md:text-4xl text-white leading-none mb-2">
-        {prefix}{count}{suffix}
+      <div className="font-body font-light text-3xl md:text-4xl text-[#e5e2e1] leading-none mb-2 tracking-tight relative z-10">
+        <span className="text-[#f1c97d]/80">{prefix}</span>{count}<span className="text-[#f1c97d]/80">{suffix}</span>
       </div>
-      <div className="text-[9px] uppercase tracking-[0.25em] text-white/40 font-inter leading-relaxed">
+      <div className="text-[9px] uppercase tracking-[0.25em] text-[#99907c] font-body leading-relaxed relative z-10 group-hover:text-[#e5e2e1] transition-colors">
         {label}
-        {sublabel && <span className="block text-white/20 mt-0.5">{sublabel}</span>}
+        {sublabel && <span className="block text-[#f1c97d]/40 mt-0.5 lowercase italic tracking-normal font-headline">{sublabel}</span>}
       </div>
     </div>
   );
@@ -100,14 +101,14 @@ function ProgressBar({ label, value, delay = 0 }: { label: string; value: number
   }, [value, delay]);
 
   return (
-    <div ref={ref} className="space-y-2">
-      <div className="flex justify-between items-center">
-        <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-inter">{label}</span>
-        <span className="text-[10px] font-bold text-white/60 font-inter">{value}%</span>
+    <div ref={ref} className="space-y-2 group/progress">
+      <div className="flex justify-between items-center px-1">
+        <span className="text-[9px] uppercase tracking-[0.2em] text-[#99907c] font-body group-hover:text-[#f1c97d] transition-colors">{label}</span>
+        <span className="text-[9px] font-medium text-[#f1c97d] font-body tracking-[0.1em]">{value}%</span>
       </div>
-      <div className="h-1 bg-white/8 rounded-full overflow-hidden">
+      <div className="h-1 bg-white/5 rounded-full overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-white/40 to-white/70 rounded-full transition-all duration-[2500ms] ease-out"
+          className="h-full bg-gradient-to-r from-[#f1c97d]/40 to-[#f1c97d] rounded-full transition-all duration-[2500ms] ease-out shadow-[0_0_10px_rgba(241,201,125,0.2)]"
           style={{ width: `${width}%` }}
         />
       </div>
@@ -117,32 +118,34 @@ function ProgressBar({ label, value, delay = 0 }: { label: string; value: number
 
 export default function CTABusiness() {
   return (
-    <section className="py-24 bg-brand-bg">
-      <div className="max-w-7xl mx-auto px-8 lg:px-16">
+    <section className="py-10 relative overflow-hidden bg-[#080808]">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(241,201,125,0.03),transparent_70%)] pointer-events-none"></div>
+      <div className="max-w-5xl mx-auto px-4 lg:px-8 relative z-10">
         <ScrollReveal>
-          <div className="bg-[#0A0A0A] rounded-[3rem] p-10 md:p-16 relative overflow-hidden">
+          <div className="bg-[#0c0c0e] rounded-[2.5rem] p-6 md:p-10 relative overflow-hidden border border-white/5 shadow-[0_30px_60px_rgba(0,0,0,0.8)] specular-highlight">
+            <div className="absolute inset-0 liquid-glass-rich opacity-50 pointer-events-none -z-10"></div>
 
             {/* Glows decorativos */}
-            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white/[0.02] rounded-full blur-[100px] -translate-y-1/3 translate-x-1/4 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-white/[0.015] rounded-full blur-[80px] translate-y-1/3 -translate-x-1/4 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#f1c97d]/[0.05] rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[#f1c97d]/[0.03] rounded-full blur-[80px] translate-y-1/2 -translate-x-1/4 pointer-events-none" />
 
-            <div className="relative z-10 flex flex-col lg:flex-row gap-16 lg:gap-20">
+            <div className="relative z-10 flex flex-col lg:flex-row gap-8 lg:gap-12">
 
               {/* ── Columna izquierda: copy + features ── */}
-              <div className="flex-1 space-y-10">
+              <div className="flex-1 space-y-6">
 
                 {/* Header */}
                 <div>
-                  <span className="text-[10px] uppercase tracking-[0.5em] font-bold text-white/25 block mb-6 font-inter">
+                  <span className="text-[9px] uppercase tracking-[0.5em] font-bold text-[#f1c97d]/60 block mb-6 font-body">
                     Para dueños de salones
                   </span>
-                  <h2 className="font-vogue text-5xl md:text-6xl lg:text-7xl text-white leading-[0.9] mb-6">
+                  <h2 className="font-body font-light text-4xl md:text-5xl text-[#e5e2e1] leading-[0.9] mb-4 tracking-tighter">
                     Tu salón,<br/>
-                    <span className="italic text-white/50">redefinido.</span>
+                    <span className="italic font-headline text-[#f1c97d]/80">redefinido.</span>
                   </h2>
-                  <p className="text-white/40 text-base font-light leading-relaxed max-w-md font-inter">
+                  <p className="text-[#99907c] text-sm font-light leading-relaxed max-w-sm font-body">
                     Sumá tu peluquería a la plataforma. Gestioná turnos, mostrá tus servicios 
-                    y conectá con nuevas clientas — todo desde un solo lugar.
+                    y conectá con nuevas clientas — <span className="text-[#f1c97d]/60 italic font-headline text-xs px-1">todo desde un solo lugar.</span>
                   </p>
                 </div>
 
@@ -154,11 +157,11 @@ export default function CTABusiness() {
                     { icon: BarChart3, text: 'Reportes en tiempo real — ingresos, turnos y métricas' },
                     { icon: Zap, text: 'Onboarding en menos de 10 minutos — sin técnicos' },
                   ].map(({ icon: Icon, text }) => (
-                    <div key={text} className="flex items-start gap-4">
-                      <div className="w-8 h-8 rounded-xl bg-white/6 border border-white/8 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Icon className="w-4 h-4 text-white/40" strokeWidth={1.5} />
+                    <div key={text} className="flex items-start gap-4 group/feat">
+                      <div className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center flex-shrink-0 mt-0.5 group-hover/feat:border-[#f1c97d]/30 group-hover/feat:bg-[#f1c97d]/5 transition-all">
+                        <Icon className="w-4 h-4 text-[#99907c] group-hover/feat:text-[#f1c97d] transition-colors" strokeWidth={1.5} />
                       </div>
-                      <p className="text-white/40 text-sm font-light leading-relaxed font-inter">{text}</p>
+                      <p className="text-[#99907c] text-sm font-light leading-relaxed font-body group-hover/feat:text-[#e5e2e1] transition-colors">{text}</p>
                     </div>
                   ))}
                 </div>
@@ -178,31 +181,15 @@ export default function CTABusiness() {
                 <div className="flex flex-wrap gap-4 pt-2">
                   <Link
                     href="/business/register"
-                    className="group relative overflow-hidden px-10 h-14 rounded-full font-inter transition-all duration-[800ms] ease-in-out hover:px-14 flex items-center justify-center hover:bg-[#0a1a0a] bg-white hover:shadow-[0_0_40px_rgba(34,197,94,0.35)]"
+                    className="group relative overflow-hidden px-10 h-14 rounded-full font-body transition-all duration-500 flex items-center justify-center bg-gradient-to-r from-[#f1c97d] to-[#d4af37] shadow-[0_10px_30px_rgba(241,201,125,0.2)] hover:shadow-[0_15px_40px_rgba(241,201,125,0.4)] hover:-translate-y-0.5"
                   >
-                    {/* Borde traceado exacto del contenedor calculando el radio matemáticamente (h-14 -> 56px, rx -> 28px) */}
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                      <rect
-                        width="100%" height="100%"
-                        rx="28"
-                        fill="none"
-                        stroke="#22c55e"
-                        strokeWidth="4"
-                        pathLength="1"
-                        strokeDasharray="1"
-                        strokeDashoffset="-1"
-                        className="transition-none group-hover:[transition:stroke-dashoffset_0.5s_linear] group-hover:![stroke-dashoffset:0]"
-                      />
-                    </svg>
-
-                    <span className="relative z-10 text-[10px] font-black uppercase tracking-widest text-black group-hover:text-green-400 transition-colors duration-[800ms] whitespace-nowrap">
-                      <span className="inline-block group-hover:hidden">Sumá tu salón</span>
-                      <span className="hidden group-hover:inline-block">Potenciando tu negocio</span>
+                    <span className="relative z-10 text-[10px] font-black uppercase tracking-widest text-[#080808]">
+                      Sumá tu salón
                     </span>
                   </Link>
                   <Link
                     href="/explore"
-                    className="border border-white/15 text-white/60 px-10 h-14 flex items-center justify-center rounded-full text-[10px] font-bold uppercase tracking-widest hover:border-white/30 hover:text-white transition-all duration-300 font-inter"
+                    className="border border-white/10 text-[#99907c] px-10 h-14 flex items-center justify-center rounded-full text-[10px] font-bold uppercase tracking-widest hover:border-[#f1c97d]/30 hover:text-[#f1c97d] hover:bg-[#f1c97d]/5 transition-all duration-300 font-body"
                   >
                     Ver la plataforma
                   </Link>
@@ -210,18 +197,19 @@ export default function CTABusiness() {
               </div>
 
               {/* ── Columna derecha: stats animados ── */}
-              <div className="lg:w-96 flex-shrink-0 space-y-4">
+              <div className="lg:w-80 flex-shrink-0 space-y-3">
 
                 {/* Stat grande destacado */}
-                <div className="bg-white/5 border border-white/8 rounded-[1.75rem] p-8 backdrop-blur-sm">
-                  <div className="flex items-center justify-between mb-6">
-                    <span className="text-[9px] uppercase tracking-[0.3em] text-white/30 font-inter">
+                 <div className="bg-white/[0.03] border border-white/10 rounded-[1.5rem] p-6 backdrop-blur-md relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#f1c97d]/5 to-transparent pointer-events-none"></div>
+                  <div className="flex items-center justify-between mb-6 relative z-10">
+                    <span className="text-[9px] uppercase tracking-[0.3em] text-[#99907c] font-body">
                       Reservas este mes
                     </span>
-                    <TrendingUp className="w-4 h-4 text-green-400/60" strokeWidth={1.5} />
+                    <TrendingUp className="w-4 h-4 text-[#f1c97d]" strokeWidth={1.5} />
                   </div>
                   {/* Mini gráfico de barras decorativo */}
-                  <div className="flex items-end gap-1.5 h-14 mb-6">
+                  <div className="flex items-end gap-1.5 h-10 mb-4">
                     {[30, 45, 35, 60, 50, 75, 65, 85, 70, 90, 80, 100].map((h, i) => (
                       <div
                         key={i}
@@ -230,9 +218,9 @@ export default function CTABusiness() {
                           height: `${h}%`,
                           transitionDelay: `${i * 120}ms`,
                           background: i >= 10
-                            ? 'rgba(255,255,255,0.5)'
+                            ? 'rgba(241,201,125,0.6)'
                             : i >= 8
-                            ? 'rgba(255,255,255,0.2)'
+                            ? 'rgba(241,201,125,0.3)'
                             : 'rgba(255,255,255,0.07)'
                         }}
                       />
@@ -273,12 +261,13 @@ export default function CTABusiness() {
                     icon={Users}
                     delay={600}
                   />
-                  <div className="bg-white/5 border border-white/8 rounded-[1.75rem] p-6 backdrop-blur-sm
-                    flex flex-col justify-between">
-                    <Zap className="w-5 h-5 text-white/30" strokeWidth={1.5} />
-                    <div>
-                      <div className="font-vogue text-3xl text-white mb-1">Free</div>
-                      <div className="text-[9px] uppercase tracking-[0.25em] text-white/30 font-inter">
+                  <div className="bg-white/[0.03] border border-white/10 rounded-[1.5rem] p-5 backdrop-blur-md
+                    flex flex-col justify-between group/free relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-tr from-[#f1c97d]/10 to-transparent opacity-0 group-hover/free:opacity-100 transition-opacity"></div>
+                    <Zap className="w-5 h-5 text-[#f1c97d]/60 relative z-10" strokeWidth={1.5} />
+                    <div className="relative z-10">
+                      <div className="font-body font-light text-3xl text-[#e5e2e1] mb-1 group-hover/free:text-[#f1c97d] transition-colors">Free</div>
+                      <div className="text-[9px] uppercase tracking-[0.25em] text-[#99907c] font-body">
                         Para empezar
                       </div>
                     </div>

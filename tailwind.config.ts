@@ -90,10 +90,10 @@ const config = {
       },
       fontFamily: {
         headline: ["Newsreader", "serif"],
-        body: ["Inter", "sans-serif"],
-        label: ["Inter", "sans-serif"],
+        body: ["var(--font-outfit)", "Inter", "sans-serif"],
+        label: ["var(--font-outfit)", "Inter", "sans-serif"],
         display: ["var(--font-manrope)", ...fontFamily.sans],
-        sans: ["var(--font-inter)", ...fontFamily.sans],
+        sans: ["var(--font-outfit)", "var(--font-inter)", ...fontFamily.sans],
         vogue: ["var(--font-playfair)", "serif"],
       },
       borderRadius: {
