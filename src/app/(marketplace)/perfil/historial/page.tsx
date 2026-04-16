@@ -25,7 +25,7 @@ const MOCK_HISTORY = [
 
 export default function HistorialPage() {
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: '#0F1012' }}>
+    <div className="flex min-h-screen" style={{ backgroundColor: '#050504' }}>
       <DashboardSidebar />
 
       <main className="flex-1 min-w-0 px-12 py-10">
@@ -63,10 +63,10 @@ export default function HistorialPage() {
                         style={{
                           height: '64px',
                           maxWidth: '800px',
-                          backgroundColor: '#1A1C20',
+                          backgroundColor: '#111010',
                         }}
                         onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.backgroundColor = '#22252A')}
-                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.backgroundColor = '#1A1C20')}
+                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.backgroundColor = '#111010')}
                       >
                         {/* Date */}
                         <p className="text-[13px] w-16 shrink-0" style={{ color: '#8A8F98' }}>
@@ -108,7 +108,7 @@ export default function HistorialPage() {
           ) : (
             <div
               className="flex flex-col items-center justify-center py-24 rounded-[12px]"
-              style={{ border: '1px solid rgba(255,255,255,0.06)', backgroundColor: '#1A1C20' }}
+              style={{ border: '1px solid rgba(255,255,255,0.06)', backgroundColor: '#111010' }}
             >
               <p className="font-vogue text-xl" style={{ color: '#8A8F98' }}>
                 Aún no tenés historial de citas.

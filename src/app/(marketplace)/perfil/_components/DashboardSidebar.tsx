@@ -29,7 +29,7 @@ export function DashboardSidebar() {
       <div className="px-6 py-5 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-[#0F1012] shrink-0"
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-[#050504] shrink-0"
             style={{ border: '2px solid #D4AF37' }}
           >
             <span className="font-vogue text-base" style={{ color: '#D4AF37' }}>S</span>

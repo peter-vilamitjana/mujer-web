@@ -45,7 +45,7 @@ const categorias = [
 
 export default function Categorias() {
   return (
-    <section className="py-48 bg-[#080808] relative overflow-hidden">
+    <section className="py-48 bg-[#050504] relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(241,201,125,0.02),transparent_50%)] pointer-events-none"></div>
       <div className="max-w-7xl mx-auto px-8 lg:px-16 relative z-10">
 
@@ -54,7 +54,7 @@ export default function Categorias() {
             <span className="text-[10px] uppercase tracking-[0.6em] font-bold text-[#f1c97d]/50 block mb-6 font-body">
               Explorá por categoría
             </span>
-            <h2 className="font-body font-light text-5xl md:text-6xl text-[#e5e2e1] tracking-tight">
+            <h2 className="font-body font-light text-5xl md:text-6xl text-[#f5f0e8] tracking-tight">
               ¿Qué estás <span className="italic font-headline text-[#f1c97d]/80">buscando?</span>
             </h2>
           </div>
@@ -107,7 +107,7 @@ export default function Categorias() {
                       <Icon
                          className="w-8 h-8 transition-all duration-500 group-hover:scale-110"
                          style={{ 
-                            color: '#99907c', 
+                            color: '#7a766e', 
                             filter: `drop-shadow(0 0 8px ${cat.color}00)` 
                          }}
                          onMouseEnter={(e) => {
@@ -115,7 +115,7 @@ export default function Categorias() {
                             e.currentTarget.style.filter = `drop-shadow(0 0 12px ${cat.color}66)`;
                          }}
                          onMouseLeave={(e) => {
-                            e.currentTarget.style.color = '#99907c';
+                            e.currentTarget.style.color = '#7a766e';
                             e.currentTarget.style.filter = `drop-shadow(0 0 8px ${cat.color}00)`;
                          }}
                         strokeWidth={1.1}
@@ -124,10 +124,10 @@ export default function Categorias() {
 
                     {/* Texto macOS Style */}
                     <div className="relative z-10 pt-2 space-y-1">
-                      <p className="font-body font-medium text-[#e5e2e1]/80 text-[15px] leading-tight tracking-tight group-hover:text-white transition-colors duration-300">
+                      <p className="font-body font-medium text-[#f5f0e8]/80 text-[15px] leading-tight tracking-tight group-hover:text-white transition-colors duration-300">
                         {cat.label}
                       </p>
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-[#99907c] font-body font-light group-hover:text-[#f1c97d]/50 transition-colors">
+                      <p className="text-[10px] uppercase tracking-[0.3em] text-[#7a766e] font-body font-light group-hover:text-[#f1c97d]/50 transition-colors">
                         {cat.count}
                       </p>
                     </div>

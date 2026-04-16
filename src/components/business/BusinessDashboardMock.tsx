@@ -27,7 +27,7 @@ export default function BusinessDashboardMock() {
 
         {/* Mock container */}
         <div className="bg-[#0a0a0a] border border-white/[0.07] rounded-[2.5rem] p-3">
-          <div className="bg-[#080808] rounded-[2.25rem] overflow-hidden">
+          <div className="bg-[#050504] rounded-[2.25rem] overflow-hidden">
 
             {/* Top bar */}
             <div className="px-8 py-4 border-b border-white/[0.06] flex items-center justify-between">

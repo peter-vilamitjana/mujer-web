@@ -139,9 +139,9 @@ export default function MisTurnosPage() {
 
   return (
     <div 
-      className="min-h-screen text-[#e5e2e1] font-body selection:bg-[#f1c97d] selection:text-[#080808] relative"
+      className="min-h-screen text-[#f5f0e8] font-body selection:bg-[#f1c97d] selection:text-[#050504] relative"
       style={{
-        background: 'radial-gradient(circle at 0% 0%, #1a160f 0%, #080808 50%), radial-gradient(circle at 100% 100%, #121212 0%, #080808 50%)',
+        background: 'radial-gradient(circle at 0% 0%, #1a160f 0%, #050504 50%), radial-gradient(circle at 100% 100%, #121212 0%, #050504 50%)',
         backgroundAttachment: 'fixed'
       }}
     >
@@ -176,31 +176,31 @@ export default function MisTurnosPage() {
             <div className="w-9 h-9 rounded-full flex-shrink-0 bg-gradient-to-b from-white/[0.15] to-transparent p-[1px] shadow-[0_4px_20px_rgba(0,0,0,0.5)] transition-all duration-500 group-hover/logo:shadow-[0_0_15px_rgba(241,201,125,0.15)] group-hover/logo:scale-105">
               <div className="w-full h-full rounded-full bg-gradient-to-b from-[#1c1c1e] to-[#0a0a0c] flex items-center justify-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[#f1c97d]/10 to-transparent opacity-0 group-hover/logo:opacity-100 transition-opacity duration-500"></div>
-                <span className="font-headline italic text-[#e5e2e1] text-[15px] tracking-widest relative z-10 transition-colors duration-500 group-hover/logo:text-[#f1c97d]">M</span>
+                <span className="font-headline italic text-[#f5f0e8] text-[15px] tracking-widest relative z-10 transition-colors duration-500 group-hover/logo:text-[#f1c97d]">M</span>
               </div>
             </div>
-            <span className="text-xl font-headline italic text-[#e5e2e1] group-hover/logo:text-[#f1c97d] opacity-0 group-hover:opacity-100 transition-all duration-500 whitespace-nowrap">Ouleeh</span>
+            <span className="text-xl font-headline italic text-[#f5f0e8] group-hover/logo:text-[#f1c97d] opacity-0 group-hover:opacity-100 transition-all duration-500 whitespace-nowrap">Ouleeh</span>
           </Link>
 
           {/* Nav items */}
           <nav className="flex flex-col gap-1 w-full">
-            <button onClick={() => setActiveTab('panel')} className={`w-full h-10 rounded-xl flex items-center gap-4 px-2.5 transition-all duration-200 cursor-pointer ${activeTab === 'panel' ? 'text-[#f1c97d] bg-white/[0.08]' : 'text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5'}`}>
+            <button onClick={() => setActiveTab('panel')} className={`w-full h-10 rounded-xl flex items-center gap-4 px-2.5 transition-all duration-200 cursor-pointer ${activeTab === 'panel' ? 'text-[#f1c97d] bg-white/[0.08]' : 'text-[#7a766e] hover:text-[#f1c97d] hover:bg-white/5'}`}>
               <span className="material-symbols-outlined text-[19px] flex-shrink-0">dashboard</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Panel</span>
             </button>
-            <button onClick={() => setActiveTab('turnos')} className={`w-full h-10 rounded-xl flex items-center gap-4 px-2.5 transition-all duration-200 cursor-pointer ${activeTab === 'turnos' ? 'text-[#f1c97d] bg-white/[0.08]' : 'text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5'}`}>
+            <button onClick={() => setActiveTab('turnos')} className={`w-full h-10 rounded-xl flex items-center gap-4 px-2.5 transition-all duration-200 cursor-pointer ${activeTab === 'turnos' ? 'text-[#f1c97d] bg-white/[0.08]' : 'text-[#7a766e] hover:text-[#f1c97d] hover:bg-white/5'}`}>
               <span className="material-symbols-outlined text-[19px] flex-shrink-0">calendar_month</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Turnos</span>
             </button>
-            <button onClick={() => setActiveTab('explorar')} className={`w-full h-10 rounded-xl flex items-center gap-4 px-2.5 transition-all duration-200 cursor-pointer ${activeTab === 'explorar' ? 'text-[#f1c97d] bg-white/[0.08]' : 'text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5'}`}>
+            <button onClick={() => setActiveTab('explorar')} className={`w-full h-10 rounded-xl flex items-center gap-4 px-2.5 transition-all duration-200 cursor-pointer ${activeTab === 'explorar' ? 'text-[#f1c97d] bg-white/[0.08]' : 'text-[#7a766e] hover:text-[#f1c97d] hover:bg-white/5'}`}>
               <span className="material-symbols-outlined text-[19px] flex-shrink-0">explore</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Explorar</span>
             </button>
-            <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+            <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#7a766e] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
               <span className="material-symbols-outlined text-[19px] flex-shrink-0">favorite</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Favoritos</span>
             </button>
-            <button onClick={() => setActiveTab('perfil')} className={`w-full h-10 rounded-xl flex items-center gap-4 px-2.5 transition-all duration-200 cursor-pointer ${activeTab === 'perfil' ? 'text-[#f1c97d] bg-white/[0.08]' : 'text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5'}`}>
+            <button onClick={() => setActiveTab('perfil')} className={`w-full h-10 rounded-xl flex items-center gap-4 px-2.5 transition-all duration-200 cursor-pointer ${activeTab === 'perfil' ? 'text-[#f1c97d] bg-white/[0.08]' : 'text-[#7a766e] hover:text-[#f1c97d] hover:bg-white/5'}`}>
               <span className="material-symbols-outlined text-[19px] flex-shrink-0">person</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Perfil</span>
             </button>
@@ -211,7 +211,7 @@ export default function MisTurnosPage() {
 
           {/* Footer íconos */}
           <div className="flex flex-col gap-1 w-full">
-            <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+            <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#7a766e] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
               <span className="material-symbols-outlined text-[19px] flex-shrink-0">logout</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Salir</span>
             </button>
@@ -225,12 +225,12 @@ export default function MisTurnosPage() {
         <div className="flex items-center gap-8 pointer-events-auto">
           <div className="flex items-center gap-6 liquid-glass-rich px-4 py-2 rounded-full">
             <button className="relative flex items-center">
-              <span className="material-symbols-outlined text-[#99907c] hover:text-[#f1c97d] transition-colors text-[20px]">notifications</span>
+              <span className="material-symbols-outlined text-[#7a766e] hover:text-[#f1c97d] transition-colors text-[20px]">notifications</span>
               <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-[#f1c97d] rounded-full shadow-[0_0_8px_rgba(241,201,125,0.8)]"></span>
             </button>
             <div className="flex items-center gap-4 border-l border-white/10 pl-4">
               <div className="text-right">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#e5e2e1]">{userName}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#f5f0e8]">{userName}</p>
                 <p className="text-[8px] text-[#f1c97d] uppercase tracking-[0.15em]">Premium</p>
               </div>
               <img 
@@ -253,8 +253,8 @@ export default function MisTurnosPage() {
                {/* HEADER */}
               <div className="flex justify-between items-center mb-10">
                 <div>
-                  <h1 className="text-5xl font-body font-light text-[#e5e2e1] mb-2">Mi Panel</h1>
-                  <p className="text-[#99907c] text-xs tracking-wide">Tu espacio personal de estética y bienestar</p>
+                  <h1 className="text-5xl font-body font-light text-[#f5f0e8] mb-2">Mi Panel</h1>
+                  <p className="text-[#7a766e] text-xs tracking-wide">Tu espacio personal de estética y bienestar</p>
                 </div>
               </div>
 
@@ -266,7 +266,7 @@ export default function MisTurnosPage() {
 
                   {/* Próximo Turno */}
                   <div>
-                    <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-3 ml-1">Tu próximo turno</p>
+                    <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#7a766e] mb-3 ml-1">Tu próximo turno</p>
                     <div className="relative isolate z-0 overflow-hidden rounded-[2rem] p-0 flex flex-row w-full transition-all duration-700 hover:scale-[1.01] hover:bg-white/[0.02] border border-white/10 group" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
                       <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20"></div>
                       
@@ -282,8 +282,8 @@ export default function MisTurnosPage() {
                       {/* FECHA y HORA */}
                       <div className="flex flex-col items-center justify-center w-[150px] shrink-0 border-r border-dashed border-white/10 px-6 py-8 relative z-10">
                         <span className="text-5xl font-headline text-[#f1c97d] leading-none" style={{ textShadow: '0 0 30px rgba(241,201,125,0.3)' }}>15</span>
-                        <span className="text-[10px] font-headline italic tracking-[0.1em] text-[#99907c] mt-2 lowercase">abril</span>
-                        <span className="text-sm font-headline italic text-[#e5e2e1] mt-3">10:30am</span>
+                        <span className="text-[10px] font-headline italic tracking-[0.1em] text-[#7a766e] mt-2 lowercase">abril</span>
+                        <span className="text-sm font-headline italic text-[#f5f0e8] mt-3">10:30am</span>
                       </div>
 
                       {/* INFO */}
@@ -291,19 +291,19 @@ export default function MisTurnosPage() {
                         <div className="flex items-center gap-2.5 mb-2">
                           <p className="text-[10px] font-label uppercase tracking-[0.2em] text-[#f1c97d]">MAISON DE BEAUTÉ</p>
                           <span className="w-1 h-1 rounded-full bg-[#f1c97d]/30"></span>
-                          <p className="text-[#99907c] text-[10px] uppercase tracking-widest font-label flex items-center gap-1">
+                          <p className="text-[#7a766e] text-[10px] uppercase tracking-widest font-label flex items-center gap-1">
                             <span className="material-symbols-outlined text-[13px]">location_on</span> Palermo Soho
                           </p>
                         </div>
-                        <h2 className="text-2xl font-headline italic text-[#e5e2e1] mb-1 leading-tight">Balayage con Valentina</h2>
+                        <h2 className="text-2xl font-headline italic text-[#f5f0e8] mb-1 leading-tight">Balayage con Valentina</h2>
                         <div className="flex flex-wrap items-center gap-2 mt-4">
-                          <button className="h-8 px-4 rounded-full border border-white/10 hover:border-[#f1c97d]/30 hover:bg-[#f1c97d]/5 transition-all text-[10px] uppercase tracking-[0.1em] font-label text-[#99907c] hover:text-[#f1c97d] flex items-center gap-2 cursor-pointer">
+                          <button className="h-8 px-4 rounded-full border border-white/10 hover:border-[#f1c97d]/30 hover:bg-[#f1c97d]/5 transition-all text-[10px] uppercase tracking-[0.1em] font-label text-[#7a766e] hover:text-[#f1c97d] flex items-center gap-2 cursor-pointer">
                             <span className="material-symbols-outlined text-[14px]">map</span> Ver en mapa
                           </button>
-                          <button className="h-8 px-4 rounded-full border border-white/10 hover:border-white/30 hover:bg-white/5 transition-all text-[10px] uppercase tracking-[0.1em] font-label text-[#99907c] hover:text-[#e5e2e1] flex items-center gap-2 cursor-pointer">
+                          <button className="h-8 px-4 rounded-full border border-white/10 hover:border-white/30 hover:bg-white/5 transition-all text-[10px] uppercase tracking-[0.1em] font-label text-[#7a766e] hover:text-[#f5f0e8] flex items-center gap-2 cursor-pointer">
                             <span className="material-symbols-outlined text-[14px]">edit_calendar</span> Reagendar
                           </button>
-                          <button className="h-8 px-4 rounded-full border border-transparent hover:border-red-500/20 hover:bg-red-500/10 transition-all text-[10px] uppercase tracking-[0.1em] font-label text-[#99907c] hover:text-red-400 flex items-center gap-2 ml-auto cursor-pointer">
+                          <button className="h-8 px-4 rounded-full border border-transparent hover:border-red-500/20 hover:bg-red-500/10 transition-all text-[10px] uppercase tracking-[0.1em] font-label text-[#7a766e] hover:text-red-400 flex items-center gap-2 ml-auto cursor-pointer">
                             <span className="material-symbols-outlined text-[14px]">close</span> Cancelar
                           </button>
                         </div>
@@ -319,23 +319,23 @@ export default function MisTurnosPage() {
                       <div className="inline-flex px-3.5 py-1.5 bg-[#f1c97d]/10 border border-[#f1c97d]/25 rounded-full mb-4">
                         <span className="text-[8px] font-label uppercase tracking-[0.2em] text-[#f1c97d]">PARA VOS</span>
                       </div>
-                      <h2 className="text-2xl font-body font-light text-[#e5e2e1] mb-2 leading-tight">
+                      <h2 className="text-2xl font-body font-light text-[#f5f0e8] mb-2 leading-tight">
                         Valentina tiene disponibilidad el jueves
                       </h2>
-                      <p className="text-[#99907c] text-xs leading-relaxed mb-4 font-label tracking-wide uppercase">
+                      <p className="text-[#7a766e] text-xs leading-relaxed mb-4 font-label tracking-wide uppercase">
                         <span className="text-[#f1c97d]/50">—</span> TU ESTILISTA HABITUAL EN MAISON
                       </p>
                       <div className="flex items-center gap-3.5 mb-4">
-                        <div className="flex items-center gap-2 bg-[#080808]/50 border border-white/5 px-3.5 py-1.5 rounded-full backdrop-blur-md">
+                        <div className="flex items-center gap-2 bg-[#050504]/50 border border-white/5 px-3.5 py-1.5 rounded-full backdrop-blur-md">
                           <span className="material-symbols-outlined text-[#f1c97d] text-[14px]">schedule</span>
-                          <span className="text-[10px] text-[#e5e2e1] font-label tracking-wider">11:00 am</span>
+                          <span className="text-[10px] text-[#f5f0e8] font-label tracking-wider">11:00 am</span>
                         </div>
                         <span className="text-white/20">•</span>
-                        <span className="text-sm font-headline italic text-[#e5e2e1] tracking-wide">$4.500</span>
+                        <span className="text-sm font-headline italic text-[#f5f0e8] tracking-wide">$4.500</span>
                       </div>
                       <button className="liquid-glass-floating h-10 px-6 flex items-center gap-2 rounded-[1.25rem] text-[13px] font-medium hover:bg-white/10 transition-all duration-300 group/btn border border-white/10 w-fit cursor-pointer">
-                        <span className="text-[#e5e2e1] whitespace-nowrap">Reservar en un tap</span>
-                        <span className="material-symbols-outlined text-[#e5e2e1] text-[16px] group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
+                        <span className="text-[#f5f0e8] whitespace-nowrap">Reservar en un tap</span>
+                        <span className="material-symbols-outlined text-[#f5f0e8] text-[16px] group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
                       </button>
                     </div>
                     <img
@@ -351,10 +351,10 @@ export default function MisTurnosPage() {
                 <div className="col-span-4 flex flex-col gap-6 h-full">
                   {/* Tu Expediente */}
                   <div>
-                    <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-3 ml-1">Tu expediente</p>
+                    <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#7a766e] mb-3 ml-1">Tu expediente</p>
                     <div className="relative isolate overflow-hidden rounded-[2rem] p-6 flex flex-col border border-white/10">
                       <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
-                      <h3 className="text-xl font-body font-light text-[#e5e2e1] mb-1.5 flex items-center gap-2.5 relative z-10">
+                      <h3 className="text-xl font-body font-light text-[#f5f0e8] mb-1.5 flex items-center gap-2.5 relative z-10">
                         Tu Cabello
                         <span className="inline-flex items-center justify-center p-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.15)]">
                           <span className="material-symbols-outlined text-[11px]">check</span>
@@ -362,19 +362,19 @@ export default function MisTurnosPage() {
                       </h3>
                       <div className="flex flex-col gap-2.5 mt-3 mb-5 relative z-10">
                         <div>
-                          <p className="text-[8px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-1">Último tratamiento</p>
+                          <p className="text-[8px] font-label uppercase tracking-[0.2em] text-[#7a766e] mb-1">Último tratamiento</p>
                           <p className="text-[#f1c97d] font-headline italic text-base leading-tight">Balayage</p>
-                          <p className="text-[#e5e2e1] font-headline italic text-xs">hace 6 semanas</p>
+                          <p className="text-[#f5f0e8] font-headline italic text-xs">hace 6 semanas</p>
                         </div>
                         <div>
-                          <p className="text-[8px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-1">Próxima recomendación</p>
-                          <p className="text-[#e5e2e1] font-headline italic text-base leading-tight">en 2 semanas</p>
+                          <p className="text-[8px] font-label uppercase tracking-[0.2em] text-[#7a766e] mb-1">Próxima recomendación</p>
+                          <p className="text-[#f5f0e8] font-headline italic text-base leading-tight">en 2 semanas</p>
                         </div>
                       </div>
                       <div className="relative z-10 mb-5">
                         <div className="flex items-center justify-between mb-1.5">
                           <p className="text-[9px] font-label uppercase tracking-[0.15em] text-[#f1c97d]">80%</p>
-                          <p className="text-[8px] text-[#99907c] font-label">Buen estado</p>
+                          <p className="text-[8px] text-[#7a766e] font-label">Buen estado</p>
                         </div>
                         <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                           <div className="h-full rounded-full relative overflow-hidden" style={{ width: '80%', background: 'linear-gradient(90deg, rgba(241,201,125,0.4) 0%, rgba(241,201,125,1) 100%)' }}>
@@ -383,7 +383,7 @@ export default function MisTurnosPage() {
                         </div>
                       </div>
                       <div className="relative z-10 mt-auto pt-6 border-t border-white/5 flex flex-col gap-1.5">
-                        <button className="text-[9px] uppercase tracking-widest text-[#f1c97d] hover:text-[#e5e2e1] transition-colors flex items-center gap-1 group/link font-label cursor-pointer">
+                        <button className="text-[9px] uppercase tracking-widest text-[#f1c97d] hover:text-[#f5f0e8] transition-colors flex items-center gap-1 group/link font-label cursor-pointer">
                           Ver historial <span className="material-symbols-outlined text-[12px] group-hover/link:translate-x-1 transition-transform">arrow_forward</span>
                         </button>
                       </div>
@@ -394,14 +394,14 @@ export default function MisTurnosPage() {
                   <div className="relative isolate overflow-hidden rounded-[2rem] p-6 border border-white/10 flex flex-col justify-center min-h-[180px] flex-grow">
                     <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
                     <div className="relative z-10">
-                      <span className="text-[8px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-2.5 block">DESCUBRIMIENTO</span>
-                      <h3 className="text-lg lg:text-xl font-body font-light text-[#e5e2e1] mb-5">¿Qué necesitás hoy?</h3>
+                      <span className="text-[8px] font-label uppercase tracking-[0.2em] text-[#7a766e] mb-2.5 block">DESCUBRIMIENTO</span>
+                      <h3 className="text-lg lg:text-xl font-body font-light text-[#f5f0e8] mb-5">¿Qué necesitás hoy?</h3>
                       <div className="flex flex-wrap gap-2">
                         <button className="px-4 py-2 rounded-full border border-[#f1c97d]/30 bg-[#f1c97d]/10 hover:bg-[#f1c97d]/20 transition-all text-[9px] uppercase font-label tracking-[0.1em] text-[#f1c97d] cursor-pointer flex-grow text-center flex items-center justify-center gap-1.5 mb-1.5">
                           <span className="material-symbols-outlined text-[14px]">calendar_today</span> Agendar Turno
                         </button>
                         {['Corte', 'Color', 'Tratamiento', 'Uñas', 'Maquillaje'].map((tag) => (
-                          <button key={tag} className="px-3.5 py-1.5 rounded-full border border-white/10 bg-[#080808]/40 hover:border-[#f1c97d]/30 hover:bg-[#f1c97d]/5 transition-all text-[8px] uppercase font-label tracking-[0.1em] text-[#e5e2e1] hover:text-[#f1c97d] cursor-pointer flex-grow text-center">
+                          <button key={tag} className="px-3.5 py-1.5 rounded-full border border-white/10 bg-[#050504]/40 hover:border-[#f1c97d]/30 hover:bg-[#f1c97d]/5 transition-all text-[8px] uppercase font-label tracking-[0.1em] text-[#f5f0e8] hover:text-[#f1c97d] cursor-pointer flex-grow text-center">
                             {tag}
                           </button>
                         ))}
@@ -414,10 +414,10 @@ export default function MisTurnosPage() {
               {/* TUS SALONES — Mapa Estilo Apple */}
               <div className="mt-8 mb-12">
                 <div className="flex justify-between items-center mb-4 ml-1">
-                  <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] flex items-center gap-2">
+                  <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#7a766e] flex items-center gap-2">
                     <span className="material-symbols-outlined text-[13px] text-[#f1c97d]">explore</span> Tus salones
                   </p>
-                  <button className="text-[9px] uppercase tracking-widest text-[#f1c97d] hover:text-[#e5e2e1] transition-colors font-label cursor-pointer flex items-center gap-1 group/btn">
+                  <button className="text-[9px] uppercase tracking-widest text-[#f1c97d] hover:text-[#f5f0e8] transition-colors font-label cursor-pointer flex items-center gap-1 group/btn">
                     Descubrir más <span className="material-symbols-outlined text-[14px] group-hover/btn:translate-x-1 transition-transform">arrow_forward_ios</span>
                   </button>
                 </div>
@@ -463,12 +463,12 @@ export default function MisTurnosPage() {
                           
                           {/* Label persistente al lado del pin  */}
                           <div className="absolute top-1/2 -translate-y-1/2 left-full ml-3 opacity-80 group-hover/pin:opacity-0 transition-opacity whitespace-nowrap pointer-events-none z-0">
-                            <span className="text-[10px] font-headline italic tracking-wide text-[#e5e2e1] drop-shadow-md">{salon.name.split(' ')[0]}</span>
+                            <span className="text-[10px] font-headline italic tracking-wide text-[#f5f0e8] drop-shadow-md">{salon.name.split(' ')[0]}</span>
                           </div>
 
                           {/* Tooltip Premium on hover (Apple Float) */}
                           <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 opacity-0 group-hover/pin:opacity-100 transition-all duration-300 translate-y-3 group-hover/pin:translate-y-0 bg-[#252528]/80 border border-white/10 px-4 py-3 rounded-2xl backdrop-blur-2xl pointer-events-none whitespace-nowrap z-20 shadow-[0_20px_40px_rgba(0,0,0,0.5)] flex flex-col items-center">
-                            <p className="text-[12px] text-[#e5e2e1] font-medium tracking-wide mb-1 flex items-center gap-1.5">
+                            <p className="text-[12px] text-[#f5f0e8] font-medium tracking-wide mb-1 flex items-center gap-1.5">
                               {salon.name} <span className="material-symbols-outlined text-[12px] text-[#f1c97d]">verified</span>
                             </p>
                             <p className="text-[8px] text-[#63d297] font-medium uppercase tracking-[0.1em]">
@@ -482,10 +482,10 @@ export default function MisTurnosPage() {
                     
                     {/* Botón flotante estilo Apple Maps Control */}
                     <div className="absolute bottom-5 right-5 z-10 flex flex-col gap-2">
-                       <button className="w-8 h-8 bg-white/10 backdrop-blur-xl border border-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-[#e5e2e1] transition-all cursor-pointer shadow-lg">
+                       <button className="w-8 h-8 bg-white/10 backdrop-blur-xl border border-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-[#f5f0e8] transition-all cursor-pointer shadow-lg">
                          <span className="material-symbols-outlined text-[16px]">my_location</span>
                        </button>
-                       <button className="w-8 h-8 bg-white/10 backdrop-blur-xl border border-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-[#e5e2e1] transition-all cursor-pointer shadow-lg">
+                       <button className="w-8 h-8 bg-white/10 backdrop-blur-xl border border-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-[#f5f0e8] transition-all cursor-pointer shadow-lg">
                          <span className="material-symbols-outlined text-[16px] transform rotate-45">navigation</span>
                        </button>
                     </div>
@@ -494,8 +494,8 @@ export default function MisTurnosPage() {
                   {/* LISTA DE SALONES (Columna Derecha Apple Style) */}
                   <div className="w-full md:w-[320px] p-0 flex flex-col relative z-10 bg-[#121214] border-l border-white/5">
                     <div className="px-6 py-5 border-b border-white/5 bg-[#0a0a0c]">
-                       <h3 className="text-xl font-body font-light text-[#e5e2e1]">Lugares Guardados</h3>
-                       <p className="text-[10px] font-label tracking-widest text-[#99907c] uppercase mt-1">Tu selección</p>
+                       <h3 className="text-xl font-body font-light text-[#f5f0e8]">Lugares Guardados</h3>
+                       <p className="text-[10px] font-label tracking-widest text-[#7a766e] uppercase mt-1">Tu selección</p>
                     </div>
                     <div className="flex flex-col flex-1 p-3 gap-2 overflow-y-auto stylish-scrollbar">
                       {mySalons.map((salon) => (
@@ -505,17 +505,17 @@ export default function MisTurnosPage() {
                              <span className="material-symbols-outlined text-[18px] text-[#f1c97d]">storefront</span>
                           </div>
                           <div className="flex flex-col flex-1">
-                            <h4 className="text-[15px] font-medium text-[#e5e2e1] group-hover/item:text-[#f1c97d] transition-colors">{salon.name}</h4>
+                            <h4 className="text-[15px] font-medium text-[#f5f0e8] group-hover/item:text-[#f1c97d] transition-colors">{salon.name}</h4>
                             <div className="flex items-center justify-between mt-1">
-                              <span className="text-[11px] text-[#99907c] flex items-center gap-1">A 2.5 km <span className="w-0.5 h-0.5 bg-[#99907c] rounded-full"></span> Activo</span>
-                              <span className="text-[9px] text-[#99907c] bg-white/10 px-2 py-0.5 rounded-full font-medium">{salon.visits} visitas</span>
+                              <span className="text-[11px] text-[#7a766e] flex items-center gap-1">A 2.5 km <span className="w-0.5 h-0.5 bg-[#7a766e] rounded-full"></span> Activo</span>
+                              <span className="text-[9px] text-[#7a766e] bg-white/10 px-2 py-0.5 rounded-full font-medium">{salon.visits} visitas</span>
                             </div>
                             <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
                                 <div className="flex items-center gap-0.5">
                                   {[...Array(5)].map((_, i) => (
                                     <span 
                                       key={i} 
-                                      className={`material-symbols-outlined text-[12px] ${i < salon.rating ? 'text-[#f1c97d]' : 'text-[#99907c]/20'} group-hover/item:drop-shadow-[0_0_5px_rgba(241,201,125,0.4)] transition-all`}
+                                      className={`material-symbols-outlined text-[12px] ${i < salon.rating ? 'text-[#f1c97d]' : 'text-[#7a766e]/20'} group-hover/item:drop-shadow-[0_0_5px_rgba(241,201,125,0.4)] transition-all`}
                                     >
                                       star
                                     </span>
@@ -540,14 +540,14 @@ export default function MisTurnosPage() {
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
               <div className="flex flex-col gap-3 mb-8">
                 <div className="flex items-center gap-5">
-                  <h1 className="text-5xl font-body font-light text-[#e5e2e1]">Mis Turnos</h1>
+                  <h1 className="text-5xl font-body font-light text-[#f5f0e8]">Mis Turnos</h1>
                   <div className="liquid-glass-rich px-4 py-1.5 rounded-full border border-[#f1c97d]/20">
                     <span className="text-[#f1c97d] text-[9px] font-bold uppercase tracking-[0.2em]">
                       {confirmedCount} CONFIRMADOS
                     </span>
                   </div>
                 </div>
-                <p className="text-[#99907c] text-xs tracking-wide">Gestiona tus próximas citas de belleza.</p>
+                <p className="text-[#7a766e] text-xs tracking-wide">Gestiona tus próximas citas de belleza.</p>
               </div>
 
               {/* Tickets */}
@@ -567,7 +567,7 @@ export default function MisTurnosPage() {
                     {/* FECHA col */}
                     <div className="relative z-10 flex flex-col items-center justify-center min-w-[90px] px-5 py-4">
                       <span className="text-4xl font-headline text-[#f1c97d]" style={{ textShadow: '0 0 30px rgba(241,201,125,0.3)' }}>{appt.day}</span>
-                      <span className="text-[9px] font-label uppercase tracking-[0.3em] text-[#99907c] mt-0.5">{appt.month}</span>
+                      <span className="text-[9px] font-label uppercase tracking-[0.3em] text-[#7a766e] mt-0.5">{appt.month}</span>
                     </div>
 
                     {/* Separador */}
@@ -583,19 +583,19 @@ export default function MisTurnosPage() {
                           </span>
                         )}
                       </div>
-                      <p className="text-[#99907c] text-base font-headline italic mb-2.5">{appt.service}</p>
+                      <p className="text-[#7a766e] text-base font-headline italic mb-2.5">{appt.service}</p>
                       <div className="grid grid-cols-3 gap-5">
                         <div className="flex items-center gap-2.5">
                           <span className="material-symbols-outlined text-[#f1c97d]/60 text-[18px]">person</span>
                           <div>
-                            <p className="text-[7px] text-[#99907c] uppercase tracking-widest">Profesional</p>
+                            <p className="text-[7px] text-[#7a766e] uppercase tracking-widest">Profesional</p>
                             <p className="text-[10px] uppercase tracking-wider font-medium">{appt.professional}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2.5">
                           <span className="material-symbols-outlined text-[#f1c97d]/60 text-[18px]">location_on</span>
                           <div>
-                            <p className="text-[7px] text-[#99907c] uppercase tracking-widest">Ubicación</p>
+                            <p className="text-[7px] text-[#7a766e] uppercase tracking-widest">Ubicación</p>
                             <p className="text-[10px] uppercase tracking-wider font-medium">{appt.location}</p>
                           </div>
                         </div>
@@ -611,7 +611,7 @@ export default function MisTurnosPage() {
                           ))}
                         </div>
                       </div>
-                      <p className="text-[6.5px] text-[#99907c] uppercase tracking-[0.2em] mt-0.5">CHECK-IN QR</p>
+                      <p className="text-[6.5px] text-[#7a766e] uppercase tracking-[0.2em] mt-0.5">CHECK-IN QR</p>
                     </div>
                   </div>
                 ))}
@@ -624,8 +624,8 @@ export default function MisTurnosPage() {
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-6xl mx-auto">
               {/* Encabezado */}
               <div className="flex flex-col gap-2 mb-12">
-                <h1 className="text-6xl font-body font-light text-[#e5e2e1]">Mi Perfil</h1>
-                <p className="text-[#99907c] text-sm tracking-widest font-label uppercase">Tu expediente de belleza y configuraciones</p>
+                <h1 className="text-6xl font-body font-light text-[#f5f0e8]">Mi Perfil</h1>
+                <p className="text-[#7a766e] text-sm tracking-widest font-label uppercase">Tu expediente de belleza y configuraciones</p>
               </div>
 
               {/* Grid Principal — 4/8 Asymmetric */}
@@ -641,7 +641,7 @@ export default function MisTurnosPage() {
 
                     <div className="relative mb-6 group">
                       <div className="w-36 h-36 rounded-full p-[2px] shadow-[0_0_50px_rgba(241,201,125,0.15)] bg-gradient-to-tr from-[#f1c97d] via-[#f1c97d]/20 to-[#f1c97d] relative overflow-hidden transition-transform duration-700 hover:scale-105">
-                        <div className="w-full h-full rounded-full bg-[#080808] p-1">
+                        <div className="w-full h-full rounded-full bg-[#050504] p-1">
                           <img 
                             src={session?.user?.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuBHoq1ZEd8ECYymUh961ONjGj5-uoYjX-EsusAscLPzNTVIX3qpGotVv8E-oA-OBS0IuFV6oE3czpRiREq_xWMZyOj183drIeG2A35hWgTaf_AOCy7m4Fyl5vj134EOHDKKeZQpyHYqn3zntnyI3gdebSsjLUFkkvvb87bdZ9-_hziB5ZJ_iGLBgocDLFOGkO166KYHvqiYzUzS1WFIZuiMm92_9Wr8t7-meHoUb0-fR7EI23mcmlzrHpEgX2G9HUmBH0Qbt2MSPiA"} 
                             alt={userName}
@@ -654,17 +654,17 @@ export default function MisTurnosPage() {
                       </button>
                     </div>
 
-                    <h2 className="text-3xl font-body font-light text-[#e5e2e1] mb-1">{userName}</h2>
+                    <h2 className="text-3xl font-body font-light text-[#f5f0e8] mb-1">{userName}</h2>
                     <div className="flex items-center gap-2 mb-8">
-                      <p className="text-[10px] text-[#99907c] font-label lowercase tracking-widest">{session?.user?.email}</p>
+                      <p className="text-[10px] text-[#7a766e] font-label lowercase tracking-widest">{session?.user?.email}</p>
                       <span className="material-symbols-outlined text-[13px] text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">verified</span>
                     </div>
 
                     <div className="w-full flex flex-col gap-4 text-left border-t border-white/5 pt-8">
                       <div className="group/wp cursor-pointer hover:bg-white/[0.03] p-3 -mx-3 rounded-xl transition-colors">
-                        <p className="text-[8px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-1">WhatsApp / Confirmaciones</p>
+                        <p className="text-[8px] font-label uppercase tracking-[0.2em] text-[#7a766e] mb-1">WhatsApp / Confirmaciones</p>
                         <div className="flex items-center justify-between">
-                          <p className="text-sm text-[#e5e2e1] font-body group-hover/wp:text-[#f1c97d] transition-colors">{whatsapp}</p>
+                          <p className="text-sm text-[#f5f0e8] font-body group-hover/wp:text-[#f1c97d] transition-colors">{whatsapp}</p>
                           <span className="material-symbols-outlined text-[16px] text-[#f1c97d] opacity-0 group-hover/wp:opacity-100 transition-opacity">edit</span>
                         </div>
                       </div>
@@ -697,10 +697,10 @@ export default function MisTurnosPage() {
                         </div>
                       </div>
                       <h3 className="text-xl font-body font-light text-[#f1c97d] mb-2 text-center group-hover:scale-105 transition-transform duration-500">Expediente Portable</h3>
-                      <p className="text-[10px] text-[#99907c] text-center leading-relaxed font-label uppercase tracking-widest px-4 group-hover:text-[#e5e2e1] transition-colors duration-500">
+                      <p className="text-[10px] text-[#7a766e] text-center leading-relaxed font-label uppercase tracking-widest px-4 group-hover:text-[#f5f0e8] transition-colors duration-500">
                         Compartí tu historial con cualquier estilista nueva en un tap.
                       </p>
-                      <button className="mt-8 w-full py-3 rounded-xl border border-white/10 group-hover:border-[#f1c97d]/50 bg-white/5 group-hover:bg-[#f1c97d]/10 text-[9px] font-label uppercase tracking-[0.2em] text-[#e5e2e1] group-hover:text-[#f1c97d] transition-all duration-500 cursor-pointer shadow-[0_0_0_transparent] group-hover:shadow-[0_4px_20px_rgba(241,201,125,0.15)]">
+                      <button className="mt-8 w-full py-3 rounded-xl border border-white/10 group-hover:border-[#f1c97d]/50 bg-white/5 group-hover:bg-[#f1c97d]/10 text-[9px] font-label uppercase tracking-[0.2em] text-[#f5f0e8] group-hover:text-[#f1c97d] transition-all duration-500 cursor-pointer shadow-[0_0_0_transparent] group-hover:shadow-[0_4px_20px_rgba(241,201,125,0.15)]">
                         Copiar link abierto
                       </button>
                     </div>
@@ -718,8 +718,8 @@ export default function MisTurnosPage() {
                       {/* HEADER DEL CARD */}
                       <div className="flex flex-row justify-between items-center mb-6">
                         <div className="flex flex-col">
-                          <span className="text-[10px] uppercase tracking-[.12em] text-[#99907c] mb-1">Estado actual</span>
-                          <h3 className="font-body font-light text-[17px] text-[#e5e2e1]">Tu Cabello</h3>
+                          <span className="text-[10px] uppercase tracking-[.12em] text-[#7a766e] mb-1">Estado actual</span>
+                          <h3 className="font-body font-light text-[17px] text-[#f5f0e8]">Tu Cabello</h3>
                         </div>
                         <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] px-3 py-1 rounded-full">
                           Buen estado
@@ -745,14 +745,14 @@ export default function MisTurnosPage() {
                           <div className="absolute inset-0 w-full h-full animate-pulse pointer-events-none" style={{ transform: 'rotate(288deg)' }}>
                             <div className="absolute top-[3px] left-1/2 -translate-x-1/2 w-[7px] h-[7px] bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)] z-20"></div>
                           </div>
-                          <span className="absolute inset-0 flex items-center justify-center text-[22px] font-headline text-[#e5e2e1] z-10">
+                          <span className="absolute inset-0 flex items-center justify-center text-[22px] font-headline text-[#f5f0e8] z-10">
                             {mockHairHealth.score}%
                           </span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[14px] font-medium text-[#e5e2e1] mb-1.5 flex items-center gap-2">Salud general <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse"></span></span>
-                          <span className="text-[11px] text-[#99907c] font-label tracking-wide uppercase">Actualizado hace {mockHairHealth.updatedWeeksAgo} semanas</span>
-                          <span className="text-[11px] text-[#99907c] font-label tracking-wide uppercase mt-0.5">por <span className="text-[#f1c97d]">{mockHairHealth.stylistName}</span></span>
+                          <span className="text-[14px] font-medium text-[#f5f0e8] mb-1.5 flex items-center gap-2">Salud general <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse"></span></span>
+                          <span className="text-[11px] text-[#7a766e] font-label tracking-wide uppercase">Actualizado hace {mockHairHealth.updatedWeeksAgo} semanas</span>
+                          <span className="text-[11px] text-[#7a766e] font-label tracking-wide uppercase mt-0.5">por <span className="text-[#f1c97d]">{mockHairHealth.stylistName}</span></span>
                         </div>
                       </div>
 
@@ -764,16 +764,16 @@ export default function MisTurnosPage() {
                           { label: 'Frecuencia ideal', value: mockHairHealth.frequency, sub: `${mockHairHealth.visitsPerYear} visitas / año` },
                         ].map((metric, i) => (
                           <div key={i} className="bg-white/[0.02] border border-white/5 rounded-[1rem] p-4 flex flex-col hover:border-[#f1c97d]/30 hover:bg-white/[0.04] transition-all duration-300 cursor-default group/metric">
-                            <span className="text-[9px] uppercase tracking-[.1em] text-[#99907c] mb-2.5 line-clamp-1">{metric.label}</span>
-                            <span className="text-[15px] font-medium text-[#e5e2e1] mb-1 group-hover/metric:text-[#f1c97d] transition-colors">{metric.value}</span>
-                            <span className="text-[10px] text-[#99907c]">{metric.sub}</span>
+                            <span className="text-[9px] uppercase tracking-[.1em] text-[#7a766e] mb-2.5 line-clamp-1">{metric.label}</span>
+                            <span className="text-[15px] font-medium text-[#f5f0e8] mb-1 group-hover/metric:text-[#f1c97d] transition-colors">{metric.value}</span>
+                            <span className="text-[10px] text-[#7a766e]">{metric.sub}</span>
                           </div>
                         ))}
                       </div>
 
                       {/* EVOLUCIÓN — SEPARADOR + MINI BARRAS */}
                       <div className="border-t border-white/8 pt-8 mb-8 flex flex-col">
-                        <span className="text-[10px] font-label uppercase tracking-[.15em] text-[#99907c] mb-6">Evolución — últimos 6 meses</span>
+                        <span className="text-[10px] font-label uppercase tracking-[.15em] text-[#7a766e] mb-6">Evolución — últimos 6 meses</span>
                         <div className="flex items-end justify-between px-2 h-[120px] gap-2">
                           {mockHairHealth.evolution.map((evo, i) => {
                             const isLast = i === mockHairHealth.evolution.length - 1;
@@ -801,7 +801,7 @@ export default function MisTurnosPage() {
                                   <div className={`w-full rounded-full transition-all duration-1000 ${barColor} ${glow}`} style={{ height: `${evo.score}%` }}></div>
                                 </div>
                                 {/* Label Mes */}
-                                <span className={`text-[10px] font-label uppercase tracking-widest mt-3 ${isLast ? 'text-emerald-400 font-bold' : 'text-[#99907c]'}`}>{evo.month}</span>
+                                <span className={`text-[10px] font-label uppercase tracking-widest mt-3 ${isLast ? 'text-emerald-400 font-bold' : 'text-[#7a766e]'}`}>{evo.month}</span>
                               </div>
                             );
                           })}
@@ -817,8 +817,8 @@ export default function MisTurnosPage() {
                             <AlertTriangle className="text-amber-400" size={18} strokeWidth={2} />
                           </div>
                           <div className="flex flex-col relative z-10 pt-0.5">
-                            <span className="text-[12px] font-medium text-[#e5e2e1] mb-0.5">Alergia registrada</span>
-                            <span className="text-[10px] text-[#99907c] leading-snug">{mockHairHealth.allergy} <br/><span className="italic opacity-70">Tu estilista lo sabe</span></span>
+                            <span className="text-[12px] font-medium text-[#f5f0e8] mb-0.5">Alergia registrada</span>
+                            <span className="text-[10px] text-[#7a766e] leading-snug">{mockHairHealth.allergy} <br/><span className="italic opacity-70">Tu estilista lo sabe</span></span>
                           </div>
                         </div>
                         
@@ -829,8 +829,8 @@ export default function MisTurnosPage() {
                             <Target className="text-blue-400" size={18} strokeWidth={2} />
                           </div>
                           <div className="flex flex-col relative z-10 pt-0.5">
-                            <span className="text-[12px] font-medium text-[#e5e2e1] mb-0.5">Objetivo activo</span>
-                            <span className="text-[10px] text-[#99907c] leading-snug line-clamp-2" title={mockHairHealth.goal}>{mockHairHealth.goal}</span>
+                            <span className="text-[12px] font-medium text-[#f5f0e8] mb-0.5">Objetivo activo</span>
+                            <span className="text-[10px] text-[#7a766e] leading-snug line-clamp-2" title={mockHairHealth.goal}>{mockHairHealth.goal}</span>
                           </div>
                         </div>
                       </div>
@@ -841,10 +841,10 @@ export default function MisTurnosPage() {
                           <span className="text-[10px] uppercase font-label tracking-widest text-[#f1c97d] mb-1.5 flex items-center gap-2">
                              Recomendación de tu estilista <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
                           </span>
-                          <span className="text-[13px] text-[#e5e2e1] italic font-headline leading-relaxed">"{mockHairHealth.stylistRecommendation}"</span>
+                          <span className="text-[13px] text-[#f5f0e8] italic font-headline leading-relaxed">"{mockHairHealth.stylistRecommendation}"</span>
                         </div>
                         <div className="w-[40px] h-[40px] rounded-full bg-gradient-to-br from-[#f1c97d] to-[#d4af37] p-[1.5px] flex-shrink-0 shadow-[0_0_15px_rgba(241,201,125,0.2)]">
-                           <div className="w-full h-full rounded-full bg-[#080808] flex items-center justify-center">
+                           <div className="w-full h-full rounded-full bg-[#050504] flex items-center justify-center">
                               <span className="text-[14px] text-[#f1c97d] font-headline">{mockHairHealth.stylistName.charAt(0)}</span>
                            </div>
                         </div>
@@ -857,30 +857,30 @@ export default function MisTurnosPage() {
                     <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
                     <div className="mb-10">
                       <p className="text-[9px] font-label uppercase tracking-[0.3em] text-[#f1c97d] mb-2">LOGÍSTICA Y ESTILO</p>
-                      <h3 className="text-3xl font-body font-light text-[#e5e2e1]">Preferencias</h3>
+                      <h3 className="text-3xl font-body font-light text-[#f5f0e8]">Preferencias</h3>
                     </div>
 
                     <div className="grid grid-cols-2 gap-10 mb-10 pb-10 border-b border-white/5">
                       <div>
-                        <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-6">Barrio de preferencia</p>
+                        <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#7a766e] mb-6">Barrio de preferencia</p>
                         <div className="relative">
                           <input 
                             type="text" 
                             value={preferredZone}
                             onChange={(e) => setPreferredZone(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-[#e5e2e1] focus:outline-none focus:border-[#f1c97d]/30 transition-all font-body"
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-[#f5f0e8] focus:outline-none focus:border-[#f1c97d]/30 transition-all font-body"
                           />
-                          <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#99907c] text-lg">map</span>
+                          <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#7a766e] text-lg">map</span>
                         </div>
                       </div>
                       <div>
-                        <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#99907c] mb-6">Horarios habituales</p>
+                        <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#7a766e] mb-6">Horarios habituales</p>
                         <div className="flex gap-2">
                           {['Mañana', 'Tarde', 'Noche'].map(slot => (
                             <button 
                               key={slot} 
                               onClick={() => setConfig({...config, preferredTime: slot})}
-                              className={`flex-1 py-3 rounded-xl border text-[9px] font-label uppercase tracking-widest transition-all cursor-pointer ${config.preferredTime === slot ? 'bg-[#f1c97d]/10 border-[#f1c97d]/30 text-[#f1c97d]' : 'bg-white/5 border-white/10 text-[#99907c] hover:border-white/20'}`}
+                              className={`flex-1 py-3 rounded-xl border text-[9px] font-label uppercase tracking-widest transition-all cursor-pointer ${config.preferredTime === slot ? 'bg-[#f1c97d]/10 border-[#f1c97d]/30 text-[#f1c97d]' : 'bg-white/5 border-white/10 text-[#7a766e] hover:border-white/20'}`}
                             >
                               {slot}
                             </button>
@@ -891,14 +891,14 @@ export default function MisTurnosPage() {
 
                     <div className="flex justify-between items-center bg-white/[0.02] p-6 rounded-2xl border border-white/5">
                       <div>
-                        <p className="text-sm font-body text-[#e5e2e1]">Notificaciones vía WhatsApp</p>
-                        <p className="text-[9px] font-label text-[#99907c] uppercase mt-1 tracking-widest">Confirmaciones 24hs antes del turno</p>
+                        <p className="text-sm font-body text-[#f5f0e8]">Notificaciones vía WhatsApp</p>
+                        <p className="text-[9px] font-label text-[#7a766e] uppercase mt-1 tracking-widest">Confirmaciones 24hs antes del turno</p>
                       </div>
                       <div 
                         className={`w-12 h-6 ${config.whatsappNotif ? 'bg-[#f1c97d]/20 border-[#f1c97d]/40' : 'bg-white/5 border-white/10'} rounded-full relative transition-all duration-300 border cursor-pointer`}
                         onClick={() => setConfig({...config, whatsappNotif: !config.whatsappNotif})}
                       >
-                        <div className={`absolute top-1 w-3.5 h-3.5 rounded-full transition-all duration-300 ${config.whatsappNotif ? 'right-1 bg-[#f1c97d]' : 'left-1 bg-[#99907c]'}`}></div>
+                        <div className={`absolute top-1 w-3.5 h-3.5 rounded-full transition-all duration-300 ${config.whatsappNotif ? 'right-1 bg-[#f1c97d]' : 'left-1 bg-[#7a766e]'}`}></div>
                       </div>
                     </div>
                   </div>
@@ -907,9 +907,9 @@ export default function MisTurnosPage() {
                   <div className="grid grid-cols-2 gap-6">
                     <div className="relative isolate overflow-hidden rounded-[2rem] p-8 border border-white/10">
                       <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
-                      <h4 className="text-lg font-body font-light text-[#e5e2e1] mb-6">Seguridad</h4>
+                      <h4 className="text-lg font-body font-light text-[#f5f0e8] mb-6">Seguridad</h4>
                       <div className="space-y-4">
-                        <button className="w-full flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl text-[10px] font-label tracking-widest uppercase text-[#99907c] hover:text-[#f1c97d] hover:bg-white/5 transition-all text-left group cursor-pointer">
+                        <button className="w-full flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl text-[10px] font-label tracking-widest uppercase text-[#7a766e] hover:text-[#f1c97d] hover:bg-white/5 transition-all text-left group cursor-pointer">
                           Cambiar contraseña
                           <span className="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">chevron_right</span>
                         </button>
@@ -926,7 +926,7 @@ export default function MisTurnosPage() {
                     <div className="relative isolate overflow-hidden rounded-[2rem] p-8 border border-white/10 group">
                       <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10"></div>
                       <h4 className="text-lg font-headline italic text-red-400 mb-6">Zona de riesgo</h4>
-                      <p className="text-[10px] text-[#99907c] uppercase tracking-widest leading-relaxed mb-6 font-label">
+                      <p className="text-[10px] text-[#7a766e] uppercase tracking-widest leading-relaxed mb-6 font-label">
                         Si eliminás tu cuenta, perderás tu historial capilar y preferencias de forma irreversible.
                       </p>
                       <button className="w-full py-4 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 rounded-xl text-[10px] font-label tracking-[0.2em] font-bold uppercase text-red-400 transition-all cursor-pointer">
@@ -950,7 +950,7 @@ export default function MisTurnosPage() {
                 </p>
                 <div className="mt-6 flex items-center gap-5">
                   <div className="h-[1px] w-16 bg-[#f1c97d]/30"></div>
-                  <p className="text-[8px] font-label uppercase tracking-[0.4em] text-[#99907c]">Editorial Ouleeh / SS24</p>
+                  <p className="text-[8px] font-label uppercase tracking-[0.4em] text-[#7a766e]">Editorial Ouleeh / SS24</p>
                 </div>
               </div>
               <div className="col-span-6">
@@ -960,7 +960,7 @@ export default function MisTurnosPage() {
                     alt="Salon Editorial" 
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-transparent to-transparent opacity-60"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#050504] via-transparent to-transparent opacity-60"></div>
                   <div className="absolute inset-0 liquid-glass-rich opacity-0 group-hover:opacity-10 transition-opacity"></div>
                 </div>
               </div>

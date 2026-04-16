@@ -28,7 +28,7 @@ function SalonCard({ salon, onToggle }: { salon: Salon; onToggle: (id: string) =
   return (
     <div
       className="rounded-[12px] overflow-hidden transition-colors duration-200 group"
-      style={{ backgroundColor: '#1A1C20', width: '280px', minHeight: '320px' }}
+      style={{ backgroundColor: '#111010', width: '280px', minHeight: '320px' }}
     >
       {/* Top half — salon photo placeholder */}
       <div
@@ -36,7 +36,7 @@ function SalonCard({ salon, onToggle }: { salon: Salon; onToggle: (id: string) =
         style={{
           height: '160px',
           backgroundColor: '#22252A',
-          background: 'linear-gradient(135deg, #22252A 0%, #1A1C20 100%)',
+          background: 'linear-gradient(135deg, #22252A 0%, #111010 100%)',
         }}
       >
         {/* Salon initial as decorative element */}
@@ -98,7 +98,7 @@ function SalonCard({ salon, onToggle }: { salon: Salon; onToggle: (id: string) =
         <Link
           href={`/salones/${salon.slug}`}
           className="block text-center text-[13px] font-medium py-2.5 rounded-[6px] transition-opacity duration-150 hover:opacity-80"
-          style={{ backgroundColor: '#D4AF37', color: '#0F1012' }}
+          style={{ backgroundColor: '#D4AF37', color: '#050504' }}
         >
           Reservar
         </Link>
@@ -119,7 +119,7 @@ export default function FavoritosPage() {
   const favorites = salons.filter((s) => s.isFavorite)
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: '#0F1012' }}>
+    <div className="flex min-h-screen" style={{ backgroundColor: '#050504' }}>
       <DashboardSidebar />
 
       <main className="flex-1 min-w-0 px-12 py-10">
@@ -169,7 +169,7 @@ export default function FavoritosPage() {
           ) : (
             <div
               className="flex flex-col items-center justify-center py-24 rounded-[12px]"
-              style={{ border: '1px solid rgba(255,255,255,0.06)', backgroundColor: '#1A1C20' }}
+              style={{ border: '1px solid rgba(255,255,255,0.06)', backgroundColor: '#111010' }}
             >
               <Heart className="w-10 h-10 mb-4" style={{ color: '#8A8F98' }} />
               <p className="font-vogue text-xl mb-2" style={{ color: '#8A8F98' }}>
@@ -181,7 +181,7 @@ export default function FavoritosPage() {
               <Link
                 href="/explore"
                 className="text-[11px] font-semibold uppercase tracking-widest px-6 py-3 rounded-[6px] transition-opacity hover:opacity-80"
-                style={{ backgroundColor: '#D4AF37', color: '#0F1012' }}
+                style={{ backgroundColor: '#D4AF37', color: '#050504' }}
               >
                 Explorar Salones
               </Link>

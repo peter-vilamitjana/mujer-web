@@ -50,7 +50,7 @@ export default function MiPerfilPage() {
 
   const inputBase: React.CSSProperties = {
     height: '48px',
-    backgroundColor: '#0F1012',
+    backgroundColor: '#050504',
     border: '1px solid #8A8F98',
     borderRadius: '6px',
     color: '#F4F4F5',
@@ -62,7 +62,7 @@ export default function MiPerfilPage() {
   }
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: '#0F1012' }}>
+    <div className="flex min-h-screen" style={{ backgroundColor: '#050504' }}>
       <DashboardSidebar />
 
       <main className="flex-1 min-w-0 px-12 py-10">
@@ -86,14 +86,14 @@ export default function MiPerfilPage() {
               {/* Avatar */}
               <div
                 className="p-6 rounded-[12px] mb-6 flex items-center gap-5"
-                style={{ backgroundColor: '#1A1C20' }}
+                style={{ backgroundColor: '#111010' }}
               >
                 {/* Avatar Upload — 100x100, gold border */}
                 <div
                   className="w-[100px] h-[100px] rounded-full flex items-center justify-center shrink-0"
                   style={{
                     border: '2px solid #D4AF37',
-                    backgroundColor: '#0F1012',
+                    backgroundColor: '#050504',
                     cursor: 'pointer',
                   }}
                 >
@@ -116,7 +116,7 @@ export default function MiPerfilPage() {
               {/* Form */}
               <div
                 className="p-6 rounded-[12px] space-y-6"
-                style={{ backgroundColor: '#1A1C20' }}
+                style={{ backgroundColor: '#111010' }}
               >
                 <p
                   className="text-[10px] uppercase tracking-[0.2em] font-medium"
@@ -199,7 +199,7 @@ export default function MiPerfilPage() {
                     <div
                       className="flex items-center px-3 shrink-0 text-sm"
                       style={{
-                        backgroundColor: '#0F1012',
+                        backgroundColor: '#050504',
                         borderRight: '1px solid #8A8F98',
                         color: '#8A8F98',
                         height: '48px',
@@ -214,7 +214,7 @@ export default function MiPerfilPage() {
                         onChange={(e) => setTempValue(e.target.value.replace(/[^\d\s]/g, ''))}
                         style={{
                           height: '48px',
-                          backgroundColor: '#0F1012',
+                          backgroundColor: '#050504',
                           color: '#F4F4F5',
                           fontSize: '14px',
                           padding: '0 40px 0 14px',
@@ -256,7 +256,7 @@ export default function MiPerfilPage() {
                         width: '120px',
                         height: '44px',
                         backgroundColor: showSuccess ? 'rgba(60,90,69,0.5)' : '#D4AF37',
-                        color: showSuccess ? '#F4F4F5' : '#0F1012',
+                        color: showSuccess ? '#F4F4F5' : '#050504',
                         justifyContent: 'center',
                       }}
                     >
@@ -281,7 +281,7 @@ export default function MiPerfilPage() {
               {/* Notification preferences */}
               <div
                 className="p-6 rounded-[12px]"
-                style={{ backgroundColor: '#1A1C20' }}
+                style={{ backgroundColor: '#111010' }}
               >
                 <p
                   className="text-[10px] uppercase tracking-[0.2em] font-medium mb-5"
@@ -317,7 +317,7 @@ export default function MiPerfilPage() {
               {/* Salones visitados */}
               <div
                 className="p-6 rounded-[12px]"
-                style={{ backgroundColor: '#1A1C20' }}
+                style={{ backgroundColor: '#111010' }}
               >
                 <p
                   className="text-[10px] uppercase tracking-[0.2em] font-medium mb-5"
