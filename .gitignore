@@ -69,3 +69,7 @@ prompts/products/*
 prompts/salon/*
 prompts/marketing/*
 !prompts/**/.gitkeep
+
+# Frames extraídos del video — son pesados, no subir al repo
+public/frames/
+public/videos/
