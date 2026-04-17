@@ -49,3 +49,23 @@ firestore-debug.log
 .agents/
 .claude/
 CLAUDE.md
+
+# Imágenes generadas por IA — no subir al repo
+images/infographics/*
+images/miscellaneous/*
+images/people/*
+images/photography/*
+images/products/*
+images/salon/*
+images/marketing/*
+!images/**/.gitkeep
+
+# Prompts JSON de imágenes generadas
+prompts/infographics/*
+prompts/miscellaneous/*
+prompts/people/*
+prompts/photography/*
+prompts/products/*
+prompts/salon/*
+prompts/marketing/*
+!prompts/**/.gitkeep
