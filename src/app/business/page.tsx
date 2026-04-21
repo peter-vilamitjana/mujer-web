@@ -1,6 +1,5 @@
 import BusinessHero from '@/components/business/BusinessHero';
 import BusinessFeatures from '@/components/business/BusinessFeatures';
-import BusinessDashboardMock from '@/components/business/BusinessDashboardMock';
 import BusinessCTA from '@/components/business/BusinessCTA';
 import LandingHeader from '@/components/landing/LandingHeader';
 
@@ -15,7 +14,6 @@ export default function BusinessPage() {
       <LandingHeader />
       <BusinessHero />
       <BusinessFeatures />
-      <BusinessDashboardMock />
       <BusinessCTA />
     </div>
   );

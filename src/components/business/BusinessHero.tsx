@@ -1,116 +1,211 @@
-import Link from 'next/link';
-import ScrollVideoHero from './ScrollVideoHero'
+"use client";
+import { BackgroundPaths } from "@/components/ui/background-paths";
+import { ContainerScroll } from "@/components/ui/container-scroll-animation";
+
+const weekData = [
+  { label: "LUN", height: 40, highlight: false },
+  { label: "MAR", height: 62, highlight: false },
+  { label: "MIE", height: 32, highlight: false },
+  { label: "JUE", height: 100, highlight: true },
+  { label: "VIE", height: 58, highlight: false },
+  { label: "SAB", height: 75, highlight: false },
+  { label: "DOM", height: 44, highlight: false },
+];
+
+const appointments = [
+  { name: "Corte de Autor — Martina S.", time: "14:00" },
+  { name: "Balayage Premium — Carolina V.", time: "15:30" },
+  { name: "Tratamiento Keratina", time: "17:00" },
+];
 
 export default function BusinessHero() {
   return (
     <>
-      {/* Copy section — unchanged */}
-      <section className="relative min-h-screen flex items-center pt-24 overflow-hidden bg-white dark:bg-[#050505]">
+      {/* ── Sección 1: Hero con BackgroundPaths ── */}
+      <BackgroundPaths
+        title="Transformá tu salón."
+        subtitle="Gestión sofisticada para el profesional contemporáneo. Agenda, clientes, métricas y pagos — todo en un lugar."
+        cta={{
+          label: "Comenzar gratis",
+          href: "/business/register",
+          secondary: { label: "Ver la plataforma", href: "/explore" },
+        }}
+        stats={[
+          { value: "+340", label: "Salones activos" },
+          { value: "42k", label: "Reservas / mes" },
+          { value: "Free", label: "Para empezar" },
+        ]}
+      />
 
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-black/[0.015] dark:bg-white/[0.015] rounded-full blur-[120px] pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-8 lg:px-16 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center min-h-[calc(100vh-6rem)] overflow-visible">
-
-            {/* Copy */}
-            <div className="space-y-10 py-20 overflow-visible">
-
-              <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/8">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-[9px] uppercase tracking-[0.3em] text-[#0a0a0a]/35 dark:text-white/40 font-inter">
-                  Elite Business Solution
-                </span>
-              </div>
-
-              <div>
-                <h1 className="font-vogue text-6xl md:text-7xl lg:text-8xl text-[#0a0a0a] dark:text-white leading-[0.9] mb-6">
-                  Transformá<br/>
-                  <span className="italic text-[#0a0a0a]/50 dark:text-white/35">tu salón.</span>
-                </h1>
-                <p className="text-lg text-[#0a0a0a]/50 dark:text-white/40 font-light leading-relaxed max-w-md font-inter">
-                  Gestión sofisticada para el profesional contemporáneo.
-                  Agenda, clientes, métricas y pagos — todo desde un solo lugar.
-                </p>
-              </div>
-
-              {/* Social proof */}
-              <div className="flex items-center gap-8 py-2">
-                <div className="text-center">
-                  <div className="font-vogue text-3xl text-[#0a0a0a] dark:text-white">+340</div>
-                  <div className="text-[9px] uppercase tracking-[0.2em] text-[#0a0a0a]/35 dark:text-white/25 font-inter mt-1">Salones activos</div>
-                </div>
-                <div className="w-px h-10 bg-black/10 dark:bg-white/10" />
-                <div className="text-center">
-                  <div className="font-vogue text-3xl text-[#0a0a0a] dark:text-white">42k</div>
-                  <div className="text-[9px] uppercase tracking-[0.2em] text-[#0a0a0a]/35 dark:text-white/25 font-inter mt-1">Reservas / mes</div>
-                </div>
-                <div className="w-px h-10 bg-black/10 dark:bg-white/10" />
-                <div className="text-center">
-                  <div className="font-vogue text-3xl text-[#0a0a0a] dark:text-white">Free</div>
-                  <div className="text-[9px] uppercase tracking-[0.2em] text-[#0a0a0a]/35 dark:text-white/25 font-inter mt-1">Para empezar</div>
-                </div>
-              </div>
-
-              {/* CTAs */}
-              <div className="flex flex-wrap gap-4 pt-2">
-                <Link
-                  href="/business/register"
-                  className="group relative px-10 py-4 rounded-full font-inter
-                    transition-all duration-500 ease-out hover:px-14
-                    flex items-center bg-[#0a0a0a] text-white dark:bg-white dark:text-black
-                    hover:bg-black/90 dark:hover:bg-[#0a1a0a] hover:text-green-400 dark:hover:text-green-400
-                    outline outline-0 hover:outline-[3px] hover:outline-green-500 hover:outline-offset-[6px]
-                    hover:shadow-[0_0_30px_rgba(34,197,94,0.3)]"
-                >
-                  <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300">
-                    <span className="group-hover:hidden">Comenzar gratis</span>
-                    <span className="hidden group-hover:inline">Potenciando tu negocio</span>
-                  </span>
-                </Link>
-                <Link
-                  href="/explore"
-                  className="px-10 py-4 rounded-full border border-black/15 dark:border-white/12 text-[#0a0a0a]/50 dark:text-white/45
-                    text-[10px] font-bold uppercase tracking-widest font-inter
-                    hover:border-black/30 hover:text-[#0a0a0a] dark:hover:border-white/25 dark:hover:text-white transition-all duration-300"
-                >
-                  Ver la plataforma
-                </Link>
-              </div>
-
-              <p className="text-[10px] text-[#0a0a0a]/30 dark:text-white/18 font-inter italic">
-                Sin contratos. Sin tarjeta de crédito. Onboarding en 10 minutos.
+      {/* ── Sección 2: ContainerScroll — el dashboard se desdobla en 3D ── */}
+      <div className="bg-white dark:bg-[#050505] overflow-hidden">
+        <ContainerScroll
+          titleComponent={
+            <div className="flex flex-col items-center gap-4 pb-4">
+              <span className="text-[9px] uppercase tracking-[0.4em] text-[#0a0a0a]/30 dark:text-white/22 font-inter">
+                La experiencia
+              </span>
+              <h2 className="font-vogue text-5xl md:text-6xl text-[#0a0a0a] dark:text-white leading-[0.9]">
+                Minimalismo funcional.
+              </h2>
+              <p className="text-[#0a0a0a]/45 dark:text-white/30 font-light font-inter text-sm leading-relaxed max-w-sm mx-auto text-center">
+                Una interfaz que desaparece para dejar que tu trabajo brille.
               </p>
             </div>
+          }
+        >
+          {/* ── Dashboard mock ── */}
+          <div className="h-full flex flex-col bg-[#050504]">
 
-            {/* Right column — hidden on mobile, shown on desktop */}
-            <div className="relative hidden lg:block h-full py-16">
-              <div className="relative h-full min-h-[580px] rounded-[2.5rem] overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center">
-                <p className="text-[10px] text-zinc-400 uppercase tracking-widest">Scroll hacia abajo ↓</p>
+            {/* Top bar */}
+            <div className="px-5 md:px-7 py-3.5 border-b border-white/[0.06] flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-5">
+                <span className="font-vogue text-sm italic text-white/65">Pro Workspace</span>
+                <div className="hidden md:flex items-center gap-0.5">
+                  {["Dashboard", "Agenda", "Clientes", "Finanzas"].map((item, i) => (
+                    <span
+                      key={item}
+                      className="px-3 py-1.5 rounded-full text-[11px] font-inter"
+                      style={{
+                        background: i === 0 ? "rgba(255,255,255,0.1)" : "transparent",
+                        color: i === 0 ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.22)",
+                      }}
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div
+                  className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full"
+                  style={{ background: "rgba(74,222,128,0.08)", border: "1px solid rgba(74,222,128,0.15)" }}
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                  <span className="text-[10px] text-green-400 font-inter">En vivo</span>
+                </div>
+                <div
+                  className="w-7 h-7 rounded-full border border-white/[0.1] flex items-center justify-center"
+                  style={{ background: "rgba(255,255,255,0.06)" }}
+                >
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: "rgba(255,255,255,0.35)" }} />
+                </div>
               </div>
             </div>
 
-          </div>
-        </div>
-      </section>
+            {/* Main content */}
+            <div className="flex-1 min-h-0 p-5 md:p-6 flex flex-col gap-4 overflow-hidden">
 
-      {/* Scroll video hero — Apple Studio Display animation */}
-      <ScrollVideoHero
-        totalFrames={96}
-        framesPath="/frames/studio-display"
-        frameExt="jpg"
-      >
-        <div className="text-center max-w-2xl px-6">
-          <p className="text-[10px] text-emerald-400 uppercase tracking-[0.5em] font-bold mb-4">
-            MujerApp para Negocios
-          </p>
-          <h2 className="font-playfair text-4xl text-white italic mb-3">
-            Tu salón, en control total
-          </h2>
-          <p className="text-zinc-400 text-sm leading-relaxed">
-            Agenda, clientes, cobros y métricas — todo en un lugar.
-          </p>
-        </div>
-      </ScrollVideoHero>
+              {/* Greeting row */}
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm font-light text-white/70 font-inter">
+                    Buenos días, <span className="text-white/90">Carolina</span>
+                  </p>
+                  <p className="text-[10px] text-white/22 font-inter mt-0.5">Tenés 12 turnos para hoy</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-vogue text-2xl text-white">$45.200</p>
+                  <p className="text-[10px] font-inter mt-0.5" style={{ color: "rgba(74,222,128,0.8)" }}>+12% hoy</p>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-2.5">
+                {[
+                  { label: "Ingresos", value: "$45.200", sub: "+12%", green: true },
+                  { label: "Nuevas clientas", value: "+8", sub: "este mes", green: false },
+                  { label: "Turnos hoy", value: "12", sub: "4 completos", green: false },
+                ].map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="rounded-xl p-3 md:p-4"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+                  >
+                    <p className="text-[8px] uppercase tracking-widest mb-1.5 font-inter" style={{ color: "rgba(255,255,255,0.22)" }}>
+                      {stat.label}
+                    </p>
+                    <p className="font-vogue text-lg md:text-xl text-white leading-none">{stat.value}</p>
+                    <p className="text-[9px] font-inter mt-1.5" style={{ color: stat.green ? "rgba(74,222,128,0.8)" : "rgba(255,255,255,0.22)" }}>
+                      {stat.sub}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Bottom: appointments + chart */}
+              <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-3 flex-1 min-h-0">
+
+                {/* Appointments */}
+                <div
+                  className="rounded-xl p-4 flex flex-col gap-3 overflow-hidden"
+                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                >
+                  <p className="text-[8px] uppercase tracking-[0.35em] font-inter flex-shrink-0" style={{ color: "rgba(255,255,255,0.22)" }}>
+                    Próximos turnos
+                  </p>
+                  <div className="space-y-1.5">
+                    {appointments.map((apt, i) => (
+                      <div
+                        key={apt.name}
+                        className="flex items-center justify-between rounded-lg px-3 py-2.5"
+                        style={{
+                          background: i === 0 ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.02)",
+                          border: `1px solid ${i === 0 ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)"}`,
+                          opacity: 1 - i * 0.25,
+                        }}
+                      >
+                        <span className="text-[10px] text-white/60 font-inter truncate pr-2">{apt.name}</span>
+                        <span
+                          className="text-[10px] font-inter font-semibold flex-shrink-0"
+                          style={{ color: i === 0 ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.3)" }}
+                        >
+                          {apt.time}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Chart */}
+                <div
+                  className="rounded-xl p-4 flex flex-col gap-3"
+                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                >
+                  <div className="flex justify-between items-start flex-shrink-0">
+                    <p className="text-[8px] uppercase tracking-[0.35em] font-inter" style={{ color: "rgba(255,255,255,0.22)" }}>
+                      Rendimiento
+                    </p>
+                    <span className="text-[10px] font-inter font-semibold" style={{ color: "rgba(74,222,128,0.8)" }}>
+                      +18%
+                    </span>
+                  </div>
+                  <div className="flex items-end justify-between gap-1.5 flex-1" style={{ minHeight: "50px" }}>
+                    {weekData.map(({ label, height, highlight }) => (
+                      <div key={label} className="flex-1 flex flex-col items-center gap-1" style={{ height: "100%" }}>
+                        <div style={{ flex: 1, display: "flex", alignItems: "flex-end", width: "100%" }}>
+                          <div
+                            style={{
+                              width: "100%",
+                              height: `${height}%`,
+                              borderRadius: "3px 3px 0 0",
+                              backgroundColor: highlight ? "rgba(255,255,255,0.55)" : "rgba(255,255,255,0.08)",
+                            }}
+                          />
+                        </div>
+                        <span className="text-[8px] font-inter" style={{ color: highlight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.18)" }}>
+                          {label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </ContainerScroll>
+      </div>
     </>
   );
 }
