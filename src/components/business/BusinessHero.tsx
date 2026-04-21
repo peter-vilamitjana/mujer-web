@@ -1,6 +1,7 @@
 "use client";
 import { BackgroundPaths } from "@/components/ui/background-paths";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
+import { motion } from "framer-motion";
 
 const weekData = [
   { label: "LUN", height: 40, highlight: false },
@@ -38,24 +39,30 @@ export default function BusinessHero() {
       />
 
       {/* ── Sección 2: ContainerScroll — el dashboard se desdobla en 3D ── */}
-      <div className="bg-white dark:bg-[#050505] overflow-hidden">
+      <div className="bg-white dark:bg-[#050505] overflow-hidden relative">
+        {/* Ambient Glow */}
+        <div className="absolute top-[40%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-green-500/10 dark:bg-green-500/5 blur-[120px] rounded-full pointer-events-none" />
         <ContainerScroll
           titleComponent={
             <div className="flex flex-col items-center gap-4 pb-4">
-              <span className="text-[9px] uppercase tracking-[0.4em] text-[#0a0a0a]/30 dark:text-white/22 font-inter">
+              <span className="text-[9px] uppercase tracking-[0.4em] text-[#0a0a0a]/60 dark:text-white/60 font-inter">
                 La experiencia
               </span>
               <h2 className="font-vogue text-5xl md:text-6xl text-[#0a0a0a] dark:text-white leading-[0.9]">
                 Minimalismo funcional.
               </h2>
-              <p className="text-[#0a0a0a]/45 dark:text-white/30 font-light font-inter text-sm leading-relaxed max-w-sm mx-auto text-center">
+              <p className="text-[#0a0a0a]/60 dark:text-white/60 font-light font-inter text-sm leading-relaxed max-w-sm mx-auto text-center">
                 Una interfaz que desaparece para dejar que tu trabajo brille.
               </p>
             </div>
           }
         >
           {/* ── Dashboard mock ── */}
-          <div className="h-full flex flex-col bg-[#050504]">
+          <motion.div 
+            animate={{ y: [0, -6, 0] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+            className="h-full flex flex-col bg-[#050504]"
+          >
 
             {/* Top bar */}
             <div className="px-5 md:px-7 py-3.5 border-b border-white/[0.06] flex items-center justify-between flex-shrink-0">
@@ -67,8 +74,8 @@ export default function BusinessHero() {
                       key={item}
                       className="px-3 py-1.5 rounded-full text-[11px] font-inter"
                       style={{
-                        background: i === 0 ? "rgba(255,255,255,0.1)" : "transparent",
-                        color: i === 0 ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.22)",
+                        background: i === 0 ? "rgba(255,255,255,0.15)" : "transparent",
+                        color: i === 0 ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.6)",
                       }}
                     >
                       {item}
@@ -99,10 +106,10 @@ export default function BusinessHero() {
               {/* Greeting row */}
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="text-sm font-light text-white/70 font-inter">
-                    Buenos días, <span className="text-white/90">Carolina</span>
+                  <p className="text-sm font-light text-white/90 font-inter">
+                    Buenos días, <span className="text-white font-medium">Carolina</span>
                   </p>
-                  <p className="text-[10px] text-white/22 font-inter mt-0.5">Tenés 12 turnos para hoy</p>
+                  <p className="text-[10px] text-white/60 font-inter mt-0.5">Tenés 12 turnos para hoy</p>
                 </div>
                 <div className="text-right">
                   <p className="font-vogue text-2xl text-white">$45.200</p>
@@ -122,11 +129,11 @@ export default function BusinessHero() {
                     className="rounded-xl p-3 md:p-4"
                     style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
                   >
-                    <p className="text-[8px] uppercase tracking-widest mb-1.5 font-inter" style={{ color: "rgba(255,255,255,0.22)" }}>
+                    <p className="text-[8px] uppercase tracking-widest mb-1.5 font-inter" style={{ color: "rgba(255,255,255,0.6)" }}>
                       {stat.label}
                     </p>
                     <p className="font-vogue text-lg md:text-xl text-white leading-none">{stat.value}</p>
-                    <p className="text-[9px] font-inter mt-1.5" style={{ color: stat.green ? "rgba(74,222,128,0.8)" : "rgba(255,255,255,0.22)" }}>
+                    <p className="text-[9px] font-inter mt-1.5" style={{ color: stat.green ? "rgba(74,222,128,0.9)" : "rgba(255,255,255,0.6)" }}>
                       {stat.sub}
                     </p>
                   </div>
@@ -141,7 +148,7 @@ export default function BusinessHero() {
                   className="rounded-xl p-4 flex flex-col gap-3 overflow-hidden"
                   style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
                 >
-                  <p className="text-[8px] uppercase tracking-[0.35em] font-inter flex-shrink-0" style={{ color: "rgba(255,255,255,0.22)" }}>
+                  <p className="text-[8px] uppercase tracking-[0.35em] font-inter flex-shrink-0" style={{ color: "rgba(255,255,255,0.6)" }}>
                     Próximos turnos
                   </p>
                   <div className="space-y-1.5">
@@ -155,10 +162,10 @@ export default function BusinessHero() {
                           opacity: 1 - i * 0.25,
                         }}
                       >
-                        <span className="text-[10px] text-white/60 font-inter truncate pr-2">{apt.name}</span>
+                        <span className="text-[10px] text-white/80 font-inter truncate pr-2">{apt.name}</span>
                         <span
                           className="text-[10px] font-inter font-semibold flex-shrink-0"
-                          style={{ color: i === 0 ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.3)" }}
+                          style={{ color: i === 0 ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.6)" }}
                         >
                           {apt.time}
                         </span>
@@ -173,7 +180,7 @@ export default function BusinessHero() {
                   style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
                 >
                   <div className="flex justify-between items-start flex-shrink-0">
-                    <p className="text-[8px] uppercase tracking-[0.35em] font-inter" style={{ color: "rgba(255,255,255,0.22)" }}>
+                    <p className="text-[8px] uppercase tracking-[0.35em] font-inter" style={{ color: "rgba(255,255,255,0.6)" }}>
                       Rendimiento
                     </p>
                     <span className="text-[10px] font-inter font-semibold" style={{ color: "rgba(74,222,128,0.8)" }}>
@@ -193,7 +200,7 @@ export default function BusinessHero() {
                             }}
                           />
                         </div>
-                        <span className="text-[8px] font-inter" style={{ color: highlight ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.18)" }}>
+                        <span className="text-[8px] font-inter" style={{ color: highlight ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.4)" }}>
                           {label}
                         </span>
                       </div>
@@ -203,7 +210,7 @@ export default function BusinessHero() {
 
               </div>
             </div>
-          </div>
+          </motion.div>
         </ContainerScroll>
       </div>
     </>
