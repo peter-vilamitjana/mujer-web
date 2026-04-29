@@ -143,12 +143,17 @@ export interface Appointment {
     createdAt: Timestamp;
     createdBy: string; // User ID
     googleEventId?: string;
+    source?: string;                   // 'marketplace' | 'admin'
     // ── Campos de Checkout Local (Pivot LATAM) ──────────────────
     amountPaid?: number;              // Monto real cobrado al cerrar caja
     paymentMethod?: PaymentMethod;    // Cómo pagó la clienta
     commissionCalculated?: number;    // Comisión calculada al staff (si aplica)
     checkoutAt?: Timestamp;           // Cuándo se cerró el cobro
     checkoutBy?: string;              // UID del admin que cobró
+    // ── Guest booking (reservas sin cuenta) ─────────────────────
+    isGuestBooking?: boolean;         // true cuando reserva sin sesión NextAuth
+    guestEmail?: string;              // email del invitado para confirmación
+    guestPhone?: string;              // WhatsApp del invitado
 }
 
 export interface Customer {
