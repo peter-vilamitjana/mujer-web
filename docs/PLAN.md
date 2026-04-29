@@ -1,6 +1,6 @@
 # MujerApp — Análisis Técnico y Plan de Proyecto
 
-**Rama analizada**: `database-config` | **Fecha**: 2026-04-03 | **Pivot LATAM**: 2026-04-08 | **Última actualización**: 2026-04-09
+**Rama analizada**: `database-config` | **Fecha**: 2026-04-03 | **Pivot LATAM**: 2026-04-08 | **Última actualización**: 2026-04-28
 
 ---
 
@@ -8,7 +8,7 @@
 
 MujerApp es una plataforma SaaS B2B2C multi-tenant para la gestión de salones de belleza. El stack es sólido y moderno (Next.js 15, TypeScript, Firestore, NextAuth v4), con una arquitectura multi-tenant bien diseñada a nivel de schema y reglas Firestore.
 
-**Estado actual (2026-04-09)**: ✅ Fase 0 + ✅ Fase 1 + ✅ Fase 2 + ✅ Fase 3 (parcial) + ✅ Fase 3.5 completadas. Portal B2C, booking flow con teléfono, checkout de caja, CRM con métricas, auth B2C con rol `customer`, `/registro` y `/perfil`. Build y TypeScript limpios. Próximo paso: **Fase 3 restante — MercadoPago + cierre de caja dashboard**.
+**Estado actual (2026-04-28)**: ✅ Fase 0 + ✅ Fase 1 + ✅ Fase 2 + ✅ Fase 3 + ✅ Fase 3.5 + ✅ Fase 4 (parcial) completadas. `/perfil` wired a Firestore, CierreCajaDiario en dashboard, MercadoPago Checkout Pro integrado en BookingFlow, SEO + sitemap + robots.txt, tests e2e con Playwright. Build y TypeScript limpios. **Próximo hito**: activar credenciales MERCADOPAGO_ACCESS_TOKEN en producción + correr `npx playwright install` para habilitar tests.
 
 La hoja de ruta para un MVP launchable es de **10–14 semanas** para un equipo de 2–3 devs (~6 semanas completadas).
 

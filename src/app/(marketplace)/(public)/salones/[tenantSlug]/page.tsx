@@ -16,9 +16,35 @@ export async function generateMetadata({ params }: Props) {
   const { tenantSlug } = await params;
   const salon = await getSalonBySlug(tenantSlug);
   if (!salon) return { title: 'Salón no encontrado' };
+
+  const title = `${salon.name} | Ouleeh`;
+  const description = salon.description
+    ? `${salon.description} Reservá tu turno online en ${salon.name}.`
+    : `Reservá tu turno online en ${salon.name}. Servicios de belleza y estilismo premium en ${salon.address ?? 'Argentina'}.`;
+
+  const baseUrl = process.env.NEXTAUTH_URL ?? 'https://ouleeh.com';
+  const canonicalUrl = `${baseUrl}/salones/${tenantSlug}`;
+  const ogImage = salon.coverImageUrl ?? `${baseUrl}/og-default.jpg`;
+
   return {
-    title: `${salon.name} | Ouleeh`,
-    description: `Reservá tu turno en ${salon.name}`,
+    title,
+    description,
+    alternates: { canonical: canonicalUrl },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: 'Ouleeh',
+      images: [{ url: ogImage, width: 1200, height: 630, alt: salon.name }],
+      locale: 'es_AR',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage],
+    },
   };
 }
 

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSession, signOut } from 'next-auth/react'
 import { LayoutDashboard, Clock, User, Heart, LogOut } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -14,7 +15,12 @@ const NAV_ITEMS = [
 
 export function DashboardSidebar() {
   const pathname = usePathname()
+  const { data: session } = useSession()
   const [confirmLogout, setConfirmLogout] = useState(false)
+
+  const userName = session?.user?.name ?? ''
+  const userEmail = session?.user?.email ?? ''
+  const nameInitial = userName.charAt(0).toUpperCase() || '?'
 
   return (
     <aside className="w-[280px] liquid-glass-floating flex flex-col h-screen sticky top-0 shrink-0">
@@ -29,14 +35,19 @@ export function DashboardSidebar() {
       <div className="px-6 py-5 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center bg-[#050504] shrink-0"
+            className="w-10 h-10 rounded-full flex items-center justify-center bg-[#050504] shrink-0 overflow-hidden"
             style={{ border: '2px solid #D4AF37' }}
           >
-            <span className="font-vogue text-base" style={{ color: '#D4AF37' }}>S</span>
+            {session?.user?.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={session.user.image} alt={userName} className="w-full h-full object-cover" />
+            ) : (
+              <span className="font-vogue text-base" style={{ color: '#D4AF37' }}>{nameInitial}</span>
+            )}
           </div>
           <div className="min-w-0">
-            <p className="text-[#F4F4F5] text-sm font-medium truncate">Sofia R.</p>
-            <p className="text-[#8A8F98] text-[11px] truncate">sofia.r@email.com</p>
+            <p className="text-[#F4F4F5] text-sm font-medium truncate">{userName || 'Clienta'}</p>
+            <p className="text-[#8A8F98] text-[11px] truncate">{userEmail}</p>
           </div>
         </div>
       </div>
@@ -79,6 +90,7 @@ export function DashboardSidebar() {
                 No
               </button>
               <button
+                onClick={() => signOut({ callbackUrl: '/' })}
                 className="flex-1 text-[11px] text-red-400 border border-red-400/20 py-2 rounded-lg hover:bg-red-400/[0.06] transition-all cursor-pointer"
               >
                 Sí, salir

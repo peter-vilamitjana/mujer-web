@@ -12,6 +12,7 @@ import { MonthlyVolumeChart } from "@/components/charts/MonthlyVolumeChart";
 import { WeeklyTurnosChart } from "@/components/charts/WeeklyTurnosChart";
 import { useUser } from "@/contexts/UserContext";
 import { useMetrics } from "@/hooks/useMetrics";
+import { CierreCajaDiario } from "@/components/admin/CierreCajaDiario";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -124,6 +125,8 @@ export default function DashboardPage() {
           )}
         </CardContent>
       </Card>
+
+      <CierreCajaDiario />
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <Card className="lg:col-span-3 shadow-sm hover:shadow-md transition-shadow rounded-2xl">

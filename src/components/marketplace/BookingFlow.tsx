@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getAvailableSlots, createBooking } from '@/actions/booking.actions';
+import { createDepositPreference } from '@/actions/mercadopago.actions';
 import type { Service, Staff, ServicePriceByLength } from '@/lib/schema';
 import type { LargoPelo } from '@/lib/types';
 import {
@@ -27,6 +28,7 @@ const ALL_TIME_SLOTS = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "1
 
 interface Props {
   tenantId: string;
+  tenantSlug: string;
   services: Service[];
   staff: Staff[];
 }
@@ -67,7 +69,7 @@ const LengthPopoverTrigger = ({ asChild = false }: { asChild?: boolean }) => (
   </Popover>
 );
 
-export default function BookingFlow({ tenantId, services, staff }: Props) {
+export default function BookingFlow({ tenantId, tenantSlug, services, staff }: Props) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { toast } = useToast();
@@ -87,21 +89,7 @@ export default function BookingFlow({ tenantId, services, staff }: Props) {
 
   const isPhoneValid = useMemo(() => /^\d{8,15}$/.test(clientPhone.replace(/\s/g, '')), [clientPhone]);
 
-  if (status === 'unauthenticated') {
-    return (
-      <div className="text-center py-12 space-y-4">
-        <p className="text-muted-foreground">Necesitás iniciar sesión para reservar un turno.</p>
-        <Button onClick={() => router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`)}>
-          Iniciar sesión
-        </Button>
-      </div>
-    );
-  }
-
-  if (status === 'loading') {
-    return <div className="flex justify-center py-12"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
-  }
-
+  // Pure helpers — defined before early returns so useMemo below can reference them
   const getServicePrice = (service: SelectedServiceWithLargo): { from: number; to?: number } => {
     if (service.requiresLengthSelection && !service.largo) return { from: 0, to: 0 };
     if (typeof service.price === 'object' && service.largo) {
@@ -125,6 +113,7 @@ export default function BookingFlow({ tenantId, services, staff }: Props) {
     return `${h}h ${m}min`;
   };
 
+  // All useMemo hooks must come before any early return to satisfy Rules of Hooks
   const { totalFrom, totalTo, hasRange } = useMemo(() => {
     let from = 0, to = 0, range = false;
     selectedServices.forEach(s => {
@@ -159,6 +148,22 @@ export default function BookingFlow({ tenantId, services, staff }: Props) {
     if (names.length > limit) summary += ` +${names.length - limit} más`;
     return summary;
   }, [selectedServices]);
+
+  // Early returns after all hooks — safe per Rules of Hooks
+  if (status === 'unauthenticated') {
+    return (
+      <div className="text-center py-12 space-y-4">
+        <p className="text-muted-foreground">Necesitás iniciar sesión para reservar un turno.</p>
+        <Button onClick={() => router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`)}>
+          Iniciar sesión
+        </Button>
+      </div>
+    );
+  }
+
+  if (status === 'loading') {
+    return <div className="flex justify-center py-12"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
+  }
 
   const handleServiceToggle = (service: Service) => {
     setSelectedServices(prev => {
@@ -239,12 +244,33 @@ export default function BookingFlow({ tenantId, services, staff }: Props) {
         clientPhone,
       });
 
-      if (result.success) {
-        toast({ title: "¡Turno confirmado!", description: `Tu cita para ${selectedServiceNames} quedó agendada.` });
-        router.push('/dashboard'); 
-      } else {
+      if (!result.success) {
         toast({ title: "Error", description: result.error ?? 'No se pudo crear el turno.', variant: "destructive" });
+        return;
       }
+
+      // Si hay seña, intentar crear preferencia de MercadoPago
+      if (depositAmount > 0 && result.appointmentId) {
+        const mpResult = await createDepositPreference({
+          appointmentId: result.appointmentId,
+          tenantId,
+          tenantSlug,
+          depositAmount,
+          serviceNames: selectedServiceNames,
+        });
+
+        if ('checkoutUrl' in mpResult) {
+          window.location.href = mpResult.checkoutUrl;
+          return;
+        }
+        // Si MP no está configurado (MP_NOT_CONFIGURED) o falla, confirmar igual sin seña
+        if (!('error' in mpResult && mpResult.error === 'MP_NOT_CONFIGURED')) {
+          toast({ title: "Advertencia", description: "No se pudo procesar el pago. El turno quedó reservado sin seña.", variant: "destructive" });
+        }
+      }
+
+      toast({ title: "¡Turno confirmado!", description: `Tu cita para ${selectedServiceNames} quedó agendada.` });
+      router.push(`/salones/${tenantSlug}/dashboard`);
     });
   };
 

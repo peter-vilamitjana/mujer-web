@@ -28,8 +28,16 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: 'Ouleeh | Estilismo y Belleza',
-  description: 'Gestioná tu salón de forma sencilla y elegante.',
+  title: { default: 'Ouleeh | Estilismo y Belleza', template: '%s | Ouleeh' },
+  description: 'Descubrí y reservá turnos en los mejores salones de belleza de Argentina. Gestión premium para estilistas.',
+  metadataBase: new URL(process.env.NEXTAUTH_URL ?? 'https://ouleeh.com'),
+  openGraph: {
+    siteName: 'Ouleeh',
+    locale: 'es_AR',
+    type: 'website',
+  },
+  twitter: { card: 'summary_large_image' },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({

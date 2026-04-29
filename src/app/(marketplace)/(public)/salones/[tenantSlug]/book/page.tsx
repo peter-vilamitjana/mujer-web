@@ -34,6 +34,7 @@ export default async function BookPage({ params }: Props) {
       </div>
       <BookingFlow
         tenantId={salon.id}
+        tenantSlug={tenantSlug}
         services={services}
         staff={staff}
       />

@@ -90,6 +90,7 @@ export const authOptions: NextAuthOptions = {
         async jwt({ token, user, account }) {
             // Primer login: account y user están presentes
             if (account && user) {
+                token.provider = account.provider; // para evitar refresh en Credentials
                 token.accessToken = account.access_token;
                 token.refreshToken = account.refresh_token;
                 token.accessTokenExpires = (account.expires_at || 0) * 1000;
@@ -119,6 +120,11 @@ export const authOptions: NextAuthOptions = {
                     // phone es opcional, no fallar
                 }
 
+                return token;
+            }
+
+            // Credentials users have no OAuth token — skip refresh entirely
+            if (token.provider === 'credentials' || !token.refreshToken) {
                 return token;
             }
 
