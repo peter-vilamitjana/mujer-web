@@ -1,6 +1,5 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { redirect } from 'next/navigation';
 import { getSalonBySlug, getSalonServices, getSalonStaff } from '@/lib/services/marketplace.service';
 import { notFound } from 'next/navigation';
 import BookingFlow from '@/components/marketplace/BookingFlow';
@@ -11,13 +10,10 @@ interface Props {
 
 export default async function BookPage({ params }: Props) {
   const { tenantSlug } = await params;
-  // Verificar sesión en el servidor — si no hay sesión, redirigir a login
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    redirect(`/login?callbackUrl=/${tenantSlug}/book`);
-  }
 
-  // Obtener datos del salón
+  // Sesión opcional — no redirigir si no hay (guest checkout habilitado)
+  const session = await getServerSession(authOptions);
+
   const salon = await getSalonBySlug(tenantSlug);
   if (!salon) notFound();
 
@@ -37,6 +33,7 @@ export default async function BookPage({ params }: Props) {
         tenantSlug={tenantSlug}
         services={services}
         staff={staff}
+        isAuthenticated={!!session}
       />
     </div>
   );

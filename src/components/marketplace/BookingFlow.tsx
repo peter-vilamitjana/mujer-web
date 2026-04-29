@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getAvailableSlots, createBooking } from '@/actions/booking.actions';
+import { createGuestBooking } from '@/actions/guest-booking.actions';
 import { createDepositPreference } from '@/actions/mercadopago.actions';
 import type { Service, Staff, ServicePriceByLength } from '@/lib/schema';
 import type { LargoPelo } from '@/lib/types';
@@ -31,6 +32,7 @@ interface Props {
   tenantSlug: string;
   services: Service[];
   staff: Staff[];
+  isAuthenticated: boolean;
 }
 
 type SelectedServiceWithLargo = Service & { largo?: LargoPelo };
@@ -69,7 +71,7 @@ const LengthPopoverTrigger = ({ asChild = false }: { asChild?: boolean }) => (
   </Popover>
 );
 
-export default function BookingFlow({ tenantId, tenantSlug, services, staff }: Props) {
+export default function BookingFlow({ tenantId, tenantSlug, services, staff, isAuthenticated }: Props) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { toast } = useToast();
@@ -86,6 +88,11 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff }: P
   const [showLengthError, setShowLengthError] = useState(false);
   const [clientPhone, setClientPhone] = useState((session?.user as any)?.phone || '');
   const [phoneTouched, setPhoneTouched] = useState(false);
+
+  // Guest mode — datos del invitado cuando no hay sesión
+  const [guestName, setGuestName] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
 
   const isPhoneValid = useMemo(() => /^\d{8,15}$/.test(clientPhone.replace(/\s/g, '')), [clientPhone]);
 
@@ -150,17 +157,6 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff }: P
   }, [selectedServices]);
 
   // Early returns after all hooks — safe per Rules of Hooks
-  if (status === 'unauthenticated') {
-    return (
-      <div className="text-center py-12 space-y-4">
-        <p className="text-muted-foreground">Necesitás iniciar sesión para reservar un turno.</p>
-        <Button onClick={() => router.push(`/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`)}>
-          Iniciar sesión
-        </Button>
-      </div>
-    );
-  }
-
   if (status === 'loading') {
     return <div className="flex justify-center py-12"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>;
   }
@@ -205,7 +201,12 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff }: P
       return;
     }
 
-    if (!isPhoneValid) {
+    if (!isAuthenticated) {
+      if (!guestName.trim() || !guestEmail.trim() || !guestPhone.trim()) {
+        toast({ title: "Datos requeridos", description: "Completá nombre, email y WhatsApp para continuar.", variant: "destructive" });
+        return;
+      }
+    } else if (!isPhoneValid) {
       setPhoneTouched(true);
       toast({ title: "Teléfono requerido", description: "Por favor ingresá un número de WhatsApp válido.", variant: "destructive" });
       return;
@@ -218,59 +219,98 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff }: P
     }).join(', ');
 
     startTransition(async () => {
-      const result = await createBooking({
-        tenantId,
-        staffId: selectedStaff.id,
-        staffName: selectedStaff.name,
-        serviceIds: selectedServices.map(s => s.id),
-        serviceNames: selectedServiceNames,
-        selectedServices: selectedServices.map(s => ({
-          id: s.id,
-          nombre: s.name,
-          largo: s.largo,
-          duracion: s.durationMinutes,
-          precio: typeof s.price === 'number' ? s.price : undefined,
-          precios: typeof s.price === 'object' ? { ...(s.price as ServicePriceByLength) } as Record<string, number> : undefined,
-          preciosHasta: s.priceHasta ? { ...(s.priceHasta as ServicePriceByLength) } as Record<string, number> : undefined,
-          requiereLargo: s.requiresLengthSelection,
-          variable: s.variablePrice,
-        })),
-        date: selectedDate.toISOString(),
-        time: selectedTime,
-        totalFrom,
-        totalTo,
-        depositAmount,
-        durationMinutes: totalDuration,
-        clientPhone,
-      });
+      let appointmentId: string | undefined;
 
-      if (!result.success) {
-        toast({ title: "Error", description: result.error ?? 'No se pudo crear el turno.', variant: "destructive" });
-        return;
-      }
-
-      // Si hay seña, intentar crear preferencia de MercadoPago
-      if (depositAmount > 0 && result.appointmentId) {
-        const mpResult = await createDepositPreference({
-          appointmentId: result.appointmentId,
+      if (!isAuthenticated) {
+        // Guest booking — sin sesión
+        const result = await createGuestBooking({
           tenantId,
           tenantSlug,
-          depositAmount,
+          staffId: selectedStaff.id,
+          staffName: selectedStaff.name,
+          serviceIds: selectedServices.map(s => s.id),
           serviceNames: selectedServiceNames,
+          date: selectedDate.toISOString(),
+          time: selectedTime,
+          totalFrom,
+          durationMinutes: totalDuration,
+          guestName: guestName.trim(),
+          guestEmail: guestEmail.trim(),
+          guestPhone: guestPhone.trim(),
         });
 
-        if ('checkoutUrl' in mpResult) {
-          window.location.href = mpResult.checkoutUrl;
+        if (!result.success) {
+          toast({ title: "Error", description: result.error ?? 'No se pudo crear el turno.', variant: "destructive" });
           return;
         }
-        // Si MP no está configurado (MP_NOT_CONFIGURED) o falla, confirmar igual sin seña
-        if (!('error' in mpResult && mpResult.error === 'MP_NOT_CONFIGURED')) {
-          toast({ title: "Advertencia", description: "No se pudo procesar el pago. El turno quedó reservado sin seña.", variant: "destructive" });
+        appointmentId = result.appointmentId;
+      } else {
+        // Authenticated booking — flujo existente con MercadoPago
+        const result = await createBooking({
+          tenantId,
+          staffId: selectedStaff.id,
+          staffName: selectedStaff.name,
+          serviceIds: selectedServices.map(s => s.id),
+          serviceNames: selectedServiceNames,
+          selectedServices: selectedServices.map(s => ({
+            id: s.id,
+            nombre: s.name,
+            largo: s.largo,
+            duracion: s.durationMinutes,
+            precio: typeof s.price === 'number' ? s.price : undefined,
+            precios: typeof s.price === 'object' ? { ...(s.price as ServicePriceByLength) } as Record<string, number> : undefined,
+            preciosHasta: s.priceHasta ? { ...(s.priceHasta as ServicePriceByLength) } as Record<string, number> : undefined,
+            requiereLargo: s.requiresLengthSelection,
+            variable: s.variablePrice,
+          })),
+          date: selectedDate.toISOString(),
+          time: selectedTime,
+          totalFrom,
+          totalTo,
+          depositAmount,
+          durationMinutes: totalDuration,
+          clientPhone,
+        });
+
+        if (!result.success) {
+          toast({ title: "Error", description: result.error ?? 'No se pudo crear el turno.', variant: "destructive" });
+          return;
         }
+
+        // MercadoPago seña — solo para usuarios autenticados
+        if (depositAmount > 0 && result.appointmentId) {
+          const mpResult = await createDepositPreference({
+            appointmentId: result.appointmentId,
+            tenantId,
+            tenantSlug,
+            depositAmount,
+            serviceNames: selectedServiceNames,
+          });
+
+          if ('checkoutUrl' in mpResult) {
+            window.location.href = mpResult.checkoutUrl;
+            return;
+          }
+          if (!('error' in mpResult && mpResult.error === 'MP_NOT_CONFIGURED')) {
+            toast({ title: "Advertencia", description: "No se pudo procesar el pago. El turno quedó reservado sin seña.", variant: "destructive" });
+          }
+        }
+        appointmentId = result.appointmentId;
       }
 
-      toast({ title: "¡Turno confirmado!", description: `Tu cita para ${selectedServiceNames} quedó agendada.` });
-      router.push(`/salones/${tenantSlug}/dashboard`);
+      // Redirigir a página de confirmación con datos como query params
+      const params = new URLSearchParams({
+        service: selectedServiceNames,
+        staff: selectedStaff.name,
+        date: selectedDate.toISOString(),
+        time: selectedTime,
+        isGuest: String(!isAuthenticated),
+        ...((!isAuthenticated) && {
+          guestName: guestName.trim(),
+          guestEmail: guestEmail.trim(),
+        }),
+      });
+      router.push(`/salones/${tenantSlug}/book/confirmation/${appointmentId}?${params.toString()}`);
     });
   };
 
@@ -282,7 +322,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff }: P
   ];
 
   const currentStepConfig = stepsInfo.find(s => s.id === step);
-  const clientName = session?.user?.name || 'Cliente';
+  const clientName = isAuthenticated ? (session?.user?.name || 'Cliente') : (guestName || 'Invitada');
 
   return (
     <div className="space-y-6 mx-auto w-full">
@@ -504,6 +544,42 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff }: P
          </div>
 
           <div className="space-y-4">
+            {/* ── Guest: datos de contacto ───────────────────────────── */}
+            {!isAuthenticated && (
+              <div className="space-y-3 border border-border rounded-xl p-4">
+                <p className="text-sm font-medium">Tus datos de contacto</p>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block">Nombre completo</label>
+                  <input
+                    type="text"
+                    placeholder="Tu nombre"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    className="w-full rounded-xl px-4 py-3 text-sm bg-background border border-border focus:outline-none focus:ring-1 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block">Email</label>
+                  <input
+                    type="email"
+                    placeholder="tu@email.com"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    className="w-full rounded-xl px-4 py-3 text-sm bg-background border border-border focus:outline-none focus:ring-1 focus:ring-ring"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block">WhatsApp</label>
+                  <input
+                    type="tel"
+                    placeholder="9 11 XXXX-XXXX"
+                    value={guestPhone}
+                    onChange={(e) => setGuestPhone(e.target.value)}
+                    className="w-full rounded-xl px-4 py-3 text-sm bg-background border border-border focus:outline-none focus:ring-1 focus:ring-ring"
+                  />
+                </div>
+              </div>
+            )}
             <div className="space-y-3">
               <label className="text-zinc-400 text-sm font-medium">Tu WhatsApp para la confirmación</label>
               <div className={cn(
