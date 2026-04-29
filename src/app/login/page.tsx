@@ -53,6 +53,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [userType, setUserType] = useState<'clienta' | 'duena'>('clienta');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -196,6 +197,34 @@ export default function LoginPage() {
             className="w-full"
             style={{ maxWidth: '420px' }}
           >
+            {/* ── Selector B2C / B2B ────────────────────────────────────── */}
+            <div className="flex gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => setUserType('clienta')}
+                className={cn(
+                  'flex-1 py-2.5 rounded-xl text-[9px] tracking-[0.35em] uppercase font-bold transition-all duration-200 cursor-pointer',
+                  userType === 'clienta'
+                    ? 'bg-white text-black'
+                    : 'bg-white/[0.07] text-white/40 border border-white/10 hover:bg-white/[0.12] hover:text-white/70'
+                )}
+              >
+                Soy clienta
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserType('duena')}
+                className={cn(
+                  'flex-1 py-2.5 rounded-xl text-[9px] tracking-[0.35em] uppercase font-bold transition-all duration-200 cursor-pointer',
+                  userType === 'duena'
+                    ? 'bg-white text-black'
+                    : 'bg-white/[0.07] text-white/40 border border-white/10 hover:bg-white/[0.12] hover:text-white/70'
+                )}
+              >
+                Soy dueña de salón
+              </button>
+            </div>
+
             {/* ── Liquid Glass Card ─────────────────────────────────────── */}
             <div
               className="relative rounded-[28px] overflow-hidden"
@@ -227,15 +256,25 @@ export default function LoginPage() {
                   {mode === 'login' ? (
                     <div>
                       <p className="text-[8px] tracking-[0.65em] uppercase text-white/35 font-bold mb-2">
-                        L&apos;Art de Vivre
+                        {userType === 'duena' ? 'Panel de Salones' : "L'Art de Vivre"}
                       </p>
                       <h1 className="font-vogue text-[42px] leading-[1.05] mb-1.5">
-                        <span className="italic text-white/90">Membres</span>
-                        <br />
-                        <span className="not-italic text-white">Privés</span>
+                        {userType === 'duena' ? (
+                          <>
+                            <span className="italic text-white/90">Gestión</span>
+                            <br />
+                            <span className="not-italic text-white">de Salones</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="italic text-white/90">Membres</span>
+                            <br />
+                            <span className="not-italic text-white">Privés</span>
+                          </>
+                        )}
                       </h1>
                       <p className="text-white/35 text-[10px] tracking-[0.25em] uppercase">
-                        Ingrese a su santuario de estilo
+                        {userType === 'duena' ? 'Gestioná tu salón desde un solo lugar' : 'Ingrese a su santuario de estilo'}
                       </p>
                     </div>
                   ) : (
@@ -365,6 +404,18 @@ export default function LoginPage() {
                       >
                         CREAR UNA CUENTA
                       </button>
+
+                      {userType === 'duena' && (
+                        <div className="pt-1 text-center">
+                          <p className="text-[8px] tracking-[0.2em] text-white/25 mb-1.5 uppercase">¿Aún no tenés tu salón?</p>
+                          <Link
+                            href="/business/register"
+                            className="text-[8px] tracking-[0.25em] uppercase font-bold text-white/50 hover:text-white/80 underline underline-offset-2 transition-colors duration-200"
+                          >
+                            Registrá tu salón gratis →
+                          </Link>
+                        </div>
+                      )}
                     </div>
                   </form>
                 ) : (
