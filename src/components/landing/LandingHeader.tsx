@@ -63,11 +63,14 @@ export default function LandingHeader() {
               textWhite ? "text-white" : "text-[#1A1A1A]"
             )}>Volume No. 01</span>
           </div>
-          <nav className="hidden md:flex gap-12 items-center">
-            {['L\'Atelier', 'Édition', 'Membres'].map((item) => (
-              <a
-                key={item}
-                href="#"
+          <nav className="hidden md:flex gap-8 items-center">
+            {[
+              { label: 'Reservar turno', href: '/explore' },
+              { label: 'Sumá tu salón', href: '/business' },
+            ].map(({ label, href }) => (
+              <Link
+                key={label}
+                href={href}
                 className={cn(
                   "relative px-4 py-2 rounded-full text-[10px] tracking-[0.35em] uppercase font-medium transition-all duration-300",
                   "before:absolute before:inset-0 before:rounded-full before:opacity-0 before:transition-all before:duration-300",
@@ -77,8 +80,8 @@ export default function LandingHeader() {
                     : "text-[#1A1A1A]/60 hover:text-[#1A1A1A] before:bg-black/5 before:backdrop-blur-sm before:border before:border-black/10"
                 )}
               >
-                <span className="relative z-10">{item}</span>
-              </a>
+                <span className="relative z-10">{label}</span>
+              </Link>
             ))}
 
             {mounted && (
