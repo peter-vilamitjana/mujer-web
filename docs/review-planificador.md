@@ -1,7 +1,7 @@
 # Review del Plan de Proyecto MujerApp
 
 **Fecha**: 2026-04-03 | **Reviewer**: Agente Planificador
-**Última actualización**: 2026-04-09 | **Estado**: Fase 0 ✅ + Fase 1 ✅ + Fase 2 ✅ + Fase 3 🟡 (3.0–3.1 done) + Fase 3.5 ✅ completadas
+**Última actualización**: 2026-04-29 | **Estado**: Fase 0 ✅ + Fase 1 ✅ + Fase 2 ✅ + Fase 3 🟡 (3.0–3.4 done, 3.5–3.6 pendiente) + Fase 3.5 ✅ + Fase 4 🟡 (4.2 done, 4.5 parcial) completadas
 
 > Los hallazgos marcados con ✅ han sido resueltos. Los marcados con ⏳ están pendientes para Fase 2+.
 
@@ -186,7 +186,7 @@ El plan dice "MVP Launchable" al final de Fase 2, pero no define que significa "
 
 Sin esto, el MVP se convierte en un target movil.
 
-### 6.2 Testing demasiado tarde ⏳ PENDIENTE — agregar tests básicos en Fase 2
+### 6.2 Testing demasiado tarde ⚠️ PARCIALMENTE RESUELTO — Playwright estructurado en Fase 4
 
 Tests estan en Fase 4 (semana 13+). Para entonces habra 12 semanas de codigo sin cobertura. El costo de escribir tests retroactivamente es 3-4x mayor que escribirlos junto al feature. Recomendacion: agregar tests de integracion basicos para cada CRUD en Fase 1, y tests e2e del booking flow en Fase 2. No esperar a Fase 4.
 
@@ -212,9 +212,9 @@ SEO (4.2) y Performance (4.3) deberian estar en Fase 2 o inicio de Fase 3 -- son
 | 1 | **Seguridad primero**: Las acciones inmediatas deben empezar por credenciales y endpoints expuestos, no por errores TS. | ✅ Resuelto en Fases 0 + 3.5-A |
 | 2 | **Dependencias ocultas**: Auth B2C, cuenta Stripe, y datos de seed son bloqueantes no planificados. | ⚠️ Auth B2C resuelto en 3.5-C. Stripe: ⏳ Fase 3 restante |
 | 3 | **Estimaciones optimistas**: Google Calendar sync, test suite, fix TS errors subestimados. | ✅ GCal resuelto. TS limpio. Tests: ⏳ Fase 4 |
-| 4 | **Testing demasiado tarde**: Esperar a Fase 4 para tests multiplica costo y riesgo de regresiones. | ⏳ Agregar tests básicos en Fase 3 restante |
-| 5 | **MVP sin definicion clara**: "Launchable" necesita criterios medibles. | ⏳ Definir antes de Fase 3.2 (MercadoPago) |
-| 6 | **SEO/Performance fuera de lugar**: Deberian estar antes del launch del marketplace. | ⏳ Incorporar en Fase 3 restante |
+| 4 | **Testing demasiado tarde**: Esperar a Fase 4 para tests multiplica costo y riesgo de regresiones. | ⚠️ Playwright configurado en Fase 4 con 3 specs (booking-flow, checkout, registro). Falta `npx playwright install` + coverage CI. |
+| 5 | **MVP sin definicion clara**: "Launchable" necesita criterios medibles. | ⏳ Aún pendiente |
+| 6 | **SEO/Performance fuera de lugar**: Deberian estar antes del launch del marketplace. | ✅ SEO (sitemap + robots.txt) incorporado en Fase 4 antes del lanzamiento. Performance (Lighthouse) pendiente. |
 | 7 | **Dependencia circular 1.1/1.3 → 1.6**: Onboarding depende de CRUDs de la misma fase. | ✅ Resuelto: orden de ejecución 1.1 → 1.3 → 1.6 |
 | 8 | **Schema canonical ambiguo**: `types.ts` vs `schema.ts`. | ✅ `schema.ts` es canónico. `types.ts` legacy B2C |
 | 9 | **Endpoints destructivos expuestos** (`/admin/seed`, `/admin/migrate`) | ✅ Resuelto en Fase 3.5-A: `notFound()` en producción |

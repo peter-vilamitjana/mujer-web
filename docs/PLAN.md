@@ -1,6 +1,6 @@
 # MujerApp — Análisis Técnico y Plan de Proyecto
 
-**Rama analizada**: `database-config` | **Fecha**: 2026-04-03 | **Pivot LATAM**: 2026-04-08 | **Última actualización**: 2026-04-28
+**Rama analizada**: `database-config` | **Fecha**: 2026-04-03 | **Pivot LATAM**: 2026-04-08 | **Última actualización**: 2026-04-29
 
 ---
 
@@ -8,7 +8,7 @@
 
 MujerApp es una plataforma SaaS B2B2C multi-tenant para la gestión de salones de belleza. El stack es sólido y moderno (Next.js 15, TypeScript, Firestore, NextAuth v4), con una arquitectura multi-tenant bien diseñada a nivel de schema y reglas Firestore.
 
-**Estado actual (2026-04-28)**: ✅ Fase 0 + ✅ Fase 1 + ✅ Fase 2 + ✅ Fase 3 + ✅ Fase 3.5 + ✅ Fase 4 (parcial) completadas. `/perfil` wired a Firestore, CierreCajaDiario en dashboard, MercadoPago Checkout Pro integrado en BookingFlow, SEO + sitemap + robots.txt, tests e2e con Playwright. Build y TypeScript limpios. **Próximo hito**: activar credenciales MERCADOPAGO_ACCESS_TOKEN en producción + correr `npx playwright install` para habilitar tests.
+**Estado actual (2026-04-29)**: ✅ Fase 0 + ✅ Fase 1 + ✅ Fase 2 + ✅ Fase 3 (3.0–3.4 completas) + ✅ Fase 3.5 completadas. MercadoPago Checkout Pro + Webhook IPN integrados, CierreCajaDiario real-time en dashboard, SEO (sitemap + robots.txt), tests e2e con Playwright (estructura lista), `/perfil/cuenta` wired a Firestore, `/business` completamente rediseñada. **Pendiente Fase 3**: Planes SaaS (3.5–3.6). **Pendiente Fase 4**: reviews, performance, a11y, docs. **Próximo hito**: activar `MERCADOPAGO_ACCESS_TOKEN` en producción + `npx playwright install` + Planes SaaS.
 
 La hoja de ruta para un MVP launchable es de **10–14 semanas** para un equipo de 2–3 devs (~6 semanas completadas).
 
@@ -58,7 +58,7 @@ src/
 | **Framer Motion** | ✅ Activo | Baja | Landing y /business con animaciones premium |
 | **next-themes** | ✅ Funcional | Baja | defaultTheme="dark", toggle funcional |
 | **Landing Global** | ✅ ~95% | Baja | 12 secciones. Todas las imágenes externas reemplazadas por gradientes locales |
-| **Landing /business** | 🟡 ~70% | Baja | Bug en Safari conocido |
+| **Landing /business** | ✅ ~95% | Baja | Rediseñada con BackgroundPaths hero + ContainerScroll. Bug Safari resuelto por rediseño completo. |
 | **Dashboard Admin** | ✅ ~90% | Alta | Métricas reales (ingresos mes, ocupación, próximos turnos) |
 | **Agenda / Turnos** | 🟡 ~60% | Alta | UI existe, branchId dinámico resuelto |
 | **Clientes** | 🟡 ~55% | Media | Lista y detalle. Role real de sesión |
@@ -72,11 +72,11 @@ src/
 | ~~**Email (Resend)**~~ | ❌ **Eliminado** | — | **Pivot**: reemplazado por WhatsApp nativo. Sin emails en el flujo de notificaciones. |
 | **Portal Cliente** | ✅ ~75% | Media | Dashboard real (citas, historial, filtros), cancelación, vista guest por teléfono. Perfil: shell con mock data. |
 | **Checkout / Caja** | ✅ ~70% | Media | `CheckoutDrawer` en agenda, `closeAppointment()`, métricas CRM incrementadas. Falta cierre de caja diario. |
-| **Auth B2C** | ✅ ~60% | Media | `UserRole` incluye `'customer'`, JWT lleva `role`, `registerCustomer()`, páginas `/registro` + `/perfil`. Perfil no wired a Firestore. |
+| **Auth B2C** | ✅ ~80% | Media | `UserRole` incluye `'customer'`, JWT lleva `role`, `registerCustomer()`, `/registro` + `/perfil` multi-sección (historial, cuenta, favoritos). `/perfil/cuenta` wired a Firestore. `/perfil/historial` y main aún con mock data. |
 | **Analytics / Métricas** | ✅ ~80% | Alta | Datos reales: ingresos mes, ocupación, top servicios, próximos turnos |
 | **Loading states** | ✅ 100% | Baja | 8 skeletons + error boundary global |
 | ~~**AI (Genkit)**~~ | ❌ **Eliminado** | — | **Pivot**: removido del roadmap. Dependencia muerta a desinstalar. |
-| **Tests** | 🔴 0% | Media | Cero cobertura |
+| **Tests** | 🟡 ~40% | Media | Playwright configurado. 3 specs e2e: booking-flow, checkout, registro. Fixtures con auth admin/customer. Falta `npx playwright install` + más cobertura de flujos críticos. |
 | **CI/CD** | ✅ Configurado | Media | GitHub Actions: lint + typecheck + build en verde |
 
 ---
@@ -343,7 +343,7 @@ FASE 4                                                             │ Growth & 
 
 ### 🟡 FASE 3 — Monetización Local + CRM (Semanas 10–12) — EN CURSO
 
-> **Estado**: 🟡 EN CURSO — 3.0 y 3.1 completados (2026-04-09). Pendiente: MercadoPago, cierre de caja diario, planes SaaS.
+> **Estado**: 🟡 EN CURSO — 3.0–3.4 completados (2026-04-29). Pendiente: Planes SaaS (3.5–3.6).
 
 > **🔴 Pivot LATAM (2026-04-08):** El Módulo Financiero Local es P0 urgente. Los salones en LATAM cobran en efectivo, con transferencias bancarias y QR de MercadoPago — no con Stripe. Soportar esto de forma nativa es el diferencial de "Cierre de Caja" vs Fresha/Wonoma.
 
@@ -353,20 +353,25 @@ FASE 4                                                             │ Growth & 
 |---|-------|------|-----------|----------------|--------|
 | ~~**3.0**~~ | ~~Módulo Financiero Local: schema + cierre de caja~~ (`amountPaid`, `paymentMethod`, status `cobrado`) | ~~3~~ | ~~schema.ts~~ | ~~Admin puede cerrar un turno como "cobrado"~~ | ✅ |
 | ~~**3.1**~~ | ~~UI de Checkout en pantalla de turno~~ | ~~3~~ | ~~3.0~~ | ~~Admin cobra → status `cobrado`~~ | ✅ (`CheckoutDrawer` + `closeAppointment()` + CRM metrics) |
-| 3.2 | MercadoPago QR nativo (Checkout Pro para cobros presenciales) | 4 | Cuenta MP activada | Clienta escanea QR en mostrador, pago confirmado en app | ⏳ |
-| 3.3 | Webhook MercadoPago → Firestore (status de cita automático) | 2 | 3.2 | Pago confirmado actualiza turno automáticamente | ⏳ |
-| 3.4 | Dashboard de cierre de caja diario (efectivo + transferencias + MP) | 3 | 3.0 | Admin ve resumen de caja del día desglosado por método | ⏳ |
-| 3.5 | Planes SaaS para salones (Free / Pro / Enterprise) | 3 | — | Salones tienen plan asignado | ⏳ |
+| ~~**3.2**~~ | ~~MercadoPago Checkout Pro (seña online al reservar)~~ | ~~4~~ | ~~Cuenta MP activada~~ | ~~Clienta paga seña al reservar — pago redirige a MP~~ | ✅ (`src/lib/mercadopago.ts` REST helper + `createDepositPreference()` + páginas success/failure/pending) |
+| ~~**3.3**~~ | ~~Webhook MercadoPago → Firestore (status de cita automático)~~ | ~~2~~ | ~~3.2~~ | ~~Pago aprobado actualiza turno a `confirmed + paid_partially`~~ | ✅ (`src/app/api/mercadopago/webhook/route.ts` — IPN handler completo) |
+| ~~**3.4**~~ | ~~Dashboard de cierre de caja diario (efectivo + transferencias + MP)~~ | ~~3~~ | ~~3.0~~ | ~~Admin ve resumen de caja del día desglosado por método~~ | ✅ (`CierreCajaDiario` real-time con Firestore listener, integrado en dashboard) |
+| 3.5 | Planes SaaS para salones (Free / Pro / Enterprise) | 3 | — | Salones tienen plan asignado en schema + Firestore | ⏳ |
 | 3.6 | Feature flags por plan de suscripción | 2 | 3.5 | Features desbloqueadas según plan | ⏳ |
 
 **Total**: ~20 días → **~3–4 semanas**
 
 **Criterios de done**: Salón cierra caja diaria en efectivo, transferencia y MercadoPago sin depender de pasarelas internacionales. MujerApp cobra suscripción a salones.
 
-**Archivos clave entregados (3.0–3.1)**:
+**Archivos clave entregados (3.0–3.4)**:
 - `src/components/admin/CheckoutDrawer.tsx` — Sheet de cobro (efectivo/MP/tarjeta/transferencia)
 - `src/actions/checkout.actions.ts` — `closeAppointment()` con incremento de CRM metrics
 - `src/lib/schema.ts` — `PaymentMethod`, status `cobrado`, `Customer.metrics` con `firstVisit`
+- `src/lib/mercadopago.ts` — Helper REST Checkout Pro sin SDK (createCheckoutPreference, getPaymentStatus)
+- `src/actions/mercadopago.actions.ts` — `createDepositPreference()` server action
+- `src/app/api/mercadopago/webhook/route.ts` — IPN handler: approved → `confirmed + paid_partially`, rejected → reset
+- `src/app/(marketplace)/(public)/salones/[slug]/book/payment/{success,failure,pending}/page.tsx` — 3 páginas de retorno de pago
+- `src/components/admin/CierreCajaDiario.tsx` — Resumen de caja real-time por método de pago
 
 ---
 
@@ -385,21 +390,23 @@ FASE 4                                                             │ Growth & 
 
 ---
 
-### FASE 4 — Growth & Scale (Semanas 13–16)
+### 🟡 FASE 4 — Growth & Scale (Semanas 13–16) — EN CURSO
 
 > **🔴 Pivot LATAM (2026-04-08):** IA (Genkit) eliminada del roadmap activo. El foco es SEO, performance móvil, reviews y test suite para escalar con confianza.
 
+> **Estado**: 🟡 EN CURSO — 4.2 (SEO) completada. 4.5 (Playwright) estructura lista. Resto pendiente.
+
 **Objetivo**: Plataforma lista para adquirir usuarios masivamente y escalar.
 
-| # | Tarea | Días | Done cuando... |
-|---|-------|------|----------------|
-| 4.1 | Sistema de reviews y valoraciones | 3 | Clienta valora turno completado |
-| 4.2 | SEO: metadata dinámica, OG tags, sitemap, robots.txt | 2 | Google indexa páginas de salón |
-| 4.3 | Performance: imágenes, code splitting, ISR | 3 | Lighthouse > 80 en móvil |
-| 4.4 | Accesibilidad (a11y) audit y correcciones | 3 | 0 errores críticos en axe-core |
-| 4.5 | Test suite (Vitest unit + Playwright e2e) | 5 | Flujos críticos cubiertos en CI |
-| 4.6 | Documentación técnica (ADRs, README actualizado) | 2 | Nuevo dev onboardea en < 1 día |
-| ~~4.x~~ | ~~AI: recomendaciones personalizadas (Genkit)~~ | ~~5~~ | ~~**Eliminado del roadmap.** Genkit queda como dependencia muerta a remover.~~ |
+| # | Tarea | Días | Done cuando... | Estado |
+|---|-------|------|----------------|--------|
+| 4.1 | Sistema de reviews y valoraciones | 3 | Clienta valora turno completado | ⏳ |
+| ~~4.2~~ | ~~SEO: sitemap dinámico, robots.txt~~ | ~~2~~ | ~~Google indexa páginas de salón~~ | ✅ (`src/app/sitemap.ts` + `src/app/robots.ts` — rutas estáticas + páginas de salón dinámicas) |
+| 4.3 | Performance: imágenes, code splitting, ISR | 3 | Lighthouse > 80 en móvil | ⏳ |
+| 4.4 | Accesibilidad (a11y) audit y correcciones | 3 | 0 errores críticos en axe-core | ⏳ |
+| 4.5 | Test suite Playwright e2e (flujos críticos en CI) | 5 | Flujos críticos cubiertos + `playwright install` en CI | 🟡 Estructura lista (`booking-flow.spec.ts`, `checkout.spec.ts`, `registro.spec.ts`, fixtures auth). Falta `npx playwright install` + coverage adicional. |
+| 4.6 | Documentación técnica (ADRs, README actualizado) | 2 | Nuevo dev onboardea en < 1 día | ⏳ |
+| ~~4.x~~ | ~~AI: recomendaciones personalizadas (Genkit)~~ | ~~5~~ | ~~**Eliminado del roadmap.** Genkit queda como dependencia muerta a remover.~~ | ❌ |
 
 **Total**: ~18 días → **~3 semanas** con equipo completo
 
