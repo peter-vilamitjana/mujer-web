@@ -39,6 +39,10 @@
     --input: 220 13% 94%;
     --ring: 258 82% 57%;
     --radius: 1.25rem;
+    
+    /* Pricing Section Tokens */
+    --gradient-color: #8350e8;
+    --sparkles-color: #8350e8;
   }
 
   /* ─── DARK MODE (.dark class en <html>) ────────────────────────
@@ -74,6 +78,10 @@
     --border: 240 4% 16%; /* zinc-800 */
     --input: 240 6% 10%; /* zinc-900 */
     --ring: 258 98% 71%;
+    
+    /* Pricing Section Tokens */
+    --gradient-color: #8350e8;
+    --sparkles-color: #ffffff;
   }
 }
 

@@ -3,7 +3,7 @@ import BusinessHero from '@/components/business/BusinessHero';
 import DolorSection from '@/components/business/DolorSection';
 import ComoFuncionaSection from '@/components/business/ComoFuncionaSection';
 import FeaturesSection from '@/components/business/FeaturesSection';
-import PricingSection from '@/components/business/PricingSection';
+import PricingSection4 from '@/components/ui/pricing-section-4';
 import SocialProofSection from '@/components/business/SocialProofSection';
 import CTAFinalSection from '@/components/business/CTAFinalSection';
 
@@ -21,7 +21,7 @@ export default function BusinessPage() {
         <DolorSection />
         <ComoFuncionaSection />
         <FeaturesSection />
-        <PricingSection />
+        <PricingSection4 />
         <SocialProofSection />
         <CTAFinalSection />
       </main>
