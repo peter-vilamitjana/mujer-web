@@ -23,7 +23,8 @@ const steps = [
 
 export default function ComoFuncionaSection() {
   return (
-    <section id="como-funciona" className="py-24 px-6 max-w-4xl mx-auto scroll-mt-20">
+    <section id="como-funciona" className="relative z-10 bg-[#09090b] scroll-mt-20">
+      <div className="py-24 px-6 max-w-4xl mx-auto">
       <div className="text-center mb-16">
         <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
           Simple por diseño
@@ -61,6 +62,7 @@ export default function ComoFuncionaSection() {
             </p>
           </div>
         ))}
+      </div>
       </div>
     </section>
   );

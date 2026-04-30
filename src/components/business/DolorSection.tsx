@@ -35,7 +35,8 @@ const pains = [
 
 export default function DolorSection() {
   return (
-    <section className="py-24 px-6 max-w-5xl mx-auto">
+    <section className="relative z-10 bg-[#09090b]">
+      <div className="py-24 px-6 max-w-5xl mx-auto">
       <div className="text-center mb-16">
         <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
           El problema
@@ -65,6 +66,7 @@ export default function DolorSection() {
             <p className="text-sm text-zinc-500 leading-relaxed">{description}</p>
           </div>
         ))}
+      </div>
       </div>
     </section>
   );

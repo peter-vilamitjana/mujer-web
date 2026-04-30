@@ -13,7 +13,8 @@ const features = [
 
 export default function FeaturesSection() {
   return (
-    <section className="py-24 px-6 max-w-5xl mx-auto">
+    <section className="relative z-10 bg-[#09090b]">
+      <div className="py-24 px-6 max-w-5xl mx-auto">
       <div className="text-center mb-16">
         <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
           Todo lo que incluye
@@ -58,6 +59,7 @@ export default function FeaturesSection() {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </section>
   );

@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
 
@@ -15,6 +15,7 @@ export default function LandingHeader() {
   const tenantSlug = params?.tenantSlug as string | undefined;
   const loginUrl = '/login';
   const { theme, setTheme } = useTheme();
+  const pillRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -22,9 +23,19 @@ export default function LandingHeader() {
 
     const handleScroll = () => {
       const scrollY = window.scrollY;
+      const scrolled = scrollY > 50;
       // Transform directo al DOM — sin React state, sin re-render
       if (header) {
-        header.style.transform = scrollY > 50 ? 'translateY(-10px)' : 'translateY(0)';
+        header.style.transform = scrolled ? 'translateY(-10px)' : 'translateY(0)';
+      }
+      // Opacidad del pill en scroll — cubre el texto que pasa por detrás
+      if (pillRef.current) {
+        pillRef.current.style.background = scrolled
+          ? 'rgba(9, 9, 11, 0.85)'
+          : '';
+        pillRef.current.style.borderColor = scrolled
+          ? 'rgba(255, 255, 255, 0.08)'
+          : '';
       }
       // overHero sí puede usar state porque no afecta el header element
       setOverHero(scrollY < window.innerHeight * 0.85);
@@ -48,7 +59,7 @@ export default function LandingHeader() {
       suppressHydrationWarning
     >
       <div className="max-w-[1600px] mx-auto">
-        <div className="liquid-glass rounded-full px-10 py-5 flex justify-between items-center">
+        <div ref={pillRef} className="liquid-glass rounded-full px-10 py-5 flex justify-between items-center" style={{ transition: 'background 0.3s ease, border-color 0.3s ease' }}>
           <div className="flex items-center gap-4">
             <span className={cn(
               "font-vogue text-3xl font-black tracking-tighter uppercase transition-colors duration-300",

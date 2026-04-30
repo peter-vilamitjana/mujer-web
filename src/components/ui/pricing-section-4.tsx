@@ -122,7 +122,7 @@ export default function PricingSection6() {
 
   return (
     <div
-      className=" min-h-screen mx-auto relative bg-transparent overflow-x-hidden pt-24"
+      className="relative z-10 min-h-screen mx-auto bg-[#09090b] overflow-x-hidden pt-24"
       ref={pricingRef}
     >
       {/* Seamless transition fade from the previous section */}

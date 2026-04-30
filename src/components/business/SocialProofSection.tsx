@@ -29,7 +29,8 @@ const testimonials = [
 
 export default function SocialProofSection() {
   return (
-    <section className="py-24 px-6 max-w-4xl mx-auto">
+    <section className="relative z-10 bg-[#09090b]">
+      <div className="py-24 px-6 max-w-4xl mx-auto">
       <div className="text-center mb-12">
         <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
           Lo que dicen
@@ -90,6 +91,7 @@ export default function SocialProofSection() {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </section>
   );
