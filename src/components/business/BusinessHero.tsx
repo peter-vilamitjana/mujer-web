@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import ScrollVideoHero from './ScrollVideoHero';
 
 export default function BusinessHero() {
@@ -28,20 +29,25 @@ export default function BusinessHero() {
           todo en una plataforma diseñada para salones de Argentina.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
           <Link
             href="/business/register"
-            className="px-8 py-4 bg-white text-zinc-950 font-black text-[12px]
-              uppercase tracking-widest rounded-full hover:bg-zinc-100
-              active:scale-[0.98] transition-all"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-zinc-950
+              font-black text-[12px] uppercase tracking-widest rounded-full
+              hover:bg-zinc-100 active:scale-[0.98] transition-colors duration-200
+              cursor-pointer focus-visible:outline-none focus-visible:ring-2
+              focus-visible:ring-white/60 min-h-[44px]"
           >
-            Empezar gratis →
+            Empezar gratis
+            <ArrowRight className="w-4 h-4" />
           </Link>
           <a
             href="#como-funciona"
-            className="px-8 py-4 border border-white/[0.20] text-zinc-300
-              font-semibold text-[12px] uppercase tracking-widest rounded-full
-              hover:border-white/[0.40] hover:text-white transition-all backdrop-blur-sm"
+            className="inline-flex items-center gap-2 px-8 py-4 border border-white/[0.20]
+              text-zinc-300 font-semibold text-[12px] uppercase tracking-widest rounded-full
+              hover:border-white/[0.45] hover:text-white transition-colors duration-200
+              backdrop-blur-sm cursor-pointer focus-visible:outline-none
+              focus-visible:ring-2 focus-visible:ring-white/30 min-h-[44px]"
           >
             Ver cómo funciona
           </a>

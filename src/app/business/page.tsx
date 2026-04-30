@@ -16,13 +16,15 @@ export default function BusinessPage() {
   return (
     <div className="bg-[#09090b] min-h-screen">
       <LandingHeader />
-      <BusinessHero />
-      <DolorSection />
-      <ComoFuncionaSection />
-      <FeaturesSection />
-      <PricingSection />
-      <SocialProofSection />
-      <CTAFinalSection />
+      <main>
+        <BusinessHero />
+        <DolorSection />
+        <ComoFuncionaSection />
+        <FeaturesSection />
+        <PricingSection />
+        <SocialProofSection />
+        <CTAFinalSection />
+      </main>
     </div>
   );
 }
