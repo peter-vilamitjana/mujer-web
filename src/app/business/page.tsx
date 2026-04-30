@@ -1,7 +1,11 @@
-import BusinessHero from '@/components/business/BusinessHero';
-import BusinessFeatures from '@/components/business/BusinessFeatures';
-import BusinessCTA from '@/components/business/BusinessCTA';
 import LandingHeader from '@/components/landing/LandingHeader';
+import BusinessHero from '@/components/business/BusinessHero';
+import DolorSection from '@/components/business/DolorSection';
+import ComoFuncionaSection from '@/components/business/ComoFuncionaSection';
+import FeaturesSection from '@/components/business/FeaturesSection';
+import PricingSection from '@/components/business/PricingSection';
+import SocialProofSection from '@/components/business/SocialProofSection';
+import CTAFinalSection from '@/components/business/CTAFinalSection';
 
 export const metadata = {
   title: 'Para Salones | Ouleeh',
@@ -10,11 +14,15 @@ export const metadata = {
 
 export default function BusinessPage() {
   return (
-    <div className="min-h-screen bg-white dark:bg-[#050505]">
+    <div className="bg-[#09090b] min-h-screen">
       <LandingHeader />
       <BusinessHero />
-      <BusinessFeatures />
-      <BusinessCTA />
+      <DolorSection />
+      <ComoFuncionaSection />
+      <FeaturesSection />
+      <PricingSection />
+      <SocialProofSection />
+      <CTAFinalSection />
     </div>
   );
 }
