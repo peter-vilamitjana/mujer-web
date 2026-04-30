@@ -16,7 +16,7 @@ export default function ScrollVideoHero({
   children,
 }: ScrollVideoHeroProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const imgRef = useRef<HTMLImageElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const framesRef = useRef<HTMLImageElement[]>([])
   const currentFrameRef = useRef(0)
   const rafRef = useRef<number>()
@@ -25,6 +25,16 @@ export default function ScrollVideoHero({
 
   const frameSrc = (i: number) =>
     `${framesPath}/frame-${String(i).padStart(4, '0')}.${frameExt}`
+
+  const drawFrame = useCallback((index: number) => {
+    if (!canvasRef.current || !framesRef.current[index]) return
+    const ctx = canvasRef.current.getContext('2d')
+    if (!ctx) return
+    
+    const img = framesRef.current[index]
+    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
+    ctx.drawImage(img, 0, 0)
+  }, [])
 
   // Precargar todos los frames en background
   useEffect(() => {
@@ -38,6 +48,14 @@ export default function ScrollVideoHero({
       img.onload = () => {
         loadedCount++
         setLoadProgress(Math.floor((loadedCount / totalFrames) * 100))
+        
+        // Configurar dimensiones iniciales del canvas y pintar el frame 0
+        if (i === 1 && canvasRef.current) {
+          canvasRef.current.width = img.width
+          canvasRef.current.height = img.height
+          drawFrame(0)
+        }
+
         if (loadedCount === totalFrames) setIsLoaded(true)
       }
 
@@ -46,13 +64,7 @@ export default function ScrollVideoHero({
 
     framesRef.current = images
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totalFrames, framesPath, frameExt])
-
-  const showFrame = useCallback((index: number) => {
-    if (!imgRef.current) return
-    imgRef.current.src = frameSrc(index + 1)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [framesPath, frameExt])
+  }, [totalFrames, framesPath, frameExt, drawFrame])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -76,7 +88,7 @@ export default function ScrollVideoHero({
 
         if (frameIndex !== currentFrameRef.current) {
           currentFrameRef.current = frameIndex
-          showFrame(frameIndex)
+          drawFrame(frameIndex)
         }
       })
     }
@@ -86,15 +98,22 @@ export default function ScrollVideoHero({
       window.removeEventListener('scroll', handleScroll)
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
-  }, [totalFrames, showFrame])
+  }, [totalFrames, drawFrame])
 
   return (
     <div ref={containerRef} style={{ height: '500vh' }} className="relative">
-      <div className="sticky top-0 h-screen w-full overflow-hidden bg-black">
+      
+      {/* Contenido flotante sobre el primer frame que hace scroll natural hacia arriba */}
+      {children && (
+        <div className="absolute top-0 left-0 w-full h-screen flex flex-col items-center justify-center z-10 pointer-events-none">
+          {children}
+        </div>
+      )}
 
+      <div className="sticky top-0 h-screen w-full overflow-hidden bg-[#09090b]">
         {/* Loading bar */}
         {!isLoaded && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-[#09090b]">
             <div className="w-48 h-px bg-white/10 overflow-hidden">
               <div
                 className="h-full bg-emerald-400/70 transition-all duration-200"
@@ -107,25 +126,15 @@ export default function ScrollVideoHero({
           </div>
         )}
 
-        {/* Frame display — img con object-contain funciona correctamente */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          ref={imgRef}
-          src={frameSrc(1)}
-          alt=""
+        {/* Frame display via Canvas */}
+        <canvas
+          ref={canvasRef}
           className="w-full h-full object-contain"
           style={{
             opacity: isLoaded ? 1 : 0.2,
             transition: 'opacity 0.4s ease',
           }}
         />
-
-        {/* Contenido flotante sobre el frame */}
-        {children && (
-          <div className="absolute inset-0 flex flex-col items-center justify-end pb-16 z-10 pointer-events-none">
-            {children}
-          </div>
-        )}
 
         {/* Scroll hint */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 opacity-50">

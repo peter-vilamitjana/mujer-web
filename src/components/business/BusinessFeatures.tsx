@@ -10,18 +10,18 @@ const whatsappMessages = [
 
 export default function BusinessFeatures() {
   return (
-    <section className="py-32 bg-white dark:bg-[#050505]">
+    <section className="py-32 bg-[#09090b]">
       <div className="max-w-7xl mx-auto px-8 lg:px-20">
 
         {/* Header */}
         <div className="text-center mb-20">
-          <span className="text-[9px] uppercase tracking-[0.4em] text-[#0a0a0a]/35 dark:text-white/25 font-inter block mb-4">
+          <span className="text-[9px] uppercase tracking-[0.4em] text-white/25 font-inter block mb-4">
             Todo lo que necesitás
           </span>
-          <h2 className="font-vogue text-5xl md:text-6xl text-[#0a0a0a] dark:text-white">
+          <h2 className="font-playfair text-5xl md:text-6xl text-white">
             Potencia en tiempo real.
           </h2>
-          <p className="text-[#0a0a0a]/45 dark:text-white/35 font-light font-inter text-sm mt-4 max-w-md mx-auto leading-relaxed">
+          <p className="text-white/35 font-light font-inter text-sm mt-4 max-w-md mx-auto leading-relaxed">
             Tres pilares que transforman cómo gestionás tu salón cada día.
           </p>
         </div>
@@ -35,9 +35,9 @@ export default function BusinessFeatures() {
               group-hover:bg-white/[0.025] transition-all duration-700" />
             <div className="relative z-10">
               <div className="w-10 h-10 rounded-2xl bg-white/[0.07] border border-white/[0.1] flex items-center justify-center mb-8">
-                <Calendar className="w-4.5 h-4.5 text-white/40" strokeWidth={1.5} />
+                <Calendar className="w-4 h-4 text-emerald-400" strokeWidth={1.5} />
               </div>
-              <h3 className="font-vogue text-3xl text-white mb-3">Agenda Inteligente</h3>
+              <h3 className="font-playfair text-3xl text-white mb-3">Agenda Inteligente</h3>
               <p className="text-white/35 font-light text-sm leading-relaxed max-w-sm font-inter mb-8">
                 Tus clientas reservan 24/7 sin llamadas, sin errores, sin que vos estés presente.
               </p>
@@ -56,12 +56,12 @@ export default function BusinessFeatures() {
                       opacity: 1 - i * 0.25,
                     }}
                   >
-                    <span className="text-sm font-inter" style={{ color: i === 0 ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.4)' }}>
+                    <span className={`text-sm font-inter ${i === 0 ? 'text-white/75' : 'text-white/40'}`}>
                       {apt.name}
                     </span>
                     {i === 0
                       ? <span className="text-[10px] bg-white text-black px-3 py-1 rounded-full font-black font-inter tracking-wide">{apt.time}</span>
-                      : <span className="text-[10px] font-inter" style={{ color: 'rgba(255,255,255,0.3)' }}>{apt.time}</span>
+                      : <span className="text-[10px] font-inter text-white/30">{apt.time}</span>
                     }
                   </div>
                 ))}
@@ -73,18 +73,18 @@ export default function BusinessFeatures() {
           <div className="md:col-span-5 bg-[#0a0a0a] border border-white/[0.07] rounded-[2rem] p-10 relative overflow-hidden
             hover:border-white/[0.12] transition-all duration-500 cursor-pointer group flex flex-col">
             <div className="w-10 h-10 rounded-2xl bg-white/[0.07] border border-white/[0.1] flex items-center justify-center mb-8">
-              <BarChart3 className="w-4.5 h-4.5 text-white/40" strokeWidth={1.5} />
+              <BarChart3 className="w-4 h-4 text-emerald-400" strokeWidth={1.5} />
             </div>
-            <h3 className="font-vogue text-3xl text-white mb-3">Pulso en Real-Time</h3>
+            <h3 className="font-playfair text-3xl text-white mb-3">Pulso en Real-Time</h3>
             <p className="text-white/35 font-light text-sm leading-relaxed font-inter mb-auto">
               Datos precisos para decisiones con poder.
             </p>
             <div className="mt-8">
               <div className="flex justify-between mb-3">
-                <span className="text-[9px] uppercase tracking-widest font-inter" style={{ color: 'rgba(255,255,255,0.22)' }}>
+                <span className="text-[9px] uppercase tracking-widest font-inter text-zinc-600">
                   Ingresos mensuales
                 </span>
-                <span className="text-[10px] font-inter" style={{ color: 'rgba(74,222,128,0.8)' }}>+32%</span>
+                <span className="text-[10px] font-inter text-emerald-400">+32%</span>
               </div>
               <div className="flex items-end gap-1.5" style={{ height: '70px' }}>
                 {barData.map((h, i) => (
@@ -116,12 +116,12 @@ export default function BusinessFeatures() {
               {/* Copy */}
               <div className="flex-1">
                 <div className="w-10 h-10 rounded-2xl bg-white/[0.07] border border-white/[0.1] flex items-center justify-center mb-8">
-                  <MessageSquare className="w-4.5 h-4.5 text-white/40" strokeWidth={1.5} />
+                  <MessageSquare className="w-4 h-4 text-emerald-400" strokeWidth={1.5} />
                 </div>
-                <span className="text-[9px] uppercase tracking-[0.3em] text-white/22 font-inter block mb-4">
+                <span className="text-[9px] uppercase tracking-[0.3em] text-zinc-600 font-inter block mb-4">
                   Automation Core
                 </span>
-                <h3 className="font-vogue text-4xl text-white mb-4">
+                <h3 className="font-playfair text-4xl text-white mb-4">
                   Gestión Automatizada
                 </h3>
                 <p className="text-white/35 font-light text-sm leading-relaxed font-inter mb-8 max-w-lg">
@@ -143,7 +143,7 @@ export default function BusinessFeatures() {
                   {/* WA header */}
                   <div className="px-5 py-3 flex items-center gap-3" style={{ background: '#202C33' }}>
                     <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                      <span className="font-vogue text-xs text-white/60 italic">O</span>
+                      <span className="font-playfair text-xs text-white/60 italic">O</span>
                     </div>
                     <div>
                       <p className="text-sm font-inter text-white/85">Ouleeh Pro</p>
@@ -163,10 +163,10 @@ export default function BusinessFeatures() {
                             background: msg.from === 'client' ? '#005C4B' : '#202C33',
                           }}
                         >
-                          <p className="text-[11px] font-inter leading-relaxed" style={{ color: 'rgba(255,255,255,0.88)' }}>
+                          <p className="text-[11px] font-inter leading-relaxed text-white/90">
                             {msg.text}
                           </p>
-                          <p className="text-[9px] font-inter mt-1.5 text-right" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                          <p className="text-[9px] font-inter mt-1.5 text-right text-white/35">
                             {msg.time}
                           </p>
                         </div>
@@ -203,9 +203,9 @@ export default function BusinessFeatures() {
                 hover:border-white/[0.12] transition-all duration-500 cursor-pointer group"
             >
               <div className="w-10 h-10 rounded-2xl bg-white/[0.07] border border-white/[0.1] flex items-center justify-center mb-6">
-                <feature.icon className="w-4.5 h-4.5 text-white/40" strokeWidth={1.5} />
+                <feature.icon className="w-4 h-4 text-emerald-400" strokeWidth={1.5} />
               </div>
-              <h3 className="font-vogue text-xl text-white mb-2">{feature.title}</h3>
+              <h3 className="font-playfair text-xl text-white mb-2">{feature.title}</h3>
               <p className="text-white/30 font-light text-sm leading-relaxed font-inter">{feature.desc}</p>
             </div>
           ))}

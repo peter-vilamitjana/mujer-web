@@ -20,7 +20,7 @@ export default function BusinessDashboardMock() {
             <span className="text-[9px] uppercase tracking-[0.4em] text-[#0a0a0a]/35 dark:text-white/25 font-inter block mb-4">
               La experiencia
             </span>
-            <h2 className="font-vogue text-5xl md:text-6xl text-[#0a0a0a] dark:text-white mb-4">
+            <h2 className="font-playfair text-5xl md:text-6xl text-[#0a0a0a] dark:text-white mb-4">
               Minimalismo funcional.
             </h2>
             <p className="text-[#0a0a0a]/50 dark:text-white/35 font-light font-inter max-w-md mx-auto text-sm leading-relaxed">
@@ -32,7 +32,7 @@ export default function BusinessDashboardMock() {
         {/* Top bar */}
         <div className="px-6 py-3 border-b border-white/[0.06] flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <span className="font-vogue text-sm italic text-white/70">Pro Workspace</span>
+            <span className="font-playfair text-sm italic text-white/70">Pro Workspace</span>
             <div className="hidden md:flex items-center gap-1">
               {['Dashboard', 'Agenda', 'Clientes', 'Finanzas'].map((item, i) => (
                 <span
@@ -85,7 +85,7 @@ export default function BusinessDashboardMock() {
                 <p className="text-[9px] uppercase tracking-widest mb-1.5 font-inter" style={{ color: 'rgba(255,255,255,0.25)' }}>
                   {stat.label}
                 </p>
-                <p className="font-vogue text-xl text-white">{stat.value}</p>
+                <p className="font-playfair text-xl text-white">{stat.value}</p>
                 <p className="text-[10px] font-inter mt-0.5" style={{ color: stat.subColor }}>{stat.sub}</p>
               </div>
             ))}

@@ -10,7 +10,7 @@ export default function BusinessHero() {
       totalFrames={96}
       framesPath="/frames/studio-display"
     >
-      <div className="w-full text-center px-6 pb-4 pointer-events-auto">
+      <div className="w-full text-center px-6 pointer-events-auto mt-[-5vh]">
         <div className="flex items-center justify-center gap-2 mb-5">
           <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
           <p className="text-[10px] text-emerald-400 uppercase tracking-[0.5em] font-bold">
@@ -19,12 +19,18 @@ export default function BusinessHero() {
           <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
         </div>
 
-        <h1 className="font-playfair text-5xl md:text-7xl text-white leading-tight tracking-tight mb-5 max-w-4xl mx-auto drop-shadow-2xl">
+        <h1 
+          className="font-playfair text-5xl md:text-7xl text-white leading-tight tracking-tight mb-5 max-w-4xl mx-auto"
+          style={{ textShadow: '0 4px 24px rgba(0,0,0,0.5)' }}
+        >
           Tu salón,{' '}
           <span className="italic text-emerald-400">sin el caos.</span>
         </h1>
 
-        <p className="text-zinc-300 text-base md:text-lg max-w-xl mx-auto leading-relaxed mb-8 drop-shadow-lg">
+        <p 
+          className="text-zinc-300 text-base md:text-lg max-w-xl mx-auto leading-relaxed mb-8"
+          style={{ textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}
+        >
           Agenda inteligente, clientes fidelizados y cobros simples —
           todo en una plataforma diseñada para salones de Argentina.
         </p>
