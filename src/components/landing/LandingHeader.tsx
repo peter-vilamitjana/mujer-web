@@ -24,9 +24,9 @@ export default function LandingHeader() {
       const scrollY = window.scrollY;
       const scrolled = scrollY > 50;
 
-      // Animar solo el header — el transform se aplica directamente al DOM sin React state
+      // Animar solo el header — top en lugar de transform para no crear stacking context
       if (header) {
-        header.style.transform = scrolled ? 'translateY(-10px)' : 'translateY(0)';
+        header.style.top = scrolled ? '-10px' : '0px';
       }
 
       // Opacidad del cristal en scroll: el blur de Chrome falla con transform en el ancestro,
@@ -56,7 +56,7 @@ export default function LandingHeader() {
     // en Chrome incluso cuando scrollY = 0. El translateY se aplica solo vía DOM en scroll.
     <header
       id="main-header"
-      className="fixed top-0 inset-x-0 z-[100] isolate flex justify-center pt-6 px-6 transition-transform duration-700"
+      className="fixed top-0 inset-x-0 z-[100] isolate flex justify-center pt-6 px-6 transition-[top] duration-700"
       suppressHydrationWarning
     >
       <div className="w-full max-w-[1600px]">
