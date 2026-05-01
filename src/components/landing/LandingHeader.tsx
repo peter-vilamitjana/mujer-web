@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useTheme } from 'next-themes';
-
 import { useSession } from 'next-auth/react';
 
 export default function LandingHeader() {
@@ -12,10 +11,10 @@ export default function LandingHeader() {
   const [overHero, setOverHero] = useState(true);
   const [mounted, setMounted] = useState(false);
   const params = useParams();
-  const tenantSlug = params?.tenantSlug as string | undefined;
   const loginUrl = '/login';
   const { theme, setTheme } = useTheme();
-  const pillRef = useRef<HTMLDivElement>(null);
+  // Apunta solo a la capa de cristal aislada, no al contenedor de contenido
+  const glassRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -24,20 +23,23 @@ export default function LandingHeader() {
     const handleScroll = () => {
       const scrollY = window.scrollY;
       const scrolled = scrollY > 50;
-      // Transform directo al DOM — sin React state, sin re-render
+
+      // Animar solo el header — el transform se aplica directamente al DOM sin React state
       if (header) {
         header.style.transform = scrolled ? 'translateY(-10px)' : 'translateY(0)';
       }
-      // Opacidad del pill en scroll — cubre el texto que pasa por detrás
-      if (pillRef.current) {
-        pillRef.current.style.background = scrolled
-          ? 'rgba(9, 9, 11, 0.85)'
+
+      // Opacidad del cristal en scroll: el blur de Chrome falla con transform en el ancestro,
+      // pero compensamos con fondo sólido cuando hay scroll (en ese momento el blur es irrelevante)
+      if (glassRef.current) {
+        glassRef.current.style.background = scrolled
+          ? 'rgba(9, 9, 11, 0.88)'
           : '';
-        pillRef.current.style.borderColor = scrolled
+        glassRef.current.style.borderColor = scrolled
           ? 'rgba(255, 255, 255, 0.08)'
           : '';
       }
-      // overHero sí puede usar state porque no afecta el header element
+
       setOverHero(scrollY < window.innerHeight * 0.85);
     };
 
@@ -45,22 +47,37 @@ export default function LandingHeader() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // En dark mode: siempre texto blanco
-  // En light mode: blanco sobre hero, oscuro sobre secciones blancas
   const isLight = mounted && theme === 'light';
   const textWhite = !isLight || overHero;
-
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
   return (
+    // Sin transform-gpu aquí: el stacking context permanente bloqueaba el backdrop-filter
+    // en Chrome incluso cuando scrollY = 0. El translateY se aplica solo vía DOM en scroll.
     <header
-      className="fixed top-0 w-full z-50 transition-transform duration-700 pt-6 px-6"
       id="main-header"
+      className="fixed top-0 inset-x-0 z-[100] isolate flex justify-center pt-6 px-6 transition-transform duration-700"
       suppressHydrationWarning
     >
-      <div className="max-w-[1600px] mx-auto">
-        <div ref={pillRef} className="liquid-glass rounded-full px-10 py-5 flex justify-between items-center" style={{ transition: 'background 0.3s ease, border-color 0.3s ease' }}>
-          <div className="flex items-center gap-4">
+      <div className="w-full max-w-[1600px]">
+        {/*
+          Nuclear fix: el <nav> es el contenedor relativo sin fondo propio.
+          La capa de cristal vive en un div absoluto aislado con -z-10,
+          completamente separada del contenido. Chrome puede aplicar backdrop-filter
+          correctamente porque el nodo no tiene hijos que creen sub-contextos.
+        */}
+        <nav className="relative flex items-center justify-between w-full rounded-full px-10 py-5">
+
+          {/* Capa de cristal aislada — backdrop-filter aquí, sin contenido */}
+          <div
+            ref={glassRef}
+            aria-hidden="true"
+            className="absolute inset-0 rounded-full liquid-glass pointer-events-none -z-10"
+            style={{ transition: 'background 0.3s ease, border-color 0.3s ease' }}
+          />
+
+          {/* Logo — relativo para quedar sobre la capa de cristal */}
+          <div className="relative z-10 flex items-center gap-4">
             <span className={cn(
               "font-vogue text-3xl font-black tracking-tighter uppercase transition-colors duration-300",
               textWhite ? "text-white" : "text-[#1A1A1A]"
@@ -68,13 +85,15 @@ export default function LandingHeader() {
             <div className={cn(
               "w-px h-6 transition-colors duration-300",
               textWhite ? "bg-white/20" : "bg-black/20"
-            )}></div>
+            )} />
             <span className={cn(
               "text-[9px] tracking-[0.5em] uppercase opacity-40 font-bold hidden sm:block transition-colors duration-300",
               textWhite ? "text-white" : "text-[#1A1A1A]"
             )}>Volume No. 01</span>
           </div>
-          <nav className="hidden md:flex gap-8 items-center">
+
+          {/* Links de navegación */}
+          <div className="relative z-10 hidden md:flex gap-8 items-center">
             {[
               { label: 'Reservar turno', href: '/explore' },
               { label: 'Sumá tu salón', href: '/business' },
@@ -105,7 +124,7 @@ export default function LandingHeader() {
                 )}
               >
                 {theme === 'dark' ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <circle cx="12" cy="12" r="5"/>
                     <line x1="12" y1="1" x2="12" y2="3"/>
                     <line x1="12" y1="21" x2="12" y2="23"/>
@@ -117,7 +136,7 @@ export default function LandingHeader() {
                     <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
                   </svg>
                 ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
                   </svg>
                 )}
@@ -125,6 +144,7 @@ export default function LandingHeader() {
             )}
 
             <Link
+              href={status === 'authenticated' ? '/perfil' : loginUrl}
               className={cn(
                 "relative text-[10px] uppercase tracking-[0.3em] font-bold px-8 py-3 rounded-full font-inter overflow-hidden group",
                 "transition-all duration-500 ease-out hover:px-12",
@@ -132,21 +152,25 @@ export default function LandingHeader() {
                   ? "bg-white/15 backdrop-blur-md border border-white/25 text-white hover:bg-white/25 hover:border-white/40 hover:shadow-[0_0_24px_rgba(255,255,255,0.15)]"
                   : "bg-black/10 backdrop-blur-md border border-black/20 text-[#1A1A1A] hover:bg-black/20 hover:border-black/30 hover:shadow-[0_0_24px_rgba(0,0,0,0.1)]"
               )}
-              href={status === 'authenticated' ? '/perfil' : loginUrl}
             >
               <span className="absolute inset-x-0 top-0 h-px rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-white/50" />
               <span className="relative z-10 group-hover:tracking-[0.45em] transition-all duration-500">
                 {status === 'authenticated' ? 'Mi Perfil' : 'Sign In'}
               </span>
             </Link>
-          </nav>
-          <button className={cn(
-            "md:hidden transition-colors duration-300",
-            textWhite ? "text-white" : "text-[#1A1A1A]"
-          )}>
+          </div>
+
+          {/* Menú mobile */}
+          <button
+            className={cn(
+              "relative z-10 md:hidden transition-colors duration-300",
+              textWhite ? "text-white" : "text-[#1A1A1A]"
+            )}
+            aria-label="Abrir menú"
+          >
             <span className="material-symbols-outlined">menu</span>
           </button>
-        </div>
+        </nav>
       </div>
     </header>
   );
