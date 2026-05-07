@@ -60,9 +60,9 @@ export default function AdminDashboard() {
 
   return (
     <div
-      className="min-h-screen text-[#f5f0e8] selection:bg-[#f1c97d] selection:text-[#050504] relative"
+      className="min-h-screen text-[#f5f0e8] selection:bg-violet-500/30 selection:text-[#f5f0e8] relative"
       style={{
-        background: 'radial-gradient(circle at 0% 0%, #1a160f 0%, #050504 50%), radial-gradient(circle at 100% 100%, #121212 0%, #050504 50%)',
+        background: 'radial-gradient(circle at 0% 0%, #1a0b2e 0%, #050504 50%), radial-gradient(circle at 100% 100%, #120a1f 0%, #050504 50%)',
         backgroundAttachment: 'fixed',
       }}
     >
@@ -81,13 +81,13 @@ export default function AdminDashboard() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-4 px-[5px] mb-6 group/logo cursor-pointer">
-            <div className="w-9 h-9 rounded-full flex-shrink-0 bg-gradient-to-b from-white/[0.15] to-transparent p-[1px] shadow-[0_4px_20px_rgba(0,0,0,0.5)] transition-all duration-500 group-hover/logo:shadow-[0_0_15px_rgba(241,201,125,0.15)] group-hover/logo:scale-105">
+            <div className="w-9 h-9 rounded-full flex-shrink-0 bg-gradient-to-b from-white/[0.15] to-transparent p-[1px] shadow-[0_4px_20px_rgba(0,0,0,0.5)] transition-all duration-500 group-hover/logo:shadow-[0_0_15px_rgba(139,92,246,0.15)] group-hover/logo:scale-105">
               <div className="w-full h-full rounded-full bg-gradient-to-b from-[#1c1c1e] to-[#0a0a0c] flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-[#f1c97d]/10 to-transparent opacity-0 group-hover/logo:opacity-100 transition-opacity duration-500" />
-                <span className="font-playfair italic text-[#f5f0e8] text-[15px] tracking-widest relative z-10 transition-colors duration-500 group-hover/logo:text-[#f1c97d]">M</span>
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-violet-400/10 to-transparent opacity-0 group-hover/logo:opacity-100 transition-opacity duration-500" />
+                <span className="font-playfair italic text-[#f5f0e8] text-[15px] tracking-widest relative z-10 transition-colors duration-500 group-hover/logo:text-violet-400">M</span>
               </div>
             </div>
-            <span className="text-xl font-playfair italic text-[#f5f0e8] group-hover/logo:text-[#f1c97d] opacity-0 group-hover:opacity-100 transition-all duration-500 whitespace-nowrap">
+            <span className="text-xl font-playfair italic text-[#f5f0e8] group-hover/logo:text-violet-400 opacity-0 group-hover:opacity-100 transition-all duration-500 whitespace-nowrap">
               MujerApp
             </span>
           </Link>
@@ -100,8 +100,8 @@ export default function AdminDashboard() {
                 onClick={() => setActiveTab(item.tab)}
                 className={`w-full h-10 rounded-xl flex items-center gap-4 px-2.5 transition-all duration-200 cursor-pointer ${
                   activeTab === item.tab
-                    ? 'text-[#f1c97d] bg-white/[0.08]'
-                    : 'text-[#7a766e] hover:text-[#f1c97d] hover:bg-white/5'
+                    ? 'text-violet-400 bg-white/[0.08]'
+                    : 'text-[#7a766e] hover:text-violet-400 hover:bg-white/5'
                 }`}
               >
                 <span className="material-symbols-outlined text-[19px] flex-shrink-0">{item.icon}</span>
@@ -117,7 +117,7 @@ export default function AdminDashboard() {
 
           {/* Logout */}
           <div className="flex flex-col gap-1 w-full">
-            <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#7a766e] hover:text-[#f1c97d] hover:bg-white/5 transition-all duration-200 cursor-pointer">
+            <button className="w-full h-10 rounded-xl flex items-center gap-4 px-2.5 text-[#7a766e] hover:text-violet-400 hover:bg-white/5 transition-all duration-200 cursor-pointer">
               <span className="material-symbols-outlined text-[19px] flex-shrink-0">logout</span>
               <span className="text-[10px] uppercase tracking-[0.1em] font-label opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
                 Salir
@@ -132,12 +132,12 @@ export default function AdminDashboard() {
           MOBILE TOP HEADER
       ══════════════════════════════════════════════ */}
       <header className="md:hidden sticky top-0 z-50 flex items-center justify-between px-4 h-14 bg-[#050504]/90 backdrop-blur-xl border-b border-white/[0.04]">
-        <span className="font-playfair text-lg font-bold text-[#f1c97d] italic">MujerApp</span>
+        <span className="font-playfair text-lg font-bold text-violet-400 italic">MujerApp</span>
         <div className="flex items-center gap-1.5">
           <button className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/[0.05] transition-all cursor-pointer text-[#7a766e]">
             <Bell size={17} />
           </button>
-          <div className="w-8 h-8 rounded-full bg-[#f1c97d]/15 border border-[#f1c97d]/25 flex items-center justify-center text-[#f1c97d] text-xs font-bold">
+          <div className="w-8 h-8 rounded-full bg-violet-400/15 border border-violet-400/25 flex items-center justify-center text-violet-400 text-xs font-bold">
             V
           </div>
         </div>
@@ -171,18 +171,18 @@ export default function AdminDashboard() {
           {/* ── Stats ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
-              { label: 'Turnos hoy',     value: '7',       sub: '2 pendientes', icon: 'calendar_month', gold: true  },
+              { label: 'Turnos hoy',     value: '7',       sub: '2 pendientes', icon: 'calendar_month', accent: true  },
               { label: 'Ingresos del día', value: '$19.200', sub: '+8% vs ayer',  icon: 'trending_up',    green: true },
-              { label: 'Próxima clienta', value: '10:00',   sub: 'Valentina G.', icon: 'schedule',       gold: false },
-              { label: 'Completados',     value: '3',       sub: 'de 7 turnos',  icon: 'check_circle',   gold: false },
+              { label: 'Próxima clienta', value: '10:00',   sub: 'Valentina G.', icon: 'schedule',       accent: false },
+              { label: 'Completados',     value: '3',       sub: 'de 7 turnos',  icon: 'check_circle',   accent: false },
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="relative isolate rounded-[1.5rem] border border-white/10 p-4 md:p-5 overflow-hidden hover:border-[#f1c97d]/20 transition-all duration-300 cursor-default"
+                className="relative isolate rounded-[1.5rem] border border-white/10 p-4 md:p-5 overflow-hidden hover:border-violet-400/20 transition-all duration-300 cursor-default"
               >
                 <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
-                <div className={`absolute -top-6 -right-6 w-24 h-24 rounded-full blur-2xl opacity-20 ${stat.gold ? 'bg-[#f1c97d]' : stat.green ? 'bg-emerald-400' : 'bg-white/20'}`} />
-                <span className={`material-symbols-outlined text-[18px] mb-3 block ${stat.gold ? 'text-[#f1c97d]' : stat.green ? 'text-emerald-400' : 'text-[#7a766e]'}`}>
+                <div className={`absolute -top-6 -right-6 w-24 h-24 rounded-full blur-2xl opacity-20 ${stat.accent ? 'bg-violet-400' : stat.green ? 'bg-emerald-400' : 'bg-white/20'}`} />
+                <span className={`material-symbols-outlined text-[18px] mb-3 block ${stat.accent ? 'text-violet-400' : stat.green ? 'text-emerald-400' : 'text-[#7a766e]'}`}>
                   {stat.icon}
                 </span>
                 <p className="text-[9px] text-[#7a766e] uppercase tracking-[0.15em] font-label">{stat.label}</p>
@@ -202,7 +202,7 @@ export default function AdminDashboard() {
               <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
               <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[#f5f0e8]">Próximos turnos</h2>
-                <button className="text-[10px] text-[#f1c97d] hover:text-[#f5f0e8] transition-colors font-label uppercase tracking-widest flex items-center gap-1 cursor-pointer">
+                <button className="text-[10px] text-violet-400 hover:text-[#f5f0e8] transition-colors font-label uppercase tracking-widest flex items-center gap-1 cursor-pointer">
                   Ver agenda <ArrowUpRight size={11} />
                 </button>
               </div>
@@ -211,7 +211,7 @@ export default function AdminDashboard() {
                 {UPCOMING.map((apt) => (
                   <li key={apt.id}>
                     <button className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-white/[0.03] transition-colors cursor-pointer text-left group">
-                      <div className="w-8 h-8 rounded-full bg-[#f1c97d]/10 border border-[#f1c97d]/20 flex items-center justify-center text-[#f1c97d] text-[11px] font-bold shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-violet-400/10 border border-violet-400/20 flex items-center justify-center text-violet-400 text-[11px] font-bold shrink-0">
                         {apt.initials}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -221,7 +221,7 @@ export default function AdminDashboard() {
                       <div className="text-right shrink-0">
                         <p className="text-sm font-semibold text-[#f5f0e8] font-mono leading-tight">{apt.time}</p>
                         <span className={`text-[9px] font-bold uppercase tracking-wider ${
-                          apt.status === 'confirmed' ? 'text-emerald-400' : 'text-[#f1c97d]'
+                          apt.status === 'confirmed' ? 'text-emerald-400' : 'text-violet-400'
                         }`}>
                           {apt.status === 'confirmed' ? '● Confirmado' : '○ Pendiente'}
                         </span>
@@ -233,7 +233,7 @@ export default function AdminDashboard() {
               </ul>
 
               <div className="px-5 py-3 border-t border-white/[0.04]">
-                <button className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm text-[#7a766e] hover:text-[#f1c97d] hover:bg-[#f1c97d]/5 transition-all duration-200 cursor-pointer">
+                <button className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm text-[#7a766e] hover:text-violet-400 hover:bg-violet-400/5 transition-all duration-200 cursor-pointer">
                   <Plus size={14} />
                   Agregar turno
                 </button>
@@ -256,18 +256,18 @@ export default function AdminDashboard() {
                       <div
                         className={`w-full rounded-lg transition-all duration-300 ${
                           d.isToday
-                            ? 'shadow-[0_0_16px_rgba(241,201,125,0.35)]'
-                            : 'bg-white/[0.07] group-hover:bg-[#f1c97d]/10'
+                            ? 'shadow-[0_0_16px_rgba(139,92,246,0.35)]'
+                            : 'bg-white/[0.07] group-hover:bg-violet-400/20'
                         }`}
                         style={{
                           height: `${h}%`,
                           background: d.isToday
-                            ? 'linear-gradient(to top, rgba(241,201,125,0.8), rgba(241,201,125,1))'
+                            ? 'linear-gradient(to top, rgba(167,139,250,0.8), rgba(139,92,246,1))'
                             : undefined,
                         }}
                       />
                       <span className={`text-[9px] uppercase tracking-wider font-bold font-label ${
-                        d.isToday ? 'text-[#f1c97d]' : 'text-[#7a766e]'
+                        d.isToday ? 'text-violet-400' : 'text-[#7a766e]'
                       }`}>
                         {d.day}
                       </span>
@@ -305,12 +305,12 @@ export default function AdminDashboard() {
                   key={action.label}
                   className={`relative isolate flex flex-col items-center justify-center gap-2.5 py-5 px-3 rounded-[1.5rem] text-sm font-medium transition-all duration-200 active:scale-95 cursor-pointer overflow-hidden ${
                     action.primary
-                      ? 'border border-[#f1c97d]/30 text-[#050504]'
-                      : 'border border-white/10 text-[#7a766e] hover:text-[#f1c97d] hover:border-[#f1c97d]/20'
+                      ? 'border border-violet-400/30 text-white'
+                      : 'border border-white/10 text-[#7a766e] hover:text-violet-400 hover:border-violet-400/20'
                   }`}
                   style={action.primary ? {
-                    background: 'linear-gradient(135deg, rgba(241,201,125,0.9), rgba(212,175,55,1))',
-                    boxShadow: '0 0 24px rgba(241,201,125,0.2)',
+                    background: 'linear-gradient(135deg, rgba(139,92,246,0.9), rgba(124,58,237,1))',
+                    boxShadow: '0 0 24px rgba(139,92,246,0.3)',
                   } : undefined}
                 >
                   {!action.primary && <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />}
@@ -327,14 +327,14 @@ export default function AdminDashboard() {
       {/* ══════════════════════════════════════════════
           MOBILE BOTTOM NAV
       ══════════════════════════════════════════════ */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 liquid-glass-floating border-t border-[#f1c97d]/10">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 liquid-glass-floating border-t border-violet-400/10">
         <div className="flex items-center justify-around px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           {ADMIN_NAV.map((item) => (
             <button
               key={item.tab}
               onClick={() => setActiveTab(item.tab)}
               className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer min-w-[52px] ${
-                activeTab === item.tab ? 'text-[#f1c97d]' : 'text-[#7a766e] hover:text-[#f5f0e8]'
+                activeTab === item.tab ? 'text-violet-400' : 'text-[#7a766e] hover:text-[#f5f0e8]'
               }`}
             >
               <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
