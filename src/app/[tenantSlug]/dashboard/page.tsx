@@ -248,11 +248,11 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
                   <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.04] flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-violet-400/10 flex items-center justify-center border border-violet-400/20 shadow-[inset_0_0_12px_rgba(167,139,250,0.1)]">
-                      <span className="material-symbols-outlined text-violet-400">confirmation_number</span>
+                      <span className="material-symbols-outlined text-violet-400">event_available</span>
                     </div>
                     <div>
-                      <p className="text-[#f5f0e8] font-bold text-2xl font-playfair italic leading-none">142</p>
-                      <p className="text-[#7a766e] text-[11px] font-medium mt-1.5">Tickets Emitidos Hoy</p>
+                      <p className="text-[#f5f0e8] font-bold text-2xl font-playfair italic leading-none">7</p>
+                      <p className="text-[#7a766e] text-[11px] font-medium mt-1.5">Turnos del Día</p>
                     </div>
                   </div>
                   <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.04] flex items-center gap-4">
@@ -260,16 +260,16 @@ export default function AdminDashboard() {
                       <span className="material-symbols-outlined text-emerald-400">timer</span>
                     </div>
                     <div>
-                      <p className="text-[#f5f0e8] font-bold text-2xl font-playfair italic leading-none">18 min</p>
-                      <p className="text-[#7a766e] text-[11px] font-medium mt-1.5">Tiempo Promedio</p>
+                      <p className="text-[#f5f0e8] font-bold text-2xl font-playfair italic leading-none">52 min</p>
+                      <p className="text-[#7a766e] text-[11px] font-medium mt-1.5">Duración Promedio</p>
                     </div>
                   </div>
                 </div>
                 <div className="p-5 bg-gradient-to-br from-violet-400/10 to-transparent rounded-xl border border-violet-400/20">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="text-[#f5f0e8] font-medium text-sm">Rendimiento de Operadores</h4>
-                      <p className="text-[11px] text-[#7a766e] mt-1">Top desempeño semanal activo</p>
+                      <h4 className="text-[#f5f0e8] font-medium text-sm">Mis Estilistas</h4>
+                      <p className="text-[11px] text-[#7a766e] mt-1">Top desempeño semanal</p>
                     </div>
                     <button className="text-violet-400 text-[11px] font-medium hover:underline tracking-wide">Ver reporte</button>
                   </div>
@@ -314,49 +314,49 @@ export default function AdminDashboard() {
                     <td className="px-6 py-4 text-xs font-mono text-[#7a766e]">14:24</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-violet-400/10 flex items-center justify-center text-[10px] font-bold text-violet-400 border border-violet-400/20 shrink-0">AM</div>
-                        <span className="text-[13px] text-[#f5f0e8] font-medium">Alejandro Morales</span>
+                        <div className="w-8 h-8 rounded-full bg-violet-400/10 flex items-center justify-center text-[10px] font-bold text-violet-400 border border-violet-400/20 shrink-0">VG</div>
+                        <span className="text-[13px] text-[#f5f0e8] font-medium">Valentina García</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-[13px] text-[#7a766e]">Servicio Premium Gold</td>
+                    <td className="px-6 py-4 text-[13px] text-[#7a766e]">Coloración + Brushing</td>
                     <td className="px-6 py-4">
                       <span className="px-2.5 py-1 rounded bg-violet-400/10 text-violet-400 text-[9px] font-bold uppercase tracking-wider border border-violet-400/20">Tarjeta</span>
                     </td>
-                    <td className="px-6 py-4 text-right text-[13px] text-[#f5f0e8] font-bold font-mono">$1,200.00</td>
+                    <td className="px-6 py-4 text-right text-[13px] text-[#f5f0e8] font-bold font-mono">$8.500</td>
                     <td className="px-6 py-4 text-center">
                       <span className="material-symbols-outlined text-emerald-400 text-[16px] leading-none block">check_circle</span>
                     </td>
                   </tr>
                   <tr className="hover:bg-white/[0.03] transition-colors group">
-                    <td className="px-6 py-4 text-xs font-mono text-[#7a766e]">14:10</td>
+                    <td className="px-6 py-4 text-xs font-mono text-[#7a766e]">13:00</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-amber-400/10 flex items-center justify-center text-[10px] font-bold text-amber-400 border border-amber-400/20 shrink-0">BR</div>
-                        <span className="text-[13px] text-[#f5f0e8] font-medium">Beatriz Rojas</span>
+                        <div className="w-8 h-8 rounded-full bg-amber-400/10 flex items-center justify-center text-[10px] font-bold text-amber-400 border border-amber-400/20 shrink-0">LR</div>
+                        <span className="text-[13px] text-[#f5f0e8] font-medium">Luciana Romero</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-[13px] text-[#7a766e]">Consulta General</td>
+                    <td className="px-6 py-4 text-[13px] text-[#7a766e]">Manicura gel + Pedicura</td>
                     <td className="px-6 py-4">
                       <span className="px-2.5 py-1 rounded bg-amber-400/10 text-amber-400 text-[9px] font-bold uppercase tracking-wider border border-amber-400/20">Efectivo</span>
                     </td>
-                    <td className="px-6 py-4 text-right text-[13px] text-[#f5f0e8] font-bold font-mono">$450.00</td>
+                    <td className="px-6 py-4 text-right text-[13px] text-[#f5f0e8] font-bold font-mono">$4.200</td>
                     <td className="px-6 py-4 text-center">
                       <span className="material-symbols-outlined text-emerald-400 text-[16px] leading-none block">check_circle</span>
                     </td>
                   </tr>
                   <tr className="hover:bg-white/[0.03] transition-colors group">
-                    <td className="px-6 py-4 text-xs font-mono text-[#7a766e]">13:55</td>
+                    <td className="px-6 py-4 text-xs font-mono text-[#7a766e]">11:30</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-[#f5f0e8] border border-white/20 shrink-0">CV</div>
-                        <span className="text-[13px] text-[#f5f0e8] font-medium">Carlos Vargas</span>
+                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-[#f5f0e8] border border-white/20 shrink-0">SM</div>
+                        <span className="text-[13px] text-[#f5f0e8] font-medium">Sofía Martínez</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-[13px] text-[#7a766e]">Renovación de Licencia</td>
+                    <td className="px-6 py-4 text-[13px] text-[#7a766e]">Tratamiento capilar</td>
                     <td className="px-6 py-4">
                       <span className="px-2.5 py-1 rounded bg-white/[0.05] text-[#7a766e] text-[9px] font-bold uppercase tracking-wider border border-white/10">Transfer</span>
                     </td>
-                    <td className="px-6 py-4 text-right text-[13px] text-[#f5f0e8] font-bold font-mono">$2,800.00</td>
+                    <td className="px-6 py-4 text-right text-[13px] text-[#f5f0e8] font-bold font-mono">$6.800</td>
                     <td className="px-6 py-4 text-center">
                       <span className="material-symbols-outlined text-amber-400 text-[16px] leading-none block">schedule</span>
                     </td>
