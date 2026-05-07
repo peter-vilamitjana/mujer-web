@@ -2,31 +2,7 @@
 
 import React, { useMemo } from 'react';
 import Link from 'next/link';
-import {
-  Bell, ChevronRight, Plus, TrendingUp, Clock,
-  CheckCircle2, ArrowUpRight, Sparkles,
-  Home, Calendar, Users, Scissors, Settings,
-} from 'lucide-react';
-
-// ─── Mock data (reemplazar con Server Actions cuando estén listos) ───────────
-
-const UPCOMING = [
-  { id: 1, initials: 'VG', name: 'Valentina García',  service: 'Corte + Brushing',       time: '10:00', duration: '60 min', status: 'confirmed' as const },
-  { id: 2, initials: 'LR', name: 'Luciana Romero',    service: 'Coloración completa',     time: '11:30', duration: '120 min', status: 'confirmed' as const },
-  { id: 3, initials: 'SM', name: 'Sofía Martínez',    service: 'Manicura gel',             time: '13:00', duration: '45 min', status: 'pending' as const },
-  { id: 4, initials: 'CT', name: 'Camila Torres',     service: 'Depilación brasileña',     time: '14:30', duration: '30 min', status: 'confirmed' as const },
-  { id: 5, initials: 'DL', name: 'Daniela López',     service: 'Tratamiento capilar',      time: '16:00', duration: '90 min', status: 'confirmed' as const },
-];
-
-const WEEK = [
-  { day: 'LUN', amount: 18500 },
-  { day: 'MAR', amount: 24200 },
-  { day: 'MIÉ', amount: 15800 },
-  { day: 'JUE', amount: 31400 },
-  { day: 'VIE', amount: 28900 },
-  { day: 'SÁB', amount: 42100 },
-  { day: 'HOY', amount: 19200, isToday: true },
-];
+import { Bell, Plus, Sparkles } from 'lucide-react';
 
 const ADMIN_NAV = [
   { icon: 'dashboard',    label: 'Dashboard',     tab: 'dashboard' as const },
@@ -36,12 +12,9 @@ const ADMIN_NAV = [
   { icon: 'settings',     label: 'Config.',       tab: 'config'    as const },
 ];
 
-const ARS = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
-  const maxAmount = Math.max(...WEEK.map(d => d.amount));
   const [activeTab, setActiveTab] = React.useState<'dashboard' | 'agenda' | 'clientes' | 'servicios' | 'config'>('dashboard');
 
   const greeting = useMemo(() => {
@@ -71,7 +44,10 @@ export default function AdminDashboard() {
         .sidebar-expand:hover { width: 220px !important; }
       `}</style>
 
-      <div className="mesh-glow" />
+      {/* Violet ambient glow — override del mesh-glow ámbar de globals */}
+      <div className="fixed inset-0 pointer-events-none -z-10" style={{
+        background: 'radial-gradient(circle at 15% 25%, rgba(139,92,246,0.07) 0%, transparent 50%), radial-gradient(circle at 85% 75%, rgba(109,40,217,0.04) 0%, transparent 40%)',
+      }} />
 
       {/* ══════════════════════════════════════════════
           SIDEBAR — igual que /perfil
@@ -152,12 +128,12 @@ export default function AdminDashboard() {
           {/* ── Greeting ── */}
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-zinc-500 text-sm">{today}</p>
+              <p className="text-[#7a766e] text-sm">{today}</p>
               <h1 className="font-playfair text-3xl md:text-4xl font-bold mt-1 leading-tight italic">
                 {greeting},{' '}
                 <span className="text-violet-400">Valentina</span>
               </h1>
-              <p className="text-zinc-500 text-sm mt-1.5 flex items-center gap-1.5">
+              <p className="text-[#7a766e] text-sm mt-1.5 flex items-center gap-1.5">
                 <Sparkles size={13} className="text-violet-400" />
                 Tenés 7 turnos agendados para hoy
               </p>
@@ -168,159 +144,230 @@ export default function AdminDashboard() {
             </button>
           </div>
 
-          {/* ── Stats ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {[
-              { label: 'Turnos hoy',     value: '7',       sub: '2 pendientes', icon: 'calendar_month', accent: true  },
-              { label: 'Ingresos del día', value: '$19.200', sub: '+8% vs ayer',  icon: 'trending_up',    green: true },
-              { label: 'Próxima clienta', value: '10:00',   sub: 'Valentina G.', icon: 'schedule',       accent: false },
-              { label: 'Completados',     value: '3',       sub: 'de 7 turnos',  icon: 'check_circle',   accent: false },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="relative isolate rounded-[1.5rem] border border-white/10 p-4 md:p-5 overflow-hidden hover:border-violet-400/20 transition-all duration-300 cursor-default"
-              >
-                <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
-                <div className={`absolute -top-6 -right-6 w-24 h-24 rounded-full blur-2xl opacity-20 ${stat.accent ? 'bg-violet-400' : stat.green ? 'bg-emerald-400' : 'bg-white/20'}`} />
-                <span className={`material-symbols-outlined text-[18px] mb-3 block ${stat.accent ? 'text-violet-400' : stat.green ? 'text-emerald-400' : 'text-[#7a766e]'}`}>
-                  {stat.icon}
-                </span>
-                <p className="text-[9px] text-[#7a766e] uppercase tracking-[0.15em] font-label">{stat.label}</p>
-                <p className="font-playfair text-2xl md:text-3xl font-bold text-[#f5f0e8] mt-1 italic leading-none">
-                  {stat.value}
-                </p>
-                <p className={`text-xs mt-1.5 font-medium ${stat.green ? 'text-emerald-400' : 'text-[#7a766e]'}`}>{stat.sub}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* ── Appointments + Chart ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-
-            {/* Upcoming appointments */}
-            <div className="lg:col-span-3 relative isolate rounded-[1.5rem] border border-white/10 overflow-hidden">
+          {/* ── Metrics Row ── */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* Total Income Card */}
+            <div className="relative isolate rounded-[1.5rem] border border-white/10 p-6 overflow-hidden hover:border-violet-400/20 transition-all duration-300 cursor-default group">
               <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
-              <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-[#f5f0e8]">Próximos turnos</h2>
-                <button className="text-[10px] text-violet-400 hover:text-[#f5f0e8] transition-colors font-label uppercase tracking-widest flex items-center gap-1 cursor-pointer">
-                  Ver agenda <ArrowUpRight size={11} />
-                </button>
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label">INGRESOS TOTALES</span>
+                <span className="material-symbols-outlined text-violet-400 text-[18px]">account_balance_wallet</span>
               </div>
-
-              <ul className="divide-y divide-white/[0.04]">
-                {UPCOMING.map((apt) => (
-                  <li key={apt.id}>
-                    <button className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-white/[0.03] transition-colors cursor-pointer text-left group">
-                      <div className="w-8 h-8 rounded-full bg-violet-400/10 border border-violet-400/20 flex items-center justify-center text-violet-400 text-[11px] font-bold shrink-0">
-                        {apt.initials}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-[#f5f0e8] truncate leading-tight">{apt.name}</p>
-                        <p className="text-xs text-[#7a766e] truncate mt-0.5">{apt.service} · {apt.duration}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-semibold text-[#f5f0e8] font-mono leading-tight">{apt.time}</p>
-                        <span className={`text-[9px] font-bold uppercase tracking-wider ${
-                          apt.status === 'confirmed' ? 'text-emerald-400' : 'text-violet-400'
-                        }`}>
-                          {apt.status === 'confirmed' ? '● Confirmado' : '○ Pendiente'}
-                        </span>
-                      </div>
-                      <ChevronRight size={13} className="text-[#7a766e]/40 group-hover:text-[#7a766e] transition-colors ml-1 shrink-0" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="px-5 py-3 border-t border-white/[0.04]">
-                <button className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm text-[#7a766e] hover:text-violet-400 hover:bg-violet-400/5 transition-all duration-200 cursor-pointer">
-                  <Plus size={14} />
-                  Agregar turno
-                </button>
+              <div className="flex flex-col mt-1">
+                <span className="font-playfair text-4xl text-[#f5f0e8] font-bold italic leading-none">$128,450.00</span>
+                <div className="flex items-center gap-1.5 mt-3">
+                  <span className="material-symbols-outlined text-emerald-400 text-[15px]">trending_up</span>
+                  <span className="text-xs font-medium text-emerald-400">+12.5% vs mes anterior</span>
+                </div>
               </div>
             </div>
 
-            {/* Week chart */}
-            <div className="lg:col-span-2 relative isolate rounded-[1.5rem] border border-white/10 p-5 flex flex-col">
+            {/* Temporal Comparison (Mini Chart Card) */}
+            <div className="relative isolate rounded-[1.5rem] border border-white/10 p-6 overflow-hidden transition-all duration-300 cursor-default">
               <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
-              <div className="mb-4">
-                <h2 className="text-sm font-semibold text-[#f5f0e8]">Esta semana</h2>
-                <p className="text-[11px] text-[#7a766e] mt-0.5">Ingresos diarios</p>
+              <div className="flex justify-between items-start mb-5">
+                <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label">COMPARATIVA SEMANAL</span>
+                <span className="material-symbols-outlined text-[#7a766e] text-[18px]">bar_chart</span>
               </div>
-
-              <div className="flex-1 flex items-end justify-between gap-1.5 min-h-[120px]">
-                {WEEK.map((d) => {
-                  const h = Math.round((d.amount / maxAmount) * 100);
+              <div className="flex items-end gap-1.5 h-16">
+                {[40, 60, 30, 85, 50, 75, 45].map((h, i) => {
+                  const isToday = i === 3;
                   return (
-                    <div key={d.day} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group cursor-pointer">
-                      <div
-                        className={`w-full rounded-lg transition-all duration-300 ${
-                          d.isToday
-                            ? 'shadow-[0_0_16px_rgba(139,92,246,0.35)]'
-                            : 'bg-white/[0.07] group-hover:bg-violet-400/20'
-                        }`}
-                        style={{
-                          height: `${h}%`,
-                          background: d.isToday
-                            ? 'linear-gradient(to top, rgba(167,139,250,0.8), rgba(139,92,246,1))'
-                            : undefined,
-                        }}
-                      />
-                      <span className={`text-[9px] uppercase tracking-wider font-bold font-label ${
-                        d.isToday ? 'text-violet-400' : 'text-[#7a766e]'
-                      }`}>
-                        {d.day}
-                      </span>
-                    </div>
+                    <div key={i} className={`flex-1 rounded-t-md transition-colors ${isToday ? 'bg-violet-400' : 'bg-white/[0.08] hover:bg-violet-400/40'}`} style={{ height: `${h}%` }}></div>
                   );
                 })}
               </div>
+              <div className="flex justify-between mt-3 px-1">
+                {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((d, i) => (
+                  <span key={d} className={`text-[9px] font-bold font-label ${i === 3 ? 'text-violet-400' : 'text-[#7a766e]'}`}>{d}</span>
+                ))}
+              </div>
+            </div>
 
-              <div className="mt-4 pt-4 border-t border-white/[0.06] space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <p className="text-[11px] text-[#7a766e] font-label">Total semana</p>
-                  <p className="text-sm font-bold text-[#f5f0e8] font-mono">$180.100</p>
+            {/* Upcoming Collections */}
+            <div className="relative isolate rounded-[1.5rem] border border-white/10 p-6 overflow-hidden transition-all duration-300 cursor-default">
+              <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label">COBROS PENDIENTES</span>
+                <span className="material-symbols-outlined text-amber-400 text-[18px]">event_repeat</span>
+              </div>
+              <div className="flex flex-col mt-1">
+                <span className="font-playfair text-4xl text-[#f5f0e8] font-bold italic leading-none">24</span>
+                <span className="text-xs text-[#7a766e] mt-3 font-medium">Estimado: <span className="text-amber-400">$12,300.00</span></span>
+              </div>
+              <div className="mt-4 w-full h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
+                <div className="w-[70%] h-full bg-amber-400"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Distribution & Appointment Metrics ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+            {/* Payment Distribution */}
+            <div className="lg:col-span-2 relative isolate rounded-[1.5rem] border border-white/10 p-6 overflow-hidden flex flex-col items-center">
+              <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+              <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label self-start mb-6">MÉTODO DE PAGO</span>
+              <div className="relative w-40 h-40 md:w-44 md:h-44 mb-6">
+                {/* Geometric Pie Visualization */}
+                <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_0_15px_rgba(167,139,250,0.2)]" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="rgba(255,255,255,0.03)" strokeWidth="4"></circle>
+                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#a78bfa" strokeDasharray="65 35" strokeDashoffset="0" strokeWidth="4"></circle>
+                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#fbbf24" strokeDasharray="20 80" strokeDashoffset="-65" strokeWidth="4"></circle>
+                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#34d399" strokeDasharray="15 85" strokeDashoffset="-85" strokeWidth="4"></circle>
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl font-bold text-[#f5f0e8] font-playfair italic leading-none">65%</span>
+                  <span className="text-[9px] text-[#7a766e] uppercase tracking-wider font-label mt-1">Digital</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-[11px] text-[#7a766e] font-label">vs semana anterior</p>
-                  <p className="text-xs font-semibold text-emerald-400">↑ 14.2%</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 w-full px-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-2 h-2 rounded-full bg-violet-400"></div>
+                  <span className="text-xs text-[#7a766e] font-medium">Tarjeta</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-2 h-2 rounded-full bg-amber-400"></div>
+                  <span className="text-xs text-[#7a766e] font-medium">Efectivo</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                  <span className="text-xs text-[#7a766e] font-medium">Transfer.</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-2 h-2 rounded-full bg-white/20"></div>
+                  <span className="text-xs text-[#7a766e] font-medium">Otros</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Appointment Metrics */}
+            <div className="lg:col-span-3 space-y-5">
+              <div className="relative isolate rounded-[1.5rem] border border-white/10 p-6 md:p-7 overflow-hidden h-full flex flex-col justify-between">
+                <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+                <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label block mb-5">MÉTRICAS DE CITAS</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                  <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.04] flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-violet-400/10 flex items-center justify-center border border-violet-400/20 shadow-[inset_0_0_12px_rgba(167,139,250,0.1)]">
+                      <span className="material-symbols-outlined text-violet-400">confirmation_number</span>
+                    </div>
+                    <div>
+                      <p className="text-[#f5f0e8] font-bold text-2xl font-playfair italic leading-none">142</p>
+                      <p className="text-[#7a766e] text-[11px] font-medium mt-1.5">Tickets Emitidos Hoy</p>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.04] flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-400/10 flex items-center justify-center border border-emerald-400/20 shadow-[inset_0_0_12px_rgba(52,211,153,0.1)]">
+                      <span className="material-symbols-outlined text-emerald-400">timer</span>
+                    </div>
+                    <div>
+                      <p className="text-[#f5f0e8] font-bold text-2xl font-playfair italic leading-none">18 min</p>
+                      <p className="text-[#7a766e] text-[11px] font-medium mt-1.5">Tiempo Promedio</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-5 bg-gradient-to-br from-violet-400/10 to-transparent rounded-xl border border-violet-400/20">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="text-[#f5f0e8] font-medium text-sm">Rendimiento de Operadores</h4>
+                      <p className="text-[11px] text-[#7a766e] mt-1">Top desempeño semanal activo</p>
+                    </div>
+                    <button className="text-violet-400 text-[11px] font-medium hover:underline tracking-wide">Ver reporte</button>
+                  </div>
+                  <div className="mt-4 flex -space-x-3">
+                    <img alt="Avatar" className="w-9 h-9 rounded-full border-2 border-[#120a1f] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDovTZHT4ugpJUm45dR5I3v8-G6owMNgxWh1ru6Ohdw75SQGbn7Lw2JQNemI0ySMhl07Xda2BhkkOXbH3Bz5yWsI37dXETYSR7Mlp5Ho2MS2RsrAfUAzdKNOLfqznd4C_BIK029xEYq0-Pdp1YL-panD3YVge1RGNur_UT2LAxV87RjZ-f9AXFnjN-t9dZuXDTw1D3eH-V1qbitnSuRVLI0MKiDOGx6MCPwhHmtx7TQGLX_hWVjOE6TaZFeN3GvGGJ3xU7o5jo7Lz8" />
+                    <img alt="Avatar" className="w-9 h-9 rounded-full border-2 border-[#120a1f] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpXmezsUHIg22n8IZepkoHtKiCTgmu2Rh8Z9uA4MrtJjptfoz7hqCKeVh7n1dI--g8tLopbIMAM-D9J25kpM-iNtwUb8xTLz4e7zKuSRTGtbDUF6D5aNvQezWO_gJlpJA7OOH3qu-MMu3PO-JYiNspGJMzLBQfPIxE8R2V2Ah1UWFnL_zCW0W1c6W2WENzZHLLZCUKMVpoe3u5j4FlONFOXlcUgt-ImwvGVHn37a_MHtSlzavxufLfUmavt5icsi4YEKavWFJhcEQ" />
+                    <img alt="Avatar" className="w-9 h-9 rounded-full border-2 border-[#120a1f] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbLOO3Y7_8FQ6gl3rSZtEUQu8UsDsnuuGMqcC2RKCv9SiG2_H6-qRoQYlcwAJ9NFsVplIy7KgzvKjSSmiVkrZbEmZ6S_2ySuvcQq4dHUCAVHb48wvkIjbEkG5k4pERMpdDi3Y30jtR7IWHZLt2ym01dPjkx9VpfEGp3cVmv_EE09fCCfx815VPLnkCZ9TBxPFCHxOQZrsGZUeXRm6h4ZbPpMw9nGEN7pFPtsT7-rOZ8GL7-tJDfseoYE5sL3fpm44e5U22Xnb-9fE" />
+                    <div className="w-9 h-9 rounded-full border-2 border-[#120a1f] bg-white/10 flex items-center justify-center text-[10px] text-[#f5f0e8] font-bold backdrop-blur-md">+8</div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* ── Quick actions ── */}
-          <div>
-            <p className="text-[9px] text-[#7a766e] uppercase tracking-[0.2em] font-label mb-3">
-              Acciones rápidas
-            </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[
-                { label: 'Nuevo turno',    icon: 'add_circle',   primary: true  },
-                { label: 'Ver agenda',     icon: 'calendar_month', primary: false },
-                { label: 'Nueva clienta',  icon: 'person_add',   primary: false },
-                { label: 'Mis servicios',  icon: 'content_cut',  primary: false },
-              ].map((action) => (
-                <button
-                  key={action.label}
-                  className={`relative isolate flex flex-col items-center justify-center gap-2.5 py-5 px-3 rounded-[1.5rem] text-sm font-medium transition-all duration-200 active:scale-95 cursor-pointer overflow-hidden ${
-                    action.primary
-                      ? 'border border-violet-400/30 text-white'
-                      : 'border border-white/10 text-[#7a766e] hover:text-violet-400 hover:border-violet-400/20'
-                  }`}
-                  style={action.primary ? {
-                    background: 'linear-gradient(135deg, rgba(139,92,246,0.9), rgba(124,58,237,1))',
-                    boxShadow: '0 0 24px rgba(139,92,246,0.3)',
-                  } : undefined}
-                >
-                  {!action.primary && <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />}
-                  <span className="material-symbols-outlined text-[20px]">{action.icon}</span>
-                  <span className="text-[11px] leading-tight text-center font-label uppercase tracking-wide">{action.label}</span>
-                </button>
-              ))}
+          {/* ── Movimientos del Día Table ── */}
+          <section className="relative isolate rounded-[1.5rem] border border-white/10 overflow-hidden">
+            <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+            <div className="p-6 md:p-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4 border-b border-white/[0.06]">
+              <div>
+                <h3 className="text-xl font-bold text-[#f5f0e8] font-playfair italic">Movimientos del Día</h3>
+                <p className="text-[#7a766e] text-[13px] mt-1">Listado detallado de transacciones recientes</p>
+              </div>
+              <div className="flex gap-2">
+                <button className="bg-white/[0.05] hover:bg-white/[0.1] px-4 py-2.5 rounded-xl text-xs font-medium text-[#f5f0e8] transition-all border border-white/[0.05]">Filtrar</button>
+                <button className="bg-violet-500 hover:bg-violet-400 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-all shadow-[0_0_15px_rgba(139,92,246,0.3)]">Exportar CSV</button>
+              </div>
             </div>
-          </div>
-
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[650px]">
+                <thead>
+                  <tr className="bg-white/[0.02]">
+                    <th className="px-6 py-4 text-[9px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label border-b border-white/[0.06]">HORA</th>
+                    <th className="px-6 py-4 text-[9px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label border-b border-white/[0.06]">CLIENTE</th>
+                    <th className="px-6 py-4 text-[9px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label border-b border-white/[0.06]">CONCEPTO</th>
+                    <th className="px-6 py-4 text-[9px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label border-b border-white/[0.06]">MÉTODO</th>
+                    <th className="px-6 py-4 text-[9px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label border-b border-white/[0.06] text-right">MONTO</th>
+                    <th className="px-6 py-4 text-[9px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label border-b border-white/[0.06] text-center">ESTADO</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.04]">
+                  <tr className="hover:bg-white/[0.03] transition-colors group">
+                    <td className="px-6 py-4 text-xs font-mono text-[#7a766e]">14:24</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-violet-400/10 flex items-center justify-center text-[10px] font-bold text-violet-400 border border-violet-400/20 shrink-0">AM</div>
+                        <span className="text-[13px] text-[#f5f0e8] font-medium">Alejandro Morales</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-[13px] text-[#7a766e]">Servicio Premium Gold</td>
+                    <td className="px-6 py-4">
+                      <span className="px-2.5 py-1 rounded bg-violet-400/10 text-violet-400 text-[9px] font-bold uppercase tracking-wider border border-violet-400/20">Tarjeta</span>
+                    </td>
+                    <td className="px-6 py-4 text-right text-[13px] text-[#f5f0e8] font-bold font-mono">$1,200.00</td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="material-symbols-outlined text-emerald-400 text-[16px] leading-none block">check_circle</span>
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-white/[0.03] transition-colors group">
+                    <td className="px-6 py-4 text-xs font-mono text-[#7a766e]">14:10</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-amber-400/10 flex items-center justify-center text-[10px] font-bold text-amber-400 border border-amber-400/20 shrink-0">BR</div>
+                        <span className="text-[13px] text-[#f5f0e8] font-medium">Beatriz Rojas</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-[13px] text-[#7a766e]">Consulta General</td>
+                    <td className="px-6 py-4">
+                      <span className="px-2.5 py-1 rounded bg-amber-400/10 text-amber-400 text-[9px] font-bold uppercase tracking-wider border border-amber-400/20">Efectivo</span>
+                    </td>
+                    <td className="px-6 py-4 text-right text-[13px] text-[#f5f0e8] font-bold font-mono">$450.00</td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="material-symbols-outlined text-emerald-400 text-[16px] leading-none block">check_circle</span>
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-white/[0.03] transition-colors group">
+                    <td className="px-6 py-4 text-xs font-mono text-[#7a766e]">13:55</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-[#f5f0e8] border border-white/20 shrink-0">CV</div>
+                        <span className="text-[13px] text-[#f5f0e8] font-medium">Carlos Vargas</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-[13px] text-[#7a766e]">Renovación de Licencia</td>
+                    <td className="px-6 py-4">
+                      <span className="px-2.5 py-1 rounded bg-white/[0.05] text-[#7a766e] text-[9px] font-bold uppercase tracking-wider border border-white/10">Transfer</span>
+                    </td>
+                    <td className="px-6 py-4 text-right text-[13px] text-[#f5f0e8] font-bold font-mono">$2,800.00</td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="material-symbols-outlined text-amber-400 text-[16px] leading-none block">schedule</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div className="p-4 bg-white/[0.02] border-t border-white/[0.06] text-center">
+              <button className="text-[#7a766e] text-[11px] hover:text-violet-400 transition-colors font-medium tracking-wide uppercase">Cargar más transacciones</button>
+            </div>
+          </section>
         </div>
       </main>
 
