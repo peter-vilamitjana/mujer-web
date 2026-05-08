@@ -205,41 +205,67 @@ export default function AdminDashboard() {
                   <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label">COMPARATIVA SEMANAL</span>
                   <p className="font-playfair text-2xl text-[#f5f0e8] font-bold italic leading-none mt-1">$34.200</p>
                 </div>
-                <span className="material-symbols-outlined text-violet-400 text-[18px]">bar_chart</span>
+                {/* Delta badge — more prominent */}
+                <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2.5 py-1">
+                  <span className="material-symbols-outlined text-emerald-400 text-[13px]" style={{ fontSize: '13px' }}>trending_up</span>
+                  <span className="text-[11px] text-emerald-400 font-bold">+14.2%</span>
+                </div>
               </div>
-              <div className="flex items-end gap-2 h-24 mt-2">
+              <div className="flex items-end gap-1.5 h-28 mt-2">
                 {[
-                  { pct: 42, day: 'L' },
-                  { pct: 58, day: 'M' },
-                  { pct: 31, day: 'X' },
-                  { pct: 100, day: 'J', today: true },
-                  { pct: 52, day: 'V' },
-                  { pct: 78, day: 'S' },
-                  { pct: 47, day: 'D' },
-                ].map(({ pct, day, today }) => (
-                  <div key={day} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group/bar">
+                  { pct: 42, day: 'L',  amount: '$14.400', today: false, best: false },
+                  { pct: 58, day: 'M',  amount: '$19.900', today: false, best: false },
+                  { pct: 31, day: 'X',  amount: '$10.600', today: false, best: false },
+                  { pct: 100, day: 'J', amount: '$34.200', today: true,  best: true  },
+                  { pct: 52, day: 'V',  amount: '$17.800', today: false, best: false },
+                  { pct: 78, day: 'S',  amount: '$26.700', today: false, best: false },
+                  { pct: 47, day: 'D',  amount: '$16.100', today: false, best: false },
+                ].map(({ pct, day, amount, today, best }) => (
+                  <div key={day} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group/bar relative">
+                    {/* Hover tooltip */}
+                    <div className="absolute bottom-[calc(100%-2rem)] left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 transition-opacity duration-200 pointer-events-none z-10 mb-1">
+                      <div className="bg-[#1a1525] border border-violet-500/30 rounded-lg px-2 py-1 whitespace-nowrap shadow-lg">
+                        <span className="text-[10px] font-bold text-[#f5f0e8] font-mono">{amount}</span>
+                      </div>
+                      <div className="w-2 h-2 bg-[#1a1525] border-b border-r border-violet-500/30 rotate-45 mx-auto -mt-1" />
+                    </div>
+                    {/* Best day crown */}
+                    {best && (
+                      <span className="material-symbols-outlined text-amber-400 absolute" style={{ fontSize: '12px', bottom: 'calc(100% - 1.5rem)', left: '50%', transform: 'translateX(-50%) translateY(-100%)' }}>
+                        star
+                      </span>
+                    )}
                     <div
-                      className={`w-full rounded-md transition-all duration-300 ${
+                      className={`w-full rounded-md transition-all duration-300 group-hover/bar:brightness-125 ${
                         today
-                          ? 'shadow-[0_0_12px_rgba(167,139,250,0.5)]'
-                          : 'group-hover/bar:opacity-80'
+                          ? 'shadow-[0_0_14px_rgba(167,139,250,0.55)]'
+                          : best
+                          ? 'shadow-[0_0_10px_rgba(251,191,36,0.25)]'
+                          : ''
                       }`}
                       style={{
                         height: `${pct}%`,
                         background: today
                           ? 'linear-gradient(to top, #7c3aed, #a78bfa)'
-                          : 'rgba(167,139,250,0.18)',
+                          : best
+                          ? 'linear-gradient(to top, #92400e, #fbbf24)'
+                          : 'rgba(167,139,250,0.20)',
                       }}
                     />
-                    <span className={`text-[9px] font-bold font-label ${today ? 'text-violet-400' : 'text-[#7a766e]'}`}>
+                    <span className={`text-[9px] font-bold font-label ${today ? 'text-violet-400' : best ? 'text-amber-400' : 'text-[#7a766e]'}`}>
                       {day}
                     </span>
                   </div>
                 ))}
               </div>
-              <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-white/[0.05]">
-                <span className="material-symbols-outlined text-emerald-400 text-[13px]">trending_up</span>
-                <span className="text-[11px] text-emerald-400 font-medium">+14.2% vs semana ant.</span>
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.05]">
+                <span className="text-[10px] text-[#7a766e]">vs semana anterior</span>
+                <div className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-amber-400/80 inline-block" />
+                  <span className="text-[10px] text-[#7a766e]">mejor día</span>
+                  <span className="w-2 h-2 rounded-full bg-violet-400 inline-block ml-2" />
+                  <span className="text-[10px] text-[#7a766e]">hoy</span>
+                </div>
               </div>
             </div>
 
