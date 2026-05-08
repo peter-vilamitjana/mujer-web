@@ -147,17 +147,52 @@ export default function AdminDashboard() {
           {/* ── Metrics Row ── */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {/* Total Income Card */}
-            <div className="relative isolate rounded-[1.5rem] border border-white/10 p-6 overflow-hidden hover:border-violet-400/20 transition-all duration-300 cursor-default group">
+            <div className="relative isolate rounded-[1.5rem] border border-white/10 p-6 overflow-hidden hover:border-violet-400/20 transition-all duration-300 cursor-default flex flex-col justify-between group">
               <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
-              <div className="flex justify-between items-start mb-2">
-                <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label">INGRESOS TOTALES</span>
-                <span className="material-symbols-outlined text-violet-400 text-[18px]">account_balance_wallet</span>
+              
+              <div className="flex justify-between items-start mb-4">
+                <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label mt-1.5">INGRESOS TOTALES</span>
+                
+                {/* Time Filter Pills */}
+                <div className="flex items-center bg-[#0d0d0d]/60 rounded-[8px] p-[3px] border border-white/[0.04] backdrop-blur-md">
+                  <button className="px-2.5 py-1 text-[10px] font-semibold text-[#f5f0e8] bg-white/[0.08] rounded-[5px] shadow-[0_2px_8px_rgba(0,0,0,0.2)] transition-all">Hoy</button>
+                  <button className="px-2.5 py-1 text-[10px] font-medium text-[#7a766e] hover:text-[#f5f0e8] transition-all">Sem</button>
+                  <button className="px-2.5 py-1 text-[10px] font-medium text-[#7a766e] hover:text-[#f5f0e8] transition-all">Mes</button>
+                </div>
               </div>
-              <div className="flex flex-col mt-1">
+              
+              <div className="flex flex-col mb-5">
                 <span className="font-playfair text-4xl text-[#f5f0e8] font-bold italic leading-none">$128,450.00</span>
                 <div className="flex items-center gap-1.5 mt-3">
                   <span className="material-symbols-outlined text-emerald-400 text-[15px]">trending_up</span>
-                  <span className="text-xs font-medium text-emerald-400">+12.5% vs mes anterior</span>
+                  <span className="text-xs font-medium text-emerald-400">+12.5% vs ayer</span>
+                </div>
+              </div>
+
+              {/* Payment Breakdown Legend */}
+              <div className="grid grid-cols-1 gap-2.5 pt-4 border-t border-white/[0.06] mt-auto">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0 shadow-[0_0_5px_rgba(56,189,248,0.5)]" style={{ backgroundColor: '#38bdf8' }}></span>
+                    <span className="text-[11px] text-[#7a766e] font-medium tracking-wide">Mercado Pago</span>
+                  </div>
+                  <span className="text-[12px] font-bold text-[#f5f0e8] font-mono">$65,200.00</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0 shadow-[0_0_5px_rgba(167,139,250,0.5)]" style={{ backgroundColor: '#a78bfa' }}></span>
+                    <span className="text-[11px] text-[#7a766e] font-medium tracking-wide">Tarjeta</span>
+                  </div>
+                  <span className="text-[12px] font-bold text-[#f5f0e8] font-mono">$40,150.00</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0 shadow-[0_0_5px_rgba(251,191,36,0.5)]" style={{ backgroundColor: '#fbbf24' }}></span>
+                    <span className="text-[11px] text-[#7a766e] font-medium tracking-wide">Efectivo</span>
+                  </div>
+                  <span className="text-[12px] font-bold text-[#f5f0e8] font-mono">$23,100.00</span>
                 </div>
               </div>
             </div>
