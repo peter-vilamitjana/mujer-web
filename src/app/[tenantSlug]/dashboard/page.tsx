@@ -14,6 +14,248 @@ const ADMIN_NAV = [
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
+function AgendaTabView() {
+  return (
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-playfair text-3xl md:text-4xl font-bold mt-1 leading-tight italic text-[#f5f0e8]">
+            Agenda
+          </h1>
+          <p className="text-[#7a766e] text-sm mt-1.5 flex items-center gap-1.5">
+            <Sparkles size={13} className="text-violet-400" />
+            Organizá y visualizá los turnos del día
+          </p>
+        </div>
+        <button className="flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-400 active:scale-95 text-white text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer shadow-[0_0_24px_rgba(139,92,246,0.28)] shrink-0">
+          <Plus size={15} strokeWidth={2.5} />
+          <span className="hidden md:inline">Nuevo turno</span>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* CALENDAR GRID CONTAINER */}
+        <div className="lg:col-span-8 xl:col-span-9 relative isolate rounded-[1.5rem] border border-white/10 overflow-hidden flex flex-col bg-[#0d0d0d]/40 min-h-[600px] shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+          <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+          
+          {/* HEADER: Professionals */}
+          <div className="grid grid-cols-[60px_repeat(3,1fr)] md:grid-cols-[80px_repeat(3,1fr)] border-b border-white/[0.06] bg-white/[0.02]">
+            <div className="p-3 md:p-4 flex items-center justify-center">
+              <span className="material-symbols-outlined text-[#7a766e]">schedule</span>
+            </div>
+            <div className="p-3 md:p-4 flex flex-col md:flex-row items-center gap-2 md:gap-3 border-l border-white/[0.06]">
+              <img alt="Valentina" className="w-8 h-8 rounded-full border border-violet-400/30 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6fprNzMUiJf15L67ryLm2JzKovLxZ7fUv_xpSVVsN0_V71c0IZ-AZbxoFPwY1_bxnc4AE3n-ePf-thZp9dCJjFKj2cvnwzR9qTNdP_YxssKcAfgURFeKL5i5EWeEclbET7E5qUkaWBndbBXvvf1uue9zuwiwjWHuVP4An5_H6S__bDwovQjW2M3ZQE_-UcsobnyOJwg7k9lqkr_re1cFsCL24duFxm-4d3OSpOmUMghqSEyCLstzxec2DK6rNYGa3b1BqLAAuOWg" />
+              <span className="font-playfair text-[#f5f0e8] font-bold italic">Valentina</span>
+            </div>
+            <div className="p-3 md:p-4 flex flex-col md:flex-row items-center gap-2 md:gap-3 border-l border-white/[0.06]">
+              <img alt="Ana" className="w-8 h-8 rounded-full border border-emerald-400/30 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3TL-nWQAcKEJcPwRvAJgIAVnyJ4bJVUPIX7zU_bn11pUdxwl1cB8vx9cQdHrCb70_h0TF3G5_XsYiM88-7l0Pidkl8oMM-NGXesDgfkUx1S1GPpEFkZ1Pz9YBGr_4Biy3EOjiXBBKCIQvazOFhpqRAzOI0HsbTOd4jc7AIbZ79B9Qqbn9w3yFQmRSogSDNRZaJjP5naMVXuSt6CSehRbmpmO7zT78zoRerh1zTq62QNvvNiGeZRzz26kArqfqseZQMF-Fzsg55Hg" />
+              <span className="font-playfair text-[#f5f0e8] font-bold italic">Ana</span>
+            </div>
+            <div className="p-3 md:p-4 flex flex-col md:flex-row items-center gap-2 md:gap-3 border-l border-white/[0.06]">
+              <img alt="Julian" className="w-8 h-8 rounded-full border border-amber-400/30 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKt6vj4kJt-0J4milyLCdvTx7RjAm5TdvMTC1YBWw8waM7BHfZFydb8wR7FD3VeNzdRnkwfxCmPxOFiTYjFukldUxDaKAMst_Gx6qwpy5HjMl-aXQ9xzYMxRT8kB_bHAzJdiF3DqWcTHvJXHOXoZcy-Sa3fHVbHY4nsDtTPC-p8JAQ_OwBgQlyzPV3cYBen5-rd3C9xN0ZC-p-FZePGp0cXhVVN1TaYjb-Raf9Q9pU80J0FArN0Rev6OlCGW1HGTTrPNKayFN5sfk" />
+              <span className="font-playfair text-[#f5f0e8] font-bold italic">Julian</span>
+            </div>
+          </div>
+          
+          {/* TIME SLOTS SCROLLABLE */}
+          <div className="flex-1 overflow-y-auto relative stylish-scrollbar">
+            {/* Grid Lines Overlay */}
+            <div className="absolute inset-0 grid grid-cols-[60px_repeat(3,1fr)] md:grid-cols-[80px_repeat(3,1fr)] pointer-events-none">
+              <div className="border-r border-white/[0.03] h-full"></div>
+              <div className="border-r border-white/[0.03] h-full"></div>
+              <div className="border-r border-white/[0.03] h-full"></div>
+            </div>
+
+            {/* 09:00 Slot */}
+            <div className="grid grid-cols-[60px_repeat(3,1fr)] md:grid-cols-[80px_repeat(3,1fr)] min-h-[120px] border-b border-white/[0.03] group relative z-10">
+              <div className="p-2 text-center text-[10px] font-bold tracking-widest text-[#7a766e] mt-2 font-mono">09:00</div>
+              
+              <div className="p-2 border-l border-white/[0.03] relative">
+                {/* Confirmed Card - Violet */}
+                <div className="bg-violet-500/10 border-l-4 border-violet-400 rounded-lg p-3 shadow-lg hover:translate-y-[-2px] hover:shadow-[0_4px_20px_rgba(139,92,246,0.15)] transition-all cursor-pointer border border-violet-500/20 border-l-violet-400 backdrop-blur-sm">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[13px] md:text-sm font-bold text-violet-300 truncate pr-2">Marcos Soler</span>
+                    <span className="material-symbols-outlined text-[14px] text-violet-400 shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                  </div>
+                  <p className="text-[9px] md:text-[10px] text-[#7a766e] mt-1 uppercase tracking-wider truncate">Técnica Balayage</p>
+                  <div className="mt-3 flex justify-between items-center">
+                    <button className="bg-violet-500 text-white text-[8px] md:text-[9px] font-bold px-2 md:px-3 py-1.5 rounded-full uppercase tracking-wider hover:bg-violet-400 transition-colors shadow-[0_0_10px_rgba(139,92,246,0.3)]">Check-out</button>
+                    <span className="material-symbols-outlined text-[16px] text-[#7a766e] hover:text-violet-400 transition-colors hidden sm:block">chat</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-2 border-l border-white/[0.03]">
+                {/* Secondary Card - Emerald */}
+                <div className="bg-emerald-500/10 border-l-4 border-emerald-400 rounded-lg p-3 opacity-80 hover:opacity-100 transition-all border border-emerald-500/20 border-l-emerald-400 backdrop-blur-sm cursor-pointer hover:translate-y-[-2px]">
+                  <span className="text-[13px] md:text-sm font-bold text-emerald-400 truncate block">Elena Rivas</span>
+                  <p className="text-[9px] md:text-[10px] text-[#7a766e] mt-1 uppercase tracking-wider truncate">Tratamiento Olaplex</p>
+                </div>
+              </div>
+
+              <div className="p-2 border-l border-white/[0.03] flex items-center justify-center">
+                <div className="bg-white/[0.02] border border-dashed border-white/10 rounded-lg w-full h-[80%] flex flex-col items-center justify-center group/gap cursor-pointer hover:bg-violet-500/10 hover:border-violet-500/30 transition-all">
+                  <span className="text-[8px] md:text-[9px] font-bold text-[#7a766e] group-hover/gap:text-violet-400 uppercase tracking-widest text-center">Añadir</span>
+                  <span className="material-symbols-outlined text-[#7a766e] group-hover/gap:text-violet-400 mt-1 text-[18px]">add_circle</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 09:30 Slot */}
+            <div className="grid grid-cols-[60px_repeat(3,1fr)] md:grid-cols-[80px_repeat(3,1fr)] min-h-[100px] border-b border-white/[0.03] relative z-10">
+              <div className="p-2 text-center text-[10px] font-bold tracking-widest text-[#7a766e] mt-2 font-mono">09:30</div>
+              
+              <div className="p-2 border-l border-white/[0.03] relative">
+                {/* Drag handle visual extending from Marcos Soler */}
+                <div className="absolute -top-[120px] left-2 right-2 bottom-2 bg-violet-500/5 border-l-4 border-violet-400/50 rounded-lg p-3 shadow-lg -z-10 pointer-events-none opacity-30 border border-violet-500/10 border-l-violet-400/50"></div>
+              </div>
+              
+              <div className="p-2 border-l border-white/[0.03]"></div>
+              
+              <div className="p-2 border-l border-white/[0.03]">
+                {/* Pending Card - Amber */}
+                <div className="bg-amber-500/10 border-l-4 border-amber-400 rounded-lg p-3 shadow-lg hover:translate-y-[-2px] transition-transform border border-amber-500/20 border-l-amber-400 backdrop-blur-sm cursor-pointer">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[13px] md:text-sm font-bold text-amber-400 truncate pr-2">Lucas M.</span>
+                    <span className="material-symbols-outlined text-[14px] text-amber-400 animate-pulse shrink-0">pending</span>
+                  </div>
+                  <p className="text-[9px] md:text-[10px] text-[#7a766e] mt-1 uppercase tracking-wider truncate">Corte & Estilo</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 10:00 Slot */}
+            <div className="grid grid-cols-[60px_repeat(3,1fr)] md:grid-cols-[80px_repeat(3,1fr)] min-h-[100px] border-b border-white/[0.03] relative z-10">
+              <div className="p-2 text-center text-[10px] font-bold tracking-widest text-[#7a766e] mt-2 font-mono">10:00</div>
+              <div className="p-2 border-l border-white/[0.03]"></div>
+              <div className="p-2 border-l border-white/[0.03]">
+                {/* Error Card - Rose/Red */}
+                <div className="bg-rose-500/10 border-l-4 border-rose-400 rounded-lg p-3 hover:translate-y-[-2px] transition-transform border border-rose-500/20 border-l-rose-400 backdrop-blur-sm cursor-pointer shadow-[0_4px_15px_rgba(244,63,94,0.1)]">
+                  <div className="flex justify-between items-start">
+                    <span className="text-[13px] md:text-sm font-bold text-rose-400 truncate pr-2">Sara K.</span>
+                    <span className="material-symbols-outlined text-[14px] text-rose-400 shrink-0">error_outline</span>
+                  </div>
+                  <p className="text-[9px] md:text-[10px] text-[#7a766e] mt-1 uppercase tracking-wider truncate">Pendiente de pago</p>
+                </div>
+              </div>
+              <div className="p-2 border-l border-white/[0.03]"></div>
+            </div>
+
+            {/* 10:30 Slot */}
+            <div className="grid grid-cols-[60px_repeat(3,1fr)] md:grid-cols-[80px_repeat(3,1fr)] min-h-[100px] border-b border-white/[0.03] relative z-10">
+              <div className="p-2 text-center text-[10px] font-bold tracking-widest text-[#7a766e] mt-2 font-mono">10:30</div>
+              <div className="p-2 border-l border-white/[0.03] flex items-center justify-center">
+                <div className="bg-white/[0.02] border border-dashed border-white/10 rounded-lg w-full h-[80%] flex flex-col items-center justify-center opacity-40 hover:opacity-100 transition-opacity cursor-pointer">
+                  <span className="material-symbols-outlined text-lg text-[#7a766e]">more_horiz</span>
+                </div>
+              </div>
+              <div className="p-2 border-l border-white/[0.03]">
+                <div className="bg-violet-500/10 border-l-4 border-violet-400 rounded-lg p-3 hover:translate-y-[-2px] transition-transform border border-violet-500/20 border-l-violet-400 backdrop-blur-sm cursor-pointer">
+                  <span className="text-[13px] md:text-sm font-bold text-violet-300 truncate block">Claudia Gómez</span>
+                  <p className="text-[9px] md:text-[10px] text-[#7a766e] mt-1 uppercase tracking-wider truncate">Mechas Balayage</p>
+                </div>
+              </div>
+              <div className="p-2 border-l border-white/[0.03]"></div>
+            </div>
+            
+            {/* 11:00 Slot */}
+            <div className="grid grid-cols-[60px_repeat(3,1fr)] md:grid-cols-[80px_repeat(3,1fr)] min-h-[100px] border-b border-white/[0.03] relative z-10">
+              <div className="p-2 text-center text-[10px] font-bold tracking-widest text-[#7a766e] mt-2 font-mono">11:00</div>
+              <div className="p-2 border-l border-white/[0.03]"></div>
+              <div className="p-2 border-l border-white/[0.03]"></div>
+              <div className="p-2 border-l border-white/[0.03]"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* LATERAL PANEL: Expediente Capilar */}
+        <div className="lg:col-span-4 xl:col-span-3 flex flex-col gap-5">
+          {/* Expediente Card */}
+          <div className="relative isolate rounded-[1.5rem] border border-white/10 p-5 flex flex-col bg-[#0d0d0d]/40 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
+            <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+            
+            <div className="flex items-center gap-3 mb-6">
+              <span className="material-symbols-outlined text-violet-400">folder_shared</span>
+              <h2 className="font-playfair text-xl md:text-2xl font-bold italic text-[#f5f0e8] tracking-tight">Expediente Capilar</h2>
+            </div>
+            
+            {/* Client Focus */}
+            <div className="flex items-center gap-4 p-4 bg-white/[0.03] rounded-xl border border-white/[0.05] mb-5 shadow-inner">
+              <img alt="Marcos" className="w-12 h-12 rounded-full object-cover border-2 border-violet-400 shadow-[0_0_15px_rgba(139,92,246,0.3)]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCXGSNFNSpWJ4mRfgoyhv6E_BIB1CU1usiWJTiH3jTiR0K4-Z2FbctERBpmWH34p7nxqZA73OQsdRSg0g53P9lGKoAxIdeigg0i_b4g3ac6l2qwlf9KR1UEyDXAt0wme-q4JPktm_a2LzO2IKV_3DP0pr3Ek5Ffhv6B6DQrXdK4ePrkpnhikHA_AHlxZeOSAu2z2VfiSwK6rlwXfm9SqIuLLKLe6meBzch9lackbGM-q0Y-JRw_S7N5KYhCs7n3NZ9s2jYSmJOg0A" />
+              <div>
+                <div className="font-bold text-[#f5f0e8] text-[15px]">Marcos Soler</div>
+                <div className="text-xs text-[#7a766e]">Última visita: Hace 14 días</div>
+              </div>
+            </div>
+            
+            {/* Technical Details */}
+            <div className="space-y-4 flex-1">
+              <div>
+                <span className="text-[9px] text-violet-400 font-bold uppercase tracking-widest block mb-2 font-label">Notas Técnicas</span>
+                <div className="p-3 bg-black/40 rounded-lg border border-white/5 text-xs md:text-[13px] leading-relaxed text-[#bbcac0]">
+                  Fórmula: 9.1 + 8.2 (1:1.5) 20vol. Alta sensibilidad en la coronilla. Prefiere tonos fríos. No usar tratamientos de calor.
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg">
+                  <span className="text-[9px] text-rose-400 font-bold uppercase tracking-widest block mb-1">Alergias</span>
+                  <span className="text-xs font-medium text-[#f5f0e8] block truncate" title="Parafenilendiamina">Parafenilendiamina</span>
+                </div>
+                <div className="p-3 bg-violet-500/10 border border-violet-500/20 rounded-lg">
+                  <span className="text-[9px] text-violet-400 font-bold uppercase tracking-widest block mb-1">Prueba Parche</span>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-xs font-medium uppercase text-[#f5f0e8]">Aprobado</span>
+                    <span className="material-symbols-outlined text-[14px] text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <span className="text-[9px] text-[#7a766e] font-bold uppercase tracking-widest block mb-2 font-label mt-5">Historial</span>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center text-xs p-2 hover:bg-white/[0.05] rounded-lg transition-colors cursor-pointer group">
+                    <span className="text-[#f5f0e8] group-hover:text-violet-300 transition-colors">12 May - Tinte & Corte</span>
+                    <span className="text-violet-400 font-bold">$18.500</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs p-2 hover:bg-white/[0.05] rounded-lg transition-colors cursor-pointer group">
+                    <span className="text-[#f5f0e8] group-hover:text-violet-300 transition-colors">05 Abr - Hidratación</span>
+                    <span className="text-violet-400 font-bold">$14.500</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <button className="w-full bg-violet-500 text-white font-bold py-3 rounded-xl mt-6 hover:bg-violet-400 transition-all active:scale-[0.98] text-sm shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+              Ver Expediente Completo
+            </button>
+          </div>
+          
+          {/* Waitlist / WhatsApp Module */}
+          <div className="relative isolate rounded-[1.5rem] border border-white/10 p-4 md:p-5 bg-[#0d0d0d]/40 overflow-hidden shadow-lg">
+            <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+            
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-[10px] font-bold tracking-widest uppercase text-[#7a766e] font-label">Lista de Espera</span>
+              <div className="flex -space-x-2">
+                <div className="w-6 h-6 rounded-full border border-[#1a1525] bg-violet-500/20 flex items-center justify-center text-[9px] text-violet-300 font-bold z-10 backdrop-blur-sm">+3</div>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-white/[0.03] rounded-xl group hover:bg-violet-500/10 hover:border-violet-500/20 border border-transparent transition-all cursor-pointer">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-[#7a766e] group-hover:text-violet-400 transition-colors">person</span>
+                <span className="text-sm font-medium text-[#f5f0e8]">Elena Valdes</span>
+              </div>
+              <span className="material-symbols-outlined text-violet-400 text-[18px]">forum</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = React.useState<'dashboard' | 'agenda' | 'clientes' | 'servicios' | 'config'>('dashboard');
   const [servicesPeriod, setServicesPeriod] = React.useState<'semana' | 'mes'>('semana');
@@ -124,26 +366,30 @@ export default function AdminDashboard() {
           MAIN CONTENT
       ══════════════════════════════════════════════ */}
       <main className="md:pl-[84px] pb-28 md:pb-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-10 space-y-7">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-10">
+          
+          {activeTab === 'agenda' && <AgendaTabView />}
 
-          {/* ── Greeting ── */}
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[#7a766e] text-sm">{today}</p>
-              <h1 className="font-playfair text-3xl md:text-4xl font-bold mt-1 leading-tight italic">
-                {greeting},{' '}
-                <span className="text-violet-400">Valentina</span>
-              </h1>
-              <p className="text-[#7a766e] text-sm mt-1.5 flex items-center gap-1.5">
-                <Sparkles size={13} className="text-violet-400" />
-                Tenés 7 turnos agendados para hoy
-              </p>
-            </div>
-            <button className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-400 active:scale-95 text-white text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer shadow-[0_0_24px_rgba(139,92,246,0.28)] shrink-0">
-              <Plus size={15} strokeWidth={2.5} />
-              Nuevo turno
-            </button>
-          </div>
+          {activeTab === 'dashboard' && (
+            <div className="space-y-7 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              {/* ── Greeting ── */}
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[#7a766e] text-sm">{today}</p>
+                  <h1 className="font-playfair text-3xl md:text-4xl font-bold mt-1 leading-tight italic">
+                    {greeting},{' '}
+                    <span className="text-violet-400">Valentina</span>
+                  </h1>
+                  <p className="text-[#7a766e] text-sm mt-1.5 flex items-center gap-1.5">
+                    <Sparkles size={13} className="text-violet-400" />
+                    Tenés 7 turnos agendados para hoy
+                  </p>
+                </div>
+                <button className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-400 active:scale-95 text-white text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer shadow-[0_0_24px_rgba(139,92,246,0.28)] shrink-0">
+                  <Plus size={15} strokeWidth={2.5} />
+                  Nuevo turno
+                </button>
+              </div>
 
           {/* ── Metrics Row ── */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -620,6 +866,8 @@ export default function AdminDashboard() {
               <button className="text-[#7a766e] text-[11px] hover:text-violet-400 transition-colors font-medium tracking-wide uppercase">Cargar más transacciones</button>
             </div>
           </section>
+            </div>
+          )}
         </div>
       </main>
 
