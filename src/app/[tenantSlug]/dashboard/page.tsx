@@ -204,80 +204,87 @@ export default function AdminDashboard() {
           {/* ── Distribution & Appointment Metrics ── */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
             {/* Payment Distribution */}
-            <div className="lg:col-span-2 relative isolate rounded-[1.5rem] border border-white/10 p-6 overflow-hidden flex flex-col items-center">
+            <div className="lg:col-span-2 relative isolate rounded-[1.5rem] border border-white/[0.06] p-6 md:p-7 overflow-hidden flex flex-col items-center justify-between h-full bg-[#0d0d0d]/40">
               <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
-              <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label self-start mb-6">MÉTODO DE PAGO</span>
-              <div className="relative w-40 h-40 md:w-44 md:h-44 mb-6">
+              <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label self-start block mb-8">MÉTODO DE PAGO</span>
+              
+              <div className="relative w-44 h-44 mb-8">
                 {/* Geometric Pie Visualization */}
-                <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_0_15px_rgba(167,139,250,0.2)]" viewBox="0 0 36 36">
-                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="rgba(255,255,255,0.03)" strokeWidth="4"></circle>
-                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#a78bfa" strokeDasharray="65 35" strokeDashoffset="0" strokeWidth="4"></circle>
-                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#fbbf24" strokeDasharray="20 80" strokeDashoffset="-65" strokeWidth="4"></circle>
-                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#34d399" strokeDasharray="15 85" strokeDashoffset="-85" strokeWidth="4"></circle>
+                <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_0_20px_rgba(167,139,250,0.15)]" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="rgba(255,255,255,0.03)" strokeWidth="3"></circle>
+                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#a78bfa" strokeDasharray="65 35" strokeDashoffset="0" strokeWidth="3"></circle>
+                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#fbbf24" strokeDasharray="20 80" strokeDashoffset="-65" strokeWidth="3"></circle>
+                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#34d399" strokeDasharray="15 85" strokeDashoffset="-85" strokeWidth="3"></circle>
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-bold text-[#f5f0e8] font-playfair italic leading-none">65%</span>
-                  <span className="text-[9px] text-[#7a766e] uppercase tracking-wider font-label mt-1">Digital</span>
+                  <span className="text-3xl font-bold text-[#f5f0e8] font-inter tracking-tight leading-none drop-shadow-md">65%</span>
+                  <span className="text-[10px] text-[#7a766e] uppercase tracking-[0.2em] font-label mt-1.5">Digital</span>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4 w-full px-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-2 h-2 rounded-full bg-violet-400"></div>
-                  <span className="text-xs text-[#7a766e] font-medium">Tarjeta</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-2 h-2 rounded-full bg-amber-400"></div>
-                  <span className="text-xs text-[#7a766e] font-medium">Efectivo</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-                  <span className="text-xs text-[#7a766e] font-medium">Transfer.</span>
-                </div>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-2 h-2 rounded-full bg-white/20"></div>
-                  <span className="text-xs text-[#7a766e] font-medium">Otros</span>
+              
+              <div className="w-full px-2 mt-auto">
+                <div className="grid grid-cols-2 gap-y-5 gap-x-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.5)] shrink-0"></div>
+                    <span className="text-[13px] text-[#7a766e] font-medium">Tarjeta</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)] shrink-0"></div>
+                    <span className="text-[13px] text-[#7a766e] font-medium">Efectivo</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)] shrink-0"></div>
+                    <span className="text-[13px] text-[#7a766e] font-medium">Transfer.</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-white/20 shrink-0"></div>
+                    <span className="text-[13px] text-[#7a766e] font-medium">Otros</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Appointment Metrics */}
-            <div className="lg:col-span-3 space-y-5">
-              <div className="relative isolate rounded-[1.5rem] border border-white/10 p-6 md:p-7 overflow-hidden h-full flex flex-col justify-between">
+            <div className="lg:col-span-3 space-y-4">
+              <div className="relative isolate rounded-[1.5rem] border border-white/[0.06] p-6 md:p-7 overflow-hidden h-full flex flex-col justify-between group bg-[#0d0d0d]/40">
                 <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+
                 <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label block mb-5">MÉTRICAS DE CITAS</span>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-                  <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.04] flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-violet-400/10 flex items-center justify-center border border-violet-400/20 shadow-[inset_0_0_12px_rgba(167,139,250,0.1)]">
-                      <span className="material-symbols-outlined text-violet-400">event_available</span>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="p-4 bg-white/[0.02] rounded-2xl border border-white/[0.04] flex items-center gap-4 hover:border-violet-400/20 transition-colors">
+                    <div className="w-12 h-12 rounded-xl bg-violet-400/10 flex items-center justify-center border border-violet-400/20 shrink-0">
+                      <span className="material-symbols-outlined text-violet-400">confirmation_number</span>
                     </div>
                     <div>
-                      <p className="text-[#f5f0e8] font-bold text-2xl font-playfair italic leading-none">7</p>
-                      <p className="text-[#7a766e] text-[11px] font-medium mt-1.5">Turnos del Día</p>
+                      <p className="text-[#f5f0e8] font-bold text-xl leading-none">142</p>
+                      <p className="text-[#7a766e] text-[13px] font-medium mt-1.5">Tickets Emitidos Hoy</p>
                     </div>
                   </div>
-                  <div className="p-4 bg-white/[0.03] rounded-xl border border-white/[0.04] flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-400/10 flex items-center justify-center border border-emerald-400/20 shadow-[inset_0_0_12px_rgba(52,211,153,0.1)]">
-                      <span className="material-symbols-outlined text-emerald-400">timer</span>
+                  <div className="p-4 bg-white/[0.02] rounded-2xl border border-white/[0.04] flex items-center gap-4 hover:border-violet-400/20 transition-colors">
+                    <div className="w-12 h-12 rounded-xl bg-violet-400/10 flex items-center justify-center border border-violet-400/20 shrink-0">
+                      <span className="material-symbols-outlined text-violet-400">timer</span>
                     </div>
                     <div>
-                      <p className="text-[#f5f0e8] font-bold text-2xl font-playfair italic leading-none">52 min</p>
-                      <p className="text-[#7a766e] text-[11px] font-medium mt-1.5">Duración Promedio</p>
+                      <p className="text-[#f5f0e8] font-bold text-xl leading-none">18 min</p>
+                      <p className="text-[#7a766e] text-[13px] font-medium mt-1.5">Tiempo Promedio</p>
                     </div>
                   </div>
                 </div>
-                <div className="p-5 bg-gradient-to-br from-violet-400/10 to-transparent rounded-xl border border-violet-400/20">
-                  <div className="flex justify-between items-start">
+                
+                <div className="p-5 md:p-6 bg-white/[0.02] rounded-2xl border border-white/[0.04] relative hover:border-violet-400/20 transition-colors mt-auto">
+                  <div className="flex justify-between items-start mb-5">
                     <div>
-                      <h4 className="text-[#f5f0e8] font-medium text-sm">Mis Estilistas</h4>
-                      <p className="text-[11px] text-[#7a766e] mt-1">Top desempeño semanal</p>
+                      <h4 className="text-[#f5f0e8] font-medium text-[15px]">Rendimiento de Operadores</h4>
+                      <p className="text-[13px] text-[#7a766e] mt-1">Top desempeño semanal activo</p>
                     </div>
-                    <button className="text-violet-400 text-[11px] font-medium hover:underline tracking-wide">Ver reporte</button>
+                    <button className="text-violet-400 text-[13px] font-medium hover:text-violet-300 hover:underline transition-colors">Ver reporte</button>
                   </div>
-                  <div className="mt-4 flex -space-x-3">
-                    <img alt="Avatar" className="w-9 h-9 rounded-full border-2 border-[#120a1f] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDovTZHT4ugpJUm45dR5I3v8-G6owMNgxWh1ru6Ohdw75SQGbn7Lw2JQNemI0ySMhl07Xda2BhkkOXbH3Bz5yWsI37dXETYSR7Mlp5Ho2MS2RsrAfUAzdKNOLfqznd4C_BIK029xEYq0-Pdp1YL-panD3YVge1RGNur_UT2LAxV87RjZ-f9AXFnjN-t9dZuXDTw1D3eH-V1qbitnSuRVLI0MKiDOGx6MCPwhHmtx7TQGLX_hWVjOE6TaZFeN3GvGGJ3xU7o5jo7Lz8" />
-                    <img alt="Avatar" className="w-9 h-9 rounded-full border-2 border-[#120a1f] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpXmezsUHIg22n8IZepkoHtKiCTgmu2Rh8Z9uA4MrtJjptfoz7hqCKeVh7n1dI--g8tLopbIMAM-D9J25kpM-iNtwUb8xTLz4e7zKuSRTGtbDUF6D5aNvQezWO_gJlpJA7OOH3qu-MMu3PO-JYiNspGJMzLBQfPIxE8R2V2Ah1UWFnL_zCW0W1c6W2WENzZHLLZCUKMVpoe3u5j4FlONFOXlcUgt-ImwvGVHn37a_MHtSlzavxufLfUmavt5icsi4YEKavWFJhcEQ" />
-                    <img alt="Avatar" className="w-9 h-9 rounded-full border-2 border-[#120a1f] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbLOO3Y7_8FQ6gl3rSZtEUQu8UsDsnuuGMqcC2RKCv9SiG2_H6-qRoQYlcwAJ9NFsVplIy7KgzvKjSSmiVkrZbEmZ6S_2ySuvcQq4dHUCAVHb48wvkIjbEkG5k4pERMpdDi3Y30jtR7IWHZLt2ym01dPjkx9VpfEGp3cVmv_EE09fCCfx815VPLnkCZ9TBxPFCHxOQZrsGZUeXRm6h4ZbPpMw9nGEN7pFPtsT7-rOZ8GL7-tJDfseoYE5sL3fpm44e5U22Xnb-9fE" />
-                    <div className="w-9 h-9 rounded-full border-2 border-[#120a1f] bg-white/10 flex items-center justify-center text-[10px] text-[#f5f0e8] font-bold backdrop-blur-md">+8</div>
+                  <div className="flex -space-x-2">
+                    <img alt="Avatar" className="w-8 h-8 rounded-full border-[1.5px] border-[#0d0d0d] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDovTZHT4ugpJUm45dR5I3v8-G6owMNgxWh1ru6Ohdw75SQGbn7Lw2JQNemI0ySMhl07Xda2BhkkOXbH3Bz5yWsI37dXETYSR7Mlp5Ho2MS2RsrAfUAzdKNOLfqznd4C_BIK029xEYq0-Pdp1YL-panD3YVge1RGNur_UT2LAxV87RjZ-f9AXFnjN-t9dZuXDTw1D3eH-V1qbitnSuRVLI0MKiDOGx6MCPwhHmtx7TQGLX_hWVjOE6TaZFeN3GvGGJ3xU7o5jo7Lz8" />
+                    <img alt="Avatar" className="w-8 h-8 rounded-full border-[1.5px] border-[#0d0d0d] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpXmezsUHIg22n8IZepkoHtKiCTgmu2Rh8Z9uA4MrtJjptfoz7hqCKeVh7n1dI--g8tLopbIMAM-D9J25kpM-iNtwUb8xTLz4e7zKuSRTGtbDUF6D5aNvQezWO_gJlpJA7OOH3qu-MMu3PO-JYiNspGJMzLBQfPIxE8R2V2Ah1UWFnL_zCW0W1c6W2WENzZHLLZCUKMVpoe3u5j4FlONFOXlcUgt-ImwvGVHn37a_MHtSlzavxufLfUmavt5icsi4YEKavWFJhcEQ" />
+                    <img alt="Avatar" className="w-8 h-8 rounded-full border-[1.5px] border-[#0d0d0d] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbLOO3Y7_8FQ6gl3rSZtEUQu8UsDsnuuGMqcC2RKCv9SiG2_H6-qRoQYlcwAJ9NFsVplIy7KgzvKjSSmiVkrZbEmZ6S_2ySuvcQq4dHUCAVHb48wvkIjbEkG5k4pERMpdDi3Y30jtR7IWHZLt2ym01dPjkx9VpfEGp3cVmv_EE09fCCfx815VPLnkCZ9TBxPFCHxOQZrsGZUeXRm6h4ZbPpMw9nGEN7pFPtsT7-rOZ8GL7-tJDfseoYE5sL3fpm44e5U22Xnb-9fE" />
+                    <div className="w-8 h-8 rounded-full border-[1.5px] border-[#0d0d0d] bg-white/[0.05] flex items-center justify-center text-[10px] text-[#f5f0e8] font-bold">+8</div>
                   </div>
                 </div>
               </div>
