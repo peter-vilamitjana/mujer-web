@@ -92,7 +92,7 @@ function AgendaTabView() {
           <h1 className="font-playfair text-3xl md:text-4xl font-bold italic text-[#f5f0e8] leading-tight">Agenda</h1>
           <p className="text-[#7a766e] text-sm mt-1 flex items-center gap-1.5">
             <Sparkles size={13} className="text-violet-400" />
-            {displayDate} · {APPTS.length} turnos agendados
+            {APPTS.length} turnos agendados
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -100,8 +100,13 @@ function AgendaTabView() {
             <button onClick={() => setDateOffset(d => d - 1)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/[0.06] text-[#7a766e] hover:text-[#f5f0e8] transition-colors cursor-pointer" aria-label="Día anterior">
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>chevron_left</span>
             </button>
-            <button onClick={() => setDateOffset(0)} className={`px-3 h-8 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-colors cursor-pointer ${dateOffset === 0 ? 'bg-violet-500/20 text-violet-300' : 'text-[#7a766e] hover:text-[#f5f0e8] hover:bg-white/[0.04]'}`}>
-              Hoy
+            <button onClick={() => setDateOffset(0)} className="px-3 h-8 flex flex-col items-center justify-center rounded-lg cursor-pointer transition-colors hover:bg-white/[0.04] group" aria-label="Ir a hoy">
+              <span className="text-[11px] font-bold text-[#f5f0e8] leading-none tabular-nums">
+                {(() => { const d = new Date(); d.setDate(d.getDate() + dateOffset); return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }); })()}
+              </span>
+              <span className={`text-[9px] font-bold uppercase tracking-wide leading-none mt-0.5 transition-colors ${dateOffset === 0 ? 'text-violet-400' : 'text-[#7a766e] group-hover:text-[#f5f0e8]'}`}>
+                {dateOffset === 0 ? 'hoy' : (() => { const d = new Date(); d.setDate(d.getDate() + dateOffset); return d.toLocaleDateString('es-AR', { weekday: 'short' }); })()}
+              </span>
             </button>
             <button onClick={() => setDateOffset(d => d + 1)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/[0.06] text-[#7a766e] hover:text-[#f5f0e8] transition-colors cursor-pointer" aria-label="Día siguiente">
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>chevron_right</span>
