@@ -58,6 +58,7 @@ function AgendaTabView() {
   const [checkoutId, setCheckoutId]   = React.useState<number | null>(null);
   const [dateOffset, setDateOffset]   = React.useState(0);
   const [payMethod,  setPayMethod]    = React.useState(0);
+  const [calendarView, setCalendarView] = React.useState<'dia' | 'semana' | 'mes'>('dia');
 
   const selectedAppt = APPTS.find(a => a.id === selectedId) ?? null;
   const checkoutAppt = APPTS.find(a => a.id === checkoutId) ?? null;
@@ -67,6 +68,52 @@ function AgendaTabView() {
     const day  = d.toLocaleDateString('es-AR', { weekday: 'short' });
     const date = d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
     return `${day.charAt(0).toUpperCase() + day.slice(1)}, ${date}`;
+  }, [dateOffset]);
+
+  const weekOffset = React.useMemo(() => {
+    const d = new Date(); d.setDate(d.getDate() + dateOffset);
+    const dow = d.getDay() === 0 ? 6 : d.getDay() - 1;
+    return dateOffset - dow;
+  }, [dateOffset]);
+
+  const weekDays = React.useMemo(() =>
+    Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() + weekOffset + i);
+      return { d, offset: weekOffset + i };
+    }), [weekOffset]);
+
+  const weekLabel = React.useMemo(() => {
+    const s = weekDays[0].d, e = weekDays[6].d;
+    const sm = s.toLocaleDateString('es-AR', { month: 'short' });
+    const em = e.toLocaleDateString('es-AR', { month: 'short' });
+    return sm === em
+      ? `${s.getDate()} – ${e.getDate()} ${sm}`
+      : `${s.getDate()} ${sm} – ${e.getDate()} ${em}`;
+  }, [weekDays]);
+
+  const monthLabel = React.useMemo(() => {
+    const d = new Date(); d.setDate(d.getDate() + dateOffset);
+    const lbl = d.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+    return lbl.charAt(0).toUpperCase() + lbl.slice(1);
+  }, [dateOffset]);
+
+  const monthCells = React.useMemo(() => {
+    const ref = new Date(); ref.setDate(ref.getDate() + dateOffset);
+    const year = ref.getFullYear(), month = ref.getMonth();
+    const first = new Date(year, month, 1);
+    const startDow = first.getDay() === 0 ? 6 : first.getDay() - 1;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    const cells: Array<{ day: number; offset: number; isToday: boolean } | null> = [];
+    for (let i = 0; i < startDow; i++) cells.push(null);
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const isToday = date.toDateString() === today.toDateString();
+      const offset = Math.round((date.getTime() - today.getTime()) / 86400000);
+      cells.push({ day, offset, isToday });
+    }
+    while (cells.length % 7 !== 0) cells.push(null);
+    return cells;
   }, [dateOffset]);
 
   const occupiedCells = React.useMemo(() => {
@@ -83,6 +130,28 @@ function AgendaTabView() {
 
   const totalH = SLOTS.length * SLOT_H;
 
+  const todayColIdx = weekDays.findIndex(wd => wd.offset === 0);
+
+  const navPrev = () => {
+    if (calendarView === 'mes') {
+      const d = new Date(); d.setDate(d.getDate() + dateOffset);
+      const prev = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+      setDateOffset(Math.round((prev.getTime() - new Date().getTime()) / 86400000));
+    } else {
+      setDateOffset(o => o - (calendarView === 'semana' ? 7 : 1));
+    }
+  };
+
+  const navNext = () => {
+    if (calendarView === 'mes') {
+      const d = new Date(); d.setDate(d.getDate() + dateOffset);
+      const next = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      setDateOffset(Math.round((next.getTime() - new Date().getTime()) / 86400000));
+    } else {
+      setDateOffset(o => o + (calendarView === 'semana' ? 7 : 1));
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
@@ -95,22 +164,39 @@ function AgendaTabView() {
             {APPTS.length} turnos agendados
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Date nav pill */}
           <div className="flex items-center gap-0.5 bg-white/[0.04] border border-white/[0.06] rounded-xl p-1">
-            <button onClick={() => setDateOffset(d => d - 1)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/[0.06] text-[#7a766e] hover:text-[#f5f0e8] transition-colors cursor-pointer" aria-label="Día anterior">
+            <button onClick={navPrev} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/[0.06] text-[#7a766e] hover:text-[#f5f0e8] transition-colors cursor-pointer" aria-label="Anterior">
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>chevron_left</span>
             </button>
-            <button onClick={() => setDateOffset(0)} className="px-3 h-8 flex flex-col items-center justify-center rounded-lg cursor-pointer transition-colors hover:bg-white/[0.04] group" aria-label="Ir a hoy">
-              <span className="text-[11px] font-bold text-[#f5f0e8] leading-none tabular-nums">
-                {(() => { const d = new Date(); d.setDate(d.getDate() + dateOffset); return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }); })()}
-              </span>
-              <span className={`text-[9px] font-bold uppercase tracking-wide leading-none mt-0.5 transition-colors ${dateOffset === 0 ? 'text-violet-400' : 'text-[#7a766e] group-hover:text-[#f5f0e8]'}`}>
-                {dateOffset === 0 ? 'hoy' : (() => { const d = new Date(); d.setDate(d.getDate() + dateOffset); return d.toLocaleDateString('es-AR', { weekday: 'short' }); })()}
-              </span>
+            <button onClick={() => setDateOffset(0)} className="px-3 h-8 flex flex-col items-center justify-center rounded-lg cursor-pointer transition-colors hover:bg-white/[0.04] group min-w-[80px]" aria-label="Ir a hoy">
+              {calendarView === 'dia' && (<>
+                <span className="text-[11px] font-bold text-[#f5f0e8] leading-none tabular-nums">
+                  {(() => { const d = new Date(); d.setDate(d.getDate() + dateOffset); return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }); })()}
+                </span>
+                <span className={`text-[9px] font-bold uppercase tracking-wide leading-none mt-0.5 transition-colors ${dateOffset === 0 ? 'text-violet-400' : 'text-[#7a766e] group-hover:text-[#f5f0e8]'}`}>
+                  {dateOffset === 0 ? 'hoy' : (() => { const d = new Date(); d.setDate(d.getDate() + dateOffset); return d.toLocaleDateString('es-AR', { weekday: 'short' }); })()}
+                </span>
+              </>)}
+              {calendarView === 'semana' && (
+                <span className="text-[11px] font-bold text-[#f5f0e8] leading-none">{weekLabel}</span>
+              )}
+              {calendarView === 'mes' && (
+                <span className="text-[11px] font-bold text-[#f5f0e8] leading-none capitalize">{monthLabel}</span>
+              )}
             </button>
-            <button onClick={() => setDateOffset(d => d + 1)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/[0.06] text-[#7a766e] hover:text-[#f5f0e8] transition-colors cursor-pointer" aria-label="Día siguiente">
+            <button onClick={navNext} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/[0.06] text-[#7a766e] hover:text-[#f5f0e8] transition-colors cursor-pointer" aria-label="Siguiente">
               <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>chevron_right</span>
             </button>
+          </div>
+          {/* View toggle */}
+          <div className="flex items-center gap-0.5 bg-white/[0.04] border border-white/[0.06] rounded-xl p-1">
+            {(['dia', 'semana', 'mes'] as const).map(v => (
+              <button key={v} onClick={() => setCalendarView(v)} className={`px-3 h-8 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-colors cursor-pointer ${calendarView === v ? 'bg-violet-500/20 text-violet-300' : 'text-[#7a766e] hover:text-[#f5f0e8] hover:bg-white/[0.04]'}`}>
+                {v === 'dia' ? 'Día' : v === 'semana' ? 'Sem' : 'Mes'}
+              </button>
+            ))}
           </div>
           <button className="flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-400 active:scale-95 text-white text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer shadow-[0_0_24px_rgba(139,92,246,0.28)]">
             <Plus size={15} strokeWidth={2.5} />
@@ -126,110 +212,194 @@ function AgendaTabView() {
         <div className="lg:col-span-8 xl:col-span-9 relative isolate rounded-[1.5rem] border border-white/[0.08] overflow-hidden flex flex-col bg-[#0d0d0d]/40 shadow-[0_20px_60px_rgba(0,0,0,0.4)]" style={{ maxHeight: '70vh', minHeight: 400 }}>
           <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
 
-          {/* Professionals sticky header */}
-          <div className="sticky top-0 z-20 grid border-b border-white/[0.07] bg-[#0d0d0d]/70 backdrop-blur-xl shrink-0" style={{ gridTemplateColumns: '56px repeat(3, 1fr)' }}>
-            <div className="p-3 flex items-center justify-center border-r border-white/[0.05]">
-              <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '17px' }}>schedule</span>
-            </div>
-            {PROS.map((pro, i) => (
-              <div key={pro.name} className="px-3 py-2.5 flex items-center gap-2.5 border-r border-white/[0.05] last:border-r-0">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0" style={{ background: `${pro.color}1a`, color: pro.color, border: `1px solid ${pro.color}33` }}>
-                  {pro.initials}
-                </div>
-                <div className="min-w-0">
-                  <p className="font-playfair font-bold italic text-[#f5f0e8] text-sm leading-none truncate">{pro.name}</p>
-                  <p className="text-[10px] text-[#7a766e] mt-0.5">{APPTS.filter(a => a.pro === i).length} turnos</p>
-                </div>
+          {/* ── DAY VIEW ── */}
+          {calendarView === 'dia' && (<>
+            <div className="sticky top-0 z-20 grid border-b border-white/[0.07] bg-[#0d0d0d]/70 backdrop-blur-xl shrink-0" style={{ gridTemplateColumns: '56px repeat(3, 1fr)' }}>
+              <div className="p-3 flex items-center justify-center border-r border-white/[0.05]">
+                <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '17px' }}>schedule</span>
               </div>
-            ))}
-          </div>
-
-          {/* Scrollable body */}
-          <div className="flex-1 overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
-            <div className="relative" style={{ display: 'grid', gridTemplateColumns: '56px repeat(3, 1fr)', gridTemplateRows: `repeat(${SLOTS.length}, ${SLOT_H}px)`, height: totalH }}>
-
-              {/* Row dividers */}
-              {SLOTS.map((_, i) => (
-                <div key={`rl-${i}`} className="pointer-events-none border-b border-white/[0.035]" style={{ gridColumn: '1 / -1', gridRow: i + 1 }} />
-              ))}
-
-
-              {/* Time labels */}
-              {SLOTS.map((time, i) => (
-                <div key={`t-${i}`} className="flex items-start justify-center pt-2 border-r border-white/[0.05]" style={{ gridColumn: 1, gridRow: i + 1 }}>
-                  <span className="text-[10px] font-mono font-bold text-[#7a766e] tabular-nums">{time}</span>
+              {PROS.map((pro, i) => (
+                <div key={pro.name} className="px-3 py-2.5 flex items-center gap-2.5 border-r border-white/[0.05] last:border-r-0">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0" style={{ background: `${pro.color}1a`, color: pro.color, border: `1px solid ${pro.color}33` }}>
+                    {pro.initials}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-playfair font-bold italic text-[#f5f0e8] text-sm leading-none truncate">{pro.name}</p>
+                    <p className="text-[10px] text-[#7a766e] mt-0.5">{APPTS.filter(a => a.pro === i).length} turnos</p>
+                  </div>
                 </div>
               ))}
-
-              {/* Empty slot targets */}
-              {SLOTS.flatMap((_, slot) =>
-                PROS.map((_, pro) => {
-                  if (occupiedCells.has(`${slot}-${pro}`)) return null;
+            </div>
+            <div className="flex-1 overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
+              <div className="relative" style={{ display: 'grid', gridTemplateColumns: '56px repeat(3, 1fr)', gridTemplateRows: `repeat(${SLOTS.length}, ${SLOT_H}px)`, height: totalH }}>
+                {SLOTS.map((_, i) => (
+                  <div key={`rl-${i}`} className="pointer-events-none border-b border-white/[0.035]" style={{ gridColumn: '1 / -1', gridRow: i + 1 }} />
+                ))}
+                {SLOTS.map((time, i) => (
+                  <div key={`t-${i}`} className="flex items-start justify-center pt-2 border-r border-white/[0.05]" style={{ gridColumn: 1, gridRow: i + 1 }}>
+                    <span className="text-[10px] font-mono font-bold text-[#7a766e] tabular-nums">{time}</span>
+                  </div>
+                ))}
+                {SLOTS.flatMap((_, slot) =>
+                  PROS.map((_, pro) => {
+                    if (occupiedCells.has(`${slot}-${pro}`)) return null;
+                    return (
+                      <div key={`e-${slot}-${pro}`} className="p-1 group/add" style={{ gridColumn: pro + 2, gridRow: slot + 1 }}>
+                        <div className="w-full h-full rounded-lg border border-dashed border-transparent group-hover/add:border-violet-500/25 group-hover/add:bg-violet-500/[0.04] transition-all duration-200 flex items-center justify-center cursor-pointer">
+                          <span className="material-symbols-outlined text-violet-400/0 group-hover/add:text-violet-400/50 transition-all" style={{ fontSize: '13px' }}>add</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+                {APPTS.map(appt => {
+                  const cfg = STATUS_CFG[appt.status];
+                  const isSel = selectedId === appt.id;
                   return (
-                    <div key={`e-${slot}-${pro}`} className="p-1 group/add" style={{ gridColumn: pro + 2, gridRow: slot + 1 }}>
-                      <div className="w-full h-full rounded-lg border border-dashed border-transparent group-hover/add:border-violet-500/25 group-hover/add:bg-violet-500/[0.04] transition-all duration-200 flex items-center justify-center cursor-pointer">
-                        <span className="material-symbols-outlined text-violet-400/0 group-hover/add:text-violet-400/50 transition-all" style={{ fontSize: '13px' }}>add</span>
+                    <div key={appt.id} className="p-[3px]" style={{ gridColumn: appt.pro + 2, gridRow: `${appt.slot + 1} / span ${appt.dur}` }}>
+                      <div
+                        onClick={() => { setSelectedId(appt.id); setCheckoutId(null); }}
+                        className={`h-full rounded-md overflow-hidden flex flex-col cursor-pointer transition-all duration-200 ${isSel ? 'shadow-[0_0_18px_rgba(139,92,246,0.18)]' : 'hover:brightness-110'}`}
+                        style={{ background: cfg.bg, borderLeft: `3px solid ${cfg.lbar}`, outline: isSel ? `1px solid ${cfg.lbar}55` : 'none' }}
+                      >
+                        <div className="p-2 flex flex-col gap-0.5 h-full min-h-0">
+                          <div className="flex items-start justify-between gap-1">
+                            <span className="text-[11px] font-bold leading-tight truncate" style={{ color: cfg.text }}>{appt.client}</span>
+                            <span className="material-symbols-outlined shrink-0" style={{ fontSize: '11px', color: cfg.text, fontVariationSettings: "'FILL' 1" }}>{cfg.icon}</span>
+                          </div>
+                          <p className="text-[9px] uppercase tracking-wider text-[#7a766e] truncate leading-tight">{appt.service}</p>
+                          {appt.dur >= 2 && (
+                            <p className="text-[10px] font-bold font-mono" style={{ color: cfg.text }}>${appt.amount.toLocaleString('es-AR')}</p>
+                          )}
+                          {appt.allergy && appt.dur >= 3 && (
+                            <div className="flex items-center gap-1">
+                              <span className="material-symbols-outlined text-rose-400" style={{ fontSize: '9px' }}>warning</span>
+                              <span className="text-[8px] text-rose-400">Alergia</span>
+                            </div>
+                          )}
+                          {appt.dur >= 2 && appt.status !== 'completado' && (
+                            <div className="flex gap-1 mt-auto pt-1">
+                              <button
+                                onClick={e => { e.stopPropagation(); setCheckoutId(appt.id); setSelectedId(appt.id); }}
+                                className="flex-1 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wide cursor-pointer transition-all min-h-[28px]"
+                                style={{ background: `${cfg.lbar}22`, color: cfg.text }}
+                              >
+                                Cobrar
+                              </button>
+                              <button onClick={e => e.stopPropagation()} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/[0.08] cursor-pointer transition-colors">
+                                <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '12px' }}>chat</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
-                })
-              )}
-
-              {/* Appointment blocks */}
-              {APPTS.map(appt => {
-                const cfg = STATUS_CFG[appt.status];
-                const isSel = selectedId === appt.id;
-                return (
-                  <div key={appt.id} className="p-[3px]" style={{ gridColumn: appt.pro + 2, gridRow: `${appt.slot + 1} / span ${appt.dur}` }}>
-                    <div
-                      onClick={() => { setSelectedId(appt.id); setCheckoutId(null); }}
-                      className={`h-full rounded-md overflow-hidden flex flex-col cursor-pointer transition-all duration-200 ${isSel ? 'shadow-[0_0_18px_rgba(139,92,246,0.18)]' : 'hover:brightness-110'}`}
-                      style={{ background: cfg.bg, borderLeft: `3px solid ${cfg.lbar}`, outline: isSel ? `1px solid ${cfg.lbar}55` : 'none' }}
-                    >
-                      <div className="p-2 flex flex-col gap-0.5 h-full min-h-0">
-                        <div className="flex items-start justify-between gap-1">
-                          <span className="text-[11px] font-bold leading-tight truncate" style={{ color: cfg.text }}>{appt.client}</span>
-                          <span className="material-symbols-outlined shrink-0" style={{ fontSize: '11px', color: cfg.text, fontVariationSettings: "'FILL' 1" }}>{cfg.icon}</span>
-                        </div>
-                        <p className="text-[9px] uppercase tracking-wider text-[#7a766e] truncate leading-tight">{appt.service}</p>
-                        {appt.dur >= 2 && (
-                          <p className="text-[10px] font-bold font-mono" style={{ color: cfg.text }}>${appt.amount.toLocaleString('es-AR')}</p>
-                        )}
-                        {appt.allergy && appt.dur >= 3 && (
-                          <div className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-rose-400" style={{ fontSize: '9px' }}>warning</span>
-                            <span className="text-[8px] text-rose-400">Alergia</span>
-                          </div>
-                        )}
-                        {appt.dur >= 2 && appt.status !== 'completado' && (
-                          <div className="flex gap-1 mt-auto pt-1">
-                            <button
-                              onClick={e => { e.stopPropagation(); setCheckoutId(appt.id); setSelectedId(appt.id); }}
-                              className="flex-1 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wide cursor-pointer transition-all min-h-[28px]"
-                              style={{ background: `${cfg.lbar}22`, color: cfg.text }}
-                            >
-                              Cobrar
-                            </button>
-                            <button onClick={e => e.stopPropagation()} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/[0.08] cursor-pointer transition-colors">
-                              <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '12px' }}>chat</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                })}
+                {dateOffset === 0 && nowPx > 0 && nowPx < totalH && (
+                  <div className="pointer-events-none absolute left-0 right-0 z-30 flex items-center" style={{ top: nowPx }}>
+                    <div className="w-2 h-2 rounded-full bg-rose-400 ml-[48px] shrink-0 shadow-[0_0_6px_rgba(251,113,133,0.9)]" />
+                    <div className="flex-1 h-px bg-rose-400/50" />
                   </div>
+                )}
+              </div>
+            </div>
+          </>)}
+
+          {/* ── WEEK VIEW ── */}
+          {calendarView === 'semana' && (<>
+            <div className="sticky top-0 z-20 grid border-b border-white/[0.07] bg-[#0d0d0d]/70 backdrop-blur-xl shrink-0" style={{ gridTemplateColumns: '56px repeat(7, 1fr)' }}>
+              <div className="p-3 flex items-center justify-center border-r border-white/[0.05]">
+                <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '17px' }}>schedule</span>
+              </div>
+              {weekDays.map(({ d, offset: ofs }) => {
+                const isToday = ofs === 0;
+                return (
+                  <button key={ofs} onClick={() => { setDateOffset(ofs); setCalendarView('dia'); }}
+                    className={`px-1 py-2 flex flex-col items-center gap-0.5 border-r border-white/[0.05] last:border-r-0 cursor-pointer hover:bg-white/[0.03] transition-colors ${isToday ? 'bg-violet-500/[0.06]' : ''}`}>
+                    <span className={`text-[9px] font-bold uppercase tracking-wide ${isToday ? 'text-violet-400' : 'text-[#7a766e]'}`}>
+                      {d.toLocaleDateString('es-AR', { weekday: 'short' })}
+                    </span>
+                    <span className={`text-base font-bold leading-none ${isToday ? 'text-violet-300' : 'text-[#f5f0e8]'}`}>{d.getDate()}</span>
+                    {isToday && <div className="w-1 h-1 rounded-full bg-violet-400 mt-0.5" />}
+                  </button>
                 );
               })}
-
-              {/* Current time line */}
-              {dateOffset === 0 && nowPx > 0 && nowPx < totalH && (
-                <div className="pointer-events-none absolute left-0 right-0 z-30 flex items-center" style={{ top: nowPx }}>
-                  <div className="w-2 h-2 rounded-full bg-rose-400 ml-[48px] shrink-0 shadow-[0_0_6px_rgba(251,113,133,0.9)]" />
-                  <div className="flex-1 h-px bg-rose-400/50" />
-                </div>
-              )}
             </div>
-          </div>
+            <div className="flex-1 overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
+              <div className="relative" style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', gridTemplateRows: `repeat(${SLOTS.length}, ${SLOT_H}px)`, height: totalH }}>
+                {SLOTS.map((_, i) => (
+                  <div key={`rl-${i}`} className="pointer-events-none border-b border-white/[0.035]" style={{ gridColumn: '1 / -1', gridRow: i + 1 }} />
+                ))}
+                {SLOTS.map((time, i) => (
+                  <div key={`t-${i}`} className="flex items-start justify-center pt-2 border-r border-white/[0.05]" style={{ gridColumn: 1, gridRow: i + 1 }}>
+                    <span className="text-[10px] font-mono font-bold text-[#7a766e] tabular-nums">{time}</span>
+                  </div>
+                ))}
+                {todayColIdx >= 0 && (
+                  <div className="pointer-events-none bg-violet-500/[0.03]" style={{ gridColumn: todayColIdx + 2, gridRow: `1 / ${SLOTS.length + 1}` }} />
+                )}
+                {todayColIdx >= 0 && APPTS.map(appt => {
+                  const cfg = STATUS_CFG[appt.status];
+                  return (
+                    <div key={appt.id} className="p-[3px]" style={{ gridColumn: todayColIdx + 2, gridRow: `${appt.slot + 1} / span ${appt.dur}` }}>
+                      <div
+                        onClick={() => { setSelectedId(appt.id); setCheckoutId(null); setCalendarView('dia'); setDateOffset(0); }}
+                        className="h-full rounded-md overflow-hidden cursor-pointer hover:brightness-110 transition-all"
+                        style={{ background: cfg.bg, borderLeft: `3px solid ${cfg.lbar}` }}
+                      >
+                        <div className="p-1.5 flex flex-col gap-0.5 h-full min-h-0">
+                          <span className="text-[10px] font-bold leading-tight truncate" style={{ color: cfg.text }}>{appt.client}</span>
+                          {appt.dur >= 2 && <span className="text-[9px] text-[#7a766e] truncate">{appt.service}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {todayColIdx >= 0 && nowPx > 0 && nowPx < totalH && (
+                  <div className="pointer-events-none absolute left-0 right-0 z-30 flex items-center" style={{ top: nowPx }}>
+                    <div className="w-2 h-2 rounded-full bg-rose-400 ml-[48px] shrink-0 shadow-[0_0_6px_rgba(251,113,133,0.9)]" />
+                    <div className="flex-1 h-px bg-rose-400/50" />
+                  </div>
+                )}
+              </div>
+            </div>
+          </>)}
+
+          {/* ── MONTH VIEW ── */}
+          {calendarView === 'mes' && (
+            <div className="flex flex-col flex-1 p-5 min-h-0 overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
+              <div className="grid grid-cols-7 mb-2">
+                {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(day => (
+                  <div key={day} className="text-center text-[9px] font-bold uppercase tracking-widest text-[#7a766e] py-2 font-label">{day}</div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-1.5 flex-1">
+                {monthCells.map((cell, i) => (
+                  cell === null ? <div key={`e-${i}`} /> : (
+                    <button
+                      key={`${cell.day}-${i}`}
+                      onClick={() => { setDateOffset(cell.offset); setCalendarView('dia'); }}
+                      className={`flex flex-col items-center py-2.5 rounded-xl border transition-all cursor-pointer group ${
+                        cell.isToday
+                          ? 'bg-violet-500/15 border-violet-500/25'
+                          : 'border-transparent hover:border-white/[0.08] hover:bg-white/[0.03]'
+                      }`}
+                    >
+                      <span className={`text-[13px] font-bold leading-none ${cell.isToday ? 'text-violet-300' : 'text-[#f5f0e8] group-hover:text-violet-300 transition-colors'}`}>{cell.day}</span>
+                      {cell.isToday && (
+                        <div className="flex gap-0.5 mt-1.5">
+                          {['#a78bfa', '#34d399', '#fbbf24'].map(c => (
+                            <div key={c} className="w-1 h-1 rounded-full" style={{ background: c }} />
+                          ))}
+                        </div>
+                      )}
+                    </button>
+                  )
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* SIDE PANEL */}
