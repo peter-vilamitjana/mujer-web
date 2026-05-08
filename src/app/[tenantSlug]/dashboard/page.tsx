@@ -161,11 +161,36 @@ export default function AdminDashboard() {
                 </div>
               </div>
               
-              <div className="flex flex-col mb-5">
+              <div className="flex flex-col mb-4">
                 <span className="font-playfair text-4xl text-[#f5f0e8] font-bold italic leading-none">$128,450.00</span>
-                <div className="flex items-center gap-1.5 mt-3">
+                <div className="flex items-center gap-1.5 mt-3 mb-4">
                   <span className="material-symbols-outlined text-emerald-400 text-[15px]">trending_up</span>
                   <span className="text-xs font-medium text-emerald-400">+12.5% vs ayer</span>
+                </div>
+                
+                {/* Visual Trend Line */}
+                <div className="h-10 w-full relative opacity-90 -mb-2">
+                  <svg className="w-full h-full overflow-visible" viewBox="0 0 100 30" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#34d399" stopOpacity="0.4" />
+                        <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M0 30 L0 25 L15 22 L30 26 L45 15 L60 18 L75 8 L85 11 L100 2 L100 30 Z"
+                      fill="url(#trendGradient)"
+                    />
+                    <path
+                      d="M0 25 L15 22 L30 26 L45 15 L60 18 L75 8 L85 11 L100 2"
+                      fill="none"
+                      stroke="#34d399"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="drop-shadow-[0_0_8px_rgba(52,211,153,0.6)]"
+                    />
+                  </svg>
                 </div>
               </div>
 
