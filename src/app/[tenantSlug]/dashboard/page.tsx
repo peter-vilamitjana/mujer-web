@@ -148,10 +148,6 @@ function AgendaTabView() {
                 <div key={`rl-${i}`} className="pointer-events-none border-b border-white/[0.035]" style={{ gridColumn: '1 / -1', gridRow: i + 1 }} />
               ))}
 
-              {/* Column dividers */}
-              {[2,3,4].map(col => (
-                <div key={`cl-${col}`} className="pointer-events-none border-r border-white/[0.05]" style={{ gridColumn: col, gridRow: `1 / ${SLOTS.length + 1}` }} />
-              ))}
 
               {/* Time labels */}
               {SLOTS.map((time, i) => (
@@ -200,7 +196,7 @@ function AgendaTabView() {
                             <span className="text-[8px] text-rose-400">Alergia</span>
                           </div>
                         )}
-                        {appt.dur >= 4 && appt.status !== 'completado' && (
+                        {appt.dur >= 2 && appt.status !== 'completado' && (
                           <div className="flex gap-1 mt-auto pt-1">
                             <button
                               onClick={e => { e.stopPropagation(); setCheckoutId(appt.id); setSelectedId(appt.id); }}
@@ -514,8 +510,8 @@ export default function AdminDashboard() {
       {/* ══════════════════════════════════════════════
           MAIN CONTENT
       ══════════════════════════════════════════════ */}
-      <main className="md:pl-[84px] pb-28 md:pb-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-10">
+      <main className="md:pl-[84px] pb-28 md:pb-10 overflow-x-hidden">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 md:py-10">
           
           {activeTab === 'agenda' && <AgendaTabView />}
 
