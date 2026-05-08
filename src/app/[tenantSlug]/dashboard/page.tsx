@@ -175,10 +175,10 @@ function AgendaTabView() {
                 const cfg = STATUS_CFG[appt.status];
                 const isSel = selectedId === appt.id;
                 return (
-                  <div key={appt.id} className="p-1" style={{ gridColumn: appt.pro + 2, gridRow: `${appt.slot + 1} / span ${appt.dur}` }}>
+                  <div key={appt.id} className="p-[3px]" style={{ gridColumn: appt.pro + 2, gridRow: `${appt.slot + 1} / span ${appt.dur}` }}>
                     <div
                       onClick={() => { setSelectedId(appt.id); setCheckoutId(null); }}
-                      className={`h-full rounded-xl overflow-hidden flex flex-col cursor-pointer transition-all duration-200 ${isSel ? 'shadow-[0_0_18px_rgba(139,92,246,0.18)]' : 'hover:brightness-110'}`}
+                      className={`h-full rounded-md overflow-hidden flex flex-col cursor-pointer transition-all duration-200 ${isSel ? 'shadow-[0_0_18px_rgba(139,92,246,0.18)]' : 'hover:brightness-110'}`}
                       style={{ background: cfg.bg, borderLeft: `3px solid ${cfg.lbar}`, outline: isSel ? `1px solid ${cfg.lbar}55` : 'none' }}
                     >
                       <div className="p-2 flex flex-col gap-0.5 h-full min-h-0">
