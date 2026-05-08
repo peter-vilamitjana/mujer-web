@@ -246,29 +246,29 @@ export default function AdminDashboard() {
                 </div>
               </div>
               
-              <div className="w-full mt-auto space-y-2">
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors">
+              <div className="w-full mt-auto space-y-3">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.6)] shrink-0" />
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-[0_0_8px_rgba(167,139,250,0.6)]" style={{ backgroundColor: '#a78bfa' }}></span>
                     <span className="text-[13px] text-[#f5f0e8] font-medium">Tarjeta</span>
                   </div>
-                  <span className="text-[12px] font-bold text-[#f5f0e8] font-mono">65%</span>
+                  <span className="text-[13px] font-bold text-[#f5f0e8] font-mono">65%</span>
                 </div>
                 
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-fuchsia-400 shadow-[0_0_8px_rgba(232,121,249,0.6)] shrink-0" />
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-[0_0_8px_rgba(232,121,249,0.6)]" style={{ backgroundColor: '#e879f9' }}></span>
                     <span className="text-[13px] text-[#f5f0e8] font-medium">Efectivo</span>
                   </div>
-                  <span className="text-[12px] font-bold text-[#f5f0e8] font-mono">20%</span>
+                  <span className="text-[13px] font-bold text-[#f5f0e8] font-mono">20%</span>
                 </div>
                 
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-purple-300 shadow-[0_0_8px_rgba(216,180,254,0.6)] shrink-0" />
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-[0_0_8px_rgba(216,180,254,0.6)]" style={{ backgroundColor: '#d8b4fe' }}></span>
                     <span className="text-[13px] text-[#f5f0e8] font-medium">Transfer.</span>
                   </div>
-                  <span className="text-[12px] font-bold text-[#f5f0e8] font-mono">15%</span>
+                  <span className="text-[13px] font-bold text-[#f5f0e8] font-mono">15%</span>
                 </div>
               </div>
             </div>
