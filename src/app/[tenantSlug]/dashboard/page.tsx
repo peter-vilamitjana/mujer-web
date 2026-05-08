@@ -15,241 +15,390 @@ const ADMIN_NAV = [
 // ─── Component ───────────────────────────────────────────────────────────────
 
 function AgendaTabView() {
+  const SLOT_H = 68;
+  const SLOTS = [
+    '09:00','09:30','10:00','10:30','11:00','11:30',
+    '12:00','12:30','13:00','13:30','14:00','14:30',
+    '15:00','15:30','16:00','16:30','17:00','17:30',
+    '18:00','18:30',
+  ];
+  const PROS = [
+    { name: 'Valentina', initials: 'VL', color: '#a78bfa' },
+    { name: 'Ana',       initials: 'AN', color: '#34d399' },
+    { name: 'Julián',   initials: 'JL', color: '#fbbf24' },
+  ];
+  type ApptStatus = 'confirmado' | 'pendiente' | 'pago-pendiente' | 'completado';
+  type Appt = {
+    id: number; pro: number; slot: number; dur: number;
+    client: string; service: string; status: ApptStatus;
+    amount: number; allergy?: string; notes?: string;
+    history?: Array<{ date: string; service: string; amount: number }>;
+  };
+  const APPTS: Appt[] = [
+    { id: 1, pro: 0, slot: 0,  dur: 4, client: 'Marcos Soler',   service: 'Técnica Balayage',     status: 'confirmado',     amount: 18500, allergy: 'Parafenilendiamina', notes: 'Fórmula: 9.1 + 8.2 (1:1.5) 20vol. Alta sensibilidad coronilla. Tonos fríos. Sin calor.',
+      history: [{ date: '12 May', service: 'Tinte & Corte', amount: 18500 }, { date: '05 Abr', service: 'Hidratación', amount: 14500 }, { date: '15 Mar', service: 'Balayage', amount: 22000 }] },
+    { id: 2, pro: 1, slot: 0,  dur: 3, client: 'Elena Rivas',    service: 'Tratamiento Olaplex',  status: 'confirmado',     amount: 14500,
+      history: [{ date: '20 Abr', service: 'Olaplex', amount: 14500 }, { date: '01 Mar', service: 'Corte', amount: 8500 }] },
+    { id: 3, pro: 2, slot: 1,  dur: 1, client: 'Lucas M.',       service: 'Corte & Estilo',       status: 'pendiente',      amount: 8500  },
+    { id: 4, pro: 1, slot: 4,  dur: 2, client: 'Sara K.',        service: 'Tinte Raíz',           status: 'pago-pendiente', amount: 12000, allergy: 'Amoniaco',
+      history: [{ date: '10 Abr', service: 'Tinte', amount: 11000 }] },
+    { id: 5, pro: 0, slot: 5,  dur: 3, client: 'Claudia Gómez', service: 'Mechas Balayage',      status: 'confirmado',     amount: 22000 },
+    { id: 6, pro: 2, slot: 6,  dur: 2, client: 'Martina V.',     service: 'Manicura + Pedicura',  status: 'pendiente',      amount: 9500  },
+    { id: 7, pro: 1, slot: 8,  dur: 2, client: 'Florencia T.',   service: 'Keratina Nanoplastia', status: 'confirmado',     amount: 28000 },
+    { id: 8, pro: 2, slot: 10, dur: 3, client: 'Victoria R.',    service: 'Color + Corte',        status: 'confirmado',     amount: 16000 },
+  ];
+  const STATUS_CFG: Record<ApptStatus, { bg: string; lbar: string; text: string; icon: string; label: string }> = {
+    confirmado:      { bg: 'rgba(139,92,246,0.12)',  lbar: '#a78bfa', text: '#c4b5fd', icon: 'check_circle',  label: 'Confirmado' },
+    pendiente:       { bg: 'rgba(251,191,36,0.11)',  lbar: '#fbbf24', text: '#fcd34d', icon: 'pending',       label: 'Pendiente'  },
+    'pago-pendiente':{ bg: 'rgba(244,63,94,0.11)',   lbar: '#fb7185', text: '#fda4af', icon: 'error_outline', label: 'Sin cobrar' },
+    completado:      { bg: 'rgba(52,211,153,0.11)',  lbar: '#34d399', text: '#6ee7b7', icon: 'task_alt',      label: 'Completado' },
+  };
+
+  const [selectedId, setSelectedId]   = React.useState<number | null>(1);
+  const [checkoutId, setCheckoutId]   = React.useState<number | null>(null);
+  const [dateOffset, setDateOffset]   = React.useState(0);
+  const [payMethod,  setPayMethod]    = React.useState(0);
+
+  const selectedAppt = APPTS.find(a => a.id === selectedId) ?? null;
+  const checkoutAppt = APPTS.find(a => a.id === checkoutId) ?? null;
+
+  const displayDate = React.useMemo(() => {
+    const d = new Date(); d.setDate(d.getDate() + dateOffset);
+    const day  = d.toLocaleDateString('es-AR', { weekday: 'short' });
+    const date = d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+    return `${day.charAt(0).toUpperCase() + day.slice(1)}, ${date}`;
+  }, [dateOffset]);
+
+  const occupiedCells = React.useMemo(() => {
+    const s = new Set<string>();
+    APPTS.forEach(a => { for (let i = 0; i < a.dur; i++) s.add(`${a.slot + i}-${a.pro}`); });
+    return s;
+  }, []);
+
+  const nowPx = React.useMemo(() => {
+    const n = new Date(); const nm = n.getHours() * 60 + n.getMinutes();
+    const start = 9 * 60, end = 18 * 60 + 30;
+    return ((nm - start) / (end - start)) * (SLOTS.length * SLOT_H);
+  }, []);
+
+  const totalH = SLOTS.length * SLOT_H;
+
   return (
-    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-start justify-between gap-4">
+    <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-playfair text-3xl md:text-4xl font-bold mt-1 leading-tight italic text-[#f5f0e8]">
-            Agenda
-          </h1>
-          <p className="text-[#7a766e] text-sm mt-1.5 flex items-center gap-1.5">
+          <h1 className="font-playfair text-3xl md:text-4xl font-bold italic text-[#f5f0e8] leading-tight">Agenda</h1>
+          <p className="text-[#7a766e] text-sm mt-1 flex items-center gap-1.5">
             <Sparkles size={13} className="text-violet-400" />
-            Organizá y visualizá los turnos del día
+            {displayDate} · {APPTS.length} turnos agendados
           </p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-400 active:scale-95 text-white text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer shadow-[0_0_24px_rgba(139,92,246,0.28)] shrink-0">
-          <Plus size={15} strokeWidth={2.5} />
-          <span className="hidden md:inline">Nuevo turno</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0.5 bg-white/[0.04] border border-white/[0.06] rounded-xl p-1">
+            <button onClick={() => setDateOffset(d => d - 1)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/[0.06] text-[#7a766e] hover:text-[#f5f0e8] transition-colors cursor-pointer" aria-label="Día anterior">
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>chevron_left</span>
+            </button>
+            <button onClick={() => setDateOffset(0)} className={`px-3 h-8 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-colors cursor-pointer ${dateOffset === 0 ? 'bg-violet-500/20 text-violet-300' : 'text-[#7a766e] hover:text-[#f5f0e8] hover:bg-white/[0.04]'}`}>
+              Hoy
+            </button>
+            <button onClick={() => setDateOffset(d => d + 1)} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/[0.06] text-[#7a766e] hover:text-[#f5f0e8] transition-colors cursor-pointer" aria-label="Día siguiente">
+              <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>chevron_right</span>
+            </button>
+          </div>
+          <button className="flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-400 active:scale-95 text-white text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer shadow-[0_0_24px_rgba(139,92,246,0.28)]">
+            <Plus size={15} strokeWidth={2.5} />
+            <span className="hidden sm:inline">Nuevo turno</span>
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* CALENDAR GRID CONTAINER */}
-        <div className="lg:col-span-8 xl:col-span-9 relative isolate rounded-[1.5rem] border border-white/10 overflow-hidden flex flex-col bg-[#0d0d0d]/40 min-h-[600px] shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+      {/* Layout: calendar + side panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+        {/* CALENDAR */}
+        <div className="lg:col-span-8 xl:col-span-9 relative isolate rounded-[1.5rem] border border-white/[0.08] overflow-hidden flex flex-col bg-[#0d0d0d]/40 shadow-[0_20px_60px_rgba(0,0,0,0.4)]" style={{ maxHeight: '70vh', minHeight: 400 }}>
           <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
-          
-          {/* HEADER: Professionals */}
-          <div className="grid grid-cols-[60px_repeat(3,1fr)] md:grid-cols-[80px_repeat(3,1fr)] border-b border-white/[0.06] bg-white/[0.02]">
-            <div className="p-3 md:p-4 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[#7a766e]">schedule</span>
+
+          {/* Professionals sticky header */}
+          <div className="sticky top-0 z-20 grid border-b border-white/[0.07] bg-[#0d0d0d]/70 backdrop-blur-xl shrink-0" style={{ gridTemplateColumns: '56px repeat(3, 1fr)' }}>
+            <div className="p-3 flex items-center justify-center border-r border-white/[0.05]">
+              <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '17px' }}>schedule</span>
             </div>
-            <div className="p-3 md:p-4 flex flex-col md:flex-row items-center gap-2 md:gap-3 border-l border-white/[0.06]">
-              <img alt="Valentina" className="w-8 h-8 rounded-full border border-violet-400/30 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6fprNzMUiJf15L67ryLm2JzKovLxZ7fUv_xpSVVsN0_V71c0IZ-AZbxoFPwY1_bxnc4AE3n-ePf-thZp9dCJjFKj2cvnwzR9qTNdP_YxssKcAfgURFeKL5i5EWeEclbET7E5qUkaWBndbBXvvf1uue9zuwiwjWHuVP4An5_H6S__bDwovQjW2M3ZQE_-UcsobnyOJwg7k9lqkr_re1cFsCL24duFxm-4d3OSpOmUMghqSEyCLstzxec2DK6rNYGa3b1BqLAAuOWg" />
-              <span className="font-playfair text-[#f5f0e8] font-bold italic">Valentina</span>
-            </div>
-            <div className="p-3 md:p-4 flex flex-col md:flex-row items-center gap-2 md:gap-3 border-l border-white/[0.06]">
-              <img alt="Ana" className="w-8 h-8 rounded-full border border-emerald-400/30 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3TL-nWQAcKEJcPwRvAJgIAVnyJ4bJVUPIX7zU_bn11pUdxwl1cB8vx9cQdHrCb70_h0TF3G5_XsYiM88-7l0Pidkl8oMM-NGXesDgfkUx1S1GPpEFkZ1Pz9YBGr_4Biy3EOjiXBBKCIQvazOFhpqRAzOI0HsbTOd4jc7AIbZ79B9Qqbn9w3yFQmRSogSDNRZaJjP5naMVXuSt6CSehRbmpmO7zT78zoRerh1zTq62QNvvNiGeZRzz26kArqfqseZQMF-Fzsg55Hg" />
-              <span className="font-playfair text-[#f5f0e8] font-bold italic">Ana</span>
-            </div>
-            <div className="p-3 md:p-4 flex flex-col md:flex-row items-center gap-2 md:gap-3 border-l border-white/[0.06]">
-              <img alt="Julian" className="w-8 h-8 rounded-full border border-amber-400/30 object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKt6vj4kJt-0J4milyLCdvTx7RjAm5TdvMTC1YBWw8waM7BHfZFydb8wR7FD3VeNzdRnkwfxCmPxOFiTYjFukldUxDaKAMst_Gx6qwpy5HjMl-aXQ9xzYMxRT8kB_bHAzJdiF3DqWcTHvJXHOXoZcy-Sa3fHVbHY4nsDtTPC-p8JAQ_OwBgQlyzPV3cYBen5-rd3C9xN0ZC-p-FZePGp0cXhVVN1TaYjb-Raf9Q9pU80J0FArN0Rev6OlCGW1HGTTrPNKayFN5sfk" />
-              <span className="font-playfair text-[#f5f0e8] font-bold italic">Julian</span>
-            </div>
+            {PROS.map((pro, i) => (
+              <div key={pro.name} className="px-3 py-2.5 flex items-center gap-2.5 border-r border-white/[0.05] last:border-r-0">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0" style={{ background: `${pro.color}1a`, color: pro.color, border: `1px solid ${pro.color}33` }}>
+                  {pro.initials}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-playfair font-bold italic text-[#f5f0e8] text-sm leading-none truncate">{pro.name}</p>
+                  <p className="text-[10px] text-[#7a766e] mt-0.5">{APPTS.filter(a => a.pro === i).length} turnos</p>
+                </div>
+              </div>
+            ))}
           </div>
-          
-          {/* TIME SLOTS SCROLLABLE */}
-          <div className="flex-1 overflow-y-auto relative stylish-scrollbar">
-            {/* Grid Lines Overlay */}
-            <div className="absolute inset-0 grid grid-cols-[60px_repeat(3,1fr)] md:grid-cols-[80px_repeat(3,1fr)] pointer-events-none">
-              <div className="border-r border-white/[0.03] h-full"></div>
-              <div className="border-r border-white/[0.03] h-full"></div>
-              <div className="border-r border-white/[0.03] h-full"></div>
-            </div>
 
-            {/* 09:00 Slot */}
-            <div className="grid grid-cols-[60px_repeat(3,1fr)] md:grid-cols-[80px_repeat(3,1fr)] min-h-[120px] border-b border-white/[0.03] group relative z-10">
-              <div className="p-2 text-center text-[10px] font-bold tracking-widest text-[#7a766e] mt-2 font-mono">09:00</div>
-              
-              <div className="p-2 border-l border-white/[0.03] relative">
-                {/* Confirmed Card - Violet */}
-                <div className="bg-violet-500/10 border-l-4 border-violet-400 rounded-lg p-3 shadow-lg hover:translate-y-[-2px] hover:shadow-[0_4px_20px_rgba(139,92,246,0.15)] transition-all cursor-pointer border border-violet-500/20 border-l-violet-400 backdrop-blur-sm">
-                  <div className="flex justify-between items-start">
-                    <span className="text-[13px] md:text-sm font-bold text-violet-300 truncate pr-2">Marcos Soler</span>
-                    <span className="material-symbols-outlined text-[14px] text-violet-400 shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+          {/* Scrollable body */}
+          <div className="flex-1 overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
+            <div className="relative" style={{ display: 'grid', gridTemplateColumns: '56px repeat(3, 1fr)', gridTemplateRows: `repeat(${SLOTS.length}, ${SLOT_H}px)`, height: totalH }}>
+
+              {/* Row dividers */}
+              {SLOTS.map((_, i) => (
+                <div key={`rl-${i}`} className="pointer-events-none border-b border-white/[0.035]" style={{ gridColumn: '1 / -1', gridRow: i + 1 }} />
+              ))}
+
+              {/* Column dividers */}
+              {[2,3,4].map(col => (
+                <div key={`cl-${col}`} className="pointer-events-none border-r border-white/[0.05]" style={{ gridColumn: col, gridRow: `1 / ${SLOTS.length + 1}` }} />
+              ))}
+
+              {/* Time labels */}
+              {SLOTS.map((time, i) => (
+                <div key={`t-${i}`} className="flex items-start justify-center pt-2 border-r border-white/[0.05]" style={{ gridColumn: 1, gridRow: i + 1 }}>
+                  <span className="text-[10px] font-mono font-bold text-[#7a766e] tabular-nums">{time}</span>
+                </div>
+              ))}
+
+              {/* Empty slot targets */}
+              {SLOTS.flatMap((_, slot) =>
+                PROS.map((_, pro) => {
+                  if (occupiedCells.has(`${slot}-${pro}`)) return null;
+                  return (
+                    <div key={`e-${slot}-${pro}`} className="p-1 group/add" style={{ gridColumn: pro + 2, gridRow: slot + 1 }}>
+                      <div className="w-full h-full rounded-lg border border-dashed border-transparent group-hover/add:border-violet-500/25 group-hover/add:bg-violet-500/[0.04] transition-all duration-200 flex items-center justify-center cursor-pointer">
+                        <span className="material-symbols-outlined text-violet-400/0 group-hover/add:text-violet-400/50 transition-all" style={{ fontSize: '13px' }}>add</span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+
+              {/* Appointment blocks */}
+              {APPTS.map(appt => {
+                const cfg = STATUS_CFG[appt.status];
+                const isSel = selectedId === appt.id;
+                return (
+                  <div key={appt.id} className="p-1" style={{ gridColumn: appt.pro + 2, gridRow: `${appt.slot + 1} / span ${appt.dur}` }}>
+                    <div
+                      onClick={() => { setSelectedId(appt.id); setCheckoutId(null); }}
+                      className={`h-full rounded-xl overflow-hidden flex flex-col cursor-pointer transition-all duration-200 ${isSel ? 'shadow-[0_0_18px_rgba(139,92,246,0.18)]' : 'hover:brightness-110'}`}
+                      style={{ background: cfg.bg, borderLeft: `3px solid ${cfg.lbar}`, outline: isSel ? `1px solid ${cfg.lbar}55` : 'none' }}
+                    >
+                      <div className="p-2 flex flex-col gap-0.5 h-full min-h-0">
+                        <div className="flex items-start justify-between gap-1">
+                          <span className="text-[11px] font-bold leading-tight truncate" style={{ color: cfg.text }}>{appt.client}</span>
+                          <span className="material-symbols-outlined shrink-0" style={{ fontSize: '11px', color: cfg.text, fontVariationSettings: "'FILL' 1" }}>{cfg.icon}</span>
+                        </div>
+                        <p className="text-[9px] uppercase tracking-wider text-[#7a766e] truncate leading-tight">{appt.service}</p>
+                        {appt.dur >= 2 && (
+                          <p className="text-[10px] font-bold font-mono" style={{ color: cfg.text }}>${appt.amount.toLocaleString('es-AR')}</p>
+                        )}
+                        {appt.allergy && appt.dur >= 3 && (
+                          <div className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-rose-400" style={{ fontSize: '9px' }}>warning</span>
+                            <span className="text-[8px] text-rose-400">Alergia</span>
+                          </div>
+                        )}
+                        {appt.dur >= 4 && appt.status !== 'completado' && (
+                          <div className="flex gap-1 mt-auto pt-1">
+                            <button
+                              onClick={e => { e.stopPropagation(); setCheckoutId(appt.id); setSelectedId(appt.id); }}
+                              className="flex-1 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wide cursor-pointer transition-all min-h-[28px]"
+                              style={{ background: `${cfg.lbar}22`, color: cfg.text }}
+                            >
+                              Cobrar
+                            </button>
+                            <button onClick={e => e.stopPropagation()} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-white/[0.08] cursor-pointer transition-colors">
+                              <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '12px' }}>chat</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-[9px] md:text-[10px] text-[#7a766e] mt-1 uppercase tracking-wider truncate">Técnica Balayage</p>
-                  <div className="mt-3 flex justify-between items-center">
-                    <button className="bg-violet-500 text-white text-[8px] md:text-[9px] font-bold px-2 md:px-3 py-1.5 rounded-full uppercase tracking-wider hover:bg-violet-400 transition-colors shadow-[0_0_10px_rgba(139,92,246,0.3)]">Check-out</button>
-                    <span className="material-symbols-outlined text-[16px] text-[#7a766e] hover:text-violet-400 transition-colors hidden sm:block">chat</span>
-                  </div>
-                </div>
-              </div>
+                );
+              })}
 
-              <div className="p-2 border-l border-white/[0.03]">
-                {/* Secondary Card - Emerald */}
-                <div className="bg-emerald-500/10 border-l-4 border-emerald-400 rounded-lg p-3 opacity-80 hover:opacity-100 transition-all border border-emerald-500/20 border-l-emerald-400 backdrop-blur-sm cursor-pointer hover:translate-y-[-2px]">
-                  <span className="text-[13px] md:text-sm font-bold text-emerald-400 truncate block">Elena Rivas</span>
-                  <p className="text-[9px] md:text-[10px] text-[#7a766e] mt-1 uppercase tracking-wider truncate">Tratamiento Olaplex</p>
+              {/* Current time line */}
+              {dateOffset === 0 && nowPx > 0 && nowPx < totalH && (
+                <div className="pointer-events-none absolute left-0 right-0 z-30 flex items-center" style={{ top: nowPx }}>
+                  <div className="w-2 h-2 rounded-full bg-rose-400 ml-[48px] shrink-0 shadow-[0_0_6px_rgba(251,113,133,0.9)]" />
+                  <div className="flex-1 h-px bg-rose-400/50" />
                 </div>
-              </div>
-
-              <div className="p-2 border-l border-white/[0.03] flex items-center justify-center">
-                <div className="bg-white/[0.02] border border-dashed border-white/10 rounded-lg w-full h-[80%] flex flex-col items-center justify-center group/gap cursor-pointer hover:bg-violet-500/10 hover:border-violet-500/30 transition-all">
-                  <span className="text-[8px] md:text-[9px] font-bold text-[#7a766e] group-hover/gap:text-violet-400 uppercase tracking-widest text-center">Añadir</span>
-                  <span className="material-symbols-outlined text-[#7a766e] group-hover/gap:text-violet-400 mt-1 text-[18px]">add_circle</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 09:30 Slot */}
-            <div className="grid grid-cols-[60px_repeat(3,1fr)] md:grid-cols-[80px_repeat(3,1fr)] min-h-[100px] border-b border-white/[0.03] relative z-10">
-              <div className="p-2 text-center text-[10px] font-bold tracking-widest text-[#7a766e] mt-2 font-mono">09:30</div>
-              
-              <div className="p-2 border-l border-white/[0.03] relative">
-                {/* Drag handle visual extending from Marcos Soler */}
-                <div className="absolute -top-[120px] left-2 right-2 bottom-2 bg-violet-500/5 border-l-4 border-violet-400/50 rounded-lg p-3 shadow-lg -z-10 pointer-events-none opacity-30 border border-violet-500/10 border-l-violet-400/50"></div>
-              </div>
-              
-              <div className="p-2 border-l border-white/[0.03]"></div>
-              
-              <div className="p-2 border-l border-white/[0.03]">
-                {/* Pending Card - Amber */}
-                <div className="bg-amber-500/10 border-l-4 border-amber-400 rounded-lg p-3 shadow-lg hover:translate-y-[-2px] transition-transform border border-amber-500/20 border-l-amber-400 backdrop-blur-sm cursor-pointer">
-                  <div className="flex justify-between items-start">
-                    <span className="text-[13px] md:text-sm font-bold text-amber-400 truncate pr-2">Lucas M.</span>
-                    <span className="material-symbols-outlined text-[14px] text-amber-400 animate-pulse shrink-0">pending</span>
-                  </div>
-                  <p className="text-[9px] md:text-[10px] text-[#7a766e] mt-1 uppercase tracking-wider truncate">Corte & Estilo</p>
-                </div>
-              </div>
-            </div>
-
-            {/* 10:00 Slot */}
-            <div className="grid grid-cols-[60px_repeat(3,1fr)] md:grid-cols-[80px_repeat(3,1fr)] min-h-[100px] border-b border-white/[0.03] relative z-10">
-              <div className="p-2 text-center text-[10px] font-bold tracking-widest text-[#7a766e] mt-2 font-mono">10:00</div>
-              <div className="p-2 border-l border-white/[0.03]"></div>
-              <div className="p-2 border-l border-white/[0.03]">
-                {/* Error Card - Rose/Red */}
-                <div className="bg-rose-500/10 border-l-4 border-rose-400 rounded-lg p-3 hover:translate-y-[-2px] transition-transform border border-rose-500/20 border-l-rose-400 backdrop-blur-sm cursor-pointer shadow-[0_4px_15px_rgba(244,63,94,0.1)]">
-                  <div className="flex justify-between items-start">
-                    <span className="text-[13px] md:text-sm font-bold text-rose-400 truncate pr-2">Sara K.</span>
-                    <span className="material-symbols-outlined text-[14px] text-rose-400 shrink-0">error_outline</span>
-                  </div>
-                  <p className="text-[9px] md:text-[10px] text-[#7a766e] mt-1 uppercase tracking-wider truncate">Pendiente de pago</p>
-                </div>
-              </div>
-              <div className="p-2 border-l border-white/[0.03]"></div>
-            </div>
-
-            {/* 10:30 Slot */}
-            <div className="grid grid-cols-[60px_repeat(3,1fr)] md:grid-cols-[80px_repeat(3,1fr)] min-h-[100px] border-b border-white/[0.03] relative z-10">
-              <div className="p-2 text-center text-[10px] font-bold tracking-widest text-[#7a766e] mt-2 font-mono">10:30</div>
-              <div className="p-2 border-l border-white/[0.03] flex items-center justify-center">
-                <div className="bg-white/[0.02] border border-dashed border-white/10 rounded-lg w-full h-[80%] flex flex-col items-center justify-center opacity-40 hover:opacity-100 transition-opacity cursor-pointer">
-                  <span className="material-symbols-outlined text-lg text-[#7a766e]">more_horiz</span>
-                </div>
-              </div>
-              <div className="p-2 border-l border-white/[0.03]">
-                <div className="bg-violet-500/10 border-l-4 border-violet-400 rounded-lg p-3 hover:translate-y-[-2px] transition-transform border border-violet-500/20 border-l-violet-400 backdrop-blur-sm cursor-pointer">
-                  <span className="text-[13px] md:text-sm font-bold text-violet-300 truncate block">Claudia Gómez</span>
-                  <p className="text-[9px] md:text-[10px] text-[#7a766e] mt-1 uppercase tracking-wider truncate">Mechas Balayage</p>
-                </div>
-              </div>
-              <div className="p-2 border-l border-white/[0.03]"></div>
-            </div>
-            
-            {/* 11:00 Slot */}
-            <div className="grid grid-cols-[60px_repeat(3,1fr)] md:grid-cols-[80px_repeat(3,1fr)] min-h-[100px] border-b border-white/[0.03] relative z-10">
-              <div className="p-2 text-center text-[10px] font-bold tracking-widest text-[#7a766e] mt-2 font-mono">11:00</div>
-              <div className="p-2 border-l border-white/[0.03]"></div>
-              <div className="p-2 border-l border-white/[0.03]"></div>
-              <div className="p-2 border-l border-white/[0.03]"></div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* LATERAL PANEL: Expediente Capilar */}
-        <div className="lg:col-span-4 xl:col-span-3 flex flex-col gap-5">
-          {/* Expediente Card */}
-          <div className="relative isolate rounded-[1.5rem] border border-white/10 p-5 flex flex-col bg-[#0d0d0d]/40 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden">
+        {/* SIDE PANEL */}
+        <div className="lg:col-span-4 xl:col-span-3 flex flex-col gap-4">
+
+          {checkoutAppt ? (
+            <div className="relative isolate rounded-[1.5rem] border border-white/[0.08] p-5 flex flex-col bg-[#0d0d0d]/40 overflow-hidden">
+              <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-2.5">
+                  <span className="material-symbols-outlined text-violet-400" style={{ fontSize: '20px' }}>point_of_sale</span>
+                  <h2 className="font-playfair text-xl font-bold italic text-[#f5f0e8]">Cobrar</h2>
+                </div>
+                <button onClick={() => setCheckoutId(null)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/[0.06] text-[#7a766e] hover:text-[#f5f0e8] transition-colors cursor-pointer" aria-label="Cerrar">
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
+                </button>
+              </div>
+              <div className="p-3.5 bg-white/[0.03] rounded-xl border border-white/[0.05] mb-4">
+                <p className="text-[10px] uppercase tracking-wider text-[#7a766e] mb-1">Cliente · Servicio</p>
+                <p className="font-bold text-[#f5f0e8] leading-tight">{checkoutAppt.client}</p>
+                <p className="text-[12px] text-[#7a766e]">{checkoutAppt.service}</p>
+              </div>
+              <div className="space-y-1.5 mb-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#7a766e]">{checkoutAppt.service}</span>
+                  <span className="font-bold text-[#f5f0e8] font-mono">${checkoutAppt.amount.toLocaleString('es-AR')}</span>
+                </div>
+                <div className="flex justify-between border-t border-white/[0.06] pt-2">
+                  <span className="text-[13px] font-bold text-[#f5f0e8] uppercase tracking-wide">Total</span>
+                  <span className="text-xl font-bold text-violet-300 font-mono">${checkoutAppt.amount.toLocaleString('es-AR')}</span>
+                </div>
+              </div>
+              <p className="text-[10px] uppercase tracking-wider text-[#7a766e] mb-2">Método de pago</p>
+              <div className="grid grid-cols-3 gap-2 mb-5">
+                {[{ icon: 'credit_card', label: 'Tarjeta' }, { icon: 'payments', label: 'Efectivo' }, { icon: 'account_balance', label: 'Transfer.' }].map((m, i) => (
+                  <button key={m.label} onClick={() => setPayMethod(i)} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all cursor-pointer min-h-[44px] ${payMethod === i ? 'bg-violet-500/15 border-violet-500/30 text-violet-300' : 'bg-white/[0.03] border-white/[0.06] text-[#7a766e] hover:bg-white/[0.06] hover:text-[#f5f0e8]'}`}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{m.icon}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wide">{m.label}</span>
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => setCheckoutId(null)} className="w-full py-3.5 bg-violet-500 hover:bg-violet-400 active:scale-[0.98] text-white font-bold rounded-xl text-sm transition-all shadow-[0_0_20px_rgba(139,92,246,0.35)] cursor-pointer min-h-[44px]">
+                Confirmar · ${checkoutAppt.amount.toLocaleString('es-AR')}
+              </button>
+              <p className="text-[10px] text-center text-[#7a766e] mt-2.5">
+                Comisión {PROS[checkoutAppt.pro].name}: <span className="text-violet-400 font-bold">${Math.round(checkoutAppt.amount * 0.3).toLocaleString('es-AR')}</span> (30%)
+              </p>
+            </div>
+
+          ) : selectedAppt ? (
+            <div className="relative isolate rounded-[1.5rem] border border-white/[0.08] p-5 flex flex-col bg-[#0d0d0d]/40 overflow-hidden">
+              <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+              <div className="flex items-center gap-2.5 mb-4">
+                <span className="material-symbols-outlined text-violet-400" style={{ fontSize: '19px' }}>folder_shared</span>
+                <h2 className="font-playfair text-xl font-bold italic text-[#f5f0e8]">Expediente</h2>
+              </div>
+              <div className="flex items-center gap-3 p-3.5 bg-white/[0.03] rounded-xl border border-white/[0.05] mb-3">
+                <div className="w-11 h-11 rounded-full flex items-center justify-center text-[12px] font-black shrink-0" style={{ background: `${STATUS_CFG[selectedAppt.status].lbar}1a`, color: STATUS_CFG[selectedAppt.status].lbar, border: `1.5px solid ${STATUS_CFG[selectedAppt.status].lbar}40` }}>
+                  {selectedAppt.client.split(' ').map(w => w[0]).join('').slice(0,2)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-[#f5f0e8] text-[14px] truncate">{selectedAppt.client}</p>
+                  <p className="text-[11px] text-[#7a766e] truncate">{selectedAppt.service}</p>
+                  <p className="text-[11px] font-mono font-bold" style={{ color: STATUS_CFG[selectedAppt.status].lbar }}>${selectedAppt.amount.toLocaleString('es-AR')}</p>
+                </div>
+                <div className="flex items-center gap-1 px-2 py-1 rounded-full shrink-0" style={{ background: `${STATUS_CFG[selectedAppt.status].lbar}18` }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '11px', color: STATUS_CFG[selectedAppt.status].text, fontVariationSettings: "'FILL' 1" }}>{STATUS_CFG[selectedAppt.status].icon}</span>
+                  <span className="text-[9px] font-bold uppercase" style={{ color: STATUS_CFG[selectedAppt.status].text }}>{STATUS_CFG[selectedAppt.status].label}</span>
+                </div>
+              </div>
+              {selectedAppt.allergy && (
+                <div className="flex items-center gap-2.5 p-3 bg-rose-500/10 border border-rose-500/25 rounded-xl mb-3">
+                  <span className="material-symbols-outlined text-rose-400 shrink-0" style={{ fontSize: '17px', fontVariationSettings: "'FILL' 1" }}>warning</span>
+                  <div>
+                    <p className="text-[9px] uppercase tracking-wider text-rose-400 font-bold leading-none">Alergia registrada</p>
+                    <p className="text-[12px] text-[#f5f0e8] font-medium mt-0.5">{selectedAppt.allergy}</p>
+                  </div>
+                </div>
+              )}
+              {selectedAppt.notes && (
+                <div className="mb-3">
+                  <span className="text-[9px] uppercase tracking-widest text-violet-400 font-bold block mb-1.5 font-label">Notas Técnicas</span>
+                  <div className="p-3 bg-black/40 rounded-xl border border-white/[0.05] text-[12px] leading-relaxed text-[#c9c3b8]">{selectedAppt.notes}</div>
+                </div>
+              )}
+              {selectedAppt.history && (
+                <div className="mb-4">
+                  <span className="text-[9px] uppercase tracking-widest text-[#7a766e] font-bold block mb-2 font-label">Historial</span>
+                  <div className="space-y-0.5">
+                    {selectedAppt.history.map(h => (
+                      <div key={h.date} className="flex justify-between items-center text-xs p-2 hover:bg-white/[0.04] rounded-lg transition-colors cursor-pointer group">
+                        <div className="min-w-0 flex-1 mr-2">
+                          <span className="text-[#f5f0e8] group-hover:text-violet-300 transition-colors truncate block">{h.service}</span>
+                          <span className="text-[#7a766e] text-[10px]">{h.date}</span>
+                        </div>
+                        <span className="text-violet-400 font-bold font-mono shrink-0">${h.amount.toLocaleString('es-AR')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="flex gap-2 mt-auto pt-2">
+                <button onClick={() => setCheckoutId(selectedAppt.id)} className="flex-1 py-3 bg-violet-500 hover:bg-violet-400 active:scale-[0.98] text-white font-bold rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(139,92,246,0.3)] cursor-pointer flex items-center justify-center gap-2 min-h-[44px]">
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>point_of_sale</span>
+                  Cobrar
+                </button>
+                <button className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center hover:bg-emerald-500/20 transition-colors cursor-pointer" aria-label="WhatsApp">
+                  <span className="material-symbols-outlined text-emerald-400" style={{ fontSize: '19px' }}>chat</span>
+                </button>
+              </div>
+            </div>
+
+          ) : (
+            <div className="relative isolate rounded-[1.5rem] border border-white/[0.08] p-6 flex flex-col items-center justify-center bg-[#0d0d0d]/40 overflow-hidden min-h-[180px]">
+              <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+              <span className="material-symbols-outlined text-[#7a766e]/50 mb-3" style={{ fontSize: '36px' }}>touch_app</span>
+              <p className="text-[#7a766e] text-sm text-center leading-snug">Seleccioná un turno para ver el expediente del cliente</p>
+            </div>
+          )}
+
+          {/* WAITLIST */}
+          <div className="relative isolate rounded-[1.5rem] border border-white/[0.08] p-4 bg-[#0d0d0d]/40 overflow-hidden">
             <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
-            
-            <div className="flex items-center gap-3 mb-6">
-              <span className="material-symbols-outlined text-violet-400">folder_shared</span>
-              <h2 className="font-playfair text-xl md:text-2xl font-bold italic text-[#f5f0e8] tracking-tight">Expediente Capilar</h2>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[10px] font-bold tracking-widest uppercase text-[#7a766e] font-label">Lista de Espera</span>
+              <span className="px-2 py-0.5 bg-violet-500/15 border border-violet-500/25 rounded-full text-[10px] text-violet-300 font-bold">3</span>
             </div>
-            
-            {/* Client Focus */}
-            <div className="flex items-center gap-4 p-4 bg-white/[0.03] rounded-xl border border-white/[0.05] mb-5 shadow-inner">
-              <img alt="Marcos" className="w-12 h-12 rounded-full object-cover border-2 border-violet-400 shadow-[0_0_15px_rgba(139,92,246,0.3)]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCXGSNFNSpWJ4mRfgoyhv6E_BIB1CU1usiWJTiH3jTiR0K4-Z2FbctERBpmWH34p7nxqZA73OQsdRSg0g53P9lGKoAxIdeigg0i_b4g3ac6l2qwlf9KR1UEyDXAt0wme-q4JPktm_a2LzO2IKV_3DP0pr3Ek5Ffhv6B6DQrXdK4ePrkpnhikHA_AHlxZeOSAu2z2VfiSwK6rlwXfm9SqIuLLKLe6meBzch9lackbGM-q0Y-JRw_S7N5KYhCs7n3NZ9s2jYSmJOg0A" />
-              <div>
-                <div className="font-bold text-[#f5f0e8] text-[15px]">Marcos Soler</div>
-                <div className="text-xs text-[#7a766e]">Última visita: Hace 14 días</div>
-              </div>
-            </div>
-            
-            {/* Technical Details */}
-            <div className="space-y-4 flex-1">
-              <div>
-                <span className="text-[9px] text-violet-400 font-bold uppercase tracking-widest block mb-2 font-label">Notas Técnicas</span>
-                <div className="p-3 bg-black/40 rounded-lg border border-white/5 text-xs md:text-[13px] leading-relaxed text-[#bbcac0]">
-                  Fórmula: 9.1 + 8.2 (1:1.5) 20vol. Alta sensibilidad en la coronilla. Prefiere tonos fríos. No usar tratamientos de calor.
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg">
-                  <span className="text-[9px] text-rose-400 font-bold uppercase tracking-widest block mb-1">Alergias</span>
-                  <span className="text-xs font-medium text-[#f5f0e8] block truncate" title="Parafenilendiamina">Parafenilendiamina</span>
-                </div>
-                <div className="p-3 bg-violet-500/10 border border-violet-500/20 rounded-lg">
-                  <span className="text-[9px] text-violet-400 font-bold uppercase tracking-widest block mb-1">Prueba Parche</span>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <span className="text-xs font-medium uppercase text-[#f5f0e8]">Aprobado</span>
-                    <span className="material-symbols-outlined text-[14px] text-emerald-400" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+            <ul className="space-y-1.5">
+              {[
+                { name: 'Elena Valdés',  service: 'Corte',    time: '14:30' },
+                { name: 'Romina C.',     service: 'Mechas',   time: 'Flexible' },
+                { name: 'Julieta M.',    service: 'Manicura', time: '16:00' },
+              ].map(w => (
+                <li key={w.name} className="flex items-center gap-3 p-2.5 bg-white/[0.02] rounded-xl border border-white/[0.04] hover:border-violet-500/20 hover:bg-violet-500/[0.04] transition-all cursor-pointer group">
+                  <div className="w-7 h-7 rounded-full bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-[9px] font-black text-violet-400 shrink-0">
+                    {w.name.split(' ').map(n => n[0]).join('').slice(0,2)}
                   </div>
-                </div>
-              </div>
-              
-              <div>
-                <span className="text-[9px] text-[#7a766e] font-bold uppercase tracking-widest block mb-2 font-label mt-5">Historial</span>
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-center text-xs p-2 hover:bg-white/[0.05] rounded-lg transition-colors cursor-pointer group">
-                    <span className="text-[#f5f0e8] group-hover:text-violet-300 transition-colors">12 May - Tinte & Corte</span>
-                    <span className="text-violet-400 font-bold">$18.500</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-medium text-[#f5f0e8] truncate">{w.name}</p>
+                    <p className="text-[10px] text-[#7a766e]">{w.service} · {w.time}</p>
                   </div>
-                  <div className="flex justify-between items-center text-xs p-2 hover:bg-white/[0.05] rounded-lg transition-colors cursor-pointer group">
-                    <span className="text-[#f5f0e8] group-hover:text-violet-300 transition-colors">05 Abr - Hidratación</span>
-                    <span className="text-violet-400 font-bold">$14.500</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <button className="w-full bg-violet-500 text-white font-bold py-3 rounded-xl mt-6 hover:bg-violet-400 transition-all active:scale-[0.98] text-sm shadow-[0_0_15px_rgba(139,92,246,0.3)]">
-              Ver Expediente Completo
+                  <span className="material-symbols-outlined text-[#7a766e] group-hover:text-emerald-400 transition-colors shrink-0" style={{ fontSize: '17px' }}>chat</span>
+                </li>
+              ))}
+            </ul>
+            <button className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[12px] font-bold text-emerald-400 hover:bg-emerald-500/20 transition-all cursor-pointer min-h-[44px]">
+              <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>chat</span>
+              Notificar por WhatsApp
             </button>
           </div>
-          
-          {/* Waitlist / WhatsApp Module */}
-          <div className="relative isolate rounded-[1.5rem] border border-white/10 p-4 md:p-5 bg-[#0d0d0d]/40 overflow-hidden shadow-lg">
+
+          {/* RESUMEN */}
+          <div className="relative isolate rounded-[1.5rem] border border-white/[0.08] p-4 bg-[#0d0d0d]/40 overflow-hidden">
             <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
-            
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-[10px] font-bold tracking-widest uppercase text-[#7a766e] font-label">Lista de Espera</span>
-              <div className="flex -space-x-2">
-                <div className="w-6 h-6 rounded-full border border-[#1a1525] bg-violet-500/20 flex items-center justify-center text-[9px] text-violet-300 font-bold z-10 backdrop-blur-sm">+3</div>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-between p-3 bg-white/[0.03] rounded-xl group hover:bg-violet-500/10 hover:border-violet-500/20 border border-transparent transition-all cursor-pointer">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-[#7a766e] group-hover:text-violet-400 transition-colors">person</span>
-                <span className="text-sm font-medium text-[#f5f0e8]">Elena Valdes</span>
-              </div>
-              <span className="material-symbols-outlined text-violet-400 text-[18px]">forum</span>
+            <span className="text-[10px] font-bold tracking-widest uppercase text-[#7a766e] font-label block mb-3">Resumen del día</span>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: 'Confirmados', value: '5',     color: '#a78bfa' },
+                { label: 'Pendientes',  value: '2',     color: '#fbbf24' },
+                { label: 'Sin cobrar',  value: '1',     color: '#fb7185' },
+                { label: 'Proyectado',  value: '$131k', color: '#34d399' },
+              ].map(s => (
+                <div key={s.label} className="p-3 bg-white/[0.02] rounded-xl border border-white/[0.04]">
+                  <p className="text-lg font-bold font-mono leading-none" style={{ color: s.color }}>{s.value}</p>
+                  <p className="text-[10px] text-[#7a766e] mt-1">{s.label}</p>
+                </div>
+              ))}
             </div>
           </div>
+
         </div>
       </div>
     </div>
