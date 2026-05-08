@@ -165,22 +165,46 @@ export default function AdminDashboard() {
             {/* Temporal Comparison (Mini Chart Card) */}
             <div className="relative isolate rounded-[1.5rem] border border-white/10 p-6 overflow-hidden transition-all duration-300 cursor-default">
               <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
-              <div className="flex justify-between items-start mb-5">
-                <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label">COMPARATIVA SEMANAL</span>
-                <span className="material-symbols-outlined text-[#7a766e] text-[18px]">bar_chart</span>
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label">COMPARATIVA SEMANAL</span>
+                  <p className="font-playfair text-2xl text-[#f5f0e8] font-bold italic leading-none mt-1">$34.200</p>
+                </div>
+                <span className="material-symbols-outlined text-violet-400 text-[18px]">bar_chart</span>
               </div>
-              <div className="flex items-end gap-1.5 h-16">
-                {[40, 60, 30, 85, 50, 75, 45].map((h, i) => {
-                  const isToday = i === 3;
-                  return (
-                    <div key={i} className={`flex-1 rounded-t-md transition-colors ${isToday ? 'bg-violet-400' : 'bg-white/[0.08] hover:bg-violet-400/40'}`} style={{ height: `${h}%` }}></div>
-                  );
-                })}
-              </div>
-              <div className="flex justify-between mt-3 px-1">
-                {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((d, i) => (
-                  <span key={d} className={`text-[9px] font-bold font-label ${i === 3 ? 'text-violet-400' : 'text-[#7a766e]'}`}>{d}</span>
+              <div className="flex items-end gap-2 h-24 mt-2">
+                {[
+                  { pct: 42, day: 'L' },
+                  { pct: 58, day: 'M' },
+                  { pct: 31, day: 'X' },
+                  { pct: 100, day: 'J', today: true },
+                  { pct: 52, day: 'V' },
+                  { pct: 78, day: 'S' },
+                  { pct: 47, day: 'D' },
+                ].map(({ pct, day, today }) => (
+                  <div key={day} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group/bar">
+                    <div
+                      className={`w-full rounded-md transition-all duration-300 ${
+                        today
+                          ? 'shadow-[0_0_12px_rgba(167,139,250,0.5)]'
+                          : 'group-hover/bar:opacity-80'
+                      }`}
+                      style={{
+                        height: `${pct}%`,
+                        background: today
+                          ? 'linear-gradient(to top, #7c3aed, #a78bfa)'
+                          : 'rgba(167,139,250,0.18)',
+                      }}
+                    />
+                    <span className={`text-[9px] font-bold font-label ${today ? 'text-violet-400' : 'text-[#7a766e]'}`}>
+                      {day}
+                    </span>
+                  </div>
                 ))}
+              </div>
+              <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-white/[0.05]">
+                <span className="material-symbols-outlined text-emerald-400 text-[13px]">trending_up</span>
+                <span className="text-[11px] text-emerald-400 font-medium">+14.2% vs semana ant.</span>
               </div>
             </div>
 
@@ -222,25 +246,20 @@ export default function AdminDashboard() {
                 </div>
               </div>
               
-              <div className="w-full px-2 mt-auto">
-                <div className="grid grid-cols-2 gap-y-5 gap-x-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.5)] shrink-0"></div>
-                    <span className="text-[13px] text-[#7a766e] font-medium">Tarjeta</span>
+              <div className="w-full mt-auto space-y-2.5">
+                {[
+                  { color: 'bg-violet-400', glow: 'shadow-[0_0_8px_rgba(167,139,250,0.6)]', label: 'Tarjeta', pct: '65%' },
+                  { color: 'bg-amber-400',  glow: 'shadow-[0_0_8px_rgba(251,191,36,0.6)]',  label: 'Efectivo', pct: '20%' },
+                  { color: 'bg-emerald-400',glow: 'shadow-[0_0_8px_rgba(52,211,153,0.6)]',  label: 'Transfer.', pct: '15%' },
+                ].map(({ color, glow, label, pct }) => (
+                  <div key={label} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${color} ${glow}`} />
+                      <span className="text-[13px] text-[#f5f0e8] font-medium">{label}</span>
+                    </div>
+                    <span className="text-[12px] font-bold text-[#f5f0e8] font-mono">{pct}</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)] shrink-0"></div>
-                    <span className="text-[13px] text-[#7a766e] font-medium">Efectivo</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)] shrink-0"></div>
-                    <span className="text-[13px] text-[#7a766e] font-medium">Transfer.</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-white/20 shrink-0"></div>
-                    <span className="text-[13px] text-[#7a766e] font-medium">Otros</span>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
