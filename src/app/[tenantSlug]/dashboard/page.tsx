@@ -237,8 +237,8 @@ export default function AdminDashboard() {
                 <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_0_20px_rgba(167,139,250,0.15)]" viewBox="0 0 36 36">
                   <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="rgba(255,255,255,0.03)" strokeWidth="3"></circle>
                   <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#a78bfa" strokeDasharray="65 35" strokeDashoffset="0" strokeWidth="3"></circle>
-                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#fbbf24" strokeDasharray="20 80" strokeDashoffset="-65" strokeWidth="3"></circle>
-                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#34d399" strokeDasharray="15 85" strokeDashoffset="-85" strokeWidth="3"></circle>
+                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#e879f9" strokeDasharray="20 80" strokeDashoffset="-65" strokeWidth="3"></circle>
+                  <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#d8b4fe" strokeDasharray="15 85" strokeDashoffset="-85" strokeWidth="3"></circle>
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-3xl font-bold text-[#f5f0e8] font-inter tracking-tight leading-none drop-shadow-md">65%</span>
@@ -246,20 +246,30 @@ export default function AdminDashboard() {
                 </div>
               </div>
               
-              <div className="w-full mt-auto space-y-2.5">
-                {[
-                  { color: 'bg-violet-400', glow: 'shadow-[0_0_8px_rgba(167,139,250,0.6)]', label: 'Tarjeta', pct: '65%' },
-                  { color: 'bg-amber-400',  glow: 'shadow-[0_0_8px_rgba(251,191,36,0.6)]',  label: 'Efectivo', pct: '20%' },
-                  { color: 'bg-emerald-400',glow: 'shadow-[0_0_8px_rgba(52,211,153,0.6)]',  label: 'Transfer.', pct: '15%' },
-                ].map(({ color, glow, label, pct }) => (
-                  <div key={label} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${color} ${glow}`} />
-                      <span className="text-[13px] text-[#f5f0e8] font-medium">{label}</span>
-                    </div>
-                    <span className="text-[12px] font-bold text-[#f5f0e8] font-mono">{pct}</span>
+              <div className="w-full mt-auto space-y-2">
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.6)] shrink-0" />
+                    <span className="text-[13px] text-[#f5f0e8] font-medium">Tarjeta</span>
                   </div>
-                ))}
+                  <span className="text-[12px] font-bold text-[#f5f0e8] font-mono">65%</span>
+                </div>
+                
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-fuchsia-400 shadow-[0_0_8px_rgba(232,121,249,0.6)] shrink-0" />
+                    <span className="text-[13px] text-[#f5f0e8] font-medium">Efectivo</span>
+                  </div>
+                  <span className="text-[12px] font-bold text-[#f5f0e8] font-mono">20%</span>
+                </div>
+                
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-purple-300 shadow-[0_0_8px_rgba(216,180,254,0.6)] shrink-0" />
+                    <span className="text-[13px] text-[#f5f0e8] font-medium">Transfer.</span>
+                  </div>
+                  <span className="text-[12px] font-bold text-[#f5f0e8] font-mono">15%</span>
+                </div>
               </div>
             </div>
 
