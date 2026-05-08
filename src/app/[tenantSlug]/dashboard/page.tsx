@@ -244,18 +244,42 @@ export default function AdminDashboard() {
             </div>
 
             {/* Upcoming Collections */}
-            <div className="relative isolate rounded-[1.5rem] border border-white/10 p-6 overflow-hidden transition-all duration-300 cursor-default">
+            <div className="relative isolate rounded-[1.5rem] border border-white/10 p-5 overflow-hidden transition-all duration-300 flex flex-col">
               <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
-              <div className="flex justify-between items-start mb-2">
-                <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label">COBROS PENDIENTES</span>
-                <span className="material-symbols-outlined text-amber-400 text-[18px]">event_repeat</span>
+
+              {/* Header */}
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label">COBROS PENDIENTES</span>
+                  <p className="font-playfair text-3xl text-[#f5f0e8] font-bold italic leading-none mt-1">3</p>
+                </div>
+                <span className="material-symbols-outlined text-amber-400 text-[18px]">payments</span>
               </div>
-              <div className="flex flex-col mt-1">
-                <span className="font-playfair text-4xl text-[#f5f0e8] font-bold italic leading-none">24</span>
-                <span className="text-xs text-[#7a766e] mt-3 font-medium">Estimado: <span className="text-amber-400">$12,300.00</span></span>
-              </div>
-              <div className="mt-4 w-full h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
-                <div className="w-[70%] h-full bg-amber-400"></div>
+
+              {/* Mini list */}
+              <ul className="flex flex-col gap-2 flex-1">
+                {[
+                  { initials: 'SM', name: 'Sofía M.',   time: '13:00', amount: '$2.500' },
+                  { initials: 'CT', name: 'Camila T.',  time: '14:30', amount: '$1.800' },
+                  { initials: 'DL', name: 'Daniela L.', time: '16:00', amount: '$2.500' },
+                ].map((row) => (
+                  <li key={row.time} className="flex items-center gap-2.5 py-2 border-b border-white/[0.05] last:border-0">
+                    <div className="w-7 h-7 rounded-full bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-[9px] font-bold text-amber-400 shrink-0">
+                      {row.initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-medium text-[#f5f0e8] leading-none truncate">{row.name}</p>
+                      <p className="text-[10px] text-[#7a766e] mt-0.5 font-mono">{row.time}</p>
+                    </div>
+                    <span className="text-[12px] font-bold text-amber-400 font-mono shrink-0">{row.amount}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Total */}
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.06]">
+                <span className="text-[10px] text-[#7a766e] uppercase tracking-wider font-label">Total estimado</span>
+                <span className="text-[13px] font-bold text-amber-400 font-mono">$6.800</span>
               </div>
             </div>
           </div>
