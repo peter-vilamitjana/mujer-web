@@ -16,6 +16,7 @@ const ADMIN_NAV = [
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = React.useState<'dashboard' | 'agenda' | 'clientes' | 'servicios' | 'config'>('dashboard');
+  const [servicesPeriod, setServicesPeriod] = React.useState<'semana' | 'mes'>('semana');
 
   const greeting = useMemo(() => {
     const h = new Date().getHours();
@@ -336,7 +337,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* ── Distribution & Appointment Metrics ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-8 gap-5">
             {/* Payment Distribution */}
             <div className="lg:col-span-2 relative isolate rounded-[1.5rem] border border-white/[0.06] p-6 md:p-7 overflow-hidden flex flex-col items-center justify-between h-full bg-[#0d0d0d]/40">
               <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
@@ -380,6 +381,92 @@ export default function AdminDashboard() {
                   </div>
                   <span className="text-[13px] font-bold text-[#f5f0e8] font-mono">15%</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Top Services Card */}
+            <div className="lg:col-span-3 relative isolate rounded-[1.5rem] border border-white/[0.06] p-6 md:p-7 overflow-hidden flex flex-col bg-[#0d0d0d]/40">
+              <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+
+              {/* Header */}
+              <div className="flex items-start justify-between mb-5">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label block">SERVICIOS DESTACADOS</span>
+                  <p className="font-playfair text-lg text-[#f5f0e8] font-bold italic leading-tight mt-1">Más solicitados</p>
+                </div>
+                {/* Semana / Mes toggle */}
+                <div className="flex items-center gap-0.5 bg-white/[0.04] border border-white/[0.06] rounded-full p-0.5">
+                  {(['semana', 'mes'] as const).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setServicesPeriod(p)}
+                      className={`px-3 py-1 rounded-full text-[10px] font-bold font-label uppercase tracking-wide transition-all duration-200 cursor-pointer ${
+                        servicesPeriod === p
+                          ? 'bg-violet-500/20 text-violet-300 border border-violet-500/25'
+                          : 'text-[#7a766e] hover:text-[#f5f0e8]'
+                      }`}
+                    >
+                      {p === 'semana' ? 'Semana' : 'Mes'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Service list */}
+              <ul className="flex flex-col gap-3 flex-1">
+                {(servicesPeriod === 'semana' ? [
+                  { rank: 1, name: 'Coloración / Tinte',  count: 24, revenue: '$48.000', pct: 100 },
+                  { rank: 2, name: 'Corte + Brushing',     count: 18, revenue: '$27.000', pct: 75  },
+                  { rank: 3, name: 'Balayage',             count: 11, revenue: '$77.000', pct: 46  },
+                  { rank: 4, name: 'Manicura',             count: 9,  revenue: '$13.500', pct: 38  },
+                ] : [
+                  { rank: 1, name: 'Corte + Brushing',     count: 72, revenue: '$108.000', pct: 100 },
+                  { rank: 2, name: 'Coloración / Tinte',   count: 68, revenue: '$136.000', pct: 94  },
+                  { rank: 3, name: 'Manicura',             count: 45, revenue: '$67.500',  pct: 63  },
+                  { rank: 4, name: 'Balayage',             count: 38, revenue: '$266.000', pct: 53  },
+                ]).map(({ rank, name, count, revenue, pct }) => {
+                  const rankColors: Record<number, { dot: string; glow: string; bar: string }> = {
+                    1: { dot: '#fbbf24', glow: 'rgba(251,191,36,0.5)', bar: 'linear-gradient(to right, #92400e, #fbbf24)' },
+                    2: { dot: '#a78bfa', glow: 'rgba(167,139,250,0.5)', bar: 'linear-gradient(to right, #4c1d95, #a78bfa)' },
+                    3: { dot: '#e879f9', glow: 'rgba(232,121,249,0.4)', bar: 'linear-gradient(to right, #701a75, #e879f9)' },
+                    4: { dot: '#7a766e', glow: 'transparent',           bar: 'rgba(167,139,250,0.15)' },
+                  };
+                  const rc = rankColors[rank];
+                  return (
+                    <li key={name} className="group/svc">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span
+                            className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0"
+                            style={{ background: `${rc.dot}18`, color: rc.dot, boxShadow: `0 0 6px ${rc.glow}` }}
+                          >
+                            {rank}
+                          </span>
+                          <span className="text-[13px] text-[#f5f0e8] font-medium truncate">{name}</span>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0 ml-2">
+                          <span className="text-[11px] text-[#7a766e]">{count} turnos</span>
+                          <span className="text-[12px] font-bold text-[#f5f0e8] font-mono w-20 text-right">{revenue}</span>
+                        </div>
+                      </div>
+                      {/* Progress bar */}
+                      <div className="h-1 rounded-full bg-white/[0.05] overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{ width: `${pct}%`, background: rc.bar }}
+                        />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/[0.05]">
+                <span className="text-[10px] text-[#7a766e]">
+                  {servicesPeriod === 'semana' ? 'Esta semana · Jue 1 – Jue 7 May' : 'Este mes · Mayo 2026'}
+                </span>
+                <button className="text-[11px] text-violet-400 hover:text-violet-300 font-medium transition-colors cursor-pointer">Ver todos →</button>
               </div>
             </div>
 
