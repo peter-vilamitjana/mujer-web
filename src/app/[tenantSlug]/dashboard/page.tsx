@@ -471,48 +471,67 @@ export default function AdminDashboard() {
             </div>
 
             {/* Appointment Metrics */}
-            <div className="lg:col-span-3 space-y-4">
-              <div className="relative isolate rounded-[1.5rem] border border-white/[0.06] p-6 md:p-7 overflow-hidden h-full flex flex-col justify-between group bg-[#0d0d0d]/40">
-                <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+            <div className="lg:col-span-3 relative isolate rounded-[1.5rem] border border-white/[0.06] p-6 overflow-hidden flex flex-col bg-[#0d0d0d]/40">
+              <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
 
-                <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label block mb-5">MÉTRICAS DE CITAS</span>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div className="p-4 bg-white/[0.02] rounded-2xl border border-white/[0.04] flex items-center gap-4 hover:border-violet-400/20 transition-colors">
-                    <div className="w-12 h-12 rounded-xl bg-violet-400/10 flex items-center justify-center border border-violet-400/20 shrink-0">
-                      <span className="material-symbols-outlined text-violet-400">confirmation_number</span>
+              <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label block mb-5">MÉTRICAS DE CITAS</span>
+
+              {/* 2×2 stat tiles */}
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                {[
+                  { icon: 'event_available', label: 'Turnos hoy',         value: '18 / 22', sub: '82% ocupación'  },
+                  { icon: 'timer',           label: 'Duración promedio',  value: '48 min',  sub: 'por servicio'   },
+                  { icon: 'check_circle',    label: 'Confirmados',        value: '87%',     sub: 'tasa confirmac.' },
+                  { icon: 'cancel',          label: 'Cancelaciones',      value: '2',       sub: 'hoy'            },
+                ].map(({ icon, label, value, sub }) => (
+                  <div
+                    key={label}
+                    className="p-3.5 bg-white/[0.02] rounded-2xl border border-white/[0.04] hover:border-violet-400/20 transition-colors flex flex-col gap-2"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-violet-400/10 border border-violet-400/20 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-violet-400" style={{ fontSize: '16px' }}>{icon}</span>
                     </div>
                     <div>
-                      <p className="text-[#f5f0e8] font-bold text-xl leading-none">142</p>
-                      <p className="text-[#7a766e] text-[13px] font-medium mt-1.5">Tickets Emitidos Hoy</p>
+                      <p className="text-[#f5f0e8] font-bold text-lg leading-none">{value}</p>
+                      <p className="text-[#7a766e] text-[11px] mt-1 leading-tight">{label}</p>
+                      <p className="text-[#7a766e]/60 text-[10px] leading-tight">{sub}</p>
                     </div>
                   </div>
-                  <div className="p-4 bg-white/[0.02] rounded-2xl border border-white/[0.04] flex items-center gap-4 hover:border-violet-400/20 transition-colors">
-                    <div className="w-12 h-12 rounded-xl bg-violet-400/10 flex items-center justify-center border border-violet-400/20 shrink-0">
-                      <span className="material-symbols-outlined text-violet-400">timer</span>
-                    </div>
-                    <div>
-                      <p className="text-[#f5f0e8] font-bold text-xl leading-none">18 min</p>
-                      <p className="text-[#7a766e] text-[13px] font-medium mt-1.5">Tiempo Promedio</p>
-                    </div>
-                  </div>
+                ))}
+              </div>
+
+              {/* Staff performance */}
+              <div className="mt-auto">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label">Top Estilistas</span>
+                  <button className="text-[11px] text-violet-400 hover:text-violet-300 font-medium transition-colors cursor-pointer">Ver reporte →</button>
                 </div>
-                
-                <div className="p-5 md:p-6 bg-white/[0.02] rounded-2xl border border-white/[0.04] relative hover:border-violet-400/20 transition-colors mt-auto">
-                  <div className="flex justify-between items-start mb-5">
-                    <div>
-                      <h4 className="text-[#f5f0e8] font-medium text-[15px]">Rendimiento de Operadores</h4>
-                      <p className="text-[13px] text-[#7a766e] mt-1">Top desempeño semanal activo</p>
-                    </div>
-                    <button className="text-violet-400 text-[13px] font-medium hover:text-violet-300 hover:underline transition-colors">Ver reporte</button>
-                  </div>
-                  <div className="flex -space-x-2">
-                    <img alt="Avatar" className="w-8 h-8 rounded-full border-[1.5px] border-[#0d0d0d] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDovTZHT4ugpJUm45dR5I3v8-G6owMNgxWh1ru6Ohdw75SQGbn7Lw2JQNemI0ySMhl07Xda2BhkkOXbH3Bz5yWsI37dXETYSR7Mlp5Ho2MS2RsrAfUAzdKNOLfqznd4C_BIK029xEYq0-Pdp1YL-panD3YVge1RGNur_UT2LAxV87RjZ-f9AXFnjN-t9dZuXDTw1D3eH-V1qbitnSuRVLI0MKiDOGx6MCPwhHmtx7TQGLX_hWVjOE6TaZFeN3GvGGJ3xU7o5jo7Lz8" />
-                    <img alt="Avatar" className="w-8 h-8 rounded-full border-[1.5px] border-[#0d0d0d] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpXmezsUHIg22n8IZepkoHtKiCTgmu2Rh8Z9uA4MrtJjptfoz7hqCKeVh7n1dI--g8tLopbIMAM-D9J25kpM-iNtwUb8xTLz4e7zKuSRTGtbDUF6D5aNvQezWO_gJlpJA7OOH3qu-MMu3PO-JYiNspGJMzLBQfPIxE8R2V2Ah1UWFnL_zCW0W1c6W2WENzZHLLZCUKMVpoe3u5j4FlONFOXlcUgt-ImwvGVHn37a_MHtSlzavxufLfUmavt5icsi4YEKavWFJhcEQ" />
-                    <img alt="Avatar" className="w-8 h-8 rounded-full border-[1.5px] border-[#0d0d0d] object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbLOO3Y7_8FQ6gl3rSZtEUQu8UsDsnuuGMqcC2RKCv9SiG2_H6-qRoQYlcwAJ9NFsVplIy7KgzvKjSSmiVkrZbEmZ6S_2ySuvcQq4dHUCAVHb48wvkIjbEkG5k4pERMpdDi3Y30jtR7IWHZLt2ym01dPjkx9VpfEGp3cVmv_EE09fCCfx815VPLnkCZ9TBxPFCHxOQZrsGZUeXRm6h4ZbPpMw9nGEN7pFPtsT7-rOZ8GL7-tJDfseoYE5sL3fpm44e5U22Xnb-9fE" />
-                    <div className="w-8 h-8 rounded-full border-[1.5px] border-[#0d0d0d] bg-white/[0.05] flex items-center justify-center text-[10px] text-[#f5f0e8] font-bold">+8</div>
-                  </div>
-                </div>
+                <ul className="flex flex-col gap-2">
+                  {[
+                    { initials: 'LM', name: 'Luciana M.',   turnos: 8, color: '#a78bfa' },
+                    { initials: 'SR', name: 'Sofía R.',      turnos: 6, color: '#e879f9' },
+                    { initials: 'CA', name: 'Camila A.',     turnos: 4, color: '#d8b4fe' },
+                  ].map(({ initials, name, turnos, color }) => (
+                    <li key={initials} className="flex items-center gap-3">
+                      <div
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black shrink-0"
+                        style={{ background: `${color}18`, color, border: `1px solid ${color}30` }}
+                      >
+                        {initials}
+                      </div>
+                      <span className="text-[13px] text-[#f5f0e8] flex-1 truncate">{name}</span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="w-16 h-1 rounded-full bg-white/[0.05] overflow-hidden">
+                          <div
+                            className="h-full rounded-full"
+                            style={{ width: `${(turnos / 8) * 100}%`, background: color }}
+                          />
+                        </div>
+                        <span className="text-[11px] text-[#7a766e] font-mono w-8 text-right">{turnos}t</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>
