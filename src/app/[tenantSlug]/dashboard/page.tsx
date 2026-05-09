@@ -59,9 +59,12 @@ function AgendaTabView() {
   const [dateOffset, setDateOffset]   = React.useState(0);
   const [payMethod,  setPayMethod]    = React.useState(0);
   const [calendarView, setCalendarView] = React.useState<'dia' | 'semana' | 'mes'>('dia');
+  const [appts, setAppts]               = React.useState<Appt[]>(APPTS);
+  const [draggedId, setDraggedId]       = React.useState<number | null>(null);
+  const [dropTarget, setDropTarget]     = React.useState<{ slot: number; pro: number } | null>(null);
 
-  const selectedAppt = APPTS.find(a => a.id === selectedId) ?? null;
-  const checkoutAppt = APPTS.find(a => a.id === checkoutId) ?? null;
+  const selectedAppt = appts.find(a => a.id === selectedId) ?? null;
+  const checkoutAppt = appts.find(a => a.id === checkoutId) ?? null;
 
   const displayDate = React.useMemo(() => {
     const d = new Date(); d.setDate(d.getDate() + dateOffset);
@@ -118,9 +121,25 @@ function AgendaTabView() {
 
   const occupiedCells = React.useMemo(() => {
     const s = new Set<string>();
-    APPTS.forEach(a => { for (let i = 0; i < a.dur; i++) s.add(`${a.slot + i}-${a.pro}`); });
+    appts.forEach(a => {
+      if (a.id === draggedId) return;
+      for (let i = 0; i < a.dur; i++) s.add(`${a.slot + i}-${a.pro}`);
+    });
     return s;
-  }, []);
+  }, [appts, draggedId]);
+
+  const canDrop = (targetSlot: number, targetPro: number): boolean => {
+    if (draggedId === null) return false;
+    const dragged = appts.find(a => a.id === draggedId);
+    if (!dragged) return false;
+    for (let i = 0; i < dragged.dur; i++) {
+      if (targetSlot + i >= SLOTS.length) return false;
+      if (occupiedCells.has(`${targetSlot + i}-${targetPro}`)) return false;
+    }
+    return true;
+  };
+
+  const draggedDur = draggedId !== null ? (appts.find(a => a.id === draggedId)?.dur ?? 1) : 0;
 
   const nowPx = React.useMemo(() => {
     const n = new Date(); const nm = n.getHours() * 60 + n.getMinutes();
@@ -161,7 +180,7 @@ function AgendaTabView() {
           <h1 className="font-playfair text-3xl md:text-4xl font-bold italic text-[#f5f0e8] leading-tight">Agenda</h1>
           <p className="text-[#7a766e] text-sm mt-1 flex items-center gap-1.5">
             <Sparkles size={13} className="text-violet-400" />
-            {APPTS.length} turnos agendados
+            {appts.length} turnos agendados
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -225,7 +244,7 @@ function AgendaTabView() {
                   </div>
                   <div className="min-w-0">
                     <p className="font-playfair font-bold italic text-[#f5f0e8] text-sm leading-none truncate">{pro.name}</p>
-                    <p className="text-[10px] text-[#7a766e] mt-0.5">{APPTS.filter(a => a.pro === i).length} turnos</p>
+                    <p className="text-[10px] text-[#7a766e] mt-0.5">{appts.filter(a => a.pro === i).length} turnos</p>
                   </div>
                 </div>
               ))}
@@ -243,24 +262,59 @@ function AgendaTabView() {
                 {SLOTS.flatMap((_, slot) =>
                   PROS.map((_, pro) => {
                     if (occupiedCells.has(`${slot}-${pro}`)) return null;
+                    const isDragging = draggedId !== null;
+                    const validTarget = isDragging && canDrop(slot, pro);
                     return (
-                      <div key={`e-${slot}-${pro}`} className="p-1 group/add" style={{ gridColumn: pro + 2, gridRow: slot + 1 }}>
-                        <div className="w-full h-full rounded-lg border border-dashed border-transparent group-hover/add:border-violet-500/25 group-hover/add:bg-violet-500/[0.04] transition-all duration-200 flex items-center justify-center cursor-pointer">
-                          <span className="material-symbols-outlined text-violet-400/0 group-hover/add:text-violet-400/50 transition-all" style={{ fontSize: '13px' }}>add</span>
-                        </div>
+                      <div
+                        key={`e-${slot}-${pro}`}
+                        className={`p-1 group/add ${isDragging ? 'cursor-copy' : ''}`}
+                        style={{ gridColumn: pro + 2, gridRow: slot + 1 }}
+                        onDragOver={e => { e.preventDefault(); if (validTarget) setDropTarget({ slot, pro }); }}
+                        onDrop={e => {
+                          e.preventDefault();
+                          if (draggedId !== null && validTarget) {
+                            setAppts(prev => prev.map(a => a.id === draggedId ? { ...a, slot, pro } : a));
+                            setSelectedId(draggedId);
+                          }
+                          setDraggedId(null); setDropTarget(null);
+                        }}
+                      >
+                        {!isDragging && (
+                          <div className="w-full h-full rounded-lg border border-dashed border-transparent group-hover/add:border-violet-500/25 group-hover/add:bg-violet-500/[0.04] transition-all duration-200 flex items-center justify-center cursor-pointer">
+                            <span className="material-symbols-outlined text-violet-400/0 group-hover/add:text-violet-400/50 transition-all" style={{ fontSize: '13px' }}>add</span>
+                          </div>
+                        )}
                       </div>
                     );
                   })
                 )}
-                {APPTS.map(appt => {
+
+                {/* Drop preview */}
+                {draggedId !== null && dropTarget !== null && canDrop(dropTarget.slot, dropTarget.pro) && (() => {
+                  const dragged = appts.find(a => a.id === draggedId);
+                  const cfg = dragged ? STATUS_CFG[dragged.status] : null;
+                  return cfg ? (
+                    <div className="pointer-events-none rounded-md z-10 transition-all" style={{ gridColumn: dropTarget.pro + 2, gridRow: `${dropTarget.slot + 1} / span ${draggedDur}`, background: `${cfg.lbar}18`, border: `2px dashed ${cfg.lbar}70` }} />
+                  ) : null;
+                })()}
+
+                {appts.map(appt => {
                   const cfg = STATUS_CFG[appt.status];
                   const isSel = selectedId === appt.id;
+                  const isDragged = draggedId === appt.id;
                   return (
-                    <div key={appt.id} className="p-[3px]" style={{ gridColumn: appt.pro + 2, gridRow: `${appt.slot + 1} / span ${appt.dur}` }}>
+                    <div
+                      key={appt.id}
+                      draggable
+                      onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; setDraggedId(appt.id); setDropTarget(null); }}
+                      onDragEnd={() => { setDraggedId(null); setDropTarget(null); }}
+                      className="p-[3px] transition-opacity duration-150"
+                      style={{ gridColumn: appt.pro + 2, gridRow: `${appt.slot + 1} / span ${appt.dur}`, opacity: isDragged ? 0.35 : 1 }}
+                    >
                       <div
-                        onClick={() => { setSelectedId(appt.id); setCheckoutId(null); }}
-                        className={`h-full rounded-md overflow-hidden flex flex-col cursor-pointer transition-all duration-200 ${isSel ? 'shadow-[0_0_18px_rgba(139,92,246,0.18)]' : 'hover:brightness-110'}`}
-                        style={{ background: cfg.bg, borderLeft: `3px solid ${cfg.lbar}`, outline: isSel ? `1px solid ${cfg.lbar}55` : 'none' }}
+                        onClick={() => { if (!isDragged) { setSelectedId(appt.id); setCheckoutId(null); } }}
+                        className={`h-full rounded-md overflow-hidden flex flex-col transition-all duration-200 ${isDragged ? 'cursor-grabbing' : 'cursor-grab'} ${isSel && !isDragged ? 'shadow-[0_0_18px_rgba(139,92,246,0.18)]' : 'hover:brightness-110'}`}
+                        style={{ background: cfg.bg, borderLeft: `3px solid ${cfg.lbar}`, outline: isSel && !isDragged ? `1px solid ${cfg.lbar}55` : 'none' }}
                       >
                         <div className="p-2 flex flex-col gap-0.5 h-full min-h-0">
                           <div className="flex items-start justify-between gap-1">
@@ -339,7 +393,7 @@ function AgendaTabView() {
                 {todayColIdx >= 0 && (
                   <div className="pointer-events-none bg-violet-500/[0.03]" style={{ gridColumn: todayColIdx + 2, gridRow: `1 / ${SLOTS.length + 1}` }} />
                 )}
-                {todayColIdx >= 0 && APPTS.map(appt => {
+                {todayColIdx >= 0 && appts.map(appt => {
                   const cfg = STATUS_CFG[appt.status];
                   return (
                     <div key={appt.id} className="p-[3px]" style={{ gridColumn: todayColIdx + 2, gridRow: `${appt.slot + 1} / span ${appt.dur}` }}>
