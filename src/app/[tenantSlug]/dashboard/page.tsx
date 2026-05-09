@@ -449,41 +449,51 @@ function AgendaTabView() {
                     );
                   })
                 ) : (
-                  /* ── TODOS: mapa de calor (bloques sin texto) ── */
-                  todayColIdx >= 0 && SLOTS.map((_, slotIdx) => {
-                    const slotAppts = appts.filter(a => a.slot <= slotIdx && slotIdx < a.slot + a.dur);
-                    if (slotAppts.length === 0) return null;
-                    return (
+                  /* ── TODOS: bloques unificados por rango continuo ── */
+                  weekDays.flatMap(({ offset: ofs }, colIdx) => {
+                    const dayAppts = ofs === 0 ? appts : [];
+                    const occ = new Array(SLOTS.length).fill(0);
+                    dayAppts.forEach(a => {
+                      for (let i = a.slot; i < Math.min(a.slot + a.dur, SLOTS.length); i++) occ[i]++;
+                    });
+                    const blocks: { start: number; span: number; count: number }[] = [];
+                    let s = -1, mx = 0;
+                    for (let i = 0; i <= SLOTS.length; i++) {
+                      const c = i < SLOTS.length ? occ[i] : 0;
+                      if (c > 0 && s === -1) { s = i; mx = c; }
+                      else if (c > 0) { mx = Math.max(mx, c); }
+                      else if (s !== -1) { blocks.push({ start: s, span: i - s, count: mx }); s = -1; mx = 0; }
+                    }
+                    return [
                       <div
-                        key={`macro-${slotIdx}`}
-                        className="flex flex-col gap-[2px] px-[3px] py-[3px] cursor-pointer"
-                        style={{ gridColumn: todayColIdx + 2, gridRow: slotIdx + 1 }}
-                        onClick={() => { setDateOffset(0); setCalendarView('dia'); }}
-                      >
-                        {slotAppts.map(a => (
+                        key={`zone-${colIdx}`}
+                        className="cursor-pointer hover:bg-white/[0.015] transition-colors"
+                        style={{ gridColumn: colIdx + 2, gridRow: `1 / ${SLOTS.length + 1}` }}
+                        onClick={() => { setDateOffset(ofs); setCalendarView('dia'); }}
+                      />,
+                      ...blocks.map((b, bi) => {
+                        const ratio = b.count / PROS.length;
+                        const bg     = ratio >= 1 ? 'rgba(139,92,246,0.11)' : `rgba(255,255,255,${(0.04 + ratio * 0.06).toFixed(2)})`;
+                        const border = ratio >= 1 ? '1px solid rgba(139,92,246,0.24)' : `1px solid rgba(255,255,255,${(0.05 + ratio * 0.07).toFixed(2)})`;
+                        return (
                           <div
-                            key={a.id}
-                            className="flex-1 rounded-sm min-h-[4px]"
-                            style={{ background: PROS[a.pro].color, opacity: 0.75 }}
-                          />
-                        ))}
-                      </div>
-                    );
+                            key={`macro-${colIdx}-${bi}`}
+                            className="m-[3px] rounded-md cursor-pointer hover:brightness-125 transition-all flex flex-col items-center justify-center gap-1"
+                            style={{ gridColumn: colIdx + 2, gridRow: `${b.start + 1} / span ${b.span}`, background: bg, border }}
+                            onClick={() => { setDateOffset(ofs); setCalendarView('dia'); }}
+                          >
+                            {b.span >= 2 && (<>
+                              <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '14px', fontVariationSettings: "'FILL' 1" }}>group</span>
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-[#7a766e] text-center leading-tight font-label">
+                                {b.count} {b.count === 1 ? 'ocupada' : 'ocupadas'}
+                              </span>
+                            </>)}
+                          </div>
+                        );
+                      }),
+                    ];
                   })
                 )}
-
-                {/* Click-to-day on other columns (macro mode) */}
-                {weekPro === 'all' && weekDays.map(({ offset: ofs }, idx) => {
-                  if (idx === todayColIdx) return null;
-                  return (
-                    <div
-                      key={`click-col-${idx}`}
-                      className="cursor-pointer hover:bg-white/[0.02] transition-colors"
-                      style={{ gridColumn: idx + 2, gridRow: `1 / ${SLOTS.length + 1}` }}
-                      onClick={() => { setDateOffset(ofs); setCalendarView('dia'); }}
-                    />
-                  );
-                })}
 
                 {/* Current time line */}
                 {todayColIdx >= 0 && nowPx > 0 && nowPx < totalH && (
