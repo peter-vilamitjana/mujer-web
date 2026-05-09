@@ -592,7 +592,7 @@ function AgendaTabView() {
               : newAppt.client.trim().length > 0;
             return (
               /* ── NUEVO TURNO FORM ── */
-              <div className="relative isolate rounded-[1.5rem] border border-violet-500/20 flex flex-col bg-[#0d0d0d]/40 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="relative isolate rounded-[1.5rem] border border-violet-500/20 flex flex-col bg-[#0d0d0d]/40 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 h-full">
                 <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
 
                 {/* Header */}
@@ -640,7 +640,7 @@ function AgendaTabView() {
                             onChange={e => setNewAppt(p => p && ({ ...p, clientSearch: e.target.value, clientId: null }))}
                             className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl pl-9 pr-3.5 py-2.5 text-[13px] text-[#f5f0e8] placeholder-[#7a766e] focus:outline-none focus:border-violet-500/40 transition-all" />
                         </div>
-                        <div className="flex flex-col gap-1 max-h-[160px] overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
+                        <div className="flex flex-col gap-1 max-h-[156px] overflow-y-auto rounded-xl" style={{ overscrollBehavior: 'contain' }}>
                           {_filtered.slice(0, 5).map(c => (
                             <button key={c.id}
                               onClick={() => setNewAppt(p => p && ({ ...p, clientId: c.id, clientSearch: c.name }))}
@@ -714,10 +714,13 @@ function AgendaTabView() {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl">
                         <p className="text-[9px] text-[#7a766e] mb-1.5">Inicio</p>
-                        <select value={newAppt.slot} onChange={e => setNewAppt(p => p && ({ ...p, slot: Number(e.target.value) }))}
-                          className="w-full bg-transparent text-[13px] font-bold text-[#f5f0e8] cursor-pointer focus:outline-none">
-                          {SLOTS.map((t, i) => <option key={i} value={i} className="bg-[#0d0d0d]">{t}</option>)}
-                        </select>
+                        <div className="relative">
+                          <select value={newAppt.slot} onChange={e => setNewAppt(p => p && ({ ...p, slot: Number(e.target.value) }))}
+                            className="w-full appearance-none bg-transparent text-[13px] font-bold text-[#f5f0e8] cursor-pointer focus:outline-none pr-5">
+                            {SLOTS.map((t, i) => <option key={i} value={i} className="bg-[#0d0d0d]">{t}</option>)}
+                          </select>
+                          <span className="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-[#7a766e] pointer-events-none" style={{ fontSize: '14px' }}>expand_more</span>
+                        </div>
                       </div>
                       <div className="p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl">
                         <p className="text-[9px] text-[#7a766e] mb-1.5">Fin estimado</p>
@@ -748,51 +751,56 @@ function AgendaTabView() {
                             {newAppt.services.length > 1 && (
                               <button
                                 onClick={() => setNewAppt(p => p && ({ ...p, services: p.services.filter((_, i) => i !== idx) }))}
-                                className="w-6 h-6 rounded-lg flex items-center justify-center text-[#7a766e] hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer shrink-0 opacity-0 group-hover/svc:opacity-100">
-                                <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>close</span>
+                                className="w-7 h-7 rounded-lg flex items-center justify-center text-[#7a766e] hover:text-rose-400 hover:bg-rose-500/10 active:bg-rose-500/20 transition-all cursor-pointer shrink-0">
+                                <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>close</span>
                               </button>
                             )}
                           </div>
                         );
                       })}
                       {/* Add service selector */}
-                      <select value=""
-                        onChange={e => {
-                          const idx = Number(e.target.value);
-                          setNewAppt(p => p && ({ ...p, services: [...p.services, { serviceIdx: idx }] }));
-                        }}
-                        className="w-full bg-white/[0.03] border border-dashed border-violet-500/25 rounded-xl px-3.5 py-2.5 text-[12px] text-violet-400 cursor-pointer focus:outline-none hover:border-violet-500/45 hover:bg-violet-500/[0.04] transition-all appearance-none">
-                        <option value="" disabled>+ Agregar otro servicio</option>
-                        {SERVICES.map((svc, i) => <option key={i} value={i} className="bg-[#0d0d0d] text-[#f5f0e8]">{svc.name} — {svc.dur * 30}min</option>)}
-                      </select>
+                      <div className="relative">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-violet-400 pointer-events-none" style={{ fontSize: '15px' }}>add_circle</span>
+                        <select value="-1"
+                          onChange={e => {
+                            const idx = Number(e.target.value);
+                            if (idx < 0) return;
+                            setNewAppt(p => p && ({ ...p, services: [...p.services, { serviceIdx: idx }] }));
+                          }}
+                          className="w-full appearance-none bg-white/[0.03] border border-dashed border-violet-500/25 rounded-xl pl-9 pr-8 py-2.5 text-[12px] text-violet-400 cursor-pointer focus:outline-none hover:border-violet-500/45 hover:bg-violet-500/[0.05] transition-all">
+                          <option value="-1" disabled className="bg-[#0d0d0d] text-[#7a766e]">Agregar otro servicio</option>
+                          {SERVICES.map((svc, i) => <option key={i} value={i} className="bg-[#0d0d0d] text-[#f5f0e8]">{svc.name} — {svc.dur * 30}min</option>)}
+                        </select>
+                        <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-violet-400/60 pointer-events-none" style={{ fontSize: '14px' }}>expand_more</span>
+                      </div>
                     </div>
                   </div>
 
                   {/* ── Resumen financiero ── */}
                   <div className="rounded-xl overflow-hidden border border-white/[0.08]">
-                    <div className="px-4 py-2.5 bg-white/[0.02] flex justify-between items-center border-b border-white/[0.05]">
-                      <div className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '11px' }}>receipt_long</span>
-                        <span className="text-[9px] text-[#7a766e] font-label uppercase tracking-widest font-bold">Subtotal</span>
+                    <div className="px-4 py-3 flex justify-between items-center border-b border-white/[0.05]" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '13px' }}>receipt_long</span>
+                        <span className="text-[10px] text-[#7a766e] font-label uppercase tracking-widest font-bold">Subtotal</span>
                       </div>
-                      <span className="text-[13px] font-bold text-[#f5f0e8] font-mono">${_totalAmt.toLocaleString('es-AR')}</span>
+                      <span className="text-[14px] font-bold text-[#f5f0e8] font-mono">${_totalAmt.toLocaleString('es-AR')}</span>
                     </div>
-                    <div className="px-4 py-3 flex justify-between items-center border-b border-violet-500/10" style={{ background: 'rgba(139,92,246,0.08)' }}>
-                      <div className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-violet-400" style={{ fontSize: '12px', fontVariationSettings: "'FILL' 1" }}>lock</span>
+                    <div className="px-4 py-3 flex justify-between items-center border-b border-violet-500/10" style={{ background: 'rgba(139,92,246,0.09)' }}>
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-violet-400" style={{ fontSize: '13px', fontVariationSettings: "'FILL' 1" }}>lock</span>
                         <div>
-                          <p className="text-[9px] text-violet-300 font-label uppercase tracking-widest font-bold leading-tight">Seña (15%)</p>
-                          <p className="text-[9px] text-[#7a766e] leading-tight">cobro al reservar</p>
+                          <p className="text-[10px] text-violet-300 font-label uppercase tracking-widest font-bold leading-tight">Seña — 15%</p>
+                          <p className="text-[9px] text-violet-400/60 leading-tight mt-0.5">cobro al reservar</p>
                         </div>
                       </div>
-                      <span className="text-[15px] font-bold text-violet-300 font-mono">${_sena.toLocaleString('es-AR')}</span>
+                      <span className="text-[17px] font-bold text-violet-300 font-mono">${_sena.toLocaleString('es-AR')}</span>
                     </div>
-                    <div className="px-4 py-2.5 bg-white/[0.02] flex justify-between items-center">
-                      <div className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '11px' }}>schedule</span>
-                        <span className="text-[9px] text-[#7a766e] font-label uppercase tracking-widest font-bold">Duración total</span>
+                    <div className="px-4 py-3 flex justify-between items-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '13px' }}>schedule</span>
+                        <span className="text-[10px] text-[#7a766e] font-label uppercase tracking-widest font-bold">Duración total</span>
                       </div>
-                      <span className="text-[12px] font-bold text-[#f5f0e8]">
+                      <span className="text-[13px] font-bold text-[#f5f0e8]">
                         {_totalDur >= 2 ? `${Math.floor(_totalDur / 2)}h${_totalDur % 2 ? ' 30m' : ''}` : '30min'}
                       </span>
                     </div>
@@ -830,15 +838,6 @@ function AgendaTabView() {
 
                 {/* Footer */}
                 <div className="p-4 border-t border-white/[0.06] flex flex-col gap-2 shrink-0">
-                  {_totalAmt > 0 && (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-violet-500/15" style={{ background: 'rgba(139,92,246,0.06)' }}>
-                      <span className="material-symbols-outlined text-violet-400" style={{ fontSize: '12px', fontVariationSettings: "'FILL' 1" }}>info</span>
-                      <p className="text-[10px] text-violet-300 leading-snug">
-                        Seña a cobrar: <span className="font-bold font-mono">${_sena.toLocaleString('es-AR')}</span>
-                        <span className="text-[#7a766e]"> de ${_totalAmt.toLocaleString('es-AR')} total</span>
-                      </p>
-                    </div>
-                  )}
                   <div className="flex gap-2">
                     <button onClick={() => setNewAppt(null)}
                       className="px-4 py-2.5 rounded-xl text-[12px] font-bold text-[#7a766e] hover:text-[#f5f0e8] hover:bg-white/[0.05] transition-all cursor-pointer border border-white/[0.06]">
@@ -863,9 +862,9 @@ function AgendaTabView() {
                         setNewAppt(null);
                       }}
                       disabled={!_clientOk}
-                      className="flex-1 py-2.5 bg-violet-500 hover:bg-violet-400 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] text-white font-bold rounded-xl text-[12px] transition-all shadow-[0_0_20px_rgba(139,92,246,0.35)] cursor-pointer flex items-center justify-center gap-2 min-h-[44px]">
-                      <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>check_circle</span>
-                      Agendar turno
+                      className="flex-1 py-3 bg-violet-500 hover:bg-violet-400 disabled:opacity-35 disabled:cursor-not-allowed active:scale-[0.98] text-white font-bold rounded-xl text-[13px] transition-all shadow-[0_0_24px_rgba(139,92,246,0.40)] cursor-pointer flex items-center justify-center gap-2 min-h-[44px]">
+                      <span className="material-symbols-outlined" style={{ fontSize: '16px', fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                      {_totalAmt > 0 ? `Agendar — $${_sena.toLocaleString('es-AR')} seña` : 'Agendar turno'}
                     </button>
                   </div>
                 </div>
