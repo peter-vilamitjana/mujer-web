@@ -47,6 +47,21 @@ function AgendaTabView() {
     { id: 7, pro: 1, slot: 8,  dur: 2, client: 'Florencia T.',   service: 'Keratina Nanoplastia', status: 'confirmado',     amount: 28000 },
     { id: 8, pro: 2, slot: 10, dur: 3, client: 'Victoria R.',    service: 'Color + Corte',        status: 'confirmado',     amount: 16000 },
   ];
+  const SERVICES = [
+    { name: 'Corte & Estilo',        dur: 2, price:  8500 },
+    { name: 'Tinte Raíz',            dur: 4, price: 12000 },
+    { name: 'Técnica Balayage',      dur: 8, price: 18500 },
+    { name: 'Mechas Balayage',       dur: 6, price: 22000 },
+    { name: 'Tratamiento Olaplex',   dur: 6, price: 14500 },
+    { name: 'Keratina Nanoplastia',  dur: 8, price: 28000 },
+    { name: 'Color + Corte',         dur: 6, price: 16000 },
+    { name: 'Manicura + Pedicura',   dur: 4, price:  9500 },
+    { name: 'Hidratación Capilar',   dur: 4, price: 11000 },
+  ];
+  type NewApptForm = {
+    slot: number; pro: number; client: string; phone: string;
+    serviceIdx: number; dur: number; amount: number; notes: string; status: ApptStatus;
+  };
   const STATUS_CFG: Record<ApptStatus, { bg: string; lbar: string; text: string; icon: string; label: string }> = {
     confirmado:      { bg: 'rgba(139,92,246,0.12)',  lbar: '#a78bfa', text: '#c4b5fd', icon: 'check_circle',  label: 'Confirmado' },
     pendiente:       { bg: 'rgba(251,191,36,0.11)',  lbar: '#fbbf24', text: '#fcd34d', icon: 'pending',       label: 'Pendiente'  },
@@ -60,6 +75,13 @@ function AgendaTabView() {
   const [payMethod,  setPayMethod]    = React.useState(0);
   const [calendarView, setCalendarView] = React.useState<'dia' | 'semana' | 'mes'>('dia');
   const [weekPro, setWeekPro]           = React.useState<number | 'all'>('all');
+  const [newAppt, setNewAppt]           = React.useState<NewApptForm | null>(null);
+
+  const openNewAppt = (slot = 0, pro = 0) => {
+    setNewAppt({ slot, pro, client: '', phone: '', serviceIdx: 0, dur: SERVICES[0].dur, amount: SERVICES[0].price, notes: '', status: 'confirmado' });
+    setSelectedId(null);
+    setCheckoutId(null);
+  };
   const [appts, setAppts]               = React.useState<Appt[]>(APPTS);
   const [draggedId, setDraggedId]       = React.useState<number | null>(null);
   const [dropTarget, setDropTarget]     = React.useState<{ slot: number; pro: number } | null>(null);
@@ -218,7 +240,7 @@ function AgendaTabView() {
               </button>
             ))}
           </div>
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-400 active:scale-95 text-white text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer shadow-[0_0_24px_rgba(139,92,246,0.28)]">
+          <button onClick={() => openNewAppt()} className="flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-400 active:scale-95 text-white text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer shadow-[0_0_24px_rgba(139,92,246,0.28)]">
             <Plus size={15} strokeWidth={2.5} />
             <span className="hidden sm:inline">Nuevo turno</span>
           </button>
@@ -281,7 +303,7 @@ function AgendaTabView() {
                         }}
                       >
                         {!isDragging && (
-                          <div className="w-full h-full rounded-lg border border-dashed border-transparent group-hover/add:border-violet-500/25 group-hover/add:bg-violet-500/[0.04] transition-all duration-200 flex items-center justify-center cursor-pointer">
+                          <div onClick={() => openNewAppt(slot, pro)} className="w-full h-full rounded-lg border border-dashed border-transparent group-hover/add:border-violet-500/25 group-hover/add:bg-violet-500/[0.04] transition-all duration-200 flex items-center justify-center cursor-pointer">
                             <span className="material-symbols-outlined text-violet-400/0 group-hover/add:text-violet-400/50 transition-all" style={{ fontSize: '13px' }}>add</span>
                           </div>
                         )}
@@ -545,7 +567,130 @@ function AgendaTabView() {
         {/* SIDE PANEL */}
         <div className="lg:col-span-4 xl:col-span-3 flex flex-col gap-4">
 
-          {checkoutAppt ? (
+          {newAppt ? (
+            /* ── NUEVO TURNO FORM ── */
+            <div className="relative isolate rounded-[1.5rem] border border-violet-500/20 flex flex-col bg-[#0d0d0d]/40 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+              <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06] shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <span className="material-symbols-outlined text-violet-400" style={{ fontSize: '19px' }}>add_circle</span>
+                  <h2 className="font-playfair text-xl font-bold italic text-[#f5f0e8]">Nuevo turno</h2>
+                </div>
+                <button onClick={() => setNewAppt(null)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/[0.06] text-[#7a766e] hover:text-[#f5f0e8] transition-colors cursor-pointer">
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4" style={{ overscrollBehavior: 'contain' }}>
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400 mb-2 font-label">Cliente</p>
+                  <input type="text" placeholder="Nombre del cliente..." value={newAppt.client}
+                    onChange={e => setNewAppt(p => p && ({ ...p, client: e.target.value }))}
+                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-[13px] text-[#f5f0e8] placeholder-[#7a766e] focus:outline-none focus:border-violet-500/40 transition-all" />
+                  <input type="text" placeholder="Teléfono (opcional)" value={newAppt.phone}
+                    onChange={e => setNewAppt(p => p && ({ ...p, phone: e.target.value }))}
+                    className="w-full mt-2 bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-[13px] text-[#f5f0e8] placeholder-[#7a766e] focus:outline-none focus:border-violet-500/40 transition-all" />
+                </div>
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400 mb-2 font-label">Profesional</p>
+                  <div className="flex gap-1.5">
+                    {PROS.map((pro, i) => (
+                      <button key={pro.name} onClick={() => setNewAppt(p => p && ({ ...p, pro: i }))}
+                        className="flex-1 flex flex-col items-center gap-1.5 py-2.5 rounded-xl border transition-all cursor-pointer"
+                        style={newAppt.pro === i
+                          ? { background: `${pro.color}15`, borderColor: `${pro.color}40`, color: pro.color }
+                          : { background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)', color: '#7a766e' }}>
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black" style={{ background: `${pro.color}20`, color: pro.color, border: `1px solid ${pro.color}30` }}>{pro.initials}</div>
+                        <span className="text-[9px] font-bold uppercase tracking-wide">{pro.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400 mb-2 font-label">Horario</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl">
+                      <p className="text-[9px] text-[#7a766e] mb-1">Inicio</p>
+                      <select value={newAppt.slot} onChange={e => setNewAppt(p => p && ({ ...p, slot: Number(e.target.value) }))}
+                        className="w-full bg-transparent text-[13px] font-bold text-[#f5f0e8] cursor-pointer focus:outline-none">
+                        {SLOTS.map((t, i) => <option key={i} value={i} className="bg-[#0d0d0d]">{t}</option>)}
+                      </select>
+                    </div>
+                    <div className="p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl">
+                      <p className="text-[9px] text-[#7a766e] mb-1">Fin estimado</p>
+                      <p className="text-[13px] font-bold text-[#7a766e]">{SLOTS[Math.min(newAppt.slot + newAppt.dur, SLOTS.length - 1)]}</p>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400 mb-2 font-label">Servicio</p>
+                  <select value={newAppt.serviceIdx}
+                    onChange={e => { const idx = Number(e.target.value); setNewAppt(p => p && ({ ...p, serviceIdx: idx, dur: SERVICES[idx].dur, amount: SERVICES[idx].price })); }}
+                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-[13px] text-[#f5f0e8] cursor-pointer focus:outline-none focus:border-violet-500/40 transition-all">
+                    {SERVICES.map((svc, i) => <option key={i} value={i} className="bg-[#0d0d0d]">{svc.name}</option>)}
+                  </select>
+                  <div className="flex gap-2 mt-2">
+                    <div className="flex-1 p-2.5 bg-white/[0.03] border border-white/[0.06] rounded-xl text-center">
+                      <p className="text-[9px] text-[#7a766e]">Duración</p>
+                      <p className="text-[12px] font-bold text-[#f5f0e8]">{newAppt.dur * 30} min</p>
+                    </div>
+                    <div className="flex-1 p-2.5 bg-white/[0.03] border border-white/[0.06] rounded-xl text-center">
+                      <p className="text-[9px] text-[#7a766e]">Precio</p>
+                      <p className="text-[12px] font-bold text-violet-300 font-mono">${newAppt.amount.toLocaleString('es-AR')}</p>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400 mb-2 font-label">Estado</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(['confirmado', 'pendiente'] as ApptStatus[]).map(s => {
+                      const cfg = STATUS_CFG[s];
+                      return (
+                        <button key={s} onClick={() => setNewAppt(p => p && ({ ...p, status: s }))}
+                          className="flex items-center gap-2 px-3 py-2 rounded-xl border transition-all cursor-pointer"
+                          style={newAppt.status === s
+                            ? { background: `${cfg.lbar}18`, borderColor: `${cfg.lbar}40`, color: cfg.text }
+                            : { background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)', color: '#7a766e' }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: '13px', fontVariationSettings: "'FILL' 1" }}>{cfg.icon}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wide">{cfg.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400 mb-2 font-label">Notas técnicas</p>
+                  <textarea placeholder="Fórmula, sensibilidades, preferencias..." value={newAppt.notes}
+                    onChange={e => setNewAppt(p => p && ({ ...p, notes: e.target.value }))}
+                    rows={2} className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-[13px] text-[#f5f0e8] placeholder-[#7a766e] focus:outline-none focus:border-violet-500/40 transition-all resize-none leading-relaxed" />
+                </div>
+              </div>
+              <div className="p-4 border-t border-white/[0.06] flex gap-2 shrink-0">
+                <button onClick={() => setNewAppt(null)}
+                  className="px-4 py-2.5 rounded-xl text-[12px] font-bold text-[#7a766e] hover:text-[#f5f0e8] hover:bg-white/[0.05] transition-all cursor-pointer border border-white/[0.06]">
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    if (!newAppt.client.trim()) return;
+                    const newId = Math.max(...appts.map(a => a.id)) + 1;
+                    setAppts(prev => [...prev, {
+                      id: newId, pro: newAppt.pro, slot: newAppt.slot, dur: newAppt.dur,
+                      client: newAppt.client, service: SERVICES[newAppt.serviceIdx].name,
+                      status: newAppt.status, amount: newAppt.amount,
+                      ...(newAppt.notes ? { notes: newAppt.notes } : {}),
+                    }]);
+                    setSelectedId(newId);
+                    setNewAppt(null);
+                  }}
+                  disabled={!newAppt.client.trim()}
+                  className="flex-1 py-2.5 bg-violet-500 hover:bg-violet-400 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] text-white font-bold rounded-xl text-[12px] transition-all shadow-[0_0_20px_rgba(139,92,246,0.35)] cursor-pointer flex items-center justify-center gap-2 min-h-[44px]">
+                  <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>check_circle</span>
+                  Agendar turno
+                </button>
+              </div>
+            </div>
+          ) : (<>
+            {checkoutAppt ? (
             <div className="relative isolate rounded-[1.5rem] border border-white/[0.08] p-5 flex flex-col bg-[#0d0d0d]/40 overflow-hidden">
               <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
               <div className="flex items-center justify-between mb-5">
@@ -709,6 +854,8 @@ function AgendaTabView() {
               ))}
             </div>
           </div>
+
+          </>)}
 
         </div>
       </div>
