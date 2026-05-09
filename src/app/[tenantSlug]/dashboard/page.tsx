@@ -59,6 +59,7 @@ function AgendaTabView() {
   const [dateOffset, setDateOffset]   = React.useState(0);
   const [payMethod,  setPayMethod]    = React.useState(0);
   const [calendarView, setCalendarView] = React.useState<'dia' | 'semana' | 'mes'>('dia');
+  const [weekPro, setWeekPro]           = React.useState<number | 'all'>('all');
   const [appts, setAppts]               = React.useState<Appt[]>(APPTS);
   const [draggedId, setDraggedId]       = React.useState<number | null>(null);
   const [dropTarget, setDropTarget]     = React.useState<{ slot: number; pro: number } | null>(null);
@@ -362,6 +363,27 @@ function AgendaTabView() {
 
           {/* ── WEEK VIEW ── */}
           {calendarView === 'semana' && (<>
+
+            {/* Pro filter */}
+            <div className="flex items-center gap-1 px-4 py-2.5 border-b border-white/[0.06] bg-[#0d0d0d]/60 backdrop-blur-xl shrink-0 overflow-x-auto">
+              <button
+                onClick={() => setWeekPro('all')}
+                className={`shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer ${weekPro === 'all' ? 'bg-violet-500/20 text-violet-300 border border-violet-500/25' : 'text-[#7a766e] hover:text-[#f5f0e8] hover:bg-white/[0.05] border border-transparent'}`}
+              >Todos</button>
+              {PROS.map((pro, i) => (
+                <button
+                  key={pro.name}
+                  onClick={() => setWeekPro(i)}
+                  className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer border ${weekPro === i ? 'border-current' : 'border-transparent text-[#7a766e] hover:text-[#f5f0e8] hover:bg-white/[0.05]'}`}
+                  style={weekPro === i ? { background: `${pro.color}15`, color: pro.color, borderColor: `${pro.color}40` } : {}}
+                >
+                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: pro.color }} />
+                  {pro.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Day header */}
             <div className="sticky top-0 z-20 grid border-b border-white/[0.07] bg-[#0d0d0d]/70 backdrop-blur-xl shrink-0" style={{ gridTemplateColumns: '56px repeat(7, 1fr)' }}>
               <div className="p-3 flex items-center justify-center border-r border-white/[0.05]">
                 <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '17px' }}>schedule</span>
@@ -380,8 +402,12 @@ function AgendaTabView() {
                 );
               })}
             </div>
+
+            {/* Body */}
             <div className="flex-1 overflow-y-auto" style={{ overscrollBehavior: 'contain' }}>
               <div className="relative" style={{ display: 'grid', gridTemplateColumns: '56px repeat(7, 1fr)', gridTemplateRows: `repeat(${SLOTS.length}, ${SLOT_H}px)`, height: totalH }}>
+
+                {/* Shared: row dividers + time labels */}
                 {SLOTS.map((_, i) => (
                   <div key={`rl-${i}`} className="pointer-events-none border-b border-white/[0.035]" style={{ gridColumn: '1 / -1', gridRow: i + 1 }} />
                 ))}
@@ -390,26 +416,76 @@ function AgendaTabView() {
                     <span className="text-[10px] font-mono font-bold text-[#7a766e] tabular-nums">{time}</span>
                   </div>
                 ))}
+
+                {/* Today column highlight */}
                 {todayColIdx >= 0 && (
                   <div className="pointer-events-none bg-violet-500/[0.03]" style={{ gridColumn: todayColIdx + 2, gridRow: `1 / ${SLOTS.length + 1}` }} />
                 )}
-                {todayColIdx >= 0 && appts.map(appt => {
-                  const cfg = STATUS_CFG[appt.status];
-                  return (
-                    <div key={appt.id} className="p-[3px]" style={{ gridColumn: todayColIdx + 2, gridRow: `${appt.slot + 1} / span ${appt.dur}` }}>
-                      <div
-                        onClick={() => { setSelectedId(appt.id); setCheckoutId(null); setCalendarView('dia'); setDateOffset(0); }}
-                        className="h-full rounded-md overflow-hidden cursor-pointer hover:brightness-110 transition-all"
-                        style={{ background: cfg.bg, borderLeft: `3px solid ${cfg.lbar}` }}
-                      >
-                        <div className="p-1.5 flex flex-col gap-0.5 h-full min-h-0">
-                          <span className="text-[10px] font-bold leading-tight truncate" style={{ color: cfg.text }}>{appt.client}</span>
-                          {appt.dur >= 2 && <span className="text-[9px] text-[#7a766e] truncate">{appt.service}</span>}
+
+                {weekPro !== 'all' ? (
+                  /* ── SINGLE PRO: full cards ── */
+                  todayColIdx >= 0 && appts.filter(a => a.pro === weekPro).map(appt => {
+                    const cfg = STATUS_CFG[appt.status];
+                    const isSel = selectedId === appt.id;
+                    return (
+                      <div key={appt.id} className="p-[3px]" style={{ gridColumn: todayColIdx + 2, gridRow: `${appt.slot + 1} / span ${appt.dur}` }}>
+                        <div
+                          onClick={() => { setSelectedId(appt.id); setCheckoutId(null); setCalendarView('dia'); setDateOffset(0); }}
+                          className={`h-full rounded-md overflow-hidden flex flex-col cursor-pointer transition-all duration-200 ${isSel ? 'shadow-[0_0_18px_rgba(139,92,246,0.18)]' : 'hover:brightness-110'}`}
+                          style={{ background: cfg.bg, borderLeft: `3px solid ${cfg.lbar}`, outline: isSel ? `1px solid ${cfg.lbar}55` : 'none' }}
+                        >
+                          <div className="p-2 flex flex-col gap-0.5 h-full min-h-0">
+                            <div className="flex items-start justify-between gap-1">
+                              <span className="text-[11px] font-bold leading-tight truncate" style={{ color: cfg.text }}>{appt.client}</span>
+                              <span className="material-symbols-outlined shrink-0" style={{ fontSize: '11px', color: cfg.text, fontVariationSettings: "'FILL' 1" }}>{cfg.icon}</span>
+                            </div>
+                            <p className="text-[9px] uppercase tracking-wider text-[#7a766e] truncate leading-tight">{appt.service}</p>
+                            {appt.dur >= 2 && (
+                              <p className="text-[10px] font-bold font-mono" style={{ color: cfg.text }}>${appt.amount.toLocaleString('es-AR')}</p>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    );
+                  })
+                ) : (
+                  /* ── TODOS: mapa de calor (bloques sin texto) ── */
+                  todayColIdx >= 0 && SLOTS.map((_, slotIdx) => {
+                    const slotAppts = appts.filter(a => a.slot <= slotIdx && slotIdx < a.slot + a.dur);
+                    if (slotAppts.length === 0) return null;
+                    return (
+                      <div
+                        key={`macro-${slotIdx}`}
+                        className="flex flex-col gap-[2px] px-[3px] py-[3px] cursor-pointer"
+                        style={{ gridColumn: todayColIdx + 2, gridRow: slotIdx + 1 }}
+                        onClick={() => { setDateOffset(0); setCalendarView('dia'); }}
+                      >
+                        {slotAppts.map(a => (
+                          <div
+                            key={a.id}
+                            className="flex-1 rounded-sm min-h-[4px]"
+                            style={{ background: PROS[a.pro].color, opacity: 0.75 }}
+                          />
+                        ))}
+                      </div>
+                    );
+                  })
+                )}
+
+                {/* Click-to-day on other columns (macro mode) */}
+                {weekPro === 'all' && weekDays.map(({ offset: ofs }, idx) => {
+                  if (idx === todayColIdx) return null;
+                  return (
+                    <div
+                      key={`click-col-${idx}`}
+                      className="cursor-pointer hover:bg-white/[0.02] transition-colors"
+                      style={{ gridColumn: idx + 2, gridRow: `1 / ${SLOTS.length + 1}` }}
+                      onClick={() => { setDateOffset(ofs); setCalendarView('dia'); }}
+                    />
                   );
                 })}
+
+                {/* Current time line */}
                 {todayColIdx >= 0 && nowPx > 0 && nowPx < totalH && (
                   <div className="pointer-events-none absolute left-0 right-0 z-30 flex items-center" style={{ top: nowPx }}>
                     <div className="w-2 h-2 rounded-full bg-rose-400 ml-[48px] shrink-0 shadow-[0_0_6px_rgba(251,113,133,0.9)]" />
