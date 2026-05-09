@@ -32,7 +32,7 @@ function AgendaTabView() {
     id: number; pro: number; slot: number; dur: number;
     client: string; service: string; status: ApptStatus;
     amount: number; allergy?: string; notes?: string;
-    history?: Array<{ date: string; service: string; amount: number }>;
+    history?: Array<{ date: string; service: string; amount: number; notes?: string }>;
   };
   const APPTS: Appt[] = [
     { id: 1, pro: 0, slot: 0,  dur: 4, client: 'Marcos Soler',   service: 'Técnica Balayage',     status: 'confirmado',     amount: 18500, allergy: 'Parafenilendiamina', notes: 'Fórmula: 9.1 + 8.2 (1:1.5) 20vol. Alta sensibilidad coronilla. Tonos fríos. Sin calor.',
@@ -584,9 +584,9 @@ function AgendaTabView() {
             const _totalDur = _svcs.reduce((s, sv) => s + sv.dur, 0);
             const _totalAmt = _svcs.reduce((s, sv) => s + sv.price, 0);
             const _sena = Math.round(_totalAmt * 0.15);
-            const _filtered = newAppt.clientSearch.length >= 1
+            const _filtered = newAppt.clientSearch.trim().length >= 1
               ? CLIENTS_DB.filter(c => c.name.toLowerCase().includes(newAppt.clientSearch.toLowerCase()))
-              : CLIENTS_DB;
+              : [];
             const _clientOk = newAppt.clientMode === 'search'
               ? (!!newAppt.clientId || newAppt.clientSearch.trim().length > 0)
               : newAppt.client.trim().length > 0;
@@ -614,15 +614,18 @@ function AgendaTabView() {
                 {/* Scrollable body */}
                 <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5" style={{ overscrollBehavior: 'contain' }}>
 
-                  {/* ── Cliente ── */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2.5">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400 font-label">Cliente</p>
-                      <div className="flex gap-0.5 p-0.5 bg-white/[0.04] rounded-lg border border-white/[0.06]">
+                  {/* ── 1. Cliente ── */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-md bg-violet-500/15 text-violet-400 flex items-center justify-center text-[11px] font-bold border border-violet-500/20">1</div>
+                        <h3 className="text-[13px] font-bold text-[#f5f0e8]">Cliente</h3>
+                      </div>
+                      <div className="flex gap-0.5 p-0.5 bg-white/[0.03] rounded-lg border border-white/[0.05]">
                         {(['search', 'new'] as const).map(mode => (
                           <button key={mode}
                             onClick={() => setNewAppt(p => p && ({ ...p, clientMode: mode, clientSearch: '', clientId: null }))}
-                            className="px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wide transition-all cursor-pointer"
+                            className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer"
                             style={newAppt.clientMode === mode
                               ? { background: 'rgba(139,92,246,0.22)', color: '#c4b5fd' }
                               : { color: '#7a766e' }}>
@@ -634,204 +637,233 @@ function AgendaTabView() {
 
                     {newAppt.clientMode === 'search' ? (
                       <div className="flex flex-col gap-2">
-                        <div className="relative">
-                          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#7a766e] pointer-events-none" style={{ fontSize: '15px' }}>search</span>
+                        <div className="relative group">
+                          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#7a766e] group-focus-within:text-violet-400 transition-colors pointer-events-none" style={{ fontSize: '16px' }}>search</span>
                           <input type="text" placeholder="Buscar por nombre..." value={newAppt.clientSearch}
                             onChange={e => setNewAppt(p => p && ({ ...p, clientSearch: e.target.value, clientId: null }))}
-                            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl pl-9 pr-3.5 py-2.5 text-[13px] text-[#f5f0e8] placeholder-[#7a766e] focus:outline-none focus:border-violet-500/40 transition-all" />
+                            className="w-full bg-white/[0.02] border border-white/[0.08] hover:border-white/[0.12] rounded-xl pl-10 pr-3.5 py-2.5 text-[13px] text-[#f5f0e8] placeholder-[#7a766e] focus:outline-none focus:border-violet-500/40 focus:bg-white/[0.04] transition-all" />
                         </div>
-                        <div className="flex flex-col gap-1 max-h-[156px] overflow-y-auto rounded-xl" style={{ overscrollBehavior: 'contain' }}>
-                          {_filtered.slice(0, 5).map(c => (
-                            <button key={c.id}
-                              onClick={() => setNewAppt(p => p && ({ ...p, clientId: c.id, clientSearch: c.name }))}
-                              className="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all cursor-pointer text-left w-full border"
-                              style={newAppt.clientId === c.id
-                                ? { background: 'rgba(139,92,246,0.12)', borderColor: 'rgba(139,92,246,0.30)' }
-                                : { background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.05)' }}>
-                              <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0"
-                                style={{ background: 'rgba(139,92,246,0.15)', color: '#a78bfa' }}>
-                                {c.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                        {newAppt.clientSearch.trim().length > 0 && (
+                          <div className="flex flex-col gap-1 max-h-[140px] overflow-y-auto rounded-xl" style={{ overscrollBehavior: 'contain' }}>
+                            {_filtered.slice(0, 4).map(c => (
+                              <button key={c.id}
+                                onClick={() => setNewAppt(p => p && ({ ...p, clientId: c.id, clientSearch: c.name }))}
+                                className="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-all cursor-pointer text-left w-full border"
+                                style={newAppt.clientId === c.id
+                                  ? { background: 'rgba(139,92,246,0.12)', borderColor: 'rgba(139,92,246,0.30)' }
+                                  : { background: 'rgba(255,255,255,0.01)', borderColor: 'rgba(255,255,255,0.03)' }}>
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0"
+                                  style={{ background: 'rgba(139,92,246,0.15)', color: '#a78bfa' }}>
+                                  {c.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[12px] font-semibold text-[#f5f0e8] truncate">{c.name}</p>
+                                  <p className="text-[10px] text-[#7a766e]">{c.visits} visitas · {c.phone}</p>
+                                </div>
+                                {newAppt.clientId === c.id && (
+                                  <span className="material-symbols-outlined text-violet-400 shrink-0" style={{ fontSize: '16px', fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                                )}
+                              </button>
+                            ))}
+                            {_filtered.length === 0 && (
+                              <div className="flex flex-col items-center gap-2 py-4 border border-dashed border-white/[0.08] rounded-xl bg-white/[0.01]">
+                                <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '20px' }}>person_search</span>
+                                <p className="text-[11px] text-[#7a766e] text-center">Sin resultados ·{' '}
+                                  <span className="text-violet-400 cursor-pointer font-semibold hover:text-violet-300 transition-colors"
+                                    onClick={() => setNewAppt(p => p && ({ ...p, clientMode: 'new', client: newAppt.clientSearch }))}>
+                                    Crear nuevo
+                                  </span>
+                                </p>
                               </div>
-                              <div className="flex-1 min-w-0 text-left">
-                                <p className="text-[12px] font-semibold text-[#f5f0e8] truncate">{c.name}</p>
-                                <p className="text-[10px] text-[#7a766e]">{c.visits} visitas · {c.phone}</p>
-                              </div>
-                              {newAppt.clientId === c.id && (
-                                <span className="material-symbols-outlined text-violet-400 shrink-0" style={{ fontSize: '16px', fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                              )}
-                            </button>
-                          ))}
-                          {_filtered.length === 0 && (
-                            <div className="flex flex-col items-center gap-1.5 py-4">
-                              <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '24px' }}>person_search</span>
-                              <p className="text-[11px] text-[#7a766e] text-center">Sin resultados ·{' '}
-                                <span className="text-violet-400 cursor-pointer underline decoration-dotted"
-                                  onClick={() => setNewAppt(p => p && ({ ...p, clientMode: 'new', client: newAppt.clientSearch }))}>
-                                  Crear cliente nuevo
-                                </span>
-                              </p>
-                            </div>
-                          )}
-                        </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div className="flex flex-col gap-2">
-                        <input type="text" placeholder="Nombre completo *" value={newAppt.client}
-                          onChange={e => setNewAppt(p => p && ({ ...p, client: e.target.value }))}
-                          autoFocus
-                          className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-[13px] text-[#f5f0e8] placeholder-[#7a766e] focus:outline-none focus:border-violet-500/40 transition-all" />
-                        <div className="relative">
-                          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#7a766e] pointer-events-none" style={{ fontSize: '14px' }}>smartphone</span>
+                        <div className="relative group">
+                          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#7a766e] group-focus-within:text-violet-400 transition-colors pointer-events-none" style={{ fontSize: '16px' }}>person</span>
+                          <input type="text" placeholder="Nombre completo *" value={newAppt.client}
+                            onChange={e => setNewAppt(p => p && ({ ...p, client: e.target.value }))}
+                            autoFocus
+                            className="w-full bg-white/[0.02] border border-white/[0.08] hover:border-white/[0.12] rounded-xl pl-10 pr-3.5 py-2.5 text-[13px] text-[#f5f0e8] placeholder-[#7a766e] focus:outline-none focus:border-violet-500/40 focus:bg-white/[0.04] transition-all" />
+                        </div>
+                        <div className="relative group">
+                          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#7a766e] group-focus-within:text-violet-400 transition-colors pointer-events-none" style={{ fontSize: '16px' }}>smartphone</span>
                           <input type="tel" placeholder="WhatsApp / Teléfono" value={newAppt.phone}
                             onChange={e => setNewAppt(p => p && ({ ...p, phone: e.target.value }))}
-                            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl pl-9 pr-3.5 py-2.5 text-[13px] text-[#f5f0e8] placeholder-[#7a766e] focus:outline-none focus:border-violet-500/40 transition-all" />
+                            className="w-full bg-white/[0.02] border border-white/[0.08] hover:border-white/[0.12] rounded-xl pl-10 pr-3.5 py-2.5 text-[13px] text-[#f5f0e8] placeholder-[#7a766e] focus:outline-none focus:border-violet-500/40 focus:bg-white/[0.04] transition-all" />
                         </div>
                       </div>
                     )}
                   </div>
 
-                  {/* ── Profesional ── */}
-                  <div>
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400 mb-2.5 font-label">Profesional</p>
-                    <div className="flex gap-1.5">
-                      {PROS.map((pro, i) => (
-                        <button key={pro.name} onClick={() => setNewAppt(p => p && ({ ...p, pro: i }))}
-                          className="flex-1 flex flex-col items-center gap-1.5 py-2.5 rounded-xl border transition-all cursor-pointer"
-                          style={newAppt.pro === i
-                            ? { background: `${pro.color}15`, borderColor: `${pro.color}40`, color: pro.color }
-                            : { background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)', color: '#7a766e' }}>
-                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black"
-                            style={{ background: `${pro.color}20`, color: pro.color, border: `1px solid ${pro.color}30` }}>{pro.initials}</div>
-                          <span className="text-[9px] font-bold uppercase tracking-wide">{pro.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* ── Horario ── */}
-                  <div>
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400 mb-2.5 font-label">Horario</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl">
-                        <p className="text-[9px] text-[#7a766e] mb-1.5">Inicio</p>
-                        <div className="relative">
-                          <select value={newAppt.slot} onChange={e => setNewAppt(p => p && ({ ...p, slot: Number(e.target.value) }))}
-                            className="w-full appearance-none bg-transparent text-[13px] font-bold text-[#f5f0e8] cursor-pointer focus:outline-none pr-5">
-                            {SLOTS.map((t, i) => <option key={i} value={i} className="bg-[#0d0d0d]">{t}</option>)}
-                          </select>
-                          <span className="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 text-[#7a766e] pointer-events-none" style={{ fontSize: '14px' }}>expand_more</span>
-                        </div>
+                  {/* ── 2. Servicios ── */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-md bg-violet-500/15 text-violet-400 flex items-center justify-center text-[11px] font-bold border border-violet-500/20">2</div>
+                        <h3 className="text-[13px] font-bold text-[#f5f0e8]">Servicios</h3>
                       </div>
-                      <div className="p-3 bg-white/[0.03] border border-white/[0.06] rounded-xl">
-                        <p className="text-[9px] text-[#7a766e] mb-1.5">Fin estimado</p>
-                        <p className="text-[13px] font-bold text-[#f5f0e8]">{SLOTS[Math.min(newAppt.slot + _totalDur, SLOTS.length - 1)]}</p>
-                        {_totalDur > 0 && <p className="text-[9px] text-[#7a766e] mt-0.5">{_totalDur >= 2 ? `${Math.floor(_totalDur / 2)}h${_totalDur % 2 ? ' 30m' : ''}` : '30min'}</p>}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ── Servicios ── */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2.5">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400 font-label">Servicios</p>
-                      <span className="text-[9px] text-[#7a766e]">{newAppt.services.length} seleccionado{newAppt.services.length !== 1 ? 's' : ''}</span>
+                      <span className="text-[10px] font-bold text-[#7a766e] bg-white/[0.04] px-2 py-0.5 rounded-md">{newAppt.services.length} sel.</span>
                     </div>
                     <div className="flex flex-col gap-1.5">
                       {newAppt.services.map((sl, idx) => {
                         const svc = SERVICES[sl.serviceIdx];
                         return (
-                          <div key={idx} className="flex items-center gap-2.5 p-2.5 bg-white/[0.04] border border-white/[0.07] rounded-xl group/svc transition-all hover:border-white/[0.12]">
-                            <div className="w-7 h-7 rounded-lg bg-violet-500/10 border border-violet-500/15 flex items-center justify-center shrink-0">
-                              <span className="material-symbols-outlined text-violet-400" style={{ fontSize: '13px', fontVariationSettings: "'FILL' 1" }}>spa</span>
+                          <div key={idx} className="flex items-center gap-2.5 p-2 bg-white/[0.02] border border-white/[0.06] rounded-xl group/svc hover:border-violet-500/20 hover:bg-violet-500/[0.02] transition-all">
+                            <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/15 flex items-center justify-center shrink-0">
+                              <span className="material-symbols-outlined text-violet-400" style={{ fontSize: '15px', fontVariationSettings: "'FILL' 1" }}>spa</span>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[12px] font-semibold text-[#f5f0e8] leading-tight truncate">{svc.name}</p>
+                              <p className="text-[12px] font-bold text-[#f5f0e8] leading-tight truncate">{svc.name}</p>
                               <p className="text-[10px] text-[#7a766e] mt-0.5">{svc.dur * 30} min · <span className="text-violet-300 font-mono font-bold">${svc.price.toLocaleString('es-AR')}</span></p>
                             </div>
                             {newAppt.services.length > 1 && (
                               <button
                                 onClick={() => setNewAppt(p => p && ({ ...p, services: p.services.filter((_, i) => i !== idx) }))}
-                                className="w-7 h-7 rounded-lg flex items-center justify-center text-[#7a766e] hover:text-rose-400 hover:bg-rose-500/10 active:bg-rose-500/20 transition-all cursor-pointer shrink-0">
-                                <span className="material-symbols-outlined" style={{ fontSize: '15px' }}>close</span>
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#7a766e] hover:text-rose-400 hover:bg-rose-500/10 active:bg-rose-500/20 transition-all cursor-pointer shrink-0">
+                                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
                               </button>
                             )}
                           </div>
                         );
                       })}
-                      {/* Add service selector */}
-                      <div className="relative">
-                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-violet-400 pointer-events-none" style={{ fontSize: '15px' }}>add_circle</span>
+                      <div className="relative group mt-1">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-violet-400/60 group-hover:text-violet-400 transition-colors pointer-events-none" style={{ fontSize: '16px' }}>add_circle</span>
                         <select value="-1"
                           onChange={e => {
                             const idx = Number(e.target.value);
                             if (idx < 0) return;
                             setNewAppt(p => p && ({ ...p, services: [...p.services, { serviceIdx: idx }] }));
                           }}
-                          className="w-full appearance-none bg-white/[0.03] border border-dashed border-violet-500/25 rounded-xl pl-9 pr-8 py-2.5 text-[12px] text-violet-400 cursor-pointer focus:outline-none hover:border-violet-500/45 hover:bg-violet-500/[0.05] transition-all">
-                          <option value="-1" disabled className="bg-[#0d0d0d] text-[#7a766e]">Agregar otro servicio</option>
+                          className="w-full appearance-none bg-transparent border border-dashed border-white/[0.15] hover:border-violet-500/40 hover:bg-violet-500/[0.03] rounded-xl pl-10 pr-8 py-2.5 text-[12px] font-medium text-[#7a766e] hover:text-violet-300 cursor-pointer focus:outline-none transition-all">
+                          <option value="-1" disabled className="bg-[#0d0d0d] text-[#7a766e]">Añadir otro servicio...</option>
                           {SERVICES.map((svc, i) => <option key={i} value={i} className="bg-[#0d0d0d] text-[#f5f0e8]">{svc.name} — {svc.dur * 30}min</option>)}
                         </select>
-                        <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-violet-400/60 pointer-events-none" style={{ fontSize: '14px' }}>expand_more</span>
+                        <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#7a766e] group-hover:text-violet-400/60 transition-colors pointer-events-none" style={{ fontSize: '16px' }}>expand_more</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* ── Resumen financiero ── */}
-                  <div className="rounded-xl overflow-hidden border border-white/[0.08]">
-                    <div className="px-4 py-3 flex justify-between items-center border-b border-white/[0.05]" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '13px' }}>receipt_long</span>
-                        <span className="text-[10px] text-[#7a766e] font-label uppercase tracking-widest font-bold">Subtotal</span>
-                      </div>
-                      <span className="text-[14px] font-bold text-[#f5f0e8] font-mono">${_totalAmt.toLocaleString('es-AR')}</span>
+                  {/* ── 3. Agendamiento ── */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-md bg-violet-500/15 text-violet-400 flex items-center justify-center text-[11px] font-bold border border-violet-500/20">3</div>
+                      <h3 className="text-[13px] font-bold text-[#f5f0e8]">Agendamiento</h3>
                     </div>
-                    <div className="px-4 py-3 flex justify-between items-center border-b border-violet-500/10" style={{ background: 'rgba(139,92,246,0.09)' }}>
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-violet-400" style={{ fontSize: '13px', fontVariationSettings: "'FILL' 1" }}>lock</span>
-                        <div>
-                          <p className="text-[10px] text-violet-300 font-label uppercase tracking-widest font-bold leading-tight">Seña — 15%</p>
-                          <p className="text-[9px] text-violet-400/60 leading-tight mt-0.5">cobro al reservar</p>
+                    <div className="p-3.5 bg-white/[0.02] border border-white/[0.05] rounded-2xl flex flex-col gap-4">
+                      {/* Pro Selector */}
+                      <div>
+                        <p className="text-[9px] uppercase tracking-widest text-[#7a766e] font-bold mb-3 ml-1">Profesional</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {PROS.map((pro, i) => (
+                            <button key={pro.name} onClick={() => setNewAppt(p => p && ({ ...p, pro: i }))}
+                              className="relative flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border transition-all cursor-pointer overflow-hidden group"
+                              style={newAppt.pro === i
+                                ? { background: `${pro.color}10`, borderColor: `${pro.color}30` }
+                                : { background: 'rgba(255,255,255,0.01)', borderColor: 'rgba(255,255,255,0.04)' }}>
+                              
+                              {/* Background Glow */}
+                              {newAppt.pro === i && (
+                                <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ background: `radial-gradient(circle at center, ${pro.color} 0%, transparent 70%)` }} />
+                              )}
+
+                              <div className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-black shrink-0 transition-all z-10"
+                                style={newAppt.pro === i 
+                                  ? { background: `${pro.color}`, color: '#fff', boxShadow: `0 0 15px ${pro.color}40` } 
+                                  : { background: 'rgba(255,255,255,0.05)', color: '#7a766e' }}>
+                                {pro.initials}
+                              </div>
+                              <span className="text-[11px] font-bold tracking-wide z-10 transition-colors"
+                                style={newAppt.pro === i ? { color: pro.color } : { color: '#7a766e' }}>
+                                {pro.name}
+                              </span>
+                            </button>
+                          ))}
                         </div>
                       </div>
-                      <span className="text-[17px] font-bold text-violet-300 font-mono">${_sena.toLocaleString('es-AR')}</span>
-                    </div>
-                    <div className="px-4 py-3 flex justify-between items-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '13px' }}>schedule</span>
-                        <span className="text-[10px] text-[#7a766e] font-label uppercase tracking-widest font-bold">Duración total</span>
+
+                      <div className="w-full h-px bg-white/[0.04] my-2" />
+
+                      {/* Time Selector */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2 px-1">
+                          <p className="text-[9px] uppercase tracking-widest text-[#7a766e] font-bold">Horario</p>
+                        </div>
+                        <div className="flex items-center p-1 bg-white/[0.02] border border-white/[0.05] rounded-2xl shadow-sm">
+                          {/* Inicio (Clickable) */}
+                          <div className="flex-1 relative group/select">
+                            <div className="w-full py-2.5 px-3 bg-[#0d0d0d] shadow-sm rounded-xl flex items-center justify-center gap-1.5 transition-all border border-white/[0.04]">
+                              <span className="text-[14px] font-bold text-[#f5f0e8] tracking-wider">{SLOTS[newAppt.slot]}</span>
+                              <span className="material-symbols-outlined text-[#7a766e] group-hover/select:text-violet-400 transition-colors" style={{ fontSize: '18px' }}>expand_more</span>
+                            </div>
+                            <select value={newAppt.slot} onChange={e => setNewAppt(p => p && ({ ...p, slot: Number(e.target.value) }))}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer appearance-none">
+                              {SLOTS.map((t, i) => <option key={i} value={i} className="bg-[#0d0d0d]">{t}</option>)}
+                            </select>
+                          </div>
+
+                          {/* Divider */}
+                          <div className="px-2 flex flex-col items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-[#7a766e]/40" style={{ fontSize: '18px' }}>arrow_right_alt</span>
+                          </div>
+
+                          {/* Fin Estimado (Static) */}
+                          <div className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3">
+                            <span className="text-[14px] font-medium text-[#7a766e] tracking-wider">{SLOTS[Math.min(newAppt.slot + _totalDur, SLOTS.length - 1)]}</span>
+                            <div className="px-1.5 py-0.5 bg-white/[0.03] border border-white/[0.05] rounded-md shrink-0">
+                              <span className="text-[9px] font-bold text-[#7a766e] uppercase tracking-widest">
+                                {_totalDur >= 2 ? `${Math.floor(_totalDur / 2)}h${_totalDur % 2 ? ' 30m' : ''}` : '30m'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <span className="text-[13px] font-bold text-[#f5f0e8]">
-                        {_totalDur >= 2 ? `${Math.floor(_totalDur / 2)}h${_totalDur % 2 ? ' 30m' : ''}` : '30min'}
-                      </span>
                     </div>
                   </div>
 
-                  {/* ── Estado ── */}
-                  <div>
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400 mb-2.5 font-label">Estado del turno</p>
+                  {/* ── 4. Detalles adicionales ── */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-5 h-5 rounded-md bg-white/[0.05] text-[#7a766e] flex items-center justify-center text-[11px] font-bold border border-white/[0.08]">4</div>
+                      <h3 className="text-[13px] font-bold text-[#f5f0e8]">Opcionales</h3>
+                    </div>
                     <div className="grid grid-cols-2 gap-2">
                       {(['confirmado', 'pendiente'] as ApptStatus[]).map(s => {
                         const cfg = STATUS_CFG[s];
                         return (
                           <button key={s} onClick={() => setNewAppt(p => p && ({ ...p, status: s }))}
-                            className="flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all cursor-pointer"
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl border transition-all cursor-pointer"
                             style={newAppt.status === s
                               ? { background: `${cfg.lbar}18`, borderColor: `${cfg.lbar}40`, color: cfg.text }
-                              : { background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)', color: '#7a766e' }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: '13px', fontVariationSettings: "'FILL' 1" }}>{cfg.icon}</span>
+                              : { background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.04)', color: '#7a766e' }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '15px', fontVariationSettings: "'FILL' 1" }}>{cfg.icon}</span>
                             <span className="text-[10px] font-bold uppercase tracking-wide">{cfg.label}</span>
                           </button>
                         );
                       })}
                     </div>
-                  </div>
-
-                  {/* ── Notas ── */}
-                  <div>
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-violet-400 mb-2.5 font-label">Notas técnicas</p>
                     <textarea placeholder="Fórmula, sensibilidades, preferencias..." value={newAppt.notes}
                       onChange={e => setNewAppt(p => p && ({ ...p, notes: e.target.value }))}
-                      rows={2} className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-[13px] text-[#f5f0e8] placeholder-[#7a766e] focus:outline-none focus:border-violet-500/40 transition-all resize-none leading-relaxed" />
+                      rows={2} className="w-full bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] rounded-xl p-3 text-[12px] text-[#f5f0e8] placeholder-[#7a766e] focus:outline-none focus:border-violet-500/40 focus:bg-white/[0.04] transition-all resize-none leading-relaxed min-h-[60px]" />
+                  </div>
+
+                  {/* ── Resumen financiero ── */}
+                  <div className="mt-2 rounded-2xl overflow-hidden border border-white/[0.06] bg-gradient-to-b from-white/[0.03] to-transparent">
+                    <div className="px-4 py-3.5 flex flex-col gap-2.5">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[11px] text-[#7a766e] font-bold uppercase tracking-wide">Subtotal servicios</span>
+                        <span className="text-[14px] font-bold text-[#f5f0e8] font-mono">${_totalAmt.toLocaleString('es-AR')}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-violet-400" style={{ fontSize: '14px', fontVariationSettings: "'FILL' 1" }}>lock</span>
+                          <span className="text-[11px] text-violet-400 font-bold uppercase tracking-wide">Seña requerida (15%)</span>
+                        </div>
+                        <span className="text-[14px] font-bold text-violet-300 font-mono">${_sena.toLocaleString('es-AR')}</span>
+                      </div>
+                    </div>
                   </div>
 
                 </div>
@@ -922,58 +954,136 @@ function AgendaTabView() {
                 <span className="material-symbols-outlined text-violet-400" style={{ fontSize: '19px' }}>folder_shared</span>
                 <h2 className="font-playfair text-xl font-bold italic text-[#f5f0e8]">Expediente</h2>
               </div>
-              <div className="flex items-center gap-3 p-3.5 bg-white/[0.03] rounded-xl border border-white/[0.05] mb-3">
-                <div className="w-11 h-11 rounded-full flex items-center justify-center text-[12px] font-black shrink-0" style={{ background: `${STATUS_CFG[selectedAppt.status].lbar}1a`, color: STATUS_CFG[selectedAppt.status].lbar, border: `1.5px solid ${STATUS_CFG[selectedAppt.status].lbar}40` }}>
-                  {selectedAppt.client.split(' ').map(w => w[0]).join('').slice(0,2)}
+              {/* Header: Centered, Avatar focused */}
+              <div className="flex flex-col items-center justify-center text-center mt-2 mb-6">
+                <div className="relative mb-3 group">
+                  {/* Subtle Glow Behind Avatar */}
+                  <div className="absolute inset-0 bg-violet-500/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  
+                  <div className="relative w-16 h-16 rounded-full flex items-center justify-center text-[18px] font-black tracking-tighter shadow-lg" 
+                       style={{ background: `${STATUS_CFG[selectedAppt.status].lbar}1a`, color: STATUS_CFG[selectedAppt.status].lbar, border: `2px solid ${STATUS_CFG[selectedAppt.status].lbar}40` }}>
+                    {selectedAppt.client.split(' ').map(w => w[0]).join('').slice(0,2)}
+                    
+                    {/* Status Badge */}
+                    <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full border-[2px] border-[#0d0d0d] flex items-center justify-center shadow-sm" 
+                         style={{ background: STATUS_CFG[selectedAppt.status].lbar }}>
+                      <span className="material-symbols-outlined text-[13px] text-[#0a0a0a]" style={{ fontVariationSettings: "'FILL' 1" }}>{STATUS_CFG[selectedAppt.status].icon}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-[#f5f0e8] text-[14px] truncate">{selectedAppt.client}</p>
-                  <p className="text-[11px] text-[#7a766e] truncate">{selectedAppt.service}</p>
-                  <p className="text-[11px] font-mono font-bold" style={{ color: STATUS_CFG[selectedAppt.status].lbar }}>${selectedAppt.amount.toLocaleString('es-AR')}</p>
-                </div>
-                <div className="flex items-center gap-1 px-2 py-1 rounded-full shrink-0" style={{ background: `${STATUS_CFG[selectedAppt.status].lbar}18` }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '11px', color: STATUS_CFG[selectedAppt.status].text, fontVariationSettings: "'FILL' 1" }}>{STATUS_CFG[selectedAppt.status].icon}</span>
-                  <span className="text-[9px] font-bold uppercase" style={{ color: STATUS_CFG[selectedAppt.status].text }}>{STATUS_CFG[selectedAppt.status].label}</span>
+                <h3 className="text-[18px] font-bold text-[#f5f0e8] mb-1.5 tracking-tight">{selectedAppt.client}</h3>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.05] text-[10px] font-bold text-[#a1a1aa] uppercase tracking-wider">
+                    {CLIENTS_DB.find(c => c.name === selectedAppt.client)?.visits || (selectedAppt.history?.length || 0) + 1} Visitas
+                  </span>
+                  <span className="w-1 h-1 rounded-full bg-white/[0.1]"></span>
+                  <span className="text-[10px] font-medium text-[#7a766e]">Cliente Frecuente</span>
                 </div>
               </div>
+
+              {/* Turno Actual Block - Liquid Glass Premium */}
+              <div className="relative p-4 bg-[#121212]/80 backdrop-blur-md rounded-2xl border border-white/[0.06] shadow-sm mb-4 overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-[40px] -mr-10 -mt-10 transition-opacity duration-700 opacity-50 group-hover:opacity-100"></div>
+                
+                <h4 className="text-[9px] uppercase tracking-widest text-[#7a766e] font-bold mb-3 flex items-center gap-1.5 relative z-10">
+                  <span className="w-1.5 h-1.5 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.8)]"></span>
+                  Turno Actual
+                </h4>
+                
+                <div className="space-y-3 relative z-10">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[14px] font-bold text-[#f5f0e8] leading-snug">{selectedAppt.service}</p>
+                      <div className="text-[11px] text-[#a1a1aa] mt-1 flex items-center gap-1.5">
+                        <div className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold text-white shadow-sm" style={{ backgroundColor: PROS[selectedAppt.pro].color }}>
+                          {PROS[selectedAppt.pro].initials}
+                        </div>
+                        con <span className="font-medium text-[#f5f0e8]">{PROS[selectedAppt.pro].name}</span>
+                      </div>
+                    </div>
+                    <p className="text-[14px] font-mono font-bold text-violet-400 shrink-0">${selectedAppt.amount.toLocaleString('es-AR')}</p>
+                  </div>
+                  
+                  <div className="w-full h-px bg-gradient-to-r from-white/[0.08] via-white/[0.02] to-transparent"></div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-[12px] text-[#f5f0e8] font-medium">
+                      <div className="w-7 h-7 rounded-lg bg-white/[0.03] border border-white/[0.05] flex items-center justify-center shadow-inner">
+                        <span className="material-symbols-outlined text-[#7a766e] text-[14px]">schedule</span>
+                      </div>
+                      {SLOTS[selectedAppt.slot]} <span className="text-[#7a766e] font-normal mx-0.5">a</span> {SLOTS[Math.min(selectedAppt.slot + selectedAppt.dur, SLOTS.length - 1)]}
+                    </div>
+                    <span className="text-[9px] font-bold uppercase text-[#a1a1aa] bg-white/[0.04] border border-white/[0.05] px-2 py-0.5 rounded-md shadow-sm">
+                      {selectedAppt.dur >= 2 ? `${Math.floor(selectedAppt.dur / 2)}h${selectedAppt.dur % 2 ? ' 30m' : ''}` : '30m'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {selectedAppt.allergy && (
-                <div className="flex items-center gap-2.5 p-3 bg-rose-500/10 border border-rose-500/25 rounded-xl mb-3">
-                  <span className="material-symbols-outlined text-rose-400 shrink-0" style={{ fontSize: '17px', fontVariationSettings: "'FILL' 1" }}>warning</span>
+                <div className="flex items-start gap-3 p-3.5 bg-rose-500/[0.08] backdrop-blur-md border border-rose-500/20 rounded-2xl mb-4 relative overflow-hidden">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500/50"></div>
+                  <span className="material-symbols-outlined text-rose-400 shrink-0 mt-0.5" style={{ fontSize: '18px', fontVariationSettings: "'FILL' 1" }}>warning</span>
                   <div>
-                    <p className="text-[9px] uppercase tracking-wider text-rose-400 font-bold leading-none">Alergia registrada</p>
-                    <p className="text-[12px] text-[#f5f0e8] font-medium mt-0.5">{selectedAppt.allergy}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-rose-400 font-bold leading-none mb-1">Alerta Médica</p>
+                    <p className="text-[12px] text-[#f5f0e8] font-medium leading-snug">{selectedAppt.allergy}</p>
                   </div>
                 </div>
               )}
+
               {selectedAppt.notes && (
-                <div className="mb-3">
-                  <span className="text-[9px] uppercase tracking-widest text-violet-400 font-bold block mb-1.5 font-label">Notas Técnicas</span>
-                  <div className="p-3 bg-black/40 rounded-xl border border-white/[0.05] text-[12px] leading-relaxed text-[#c9c3b8]">{selectedAppt.notes}</div>
+                <div className="mb-5 relative">
+                  <span className="text-[9px] uppercase tracking-widest text-violet-400 font-bold block mb-2 font-label">Notas Técnicas</span>
+                  <div className="relative p-3.5 bg-black/40 backdrop-blur-xl rounded-2xl border border-white/[0.05] text-[12px] leading-relaxed text-[#c9c3b8] italic">
+                    <span className="absolute top-2 left-2 text-[#7a766e]/20 text-4xl leading-none font-serif">"</span>
+                    <span className="relative z-10 pl-4 block">{selectedAppt.notes}</span>
+                  </div>
                 </div>
               )}
-              {selectedAppt.history && (
-                <div className="mb-4">
-                  <span className="text-[9px] uppercase tracking-widest text-[#7a766e] font-bold block mb-2 font-label">Historial</span>
-                  <div className="space-y-0.5">
-                    {selectedAppt.history.map(h => (
-                      <div key={h.date} className="flex justify-between items-center text-xs p-2 hover:bg-white/[0.04] rounded-lg transition-colors cursor-pointer group">
-                        <div className="min-w-0 flex-1 mr-2">
-                          <span className="text-[#f5f0e8] group-hover:text-violet-300 transition-colors truncate block">{h.service}</span>
-                          <span className="text-[#7a766e] text-[10px]">{h.date}</span>
+
+              {selectedAppt.history && selectedAppt.history.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-3 px-1">
+                    <span className="text-[9px] uppercase tracking-widest text-[#7a766e] font-bold font-label">Historial de Visitas</span>
+                    {selectedAppt.history.length > 3 && (
+                      <span className="text-[10px] font-bold text-violet-400 hover:text-violet-300 cursor-pointer transition-colors flex items-center gap-0.5">
+                        Ver todo <span className="material-symbols-outlined text-[14px]">arrow_right_alt</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative pl-2.5 ml-2 border-l border-white/[0.06] space-y-4">
+                    {selectedAppt.history.slice(0, 3).map((h, i) => (
+                      <div key={i} className="relative group cursor-default">
+                        {/* Timeline Node */}
+                        <div className="absolute -left-[14.5px] top-1.5 w-2 h-2 rounded-full border-[2px] border-[#0d0d0d] bg-violet-400/80 group-hover:bg-violet-400 group-hover:shadow-[0_0_8px_rgba(167,139,250,0.6)] transition-all"></div>
+                        
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-[10px] font-bold text-[#7a766e] tracking-wide">{h.date}</span>
                         </div>
-                        <span className="text-violet-400 font-bold font-mono shrink-0">${h.amount.toLocaleString('es-AR')}</span>
+                        
+                        <div className="p-3 bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.04] hover:border-white/[0.08] rounded-xl transition-all">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="text-[#f5f0e8] text-[12px] font-bold leading-tight pr-2">{h.service}</span>
+                            <span className="text-[#a1a1aa] font-mono text-[11px] shrink-0">${h.amount.toLocaleString('es-AR')}</span>
+                          </div>
+                          <p className="text-[11px] text-[#7a766e] italic leading-snug line-clamp-2 mt-1">
+                            {h.notes || 'Asistencia confirmada. Sin notas adicionales.'}
+                          </p>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-              <div className="flex gap-2 mt-auto pt-2">
-                <button onClick={() => setCheckoutId(selectedAppt.id)} className="flex-1 py-3 bg-violet-500 hover:bg-violet-400 active:scale-[0.98] text-white font-bold rounded-xl text-sm transition-all shadow-[0_0_15px_rgba(139,92,246,0.3)] cursor-pointer flex items-center justify-center gap-2 min-h-[44px]">
-                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>point_of_sale</span>
-                  Cobrar
+
+              <div className="flex gap-2 mt-auto">
+                <button onClick={() => setCheckoutId(selectedAppt.id)} className="flex-1 py-3.5 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 active:scale-[0.98] text-white font-bold rounded-2xl text-[13px] transition-all shadow-[0_4px_20px_rgba(139,92,246,0.25)] hover:shadow-[0_4px_25px_rgba(139,92,246,0.35)] cursor-pointer flex items-center justify-center gap-2 border border-white/10 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-white/20 blur-md opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                  <span className="material-symbols-outlined relative z-10" style={{ fontSize: '18px' }}>point_of_sale</span>
+                  <span className="relative z-10">Procesar Cobro</span>
                 </button>
-                <button className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center hover:bg-emerald-500/20 transition-colors cursor-pointer" aria-label="WhatsApp">
-                  <span className="material-symbols-outlined text-emerald-400" style={{ fontSize: '19px' }}>chat</span>
+                <button className="w-14 h-auto rounded-2xl bg-[#25D366]/10 border border-[#25D366]/20 flex items-center justify-center hover:bg-[#25D366]/20 transition-all cursor-pointer shadow-[0_4px_15px_rgba(37,211,102,0.1)] hover:shadow-[0_4px_20px_rgba(37,211,102,0.15)]" aria-label="WhatsApp">
+                  <span className="material-symbols-outlined text-[#25D366]" style={{ fontSize: '20px' }}>chat</span>
                 </button>
               </div>
             </div>
