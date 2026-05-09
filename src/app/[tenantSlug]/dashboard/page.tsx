@@ -226,10 +226,10 @@ function AgendaTabView() {
       </div>
 
       {/* Layout: calendar + side panel */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
 
         {/* CALENDAR */}
-        <div className="lg:col-span-8 xl:col-span-9 relative isolate rounded-[1.5rem] border border-white/[0.08] overflow-hidden flex flex-col bg-[#0d0d0d]/40 shadow-[0_20px_60px_rgba(0,0,0,0.4)]" style={{ maxHeight: '70vh', minHeight: 400 }}>
+        <div className="lg:col-span-8 xl:col-span-9 relative isolate rounded-[1.5rem] border border-white/[0.08] overflow-hidden flex flex-col bg-[#0d0d0d]/40 shadow-[0_20px_60px_rgba(0,0,0,0.4)]" style={{ minHeight: 400 }}>
           <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
 
           {/* ── DAY VIEW ── */}
