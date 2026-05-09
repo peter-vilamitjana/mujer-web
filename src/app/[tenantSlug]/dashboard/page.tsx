@@ -707,42 +707,65 @@ function AgendaTabView() {
                       </div>
                       <span className="text-[10px] font-bold text-[#7a766e] bg-white/[0.04] px-2 py-0.5 rounded-md">{newAppt.services.length} sel.</span>
                     </div>
-                    <div className="flex flex-col gap-1.5">
-                      {newAppt.services.map((sl, idx) => {
-                        const svc = SERVICES[sl.serviceIdx];
+
+                    {/* Search Bar */}
+                    <div className="relative group mt-1 mb-1">
+                      <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7a766e] pointer-events-none" style={{ fontSize: '18px' }}>search</span>
+                      <input type="text" placeholder="Buscar por nombre de servicio..."
+                        className="w-full bg-transparent border border-white/[0.08] hover:border-white/[0.12] rounded-xl pl-10 pr-4 py-3 text-[13px] text-[#f5f0e8] placeholder-[#7a766e] focus:outline-none focus:border-violet-500/40 focus:bg-white/[0.02] transition-all" />
+                    </div>
+
+                    {/* Category Header */}
+                    <div className="flex items-center gap-2 mt-1 mb-1">
+                      <h4 className="text-[14px] font-bold text-[#f5f0e8]">Todos los servicios</h4>
+                      <span className="w-5 h-5 rounded-full bg-white/[0.05] flex items-center justify-center text-[10px] font-bold text-[#7a766e]">{SERVICES.length}</span>
+                    </div>
+
+                    {/* Services List */}
+                    <div className="flex flex-col max-h-[300px] overflow-y-auto hide-scrollbar">
+                      {SERVICES.map((svc, idx) => {
+                        const isSelected = newAppt.services.some(s => s.serviceIdx === idx);
+                        // Mocking a warning on a couple of items to match the requested UI
+                        const hasWarning = idx === 3 || idx === 5;
+                        
                         return (
-                          <div key={idx} className="flex items-center gap-2.5 p-2 bg-white/[0.02] border border-white/[0.06] rounded-xl group/svc hover:border-violet-500/20 hover:bg-violet-500/[0.02] transition-all">
-                            <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/15 flex items-center justify-center shrink-0">
-                              <span className="material-symbols-outlined text-violet-400" style={{ fontSize: '15px', fontVariationSettings: "'FILL' 1" }}>spa</span>
+                          <div 
+                            key={idx}
+                            onClick={() => {
+                               if (isSelected) setNewAppt(p => p && ({ ...p, services: p.services.filter(s => s.serviceIdx !== idx) }));
+                               else setNewAppt(p => p && ({ ...p, services: [...p.services, { serviceIdx: idx }] }));
+                            }}
+                            className={`relative flex items-center justify-between py-3.5 pl-4 pr-1 cursor-pointer transition-all border-b border-white/[0.04] hover:bg-white/[0.02] last:border-0`}
+                          >
+                            {/* Left Accent Border */}
+                            <div className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-r-md transition-colors ${
+                              isSelected ? 'bg-violet-400' : 'bg-cyan-500/30'
+                            }`}></div>
+                            
+                            <div className="flex flex-col gap-0.5 flex-1">
+                              <p className={`text-[14px] font-bold ${isSelected ? 'text-violet-300' : 'text-[#f5f0e8]'}`}>{svc.name}</p>
+                              <p className="text-[12px] text-[#7a766e]">{svc.dur * 30}min</p>
+                              
+                              {hasWarning && (
+                                <div className="mt-1.5 self-start px-2.5 py-1 bg-white/[0.03] border border-white/[0.1] text-[#c9c3b8] text-[10px] font-medium rounded-full">
+                                  El profesional no realiza este servicio
+                                </div>
+                              )}
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[12px] font-bold text-[#f5f0e8] leading-tight truncate">{svc.name}</p>
-                              <p className="text-[10px] text-[#7a766e] mt-0.5">{svc.dur * 30} min · <span className="text-violet-300 font-mono font-bold">${svc.price.toLocaleString('es-AR')}</span></p>
+                            
+                            <div className="flex flex-col items-end shrink-0 pl-3">
+                              <div className="flex items-center gap-2">
+                                <p className={`text-[14px] font-mono font-bold ${isSelected ? 'text-violet-300' : 'text-[#f5f0e8]'}`}>
+                                  ${svc.price.toLocaleString('es-AR')}
+                                </p>
+                              </div>
+                              {isSelected && (
+                                <span className="material-symbols-outlined text-violet-400 mt-1 animate-in zoom-in duration-200" style={{ fontSize: '18px' }}>check_circle</span>
+                              )}
                             </div>
-                            {newAppt.services.length > 1 && (
-                              <button
-                                onClick={() => setNewAppt(p => p && ({ ...p, services: p.services.filter((_, i) => i !== idx) }))}
-                                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#7a766e] hover:text-rose-400 hover:bg-rose-500/10 active:bg-rose-500/20 transition-all cursor-pointer shrink-0">
-                                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>close</span>
-                              </button>
-                            )}
                           </div>
                         );
                       })}
-                      <div className="relative group mt-1">
-                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-violet-400/60 group-hover:text-violet-400 transition-colors pointer-events-none" style={{ fontSize: '16px' }}>add_circle</span>
-                        <select value="-1"
-                          onChange={e => {
-                            const idx = Number(e.target.value);
-                            if (idx < 0) return;
-                            setNewAppt(p => p && ({ ...p, services: [...p.services, { serviceIdx: idx }] }));
-                          }}
-                          className="w-full appearance-none bg-transparent border border-dashed border-white/[0.15] hover:border-violet-500/40 hover:bg-violet-500/[0.03] rounded-xl pl-10 pr-8 py-2.5 text-[12px] font-medium text-[#7a766e] hover:text-violet-300 cursor-pointer focus:outline-none transition-all">
-                          <option value="-1" disabled className="bg-[#0d0d0d] text-[#7a766e]">Añadir otro servicio...</option>
-                          {SERVICES.map((svc, i) => <option key={i} value={i} className="bg-[#0d0d0d] text-[#f5f0e8]">{svc.name} — {svc.dur * 30}min</option>)}
-                        </select>
-                        <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#7a766e] group-hover:text-violet-400/60 transition-colors pointer-events-none" style={{ fontSize: '16px' }}>expand_more</span>
-                      </div>
                     </div>
                   </div>
 
