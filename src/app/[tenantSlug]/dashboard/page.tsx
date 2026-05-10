@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { Bell, Plus, Sparkles } from 'lucide-react';
 import ClientesTabView from './ClientesTabView';
+import ServiciosTabView from './ServiciosTabView';
 
 const ADMIN_NAV = [
   { icon: 'dashboard',    label: 'Dashboard',     tab: 'dashboard' as const },
@@ -1292,6 +1293,7 @@ export default function AdminDashboard() {
           
           {activeTab === 'agenda' && <AgendaTabView />}
           {activeTab === 'clientes' && <ClientesTabView />}
+          {activeTab === 'servicios' && <ServiciosTabView />}
 
           {activeTab === 'dashboard' && (
             <div className="space-y-7 animate-in fade-in slide-in-from-bottom-4 duration-700">
