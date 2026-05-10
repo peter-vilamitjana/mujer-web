@@ -95,6 +95,11 @@ export interface Promotion {
     order?: number;
 }
 
+export interface StaffCommissions {
+    default: number; // default commission % for all services (0-100)
+    byService?: { [serviceId: string]: number }; // per-service overrides
+}
+
 export interface Staff {
     id: string; // Doc ID
     userId?: string; // Link to user auth if they have login
@@ -109,6 +114,7 @@ export interface Staff {
     schedule?: {
         [day: string]: { start: string; end: string; available: boolean };
     }; // day: "monday", "tuesday", etc.
+    commissions?: StaffCommissions; // commission rules for this staff member
 }
 
 export type AppointmentStatus =

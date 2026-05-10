@@ -9,7 +9,7 @@ import { collection, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/fi
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import type { Staff } from '@/lib/schema';
+import type { Staff, StaffCommissions } from '@/lib/schema';
 
 type ActionResult = { success: true; id?: string } | { success: false; error: string };
 
@@ -69,5 +69,23 @@ export async function toggleStaffActive(
   } catch (err) {
     console.error('[toggleStaffActive]', err);
     return { success: false, error: 'No se pudo cambiar el estado del profesional.' };
+  }
+}
+
+export async function updateStaffCommissions(
+  tenantId: string,
+  staffId: string,
+  commissions: StaffCommissions
+): Promise<ActionResult> {
+  try {
+    await requireAdminSession();
+    await updateDoc(doc(db, 'tenants', tenantId, 'staff', staffId), {
+      commissions,
+      updatedAt: serverTimestamp(),
+    });
+    return { success: true };
+  } catch (err) {
+    console.error('[updateStaffCommissions]', err);
+    return { success: false, error: 'No se pudieron guardar las comisiones.' };
   }
 }
