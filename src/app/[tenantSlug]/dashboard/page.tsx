@@ -5,12 +5,15 @@ import Link from 'next/link';
 import { Bell, Plus, Sparkles } from 'lucide-react';
 import ClientesTabView from './ClientesTabView';
 import ServiciosTabView from './ServiciosTabView';
+import ConfigTabView from './ConfigTabView';
+import PerformanceTabView from './PerformanceTabView';
 
 const ADMIN_NAV = [
   { icon: 'dashboard',    label: 'Dashboard',     tab: 'dashboard' as const },
   { icon: 'calendar_month', label: 'Agenda',      tab: 'agenda'    as const },
   { icon: 'people',       label: 'Clientes',      tab: 'clientes'  as const },
   { icon: 'content_cut',  label: 'Servicios',     tab: 'servicios' as const },
+  { icon: 'insights',     label: 'Rendimiento',   tab: 'performance' as const },
   { icon: 'settings',     label: 'Config.',       tab: 'config'    as const },
 ];
 
@@ -1180,7 +1183,7 @@ function AgendaTabView() {
 }
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = React.useState<'dashboard' | 'agenda' | 'clientes' | 'servicios' | 'config'>('dashboard');
+  const [activeTab, setActiveTab] = React.useState<'dashboard' | 'agenda' | 'clientes' | 'servicios' | 'performance' | 'config'>('dashboard');
   const [servicesPeriod, setServicesPeriod] = React.useState<'semana' | 'mes'>('semana');
 
   const greeting = useMemo(() => {
@@ -1294,6 +1297,8 @@ export default function AdminDashboard() {
           {activeTab === 'agenda' && <AgendaTabView />}
           {activeTab === 'clientes' && <ClientesTabView />}
           {activeTab === 'servicios' && <ServiciosTabView />}
+          {activeTab === 'performance' && <PerformanceTabView />}
+          {activeTab === 'config' && <ConfigTabView />}
 
           {activeTab === 'dashboard' && (
             <div className="space-y-7 animate-in fade-in slide-in-from-bottom-4 duration-700">
