@@ -206,27 +206,27 @@ export default function ConfiguracionPage() {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      {/* ── Tab switcher ── */}
+      <div className="flex gap-2 flex-wrap">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[12px] font-bold transition-all duration-150 cursor-pointer border
+              ${activeTab === tab.id
+                ? 'bg-violet-500/20 text-violet-300 border-violet-500/30'
+                : 'text-[#7a766e] hover:text-[#f5f0e8] bg-white/[0.02] border-white/[0.07]'}`}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '14px', fontVariationSettings: activeTab === tab.id ? "'FILL' 1" : "'FILL' 0" }}>
+              {tab.icon}
+            </span>
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-        {/* ── Tab switcher ── */}
-        <div className="flex gap-1.5 p-1 rounded-2xl bg-white/[0.03] border border-white/[0.06] w-fit mb-5">
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-bold transition-all duration-200 cursor-pointer
-                ${activeTab === tab.id
-                  ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
-                  : 'text-[#7a766e] hover:text-[#f5f0e8] border border-transparent'}`}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: '14px', fontVariationSettings: activeTab === tab.id ? "'FILL' 1" : "'FILL' 0" }}>
-                {tab.icon}
-              </span>
-              <span className="hidden sm:inline">{tab.label}</span>
-            </button>
-          ))}
-        </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
         {/* ── TAB: Info ── */}
         {activeTab === 'info' && (
@@ -487,7 +487,7 @@ export default function ConfiguracionPage() {
         )}
 
         {/* ── Save button (bottom) ── */}
-        <div className="mt-5 flex justify-end">
+        <div className="flex justify-end">
           <button
             type="submit"
             disabled={isPending || slugStatus === 'taken'}
