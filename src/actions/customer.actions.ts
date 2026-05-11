@@ -8,8 +8,167 @@ import {
   DashboardAppointment,
 } from '@/lib/services/customer.service';
 import { getSalonBySlug } from '@/lib/services/marketplace.service';
-import { collection, doc, getDoc, getDocs, query, where, updateDoc, serverTimestamp, limit } from 'firebase/firestore';
+import {
+  collection, doc, addDoc, getDoc, getDocs, updateDoc,
+  query, where, orderBy, limit, startAfter, serverTimestamp,
+  QueryDocumentSnapshot, DocumentData,
+} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import type { Customer, Appointment } from '@/lib/schema';
+
+type ActionResult = { success: true; id?: string } | { success: false; error: string };
+
+// ─── Admin reads ──────────────────────────────────────────────────────────────
+
+/**
+ * Lista clientes de un tenant con paginación opcional.
+ */
+export async function getCustomers(
+  tenantId: string,
+  opts: { lim?: number; cursor?: QueryDocumentSnapshot<DocumentData> } = {},
+): Promise<{ customers: Customer[]; lastDoc: QueryDocumentSnapshot<DocumentData> | null }> {
+  const lim = opts.lim ?? 50;
+  const q = opts.cursor
+    ? query(
+        collection(db, 'tenants', tenantId, 'customers'),
+        orderBy('fullName', 'asc'),
+        startAfter(opts.cursor),
+        limit(lim),
+      )
+    : query(
+        collection(db, 'tenants', tenantId, 'customers'),
+        orderBy('fullName', 'asc'),
+        limit(lim),
+      );
+
+  const snap = await getDocs(q);
+  const customers = snap.docs.map(d => ({ id: d.id, ...d.data() }) as Customer);
+  const lastDoc = snap.docs[snap.docs.length - 1] ?? null;
+  return { customers, lastDoc };
+}
+
+/**
+ * Busca clientes por nombre o teléfono (búsqueda simple lado servidor).
+ */
+export async function searchCustomers(
+  tenantId: string,
+  searchQuery: string,
+): Promise<Customer[]> {
+  if (!searchQuery.trim()) return [];
+
+  // Búsqueda por nombre (prefix range query en Firestore)
+  const normalized = searchQuery.trim();
+  const end = normalized.slice(0, -1) + String.fromCharCode(normalized.charCodeAt(normalized.length - 1) + 1);
+
+  const [byName, byPhone] = await Promise.all([
+    getDocs(
+      query(
+        collection(db, 'tenants', tenantId, 'customers'),
+        orderBy('fullName'),
+        where('fullName', '>=', normalized),
+        where('fullName', '<',  end),
+        limit(20),
+      ),
+    ),
+    getDocs(
+      query(
+        collection(db, 'tenants', tenantId, 'customers'),
+        where('phone', '>=', normalized),
+        where('phone', '<',  end),
+        limit(10),
+      ),
+    ),
+  ]);
+
+  const seen = new Set<string>();
+  const results: Customer[] = [];
+  for (const snap of [...byName.docs, ...byPhone.docs]) {
+    if (seen.has(snap.id)) continue;
+    seen.add(snap.id);
+    results.push({ id: snap.id, ...snap.data() } as Customer);
+  }
+  return results;
+}
+
+/**
+ * Obtiene un cliente por ID.
+ */
+export async function getCustomer(
+  tenantId: string,
+  customerId: string,
+): Promise<Customer | null> {
+  const snap = await getDoc(doc(db, 'tenants', tenantId, 'customers', customerId));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as Customer;
+}
+
+/**
+ * Devuelve el historial de turnos de un cliente, ordenado por fecha descendente.
+ */
+export async function getCustomerAppointments(
+  tenantId: string,
+  customerId: string,
+  lim = 20,
+): Promise<Appointment[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, 'tenants', tenantId, 'appointments'),
+      where('clientId', '==', customerId),
+      orderBy('date', 'desc'),
+      limit(lim),
+    ),
+  );
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }) as Appointment);
+}
+
+// ─── Admin mutations ──────────────────────────────────────────────────────────
+
+/**
+ * Crea un cliente nuevo desde el panel admin.
+ */
+export async function createCustomer(
+  tenantId: string,
+  data: Omit<Customer, 'id' | 'createdAt'>,
+): Promise<ActionResult> {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return { success: false, error: 'No autenticado.' };
+
+    const ref = await addDoc(collection(db, 'tenants', tenantId, 'customers'), {
+      ...data,
+      metrics: data.metrics ?? { totalVisits: 0, totalSpent: 0 },
+      createdAt: serverTimestamp(),
+    });
+    return { success: true, id: ref.id };
+  } catch (err) {
+    console.error('[createCustomer]', err);
+    return { success: false, error: 'No se pudo crear el cliente.' };
+  }
+}
+
+/**
+ * Actualiza campos de un cliente (notas, hairProfile, datos de contacto).
+ * Todos los campos son opcionales — solo se actualizan los provistos.
+ */
+export async function updateCustomer(
+  tenantId: string,
+  customerId: string,
+  data: Partial<Omit<Customer, 'id' | 'createdAt'>>,
+): Promise<ActionResult> {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return { success: false, error: 'No autenticado.' };
+
+    await updateDoc(doc(db, 'tenants', tenantId, 'customers', customerId), {
+      ...data,
+      updatedAt: serverTimestamp(),
+    });
+    return { success: true };
+  } catch (err) {
+    console.error('[updateCustomer]', err);
+    return { success: false, error: 'No se pudo actualizar el cliente.' };
+  }
+}
 import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import { buildCancellationMessage } from '@/lib/whatsapp-templates';
 

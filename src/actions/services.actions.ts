@@ -5,7 +5,7 @@
 // Fix: Migrate to REST API with service account token before production deploy.
 // Tracked: https://github.com/[repo]/issues/[n]
 
-import { collection, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, addDoc, getDocs, updateDoc, query, where, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -17,6 +17,20 @@ async function requireAdminSession() {
   const session = await getServerSession(authOptions);
   if (!session?.user) throw new Error('No autenticado.');
   return session;
+}
+
+/**
+ * Devuelve todos los servicios activos de un tenant, ordenados por nombre.
+ */
+export async function getServices(
+  tenantId: string,
+  onlyActive = true,
+): Promise<Service[]> {
+  const q = onlyActive
+    ? query(collection(db, 'tenants', tenantId, 'services'), where('active', '==', true), orderBy('name', 'asc'))
+    : query(collection(db, 'tenants', tenantId, 'services'), orderBy('name', 'asc'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }) as Service);
 }
 
 export async function createService(

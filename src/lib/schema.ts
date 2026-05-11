@@ -44,6 +44,11 @@ export interface Tenant {
         currency: string;
         timezone: string;
     };
+    plan?: 'free' | 'basic' | 'premium';
+    slotDurationMinutes?: number;
+    cancellationPolicy?: {
+        hoursInAdvance: number;
+    };
 }
 
 export interface Branch {
@@ -128,6 +133,13 @@ export type AppointmentStatus =
 
 export type PaymentMethod = 'efectivo' | 'mercadopago' | 'tarjeta' | 'transferencia';
 
+export interface PaymentSplit {
+    efectivo?: number;
+    mercadopago?: number;
+    tarjeta?: number;
+    transferencia?: number;
+}
+
 export interface Appointment {
     id: string;
     tenantId: string;
@@ -152,8 +164,10 @@ export interface Appointment {
     source?: string;                   // 'marketplace' | 'admin'
     // ── Campos de Checkout Local (Pivot LATAM) ──────────────────
     amountPaid?: number;              // Monto real cobrado al cerrar caja
-    paymentMethod?: PaymentMethod;    // Cómo pagó la clienta
-    commissionCalculated?: number;    // Comisión calculada al staff (si aplica)
+    paymentMethod?: PaymentMethod;    // Método dominante (retrocompatibilidad)
+    paymentMethods?: PaymentSplit;    // Split por método (efectivo+mp+tarjeta === priceFinal)
+    commissionCalculated?: number;    // Porcentaje de comisión del staff (0-100)
+    staffCommissionAmount?: number;   // Comisión en $ calculada al cobrar
     checkoutAt?: Timestamp;           // Cuándo se cerró el cobro
     checkoutBy?: string;              // UID del admin que cobró
     // ── Guest booking (reservas sin cuenta) ─────────────────────
@@ -174,7 +188,15 @@ export interface Customer {
         totalSpent: number;
         firstVisit?: Timestamp;
         lastVisit?: Timestamp;
-    }
+    };
+    notes?: string;          // Notas del profesional (fórmulas, preferencias)
+    hairProfile?: {          // Ficha técnica capilar
+        type?: string;       // liso | ondulado | rizado | afro
+        thickness?: string;  // fino | normal | grueso
+        condition?: string;  // sano | dañado | procesado | muy-dañado
+        allergies?: string[];
+        goal?: string;
+    };
 }
 
 export interface TechnicalRecord {

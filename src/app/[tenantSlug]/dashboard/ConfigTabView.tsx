@@ -1,10 +1,38 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useTenant } from '@/contexts/TenantContext';
+import { getTenantSettings, updateTenantSettings } from '@/actions/tenant.actions';
 
 export default function ConfigTabView() {
+  const { tenantId } = useTenant();
   const [vacationMode, setVacationMode] = useState(false);
   const [whatsappEnabled, setWhatsappEnabled] = useState(true);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    getTenantSettings(tenantId).then(tenant => {
+      if (!tenant) return;
+      setName(tenant.name ?? '');
+      setPhone(tenant.phone ?? '');
+      setAddress(tenant.address ?? '');
+    });
+  }, [tenantId]);
+
+  async function handleSave() {
+    if (!tenantId) return;
+    setSaving(true);
+    setSaveMsg(null);
+    const result = await updateTenantSettings(tenantId, { name, phone, address });
+    setSaving(false);
+    setSaveMsg(result.success ? '¡Guardado!' : 'Error al guardar.');
+    setTimeout(() => setSaveMsg(null), 3000);
+  }
 
   return (
     <div className="flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700 h-full">
@@ -17,13 +45,19 @@ export default function ConfigTabView() {
             Refinando el arte de la gestión con precisión Liquid Glass.
           </p>
         </div>
-        <div className="flex gap-3">
-          <button className="bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] px-6 py-2.5 rounded-xl text-xs font-bold text-[#7a766e] hover:text-[#f5f0e8] transition-all cursor-pointer">
-            Descartar
-          </button>
-          <button className="bg-violet-500 hover:bg-violet-400 text-white font-bold px-8 py-2.5 rounded-xl text-xs transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] active:scale-95 cursor-pointer flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {saveMsg && (
+            <span className={`text-xs font-bold ${saveMsg.startsWith('¡') ? 'text-emerald-400' : 'text-rose-400'}`}>
+              {saveMsg}
+            </span>
+          )}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="bg-violet-500 hover:bg-violet-400 disabled:opacity-50 text-white font-bold px-8 py-2.5 rounded-xl text-xs transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] active:scale-95 cursor-pointer flex items-center gap-2"
+          >
             <span className="material-symbols-outlined" style={{ fontSize: '18px', fontVariationSettings: "'FILL' 1" }}>save</span>
-            Guardar Cambios
+            {saving ? 'Guardando…' : 'Guardar Cambios'}
           </button>
         </div>
       </section>
@@ -46,26 +80,32 @@ export default function ConfigTabView() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-[#7a766e] ml-1">Nombre del Salón</label>
-              <input 
-                type="text" 
-                defaultValue="MujerApp Luxury Hair"
-                className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-4 py-3 text-[13px] text-[#f5f0e8] focus:ring-1 focus:ring-violet-500/40 focus:outline-none transition-all" 
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                placeholder="Nombre del salón"
+                className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-4 py-3 text-[13px] text-[#f5f0e8] focus:ring-1 focus:ring-violet-500/40 focus:outline-none transition-all"
               />
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-[#7a766e] ml-1">Contacto Editorial</label>
-              <input 
-                type="text" 
-                defaultValue="+54 11 2345 6789"
-                className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-4 py-3 text-[13px] text-[#f5f0e8] focus:ring-1 focus:ring-violet-500/40 focus:outline-none transition-all" 
+              <input
+                type="text"
+                value={phone}
+                onChange={e => setPhone(e.target.value)}
+                placeholder="+54 11 ..."
+                className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-4 py-3 text-[13px] text-[#f5f0e8] focus:ring-1 focus:ring-violet-500/40 focus:outline-none transition-all"
               />
             </div>
             <div className="sm:col-span-2 space-y-2">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-[#7a766e] ml-1">Dirección (Buenos Aires)</label>
-              <input 
-                type="text" 
-                defaultValue="Av. Alvear 1891, Recoleta, Buenos Aires"
-                className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-4 py-3 text-[13px] text-[#f5f0e8] focus:ring-1 focus:ring-violet-500/40 focus:outline-none transition-all" 
+              <label className="text-[10px] font-bold uppercase tracking-widest text-[#7a766e] ml-1">Dirección</label>
+              <input
+                type="text"
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+                placeholder="Av. Ejemplo 1234, Ciudad"
+                className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-4 py-3 text-[13px] text-[#f5f0e8] focus:ring-1 focus:ring-violet-500/40 focus:outline-none transition-all"
               />
             </div>
           </div>
