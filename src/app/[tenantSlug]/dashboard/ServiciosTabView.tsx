@@ -56,7 +56,7 @@ export default function ServiciosTabView() {
   const [activeCategory, setActiveCategory] = useState<string>('Todos');
 
   // Active services only
-  const activeServices = useMemo(() => catalogServices.filter(s => s.active), [catalogServices]);
+  const activeServices = useMemo(() => catalogServices.filter(s => s.active && s.name), [catalogServices]);
 
   // Set default selection when services load
   React.useEffect(() => {
@@ -76,8 +76,9 @@ export default function ServiciosTabView() {
   }, [activeServices]);
 
   const filteredServices = useMemo(() => {
+    const q = search.toLowerCase();
     return activeServices.filter(s => {
-      const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch = (s.name ?? '').toLowerCase().includes(q);
       const matchesCategory = activeCategory === 'Todos' || catMeta(s.categoryId).label === activeCategory;
       return matchesSearch && matchesCategory;
     });
