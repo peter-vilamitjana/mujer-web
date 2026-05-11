@@ -4,9 +4,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Sparkles } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useTenant } from '@/contexts/TenantContext';
-import { getDailyMetrics, getAppointmentsToday } from '@/actions/appointments.actions';
+import { getDailyMetrics } from '@/actions/appointments.actions';
 import type { DailyMetrics } from '@/actions/appointments.actions';
-import type { Appointment } from '@/lib/schema';
 
 const AVATAR_COLORS = ['#a78bfa', '#34d399', '#fbbf24', '#fb923c', '#f472b6', '#60a5fa'];
 const avatarColor = (name = '') => AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length];
@@ -24,7 +23,6 @@ export default function DashboardTabView() {
   const { data: session } = useSession();
   const { tenantId, branchId } = useTenant();
   const [metrics, setMetrics] = useState<DailyMetrics | null>(null);
-  const [todayAppts, setTodayAppts] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [servicesPeriod, setServicesPeriod] = useState<'semana' | 'mes'>('semana');
 
@@ -47,19 +45,15 @@ export default function DashboardTabView() {
   useEffect(() => {
     if (!tenantId) return;
     setLoading(true);
-    Promise.all([
-      getDailyMetrics(tenantId, branchId ?? ''),
-      getAppointmentsToday(tenantId, branchId),
-    ]).then(([m, a]) => {
-      setMetrics(m);
-      setTodayAppts(a);
-    }).catch(err => console.error('[DashboardTabView]', err))
+    getDailyMetrics(tenantId, branchId ?? '')
+      .then(m => setMetrics(m))
+      .catch(err => console.error('[DashboardTabView]', err))
       .finally(() => setLoading(false));
   }, [tenantId, branchId]);
 
-  const pendingAppts = todayAppts.filter(a => a.status === 'pending' || a.status === 'pending_payment');
-  const cobradoAppts = todayAppts.filter(a => a.status === 'cobrado' || a.status === 'completed');
-  const totalAppts   = todayAppts.length;
+  const pendingAppts = metrics?.pendingAppts ?? [];
+  const cobradoAppts = metrics?.cobradoAppts ?? [];
+  const totalAppts   = metrics?.totalAppts ?? 0;
   const totalRevenue = metrics?.totalRevenue ?? 0;
   const revenueDeltaPct = metrics?.revenueDeltaPct;
   const revenueByMethod = metrics?.revenueByMethod;
@@ -181,7 +175,7 @@ export default function DashboardTabView() {
             <span className="material-symbols-outlined text-amber-400 text-[18px]">payments</span>
           </div>
           <ul className="flex flex-col gap-2 flex-1">
-            {pendingAppts.slice(0, 3).map(a => {
+            {pendingAppts.map(a => {
               const color = avatarColor(a.clientName);
               return (
                 <li key={a.id} className="flex items-center gap-2.5 py-2 border-b border-white/[0.05] last:border-0">
@@ -191,12 +185,10 @@ export default function DashboardTabView() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] font-medium text-[#f5f0e8] leading-none truncate">{a.clientName}</p>
-                    <p className="text-[10px] text-[#7a766e] mt-0.5 font-mono">
-                      {(a.date as any)?.toDate?.()?.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) ?? '—'}
-                    </p>
+                    <p className="text-[10px] text-[#7a766e] mt-0.5 font-mono">{a.timeStr}</p>
                   </div>
                   <span className="text-[12px] font-bold text-amber-400 font-mono shrink-0">
-                    {fmtARS(a.priceEstimated ?? 0)}
+                    {fmtARS(a.priceEstimated)}
                   </span>
                 </li>
               );
@@ -210,7 +202,7 @@ export default function DashboardTabView() {
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.06]">
             <span className="text-[10px] text-[#7a766e] uppercase tracking-wider font-label">Total estimado</span>
             <span className="text-[13px] font-bold text-amber-400 font-mono">
-              {fmtARS(pendingAppts.reduce((s, a) => s + (a.priceEstimated ?? 0), 0))}
+              {fmtARS(pendingAppts.reduce((s, a) => s + a.priceEstimated, 0))}
             </span>
           </div>
         </div>
@@ -397,14 +389,9 @@ export default function DashboardTabView() {
             <tbody className="divide-y divide-white/[0.04]">
               {cobradoAppts.map(a => {
                 const color = avatarColor(a.clientName);
-                const checkoutDate = (a as any).checkoutAt?.toDate?.() ?? null;
-                const timeStr = checkoutDate
-                  ? checkoutDate.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
-                  : (a.date as any)?.toDate?.()?.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) ?? '—';
-                const method = a.paymentMethod ?? 'efectivo';
                 return (
                   <tr key={a.id} className="hover:bg-white/[0.03] transition-colors group">
-                    <td className="px-6 py-4 text-xs font-mono text-[#7a766e]">{timeStr}</td>
+                    <td className="px-6 py-4 text-xs font-mono text-[#7a766e]">{a.timeStr}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
@@ -417,10 +404,10 @@ export default function DashboardTabView() {
                     <td className="px-6 py-4 text-[13px] text-[#7a766e]">{a.serviceNames}</td>
                     <td className="px-6 py-4">
                       <span className="px-2.5 py-1 rounded bg-violet-400/10 text-violet-400 text-[9px] font-bold uppercase tracking-wider border border-violet-400/20">
-                        {methodLabel[method] ?? method}
+                        {methodLabel[a.paymentMethod] ?? a.paymentMethod}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right text-[13px] text-[#f5f0e8] font-bold font-mono">{fmtARS(a.amountPaid ?? a.priceFinal ?? a.priceEstimated ?? 0)}</td>
+                    <td className="px-6 py-4 text-right text-[13px] text-[#f5f0e8] font-bold font-mono">{fmtARS(a.amountPaid)}</td>
                     <td className="px-6 py-4 text-center">
                       <span className="material-symbols-outlined text-emerald-400 text-[16px] leading-none block">check_circle</span>
                     </td>

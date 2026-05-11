@@ -81,6 +81,23 @@ export async function getNextAppointment(
   return { id: snap.docs[0].id, ...snap.docs[0].data() } as Appointment;
 }
 
+// Plain-object snapshots safe to cross the Server Action serialization boundary
+export interface PendingApptRow {
+  id: string;
+  clientName: string;
+  timeStr: string;   // "HH:MM"
+  priceEstimated: number;
+}
+
+export interface CobradoApptRow {
+  id: string;
+  clientName: string;
+  serviceNames: string;
+  paymentMethod: string;
+  amountPaid: number;
+  timeStr: string;   // "HH:MM"
+}
+
 export interface DailyMetrics {
   totalRevenue: number;
   revenueByMethod: { efectivo: number; mercadopago: number; tarjeta: number; transferencia: number };
@@ -88,10 +105,13 @@ export interface DailyMetrics {
   pendingCount: number;
   cancelledCount: number;
   cobradoCount: number;
+  totalAppts: number;
   occupancyRate: number;    // 0-100
   previousDayRevenue: number;
   revenueDeltaPct: number | null;
   staffCommissions: Array<{ staffId: string; staffName: string; amount: number }>;
+  pendingAppts: PendingApptRow[];
+  cobradoAppts: CobradoApptRow[];
 }
 
 /**
@@ -149,6 +169,27 @@ export async function getDailyMetrics(
   }
   const staffCommissions = Array.from(commMap.entries()).map(([staffId, v]) => ({ staffId, ...v }));
 
+  const toTimeStr = (a: Appointment) => {
+    try { return (a.date as Timestamp).toDate().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }); }
+    catch { return '—'; }
+  };
+
+  const pendingAppts: PendingApptRow[] = todayAppts
+    .filter(a => a.status === 'pending' || a.status === 'pending_payment')
+    .slice(0, 5)
+    .map(a => ({ id: a.id, clientName: a.clientName ?? '', timeStr: toTimeStr(a), priceEstimated: a.priceEstimated ?? 0 }));
+
+  const cobradoAppts: CobradoApptRow[] = cobrados
+    .slice(0, 20)
+    .map(a => ({
+      id: a.id,
+      clientName: a.clientName ?? '',
+      serviceNames: a.serviceNames ?? '',
+      paymentMethod: a.paymentMethod ?? 'efectivo',
+      amountPaid: a.amountPaid ?? a.priceFinal ?? a.priceEstimated ?? 0,
+      timeStr: toTimeStr(a),
+    }));
+
   return {
     totalRevenue,
     revenueByMethod,
@@ -156,10 +197,13 @@ export async function getDailyMetrics(
     pendingCount:    todayAppts.filter(a => a.status === 'pending').length,
     cancelledCount:  todayAppts.filter(a => a.status === 'cancelled').length,
     cobradoCount:    cobrados.length,
+    totalAppts:      todayAppts.length,
     occupancyRate,
     previousDayRevenue,
     revenueDeltaPct,
     staffCommissions,
+    pendingAppts,
+    cobradoAppts,
   };
 }
 
