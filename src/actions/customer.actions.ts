@@ -10,13 +10,26 @@ import {
 import { getSalonBySlug } from '@/lib/services/marketplace.service';
 import {
   collection, doc, addDoc, getDoc, getDocs, updateDoc,
-  query, where, orderBy, limit, startAfter, serverTimestamp,
-  QueryDocumentSnapshot, DocumentData,
+  query, where, orderBy, limit, serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Customer, Appointment } from '@/lib/schema';
 
 type ActionResult = { success: true; id?: string } | { success: false; error: string };
+
+// Converts Firestore Timestamp instances to ms numbers so they can cross
+// the Server Action RSC serialization boundary (React only supports plain objects).
+function toSerializable<T>(val: T): T {
+  if (val === null || val === undefined) return val;
+  if (typeof val === 'object') {
+    if (typeof (val as any).toMillis === 'function') return (val as any).toMillis() as unknown as T;
+    if (Array.isArray(val)) return (val as any[]).map(toSerializable) as unknown as T;
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(val as object)) out[k] = toSerializable(v);
+    return out as T;
+  }
+  return val;
+}
 
 // ─── Admin reads ──────────────────────────────────────────────────────────────
 
@@ -25,26 +38,16 @@ type ActionResult = { success: true; id?: string } | { success: false; error: st
  */
 export async function getCustomers(
   tenantId: string,
-  opts: { lim?: number; cursor?: QueryDocumentSnapshot<DocumentData> } = {},
-): Promise<{ customers: Customer[]; lastDoc: QueryDocumentSnapshot<DocumentData> | null }> {
+  opts: { lim?: number } = {},
+): Promise<Customer[]> {
   const lim = opts.lim ?? 50;
-  const q = opts.cursor
-    ? query(
-        collection(db, 'tenants', tenantId, 'customers'),
-        orderBy('fullName', 'asc'),
-        startAfter(opts.cursor),
-        limit(lim),
-      )
-    : query(
-        collection(db, 'tenants', tenantId, 'customers'),
-        orderBy('fullName', 'asc'),
-        limit(lim),
-      );
-
+  const q = query(
+    collection(db, 'tenants', tenantId, 'customers'),
+    orderBy('fullName', 'asc'),
+    limit(lim),
+  );
   const snap = await getDocs(q);
-  const customers = snap.docs.map(d => ({ id: d.id, ...d.data() }) as Customer);
-  const lastDoc = snap.docs[snap.docs.length - 1] ?? null;
-  return { customers, lastDoc };
+  return snap.docs.map(d => toSerializable({ id: d.id, ...d.data() }) as Customer);
 }
 
 /**
@@ -85,7 +88,7 @@ export async function searchCustomers(
   for (const snap of [...byName.docs, ...byPhone.docs]) {
     if (seen.has(snap.id)) continue;
     seen.add(snap.id);
-    results.push({ id: snap.id, ...snap.data() } as Customer);
+    results.push(toSerializable({ id: snap.id, ...snap.data() }) as Customer);
   }
   return results;
 }
@@ -118,7 +121,7 @@ export async function getCustomerAppointments(
       limit(lim),
     ),
   );
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }) as Appointment);
+  return snap.docs.map(d => toSerializable({ id: d.id, ...d.data() }) as Appointment);
 }
 
 // ─── Admin mutations ──────────────────────────────────────────────────────────

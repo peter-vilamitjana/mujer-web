@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Timestamp } from 'firebase/firestore';
 import { useTenant } from '@/contexts/TenantContext';
 import { getCustomers, searchCustomers, getCustomerAppointments } from '@/actions/customer.actions';
 import type { Customer, Appointment } from '@/lib/schema';
@@ -39,7 +38,11 @@ function deriveStatus(c: Customer): ClientStatus {
   const visits = c.metrics?.totalVisits ?? 0;
   const lastVisit = c.metrics?.lastVisit;
   if (lastVisit) {
-    const days = (Date.now() - (lastVisit as Timestamp).toDate().getTime()) / 86_400_000;
+    // After toSerializable, Timestamp fields are millisecond numbers
+    const ms = typeof (lastVisit as any).toMillis === 'function'
+      ? (lastVisit as any).toMillis()
+      : Number(lastVisit);
+    const days = (Date.now() - ms) / 86_400_000;
     if (days > 180) return 'inactivo';
   } else if (visits === 0) {
     return 'nuevo';
@@ -53,7 +56,8 @@ function deriveStatus(c: Customer): ClientStatus {
 function formatLastVisit(c: Customer): string {
   const lv = c.metrics?.lastVisit;
   if (!lv) return 'Sin visitas';
-  const date = (lv as Timestamp).toDate();
+  const ms = typeof (lv as any).toMillis === 'function' ? (lv as any).toMillis() : Number(lv);
+  const date = new Date(ms);
   const today = new Date();
   if (date.toDateString() === today.toDateString()) return 'Hoy';
   return date.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -92,7 +96,10 @@ interface HistoryRow {
 }
 
 function mapAppointment(a: Appointment): HistoryRow {
-  const date = a.date ? (a.date as Timestamp).toDate().toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+  const ms = a.date
+    ? (typeof (a.date as any).toMillis === 'function' ? (a.date as any).toMillis() : Number(a.date))
+    : null;
+  const date = ms ? new Date(ms).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
   return {
     date,
     service: a.serviceNames ?? '—',
@@ -118,7 +125,7 @@ export default function ClientesTabView() {
   useEffect(() => {
     if (!tenantId) return;
     setLoading(true);
-    getCustomers(tenantId, { lim: 100 }).then(({ customers }) => {
+    getCustomers(tenantId, { lim: 100 }).then(customers => {
       const rows = customers.map(mapCustomer);
       setClients(rows);
       setTotalCount(rows.length);
@@ -132,7 +139,7 @@ export default function ClientesTabView() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!search.trim()) {
       // Reload full list when search is cleared
-      getCustomers(tenantId, { lim: 100 }).then(({ customers }) => {
+      getCustomers(tenantId, { lim: 100 }).then(customers => {
         setClients(customers.map(mapCustomer));
       });
       return;
