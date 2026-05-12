@@ -9,18 +9,20 @@ import ServiciosTabView from './ServiciosTabView';
 import ConfigTabView from './ConfigTabView';
 import PerformanceTabView from './PerformanceTabView';
 import DashboardTabView from './DashboardTabView';
+import CajaTabView from './CajaTabView';
 
 const ADMIN_NAV = [
   { icon: 'dashboard',    label: 'Dashboard',     tab: 'dashboard' as const },
   { icon: 'calendar_month', label: 'Agenda',      tab: 'agenda'    as const },
   { icon: 'people',       label: 'Clientes',      tab: 'clientes'  as const },
   { icon: 'content_cut',  label: 'Servicios',     tab: 'servicios' as const },
+  { icon: 'point_of_sale', label: 'Caja',         tab: 'caja'        as const },
   { icon: 'insights',     label: 'Rendimiento',   tab: 'performance' as const },
   { icon: 'settings',     label: 'Config.',       tab: 'config'    as const },
 ];
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = React.useState<'dashboard' | 'agenda' | 'clientes' | 'servicios' | 'performance' | 'config'>('dashboard');
+  const [activeTab, setActiveTab] = React.useState<'dashboard' | 'agenda' | 'clientes' | 'servicios' | 'caja' | 'performance' | 'config'>('dashboard');
 
   return (
     <div
@@ -110,6 +112,7 @@ export default function AdminDashboard() {
           {activeTab === 'agenda'       && <AgendaTabView />}
           {activeTab === 'clientes'     && <ClientesTabView />}
           {activeTab === 'servicios'    && <ServiciosTabView />}
+          {activeTab === 'caja'         && <CajaTabView />}
           {activeTab === 'performance'  && <PerformanceTabView />}
           {activeTab === 'config'       && <ConfigTabView />}
 
