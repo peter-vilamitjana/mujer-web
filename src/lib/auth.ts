@@ -147,20 +147,25 @@ export const authOptions: NextAuthOptions = {
             session.accessToken = token.accessToken as string;
             session.error = token.error as string;
 
-            // Guardar tokens de Google Calendar para usuarios con Google OAuth conectado
+            // Persistir tokens de Google Calendar (best-effort — nunca bloquear la sesión si falla)
             if (token.refreshToken && (session.user as any).uid) {
-                const tokenData = {
-                    accessToken: token.accessToken,
-                    refreshToken: token.refreshToken,
-                    expiryDate: token.accessTokenExpires,
-                    scope: token.scope,
-                    tokenType: token.token_type,
-                    updatedAt: Date.now()
-                };
-                const legacyRef = doc(db, 'calendarTokens', (session.user as any).uid);
-                await setDoc(legacyRef, tokenData, { merge: true });
-                const newRef = doc(db, 'users', (session.user as any).uid, 'integrations', 'google');
-                await setDoc(newRef, tokenData, { merge: true });
+                try {
+                    const tokenData = {
+                        accessToken: token.accessToken,
+                        refreshToken: token.refreshToken,
+                        expiryDate: token.accessTokenExpires,
+                        scope: token.scope,
+                        tokenType: token.token_type,
+                        updatedAt: Date.now()
+                    };
+                    const legacyRef = doc(db, 'calendarTokens', (session.user as any).uid);
+                    await setDoc(legacyRef, tokenData, { merge: true });
+                    const newRef = doc(db, 'users', (session.user as any).uid, 'integrations', 'google');
+                    await setDoc(newRef, tokenData, { merge: true });
+                } catch (e) {
+                    // El Client SDK no tiene auth en server-side — ignorar, no bloquear la sesión
+                    console.warn('[auth] Google token persist failed (expected in SSR):', (e as Error)?.message);
+                }
             }
 
             return session;

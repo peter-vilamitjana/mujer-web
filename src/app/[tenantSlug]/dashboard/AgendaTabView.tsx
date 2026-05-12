@@ -13,6 +13,7 @@ import { searchCustomers, createCustomer } from '@/actions/customer.actions';
 import { createAppointment } from '@/actions/appointments.actions';
 import { closeAppointment } from '@/actions/checkout.actions';
 import type { Appointment, AppointmentStatus, Service } from '@/lib/schema';
+import type { CreateEventBody } from '@/app/api/google/event/route';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -162,6 +163,69 @@ export default function AgendaTabView() {
   const [newAppt, setNewAppt]           = useState<NewApptForm | null>(null);
   const [draggedId, setDraggedId]       = useState<string | null>(null);
   const [dropTarget, setDropTarget]     = useState<{ slot: number; pro: number } | null>(null);
+
+  // ── Google Calendar integration ──────────────────────────────────────────────
+  const [gcalConnected, setGcalConnected] = useState<boolean | null>(null); // null = loading
+  const [gcalSyncing,   setGcalSyncing]   = useState(false);
+  const [gcalError,     setGcalError]     = useState<string | null>(null);
+
+  // Check connection on mount + handle ?gcal= query param
+  useEffect(() => {
+    fetch('/api/google/status')
+      .then(r => r.json())
+      .then(d => setGcalConnected(!!d.connected))
+      .catch(() => setGcalConnected(false));
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('gcal') === 'connected') setGcalConnected(true);
+    if (params.get('gcal') === 'error') setGcalError('No se pudo conectar con Google Calendar.');
+    // Clean query param without history push
+    if (params.has('gcal')) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('gcal');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, []);
+
+  const handleGcalConnect = () => {
+    const slug = window.location.pathname.split('/')[1];
+    window.location.href = `/api/google/connect?slug=${slug}`;
+  };
+
+  const handleGcalDisconnect = async () => {
+    setGcalSyncing(true);
+    try {
+      await fetch('/api/google/disconnect', { method: 'POST' });
+      setGcalConnected(false);
+    } catch {
+      setGcalError('Error al desconectar.');
+    } finally {
+      setGcalSyncing(false);
+    }
+  };
+
+  const syncApptToGcal = useCallback(async (
+    clientName: string,
+    serviceName: string,
+    startDate: Date,
+    durationMinutes: number,
+    notes?: string,
+  ) => {
+    if (!gcalConnected) return;
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60_000);
+    const body: CreateEventBody = {
+      summary:     `${clientName} — ${serviceName}`,
+      description: notes ? `Notas: ${notes}` : undefined,
+      startIso:    startDate.toISOString(),
+      endIso:      endDate.toISOString(),
+      colorId:     '3',
+    };
+    await fetch('/api/google/event', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body),
+    }).catch(err => console.error('[syncApptToGcal]', err));
+  }, [gcalConnected]);
 
   // ── New appointment form: client search ─────────────────────────────────────
   const [clientResults, setClientResults] = useState<SearchResult[]>([]);
@@ -401,6 +465,15 @@ export default function AgendaTabView() {
         }]);
         setSelectedId(newId);
         setNewAppt(null);
+
+        // Best-effort Google Calendar sync
+        syncApptToGcal(
+          clientName,
+          svcNames,
+          slotToDate(newAppt.slot, dateOffset),
+          Math.max(totalDur, 1) * 30,
+          newAppt.notes || undefined,
+        );
       } else {
         console.error('[AgendaTabView] createAppointment failed:', result.error);
       }
@@ -517,6 +590,46 @@ export default function AgendaTabView() {
 
           {/* ── DAY VIEW ── */}
           {calendarView === 'dia' && (<>
+            {/* Prominent date bar */}
+            {(() => {
+              const d = new Date(); d.setDate(d.getDate() + dateOffset);
+              const isToday = dateOffset === 0;
+              const dayNum  = d.getDate();
+              const weekday = d.toLocaleDateString('es-AR', { weekday: 'long' });
+              const month   = d.toLocaleDateString('es-AR', { month: 'long' });
+              const year    = d.getFullYear();
+              return (
+                <div className={`flex items-center gap-5 px-5 py-4 border-b shrink-0 transition-colors ${isToday ? 'border-violet-500/15 bg-violet-500/[0.04]' : 'border-white/[0.06]'}`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-16 h-16 rounded-2xl flex flex-col items-center justify-center shrink-0 ${isToday ? 'bg-violet-500 shadow-[0_0_28px_rgba(139,92,246,0.45)]' : 'bg-white/[0.05] border border-white/[0.08]'}`}>
+                      <span className={`font-playfair font-bold leading-none ${isToday ? 'text-white text-4xl' : 'text-[#f5f0e8] text-3xl'}`}>{dayNum}</span>
+                      <span className={`text-[9px] font-bold uppercase tracking-widest leading-none mt-0.5 ${isToday ? 'text-white/70' : 'text-[#7a766e]'}`}>
+                        {d.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', '').toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-playfair text-2xl font-bold italic text-[#f5f0e8] leading-tight capitalize">{weekday}</span>
+                      <span className="text-sm text-[#7a766e] capitalize">{month} {year}</span>
+                    </div>
+                  </div>
+                  <div className="ml-auto flex items-center gap-2 shrink-0">
+                    {isToday && (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-500/15 border border-violet-500/25 rounded-full">
+                        <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                        <span className="text-[10px] font-bold text-violet-300 uppercase tracking-widest">En vivo</span>
+                      </div>
+                    )}
+                    <div className="flex flex-col items-end text-right">
+                      <span className="text-[10px] text-[#7a766e] uppercase tracking-widest">{appts.length} turnos</span>
+                      <span className="text-[11px] font-bold font-mono text-[#f5f0e8]">
+                        ${appts.reduce((s, a) => s + a.amount, 0).toLocaleString('es-AR')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             <div className="sticky top-0 z-20 border-b border-white/[0.07] bg-[#0d0d0d]/70 backdrop-blur-xl shrink-0" style={{ display: 'grid', gridTemplateColumns: `56px repeat(${pros.length || 1}, 1fr)` }}>
               <div className="p-3 flex items-center justify-center border-r border-white/[0.05]">
                 <span className="material-symbols-outlined text-[#7a766e]" style={{ fontSize: '17px' }}>schedule</span>
@@ -1290,14 +1403,81 @@ export default function AgendaTabView() {
             </div>
           )}
 
-          {/* WAITLIST — static placeholder for now */}
-          <div className="relative isolate rounded-[1.5rem] border border-white/[0.08] p-4 bg-[#0d0d0d]/40 overflow-hidden">
+          {/* GOOGLE CALENDAR PANEL */}
+          <div className={`relative isolate rounded-[1.5rem] border p-4 bg-[#0d0d0d]/40 overflow-hidden transition-colors ${gcalConnected ? 'border-emerald-500/20' : 'border-white/[0.08]'}`}>
             <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+
             <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] font-bold tracking-widest uppercase text-[#7a766e] font-label">Lista de Espera</span>
-              <span className="px-2 py-0.5 bg-violet-500/15 border border-violet-500/25 rounded-full text-[10px] text-violet-300 font-bold">—</span>
+              <div className="flex items-center gap-2">
+                {/* Google Calendar G logo */}
+                <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shrink-0 shadow-sm">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path d="M12 11.2V13h4.24c-.184.98-.76 1.808-1.608 2.36L16 17c1.656-1.528 2.616-3.784 2.616-6.44 0-.472-.04-.928-.112-1.36H12v2z" fill="#4285F4"/>
+                    <path d="M5.616 14.28A7.064 7.064 0 0 1 5 12c0-.8.144-1.568.4-2.28L3.76 8.36A11.488 11.488 0 0 0 2.8 12c0 1.312.224 2.576.632 3.752L5.616 14.28z" fill="#FBBC05"/>
+                    <path d="M12 19.2c2.176 0 4-.72 5.336-1.944l-2.048-1.6C14.56 16.24 13.368 16.6 12 16.6c-2.44 0-4.512-1.648-5.248-3.864L4.768 14.12C5.968 17.208 8.728 19.2 12 19.2z" fill="#34A853"/>
+                    <path d="M6.752 12.736C6.576 12.184 6.48 11.6 6.48 11c0-.6.096-1.184.272-1.736L5.016 7.92A9.272 9.272 0 0 0 4.72 11c0 1.128.2 2.208.56 3.216L6.752 12.736z" fill="#EA4335" opacity=".3"/>
+                    <path d="M12 4.8c1.36 0 2.576.528 3.488 1.384l2.064-2.064A7.12 7.12 0 0 0 12 1.8C8.728 1.8 5.968 3.792 4.768 6.88l2.184 1.696C7.688 6.448 9.656 4.8 12 4.8z" fill="#EA4335"/>
+                  </svg>
+                </div>
+                <span className="text-[10px] font-bold tracking-widest uppercase text-[#7a766e] font-label">Google Calendar</span>
+              </div>
+              {gcalConnected === true && (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest">Conectado</span>
+                </div>
+              )}
             </div>
-            <p className="text-[11px] text-[#7a766e] text-center py-2">Sin lista de espera activa</p>
+
+            {gcalError && (
+              <p className="text-[11px] text-rose-400 mb-2 px-1">{gcalError}</p>
+            )}
+
+            {gcalConnected === null && (
+              <div className="flex items-center justify-center py-3">
+                <span className="material-symbols-outlined text-[#7a766e] animate-spin" style={{ fontSize: '18px' }}>progress_activity</span>
+              </div>
+            )}
+
+            {gcalConnected === false && (
+              <div className="flex flex-col gap-2">
+                <p className="text-[11px] text-[#7a766e] leading-relaxed px-0.5">
+                  Sincronizá tus turnos con Google Calendar. Cada turno nuevo aparece automáticamente en tu agenda de Google.
+                </p>
+                <button
+                  onClick={handleGcalConnect}
+                  className="w-full mt-1 flex items-center justify-center gap-2 py-2.5 bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.10] hover:border-white/[0.18] rounded-xl text-[12px] font-bold text-[#f5f0e8] transition-all cursor-pointer active:scale-95"
+                >
+                  <div className="w-5 h-5 rounded bg-white flex items-center justify-center shrink-0">
+                    <svg viewBox="0 0 24 24" width="13" height="13">
+                      <path d="M12 11.2V13h4.24c-.184.98-.76 1.808-1.608 2.36L16 17c1.656-1.528 2.616-3.784 2.616-6.44 0-.472-.04-.928-.112-1.36H12v2z" fill="#4285F4"/>
+                      <path d="M5.616 14.28A7.064 7.064 0 0 1 5 12c0-.8.144-1.568.4-2.28L3.76 8.36A11.488 11.488 0 0 0 2.8 12c0 1.312.224 2.576.632 3.752L5.616 14.28z" fill="#FBBC05"/>
+                      <path d="M12 19.2c2.176 0 4-.72 5.336-1.944l-2.048-1.6C14.56 16.24 13.368 16.6 12 16.6c-2.44 0-4.512-1.648-5.248-3.864L4.768 14.12C5.968 17.208 8.728 19.2 12 19.2z" fill="#34A853"/>
+                      <path d="M12 4.8c1.36 0 2.576.528 3.488 1.384l2.064-2.064A7.12 7.12 0 0 0 12 1.8C8.728 1.8 5.968 3.792 4.768 6.88l2.184 1.696C7.688 6.448 9.656 4.8 12 4.8z" fill="#EA4335"/>
+                    </svg>
+                  </div>
+                  Conectar con Google
+                </button>
+              </div>
+            )}
+
+            {gcalConnected === true && (
+              <div className="flex flex-col gap-2">
+                <p className="text-[11px] text-[#7a766e] leading-relaxed px-0.5">
+                  Los nuevos turnos se sincronizan automáticamente a tu Google Calendar con color violeta.
+                </p>
+                <button
+                  onClick={handleGcalDisconnect}
+                  disabled={gcalSyncing}
+                  className="w-full mt-1 flex items-center justify-center gap-2 py-2 bg-rose-500/[0.07] hover:bg-rose-500/[0.12] border border-rose-500/15 hover:border-rose-500/25 rounded-xl text-[11px] font-bold text-rose-400 transition-all cursor-pointer active:scale-95 disabled:opacity-40"
+                >
+                  {gcalSyncing
+                    ? <span className="material-symbols-outlined animate-spin" style={{ fontSize: '14px' }}>progress_activity</span>
+                    : <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>link_off</span>}
+                  Desconectar
+                </button>
+              </div>
+            )}
           </div>
 
           {/* RESUMEN DEL DÍA */}

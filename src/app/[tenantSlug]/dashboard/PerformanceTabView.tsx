@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useTransition } from 'react';
 import {
   collection, query, where, orderBy,
-  onSnapshot, getDocs, Timestamp,
+  getDocs, Timestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useTenant } from '@/contexts/TenantContext';
@@ -266,7 +266,7 @@ export default function PerformanceTabView() {
       .catch(console.error);
   }, [tenantId]);
 
-  // Load appointments by period with real-time updates
+  // Load appointments by period (one-shot — analytics don't need real-time)
   useEffect(() => {
     if (!tenantId) return;
     setApptLoading(true);
@@ -276,19 +276,13 @@ export default function PerformanceTabView() {
       where('date', '>=', Timestamp.fromDate(periodStart)),
       orderBy('date', 'desc')
     );
-    const unsub = onSnapshot(
-      q,
-      (snap) => {
+    getDocs(q)
+      .then(snap => {
         const all = snap.docs.map(d => ({ id: d.id, ...d.data() } as Appointment));
         setAppointments(all.filter(a => COMPLETED_STATUSES.includes(a.status)));
-        setApptLoading(false);
-      },
-      (err) => {
-        console.error('[PerformanceTabView] appointments query:', err);
-        setApptLoading(false);
-      }
-    );
-    return () => unsub();
+      })
+      .catch(err => console.error('[PerformanceTabView] appointments query:', err))
+      .finally(() => setApptLoading(false));
   }, [tenantId, period]);
 
   // Compute per-staff metrics
