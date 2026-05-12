@@ -273,6 +273,101 @@ export async function getWeeklyRevenue(
   }));
 }
 
+// ─── Revenue time-series (trend chart) ────────────────────────────────────────
+
+export interface RevenueSeries {
+  points: number[];   // revenue per time bucket
+  labels: string[];   // display label per bucket
+  total: number;
+  maxVal: number;     // >= 1, for safe normalization
+}
+
+/**
+ * Returns revenue bucketed by time for the INGRESOS TOTALES trend chart.
+ * - dia:    hourly from 00:00 to current hour
+ * - semana: daily Mon–Sun of current week
+ * - mes:    daily for last 30 days
+ */
+export async function getRevenueTimeSeries(
+  tenantId: string,
+  branchId: string,
+  period: 'dia' | 'semana' | 'mes',
+): Promise<RevenueSeries> {
+  const now = new Date();
+
+  if (period === 'dia') {
+    const appts = await getAppointmentsForDay(tenantId, branchId || null, now);
+    const cobrados = appts.filter(a => a.status === 'cobrado' || a.status === 'completed');
+    const curHour = now.getHours();
+    const buckets = Array<number>(curHour + 1).fill(0);
+    for (const a of cobrados) {
+      try {
+        const h = (a.date as Timestamp).toDate().getHours();
+        if (h <= curHour) buckets[h] += a.amountPaid ?? a.priceFinal ?? 0;
+      } catch { /* skip malformed date */ }
+    }
+    const total = buckets.reduce((s, v) => s + v, 0);
+    return {
+      points: buckets,
+      labels: buckets.map((_, i) => `${String(i).padStart(2, '0')}hs`),
+      total,
+      maxVal: Math.max(...buckets, 1),
+    };
+  }
+
+  if (period === 'semana') {
+    const days = await getWeeklyRevenue(tenantId, branchId);
+    const points = days.map(d => d.revenue);
+    return {
+      points,
+      labels: days.map(d => d.label),
+      total: points.reduce((s, v) => s + v, 0),
+      maxVal: Math.max(...points, 1),
+    };
+  }
+
+  // mes — last 30 days
+  const start30 = new Date(now);
+  start30.setDate(now.getDate() - 29);
+  start30.setHours(0, 0, 0, 0);
+  const end30 = new Date(now);
+  end30.setHours(23, 59, 59, 999);
+
+  const constraints = [
+    where('date', '>=', Timestamp.fromDate(start30)),
+    where('date', '<=', Timestamp.fromDate(end30)),
+    orderBy('date', 'asc'),
+  ];
+  if (branchId) constraints.unshift(where('branchId', '==', branchId));
+
+  const snap = await getDocs(
+    query(collection(db, 'tenants', tenantId, 'appointments'), ...constraints),
+  );
+
+  const buckets = Array<number>(30).fill(0);
+  for (const docSnap of snap.docs) {
+    const data = docSnap.data() as Appointment;
+    if (data.status !== 'cobrado' && data.status !== 'completed') continue;
+    try {
+      const apptDate = (data.date as Timestamp).toDate();
+      const idx = Math.floor((apptDate.getTime() - start30.getTime()) / 86_400_000);
+      if (idx >= 0 && idx < 30) buckets[idx] += data.amountPaid ?? data.priceFinal ?? 0;
+    } catch { /* skip */ }
+  }
+
+  const total = buckets.reduce((s, v) => s + v, 0);
+  return {
+    points: buckets,
+    labels: Array.from({ length: 30 }, (_, i) => {
+      const d = new Date(start30);
+      d.setDate(start30.getDate() + i);
+      return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+    }),
+    total,
+    maxVal: Math.max(...buckets, 1),
+  };
+}
+
 // ─── Mutations ────────────────────────────────────────────────────────────────
 
 export interface CreateAppointmentPayload {

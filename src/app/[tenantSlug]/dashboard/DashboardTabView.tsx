@@ -4,8 +4,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Sparkles } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useTenant } from '@/contexts/TenantContext';
-import { getDailyMetrics, getWeeklyRevenue } from '@/actions/appointments.actions';
-import type { DailyMetrics, DayRevenue } from '@/actions/appointments.actions';
+import { getDailyMetrics, getWeeklyRevenue, getRevenueTimeSeries } from '@/actions/appointments.actions';
+import type { DailyMetrics, DayRevenue, RevenueSeries } from '@/actions/appointments.actions';
 import { getCierreCaja } from '@/actions/caja.actions';
 import type { CierreCajaData } from '@/actions/caja.actions';
 
@@ -24,10 +24,13 @@ const methodLabel: Record<string, string> = {
 export default function DashboardTabView() {
   const { data: session } = useSession();
   const { tenantId, branchId } = useTenant();
-  const [metrics, setMetrics]   = useState<DailyMetrics | null>(null);
-  const [caja, setCaja]         = useState<CierreCajaData | null>(null);
-  const [weekly, setWeekly]     = useState<DayRevenue[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const [metrics, setMetrics]       = useState<DailyMetrics | null>(null);
+  const [caja, setCaja]             = useState<CierreCajaData | null>(null);
+  const [weekly, setWeekly]         = useState<DayRevenue[]>([]);
+  const [chartPeriod, setChartPeriod] = useState<'dia' | 'semana' | 'mes'>('dia');
+  const [series, setSeries]         = useState<RevenueSeries | null>(null);
+  const [seriesLoading, setSeriesLoading] = useState(false);
+  const [loading, setLoading]       = useState(true);
 
   const userName = (session?.user?.name ?? '').split(' ')[0] || 'Admin';
 
@@ -52,11 +55,22 @@ export default function DashboardTabView() {
       getDailyMetrics(tenantId, branchId ?? ''),
       getCierreCaja(tenantId, branchId ?? ''),
       getWeeklyRevenue(tenantId, branchId ?? ''),
+      getRevenueTimeSeries(tenantId, branchId ?? '', 'dia'),
     ])
-      .then(([m, c, w]) => { setMetrics(m); setCaja(c); setWeekly(w); })
+      .then(([m, c, w, s]) => { setMetrics(m); setCaja(c); setWeekly(w); setSeries(s); })
       .catch(err => console.error('[DashboardTabView]', err))
       .finally(() => setLoading(false));
   }, [tenantId, branchId]);
+
+  useEffect(() => {
+    if (!tenantId || loading) return;
+    setSeriesLoading(true);
+    getRevenueTimeSeries(tenantId, branchId ?? '', chartPeriod)
+      .then(setSeries)
+      .catch(err => console.error('[DashboardTabView] series', err))
+      .finally(() => setSeriesLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chartPeriod]);
 
   const pendingAppts = metrics?.pendingAppts ?? [];
   const cobradoAppts = metrics?.cobradoAppts ?? [];
@@ -88,23 +102,33 @@ export default function DashboardTabView() {
 
       {/* ── Metrics Row ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* Total Income Card */}
+        {/* Total Income Card — real trend chart */}
         <div className="relative isolate rounded-[1.5rem] border border-white/10 p-6 overflow-hidden hover:border-violet-400/20 transition-all duration-300 cursor-default flex flex-col justify-between group">
           <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
           <div className="flex justify-between items-start mb-4">
             <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label mt-1.5">INGRESOS TOTALES</span>
             <div className="flex items-center bg-[#0d0d0d]/60 rounded-[8px] p-[3px] border border-white/[0.04] backdrop-blur-md">
-              <button className="px-2.5 py-1 text-[10px] font-semibold text-[#f5f0e8] bg-white/[0.08] rounded-[5px] shadow-[0_2px_8px_rgba(0,0,0,0.2)] transition-all">Hoy</button>
-              <button className="px-2.5 py-1 text-[10px] font-medium text-[#7a766e] hover:text-[#f5f0e8] transition-all">Sem</button>
-              <button className="px-2.5 py-1 text-[10px] font-medium text-[#7a766e] hover:text-[#f5f0e8] transition-all">Mes</button>
+              {(['dia', 'semana', 'mes'] as const).map((p, i) => (
+                <button
+                  key={p}
+                  onClick={() => setChartPeriod(p)}
+                  className={`px-2.5 py-1 text-[10px] font-semibold rounded-[5px] transition-all cursor-pointer ${
+                    chartPeriod === p
+                      ? 'text-[#f5f0e8] bg-white/[0.08] shadow-[0_2px_8px_rgba(0,0,0,0.2)]'
+                      : 'text-[#7a766e] hover:text-[#f5f0e8]'
+                  }`}
+                >
+                  {['Hoy', 'Sem', 'Mes'][i]}
+                </button>
+              ))}
             </div>
           </div>
           <div className="flex flex-col mb-4">
             <span className="font-playfair text-4xl text-[#f5f0e8] font-bold italic leading-none">
-              {loading ? '…' : fmtARS(totalRevenue)}
+              {loading ? '…' : chartPeriod === 'dia' ? fmtARS(totalRevenue) : fmtARS(series?.total ?? 0)}
             </span>
-            {revenueDeltaPct !== null && revenueDeltaPct !== undefined && (
-              <div className="flex items-center gap-1.5 mt-3 mb-4">
+            {chartPeriod === 'dia' && revenueDeltaPct !== null && revenueDeltaPct !== undefined && (
+              <div className="flex items-center gap-1.5 mt-3">
                 <span className={`material-symbols-outlined text-[15px] ${revenueDeltaPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {revenueDeltaPct >= 0 ? 'trending_up' : 'trending_down'}
                 </span>
@@ -113,18 +137,44 @@ export default function DashboardTabView() {
                 </span>
               </div>
             )}
-            {/* Static trend line — Fase E will make this dynamic */}
-            <div className="h-10 w-full relative opacity-90 -mb-2">
-              <svg className="w-full h-full overflow-visible" viewBox="0 0 100 30" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#34d399" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <path d="M0 30 L0 25 L15 22 L30 26 L45 15 L60 18 L75 8 L85 11 L100 2 L100 30 Z" fill="url(#trendGradient)" />
-                <path d="M0 25 L15 22 L30 26 L45 15 L60 18 L75 8 L85 11 L100 2" fill="none" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-              </svg>
+            {chartPeriod !== 'dia' && (
+              <p className="text-[10px] text-[#7a766e] mt-2">
+                {chartPeriod === 'semana' ? 'Semana actual' : 'Últimos 30 días'}
+              </p>
+            )}
+            {/* Real trend line */}
+            <div className="h-10 w-full relative opacity-90 mt-3 -mb-2">
+              {(loading || seriesLoading) ? (
+                <div className="h-full flex items-center justify-center">
+                  <span className="material-symbols-outlined text-violet-400/40 animate-spin" style={{ fontSize: '16px' }}>progress_activity</span>
+                </div>
+              ) : series && series.points.length >= 2 ? (() => {
+                const pts = series.points;
+                const mx  = series.maxVal;
+                const W = 100, H = 28;
+                const step = W / (pts.length - 1);
+                const line = pts.map((v, i) =>
+                  `${i === 0 ? 'M' : 'L'}${(i * step).toFixed(1)},${(H - (v / mx) * H).toFixed(1)}`
+                ).join(' ');
+                const fill = `${line} L${W},${H} L0,${H} Z`;
+                const hasRevenue = pts.some(v => v > 0);
+                const color = hasRevenue ? '#34d399' : '#a78bfa';
+                return (
+                  <svg className="w-full h-full overflow-visible" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={color} stopOpacity="0.35" />
+                        <stop offset="100%" stopColor={color} stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path d={fill} fill="url(#trendGrad)" />
+                    <path d={line} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+                      className={`drop-shadow-[0_0_8px_rgba(52,211,153,0.6)]`} />
+                  </svg>
+                );
+              })() : (
+                <div className="h-full border-b border-white/[0.05]" />
+              )}
             </div>
           </div>
           <div className="grid grid-cols-1 gap-2.5 pt-4 border-t border-white/[0.06] mt-auto">
