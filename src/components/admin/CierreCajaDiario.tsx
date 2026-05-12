@@ -1,141 +1,144 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useTenant } from '@/contexts/TenantContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import type { PaymentMethod } from '@/lib/schema';
-import { Banknote, CreditCard, QrCode, ArrowLeftRight, TrendingUp } from 'lucide-react';
+import { getCierreCaja } from '@/actions/caja.actions';
+import type { CierreCajaData } from '@/actions/caja.actions';
 
-interface PaymentSummary {
-  method: PaymentMethod;
-  total: number;
-  count: number;
-}
+const fmtARS = (n: number) => '$' + Math.round(n).toLocaleString('es-AR');
 
-const METHOD_CONFIG: Record<PaymentMethod, { label: string; icon: React.ReactNode; color: string }> = {
-  efectivo: { label: 'Efectivo', icon: <Banknote className="w-4 h-4" />, color: '#4CAF50' },
-  mercadopago: { label: 'MercadoPago / QR', icon: <QrCode className="w-4 h-4" />, color: '#009EE3' },
-  tarjeta: { label: 'Tarjeta', icon: <CreditCard className="w-4 h-4" />, color: '#D4AF37' },
-  transferencia: { label: 'Transferencia', icon: <ArrowLeftRight className="w-4 h-4" />, color: '#9C27B0' },
+const METHOD_COLORS: Record<string, string> = {
+  efectivo:      '#fbbf24',
+  mercadopago:   '#38bdf8',
+  tarjeta:       '#a78bfa',
+  transferencia: '#94a3b8',
+};
+const METHOD_LABELS: Record<string, string> = {
+  efectivo:      'Efectivo',
+  mercadopago:   'Mercado Pago',
+  tarjeta:       'Tarjeta',
+  transferencia: 'Transfer.',
 };
 
-const ARS = (n: number) =>
-  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(n);
+const AVATAR_COLORS = ['#a78bfa', '#34d399', '#fbbf24', '#fb923c', '#f472b6', '#60a5fa'];
+const avatarColor = (name = '') => AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length];
+const initials = (name = '') => {
+  const parts = name.trim().split(' ').filter(Boolean);
+  return parts.length > 1
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : name.slice(0, 2).toUpperCase();
+};
 
 export function CierreCajaDiario() {
-  const { tenantId } = useTenant();
-  const [summary, setSummary] = useState<PaymentSummary[]>([]);
-  const [totalHoy, setTotalHoy] = useState(0);
-  const [totalTurnos, setTotalTurnos] = useState(0);
+  const { tenantId, branchId } = useTenant();
+  const [data, setData]       = useState<CierreCajaData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!tenantId) return;
+    setLoading(true);
+    getCierreCaja(tenantId, branchId ?? '')
+      .then(setData)
+      .catch(err => console.error('[CierreCajaDiario]', err))
+      .finally(() => setLoading(false));
+  }, [tenantId, branchId]);
 
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    const endOfToday = new Date();
-    endOfToday.setHours(23, 59, 59, 999);
-
-    const q = query(
-      collection(db, 'tenants', tenantId, 'appointments'),
-      where('date', '>=', Timestamp.fromDate(startOfToday)),
-      where('date', '<=', Timestamp.fromDate(endOfToday))
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const cobrados = snapshot.docs
-        .map((doc) => doc.data())
-        .filter((d) => d.status === 'cobrado' && d.amountPaid != null);
-
-      const byMethod: Record<string, PaymentSummary> = {};
-      let total = 0;
-
-      for (const appt of cobrados) {
-        const method = (appt.paymentMethod as PaymentMethod) ?? 'efectivo';
-        const amount = Number(appt.amountPaid ?? 0);
-        total += amount;
-        if (!byMethod[method]) {
-          byMethod[method] = { method, total: 0, count: 0 };
-        }
-        byMethod[method].total += amount;
-        byMethod[method].count += 1;
-      }
-
-      setSummary(Object.values(byMethod).sort((a, b) => b.total - a.total));
-      setTotalHoy(total);
-      setTotalTurnos(cobrados.length);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [tenantId]);
-
-  const today = new Date().toLocaleDateString('es-AR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
+  const methods = data
+    ? (Object.entries(data.byMethod) as [string, number][]).filter(([, v]) => v > 0)
+    : [];
+  const maxMethod = Math.max(...methods.map(([, v]) => v), 1);
 
   return (
-    <Card className="shadow-sm hover:shadow-md transition-shadow rounded-2xl">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              Cierre de Caja
-            </CardTitle>
-            <CardDescription className="capitalize">{today}</CardDescription>
-          </div>
-          {!loading && (
-            <div className="text-right">
-              <p className="text-2xl font-bold text-primary">{ARS(totalHoy)}</p>
-              <p className="text-xs text-muted-foreground">{totalTurnos} turno{totalTurnos !== 1 ? 's' : ''} cobrado{totalTurnos !== 1 ? 's' : ''}</p>
-            </div>
-          )}
+    <div className="relative isolate rounded-[1.5rem] border border-white/10 p-6 overflow-hidden">
+      <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+
+      {/* Header */}
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label block">
+            CIERRE DE CAJA
+          </span>
+          <p className="font-playfair text-2xl text-[#f5f0e8] font-bold italic leading-none mt-1">
+            {loading ? '…' : fmtARS(data?.totalRevenue ?? 0)}
+          </p>
+          <p className="text-[11px] text-[#7a766e] mt-1 capitalize">
+            {loading ? '' : `${data?.dateLabel} · ${data?.cobradoCount ?? 0} turnos cobrados`}
+          </p>
         </div>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="h-32 flex items-center justify-center text-muted-foreground text-sm">
-            Cargando...
-          </div>
-        ) : summary.length === 0 ? (
-          <div className="h-32 flex flex-col items-center justify-center text-center gap-2">
-            <Banknote className="w-8 h-8 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">Sin cobros registrados hoy</p>
-            <p className="text-xs text-muted-foreground/60">Los cobros aparecen al cerrar un turno desde la Agenda</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {summary.map(({ method, total, count }) => {
-              const config = METHOD_CONFIG[method];
-              const pct = totalHoy > 0 ? (total / totalHoy) * 100 : 0;
+        <span className="material-symbols-outlined text-violet-400 text-[22px]">point_of_sale</span>
+      </div>
+
+      {loading ? (
+        <div className="h-32 flex items-center justify-center">
+          <span className="material-symbols-outlined text-violet-400 animate-spin" style={{ fontSize: '24px' }}>progress_activity</span>
+        </div>
+      ) : !data || data.totalRevenue === 0 ? (
+        <div className="h-32 flex flex-col items-center justify-center gap-2 text-center">
+          <span className="material-symbols-outlined text-[#7a766e]/30" style={{ fontSize: '32px' }}>point_of_sale</span>
+          <p className="text-[11px] text-[#7a766e]">Sin cobros registrados hoy</p>
+        </div>
+      ) : (
+        <>
+          {/* Payment methods breakdown */}
+          <div className="space-y-3 mb-6">
+            {methods.map(([method, amount]) => {
+              const color = METHOD_COLORS[method] ?? '#94a3b8';
+              const pct = Math.round(amount / maxMethod * 100);
               return (
                 <div key={method}>
                   <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2 text-sm">
-                      <span style={{ color: config.color }}>{config.icon}</span>
-                      <span className="font-medium">{config.label}</span>
-                      <span className="text-xs text-muted-foreground">· {count} turno{count !== 1 ? 's' : ''}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                      <span className="text-[13px] text-[#f5f0e8] font-medium">{METHOD_LABELS[method] ?? method}</span>
                     </div>
-                    <span className="text-sm font-semibold">{ARS(total)}</span>
+                    <span className="text-[13px] font-bold text-[#f5f0e8] font-mono">{fmtARS(amount)}</span>
                   </div>
-                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                  <div className="h-1 w-full bg-white/[0.05] rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%`, backgroundColor: config.color }}
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${pct}%`, backgroundColor: color }}
                     />
                   </div>
                 </div>
               );
             })}
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {/* Staff commissions */}
+          {data.byStaff.length > 0 && (
+            <>
+              <div className="border-t border-white/[0.06] pt-4">
+                <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label block mb-3">
+                  COMISIONES
+                </span>
+                <ul className="space-y-2">
+                  {data.byStaff.map(s => {
+                    const color = avatarColor(s.staffName);
+                    return (
+                      <li key={s.staffId} className="flex items-center gap-3">
+                        <div
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black shrink-0"
+                          style={{ background: `${color}18`, color, border: `1px solid ${color}30` }}
+                        >
+                          {initials(s.staffName)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-medium text-[#f5f0e8] truncate">{s.staffName}</p>
+                          <p className="text-[10px] text-[#7a766e]">{s.ticketCount} turno{s.ticketCount !== 1 ? 's' : ''}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-[12px] font-bold text-violet-300 font-mono">{fmtARS(s.commissionAmount)}</p>
+                          <p className="text-[9px] text-[#7a766e] font-mono">{fmtARS(s.grossSales)} bruto</p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </div>
   );
 }

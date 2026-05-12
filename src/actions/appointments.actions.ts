@@ -207,6 +207,72 @@ export async function getDailyMetrics(
   };
 }
 
+// ─── Weekly revenue ───────────────────────────────────────────────────────────
+
+export interface DayRevenue {
+  label: string;     // 'L' | 'M' | 'X' | 'J' | 'V' | 'S' | 'D'
+  revenue: number;
+  cobradoCount: number;
+  isToday: boolean;
+}
+
+/**
+ * Ingresos por día de la semana actual (lunes → domingo).
+ * Solo appointments con status cobrado/completed.
+ */
+export async function getWeeklyRevenue(
+  tenantId: string,
+  branchId: string,
+): Promise<DayRevenue[]> {
+  const today = new Date();
+  const dow = today.getDay(); // 0=Dom
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+  startOfWeek.setHours(0, 0, 0, 0);
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  endOfWeek.setHours(23, 59, 59, 999);
+
+  const constraints = [
+    where('date', '>=', Timestamp.fromDate(startOfWeek)),
+    where('date', '<=', Timestamp.fromDate(endOfWeek)),
+    orderBy('date', 'asc'),
+  ];
+  if (branchId) constraints.unshift(where('branchId', '==', branchId));
+
+  const snap = await getDocs(
+    query(collection(db, 'tenants', tenantId, 'appointments'), ...constraints),
+  );
+
+  const DAY_LABELS = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+  const todayStr = today.toDateString();
+
+  // initialize Mon–Sun slots
+  const slots: { revenue: number; cobradoCount: number; date: Date }[] = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(startOfWeek);
+    d.setDate(startOfWeek.getDate() + i);
+    return { revenue: 0, cobradoCount: 0, date: d };
+  });
+
+  for (const docSnap of snap.docs) {
+    const data = docSnap.data() as Appointment;
+    if (data.status !== 'cobrado' && data.status !== 'completed') continue;
+    const apptDate = (data.date as Timestamp).toDate();
+    const slotIdx = Math.floor((apptDate.getTime() - startOfWeek.getTime()) / 86_400_000);
+    if (slotIdx >= 0 && slotIdx < 7) {
+      slots[slotIdx].revenue += data.amountPaid ?? data.priceFinal ?? 0;
+      slots[slotIdx].cobradoCount++;
+    }
+  }
+
+  return slots.map(({ revenue, cobradoCount, date }) => ({
+    label: DAY_LABELS[date.getDay()],
+    revenue,
+    cobradoCount,
+    isToday: date.toDateString() === todayStr,
+  }));
+}
+
 // ─── Mutations ────────────────────────────────────────────────────────────────
 
 export interface CreateAppointmentPayload {

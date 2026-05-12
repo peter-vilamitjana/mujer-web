@@ -4,8 +4,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Sparkles } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useTenant } from '@/contexts/TenantContext';
-import { getDailyMetrics } from '@/actions/appointments.actions';
-import type { DailyMetrics } from '@/actions/appointments.actions';
+import { getDailyMetrics, getWeeklyRevenue } from '@/actions/appointments.actions';
+import type { DailyMetrics, DayRevenue } from '@/actions/appointments.actions';
 import { getCierreCaja } from '@/actions/caja.actions';
 import type { CierreCajaData } from '@/actions/caja.actions';
 
@@ -24,9 +24,10 @@ const methodLabel: Record<string, string> = {
 export default function DashboardTabView() {
   const { data: session } = useSession();
   const { tenantId, branchId } = useTenant();
-  const [metrics, setMetrics] = useState<DailyMetrics | null>(null);
-  const [caja, setCaja]       = useState<CierreCajaData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [metrics, setMetrics]   = useState<DailyMetrics | null>(null);
+  const [caja, setCaja]         = useState<CierreCajaData | null>(null);
+  const [weekly, setWeekly]     = useState<DayRevenue[]>([]);
+  const [loading, setLoading]   = useState(true);
 
   const userName = (session?.user?.name ?? '').split(' ')[0] || 'Admin';
 
@@ -50,8 +51,9 @@ export default function DashboardTabView() {
     Promise.all([
       getDailyMetrics(tenantId, branchId ?? ''),
       getCierreCaja(tenantId, branchId ?? ''),
+      getWeeklyRevenue(tenantId, branchId ?? ''),
     ])
-      .then(([m, c]) => { setMetrics(m); setCaja(c); })
+      .then(([m, c, w]) => { setMetrics(m); setCaja(c); setWeekly(w); })
       .catch(err => console.error('[DashboardTabView]', err))
       .finally(() => setLoading(false));
   }, [tenantId, branchId]);
@@ -144,27 +146,62 @@ export default function DashboardTabView() {
           </div>
         </div>
 
-        {/* Temporal Comparison — static chart, Fase E */}
+        {/* Weekly Revenue — real data */}
         <div className="relative isolate rounded-[1.5rem] border border-white/10 p-6 overflow-hidden transition-all duration-300 cursor-default">
           <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
           <div className="flex justify-between items-start mb-4">
             <div>
               <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label">COMPARATIVA SEMANAL</span>
-              <p className="font-playfair text-2xl text-[#f5f0e8] font-bold italic leading-none mt-1">—</p>
+              <p className="font-playfair text-2xl text-[#f5f0e8] font-bold italic leading-none mt-1">
+                {loading ? '…' : fmtARS(weekly.reduce((s, d) => s + d.revenue, 0))}
+              </p>
             </div>
-            <div className="flex items-center gap-1 bg-white/[0.04] border border-white/[0.06] rounded-full px-2.5 py-1">
-              <span className="text-[11px] text-[#7a766e] font-bold">Fase E</span>
+            <span className="text-[9px] font-bold text-violet-400 bg-violet-400/10 border border-violet-400/20 px-2.5 py-1 rounded-full uppercase tracking-wide">
+              Semana
+            </span>
+          </div>
+          {loading ? (
+            <div className="h-28 flex items-center justify-center">
+              <span className="material-symbols-outlined text-violet-400 animate-spin" style={{ fontSize: '24px' }}>progress_activity</span>
             </div>
-          </div>
-          <div className="flex items-end gap-1.5 h-28 mt-2">
-            {['L','M','X','J','V','S','D'].map((day, i) => (
-              <div key={day} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
-                <div className="w-full rounded-md" style={{ height: `${[42,58,31,100,52,78,47][i]}%`, background: i === 3 ? 'linear-gradient(to top, #7c3aed, #a78bfa)' : 'rgba(167,139,250,0.20)' }} />
-                <span className={`text-[9px] font-bold font-label ${i === 3 ? 'text-violet-400' : 'text-[#7a766e]'}`}>{day}</span>
-              </div>
-            ))}
-          </div>
-          <p className="text-[10px] text-[#7a766e]/60 mt-3 text-center">Datos históricos disponibles en Fase E</p>
+          ) : (() => {
+            const maxRev = Math.max(...weekly.map(d => d.revenue), 1);
+            return (
+              <>
+                <div className="flex items-end gap-1.5 h-28 mt-2">
+                  {weekly.map((day) => {
+                    const heightPct = Math.max(Math.round(day.revenue / maxRev * 100), day.revenue > 0 ? 6 : 3);
+                    return (
+                      <div key={day.label} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group/bar relative">
+                        {day.cobradoCount > 0 && (
+                          <span className="absolute bottom-full mb-1.5 text-[8px] font-mono text-[#7a766e] opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                            {fmtARS(day.revenue)}
+                          </span>
+                        )}
+                        <div
+                          className="w-full rounded-md transition-all duration-700"
+                          style={{
+                            height: `${heightPct}%`,
+                            background: day.isToday
+                              ? 'linear-gradient(to top, #7c3aed, #a78bfa)'
+                              : day.revenue > 0
+                                ? 'rgba(167,139,250,0.35)'
+                                : 'rgba(255,255,255,0.04)',
+                          }}
+                        />
+                        <span className={`text-[9px] font-bold font-label ${day.isToday ? 'text-violet-400' : 'text-[#7a766e]'}`}>
+                          {day.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-[#7a766e]/60 mt-3 text-center">
+                  {weekly.reduce((s, d) => s + d.cobradoCount, 0)} turnos cobrados esta semana
+                </p>
+              </>
+            );
+          })()}
         </div>
 
         {/* Cobros pendientes — REAL DATA */}
