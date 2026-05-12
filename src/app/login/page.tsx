@@ -114,7 +114,8 @@ export default function LoginPage() {
     if (result?.ok) {
       setSuccess(true);
       const session = await getSession();
-      setTimeout(() => router.push(session?.user?.role === 'customer' ? '/perfil' : '/dashboard'), 1400);
+      const slug = session?.user?.salonSlug || 'dashboard';
+      setTimeout(() => router.push(session?.user?.role === 'customer' ? '/perfil' : `/${slug}/dashboard`), 1400);
     }
   };
 

@@ -105,7 +105,17 @@ export const authOptions: NextAuthOptions = {
 
                     // Rol según memberships: sin salón → clienta B2C, con salón → staff
                     token.role = snap.docs.length === 0 ? 'customer' : 'staff';
-                } catch {
+
+                    // NEW: Store the slug of the first tenant for redirection
+                    if (snap.docs.length > 0) {
+                        const firstTenantId = snap.docs[0].id;
+                        const tenantSnap = await getDoc(doc(db, 'tenants', firstTenantId));
+                        if (tenantSnap.exists()) {
+                            token.salonSlug = tenantSnap.data().slug;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error fetching memberships or tenant slug:', err);
                     token.tenantIds = [];
                     token.role = 'customer';
                 }
@@ -142,6 +152,7 @@ export const authOptions: NextAuthOptions = {
             (session.user as any).role = token.role;
             (session.user as any).tenantIds = (token.tenantIds as string[]) ?? [];
             (session.user as any).salonId = ((token.tenantIds as string[]) ?? [])[0] ?? null;
+            (session.user as any).salonSlug = token.salonSlug || null;
             (session.user as any).role = token.role ?? 'customer';
             if (token.phone) (session.user as any).phone = token.phone;
             session.accessToken = token.accessToken as string;

@@ -11,12 +11,7 @@ export default withAuth({
 
 export const config = {
   matcher: [
-    '/agenda/:path*',
-    '/clientes/:path*',
-    '/dashboard/:path*',
-    '/servicios/:path*',
-    '/turnos/:path*',
-    '/mis-turnos/:path*',
+    '/:slug/dashboard/:path*',
     '/admin/:path*',
     '/perfil/:path*',
   ],

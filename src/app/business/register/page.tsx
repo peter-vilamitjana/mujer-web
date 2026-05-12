@@ -457,7 +457,7 @@ export default function RegisterSalonPage() {
 
       if (result.success) {
         localStorage.removeItem(STORAGE_KEY);
-        router.push('/dashboard');
+        router.push(`/${data.slug}/dashboard`);
       } else {
         setError(result.error ?? 'Error desconocido.');
       }

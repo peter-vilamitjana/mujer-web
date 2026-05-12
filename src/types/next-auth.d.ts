@@ -12,6 +12,7 @@ declare module 'next-auth' {
       image?: string | null
       uid?: string
       salonId?: string | null
+      salonSlug?: string | null
       tenantIds: string[]
       role: 'customer' | 'staff' | 'admin'
       phone?: string
@@ -28,6 +29,7 @@ declare module 'next-auth/jwt' {
     user?: any
     uid?: string
     tenantIds?: string[]
+    salonSlug?: string | null
     role?: 'customer' | 'staff' | 'admin'
     phone?: string
   }
