@@ -24,35 +24,39 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     // Suscripción al perfil en tiempo real
     const profileRef = doc(db, 'users', uid);
-    const unsub = onSnapshot(profileRef, async (snap) => {
-      let data = snap.data();
+    const unsub = onSnapshot(
+      profileRef,
+      async (snap) => {
+        let data = snap.data();
 
-      // Si no existe o no tiene datos, intentar migración
-      if (!data) {
-        data = await getUserProfile(uid, email) ?? undefined;
-        if (!data) return;
-      }
-
-      // Obtener rol desde membership del tenant activo
-      let rol: UserRole = 'clienta';
-      try {
-        const membershipSnap = await getDoc(doc(db, 'users', uid, 'memberships', tenantId));
-        if (membershipSnap.exists()) {
-          rol = membershipSnap.data().role as UserRole;
+        // Si no existe o no tiene datos, intentar migración
+        if (!data) {
+          data = await getUserProfile(uid, email) ?? undefined;
+          if (!data) return;
         }
-      } catch (e) {
-        console.error('Error leyendo membership:', e);
-      }
 
-      setUser({
-        id: uid,
-        nombre: data.displayName || data.nombre || 'Sin Nombre',
-        email: data.email || email || '',
-        rol,
-        photoURL: data.photoURL ?? undefined,
-        salonId: tenantId,
-      });
-    });
+        // Obtener rol desde membership del tenant activo
+        let rol: UserRole = 'clienta';
+        try {
+          const membershipSnap = await getDoc(doc(db, 'users', uid, 'memberships', tenantId));
+          if (membershipSnap.exists()) {
+            rol = membershipSnap.data().role as UserRole;
+          }
+        } catch (e) {
+          console.error('Error leyendo membership:', e);
+        }
+
+        setUser({
+          id: uid,
+          nombre: data.displayName || data.nombre || 'Sin Nombre',
+          email: data.email || email || '',
+          rol,
+          photoURL: data.photoURL ?? undefined,
+          salonId: tenantId,
+        });
+      },
+      (err) => console.error('[UserContext] profile onSnapshot:', err),
+    );
 
     return () => unsub();
   }, [session, status, tenantId]);

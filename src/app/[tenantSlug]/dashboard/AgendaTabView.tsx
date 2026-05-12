@@ -9,8 +9,9 @@ import { db } from '@/lib/firebase';
 import { useTenant } from '@/contexts/TenantContext';
 import { useStaff } from '@/hooks/useStaff';
 import { useCatalog } from '@/hooks/useCatalog';
-import { searchCustomers } from '@/actions/customer.actions';
+import { searchCustomers, createCustomer } from '@/actions/customer.actions';
 import { createAppointment } from '@/actions/appointments.actions';
+import { closeAppointment } from '@/actions/checkout.actions';
 import type { Appointment, AppointmentStatus, Service } from '@/lib/schema';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -352,15 +353,27 @@ export default function AgendaTabView() {
     const totalDur = selectedSvcs.reduce((s, sv) => s + sv.dur, 0);
     const totalAmt = selectedSvcs.reduce((s, sv) => s + sv.price, 0);
 
-    // Find the staff member for the selected pro index
     const selectedStaff = staff[newAppt.pro];
     if (!selectedStaff) return;
 
     setSubmitting(true);
     try {
+      // Persist new client to Firestore if created inline
+      let resolvedClientId = newAppt.clientId;
+      if (newAppt.clientMode === 'new' && !resolvedClientId) {
+        const newClientResult = await createCustomer(tenantId, {
+          fullName: clientName,
+          ...(newAppt.phone ? { phone: newAppt.phone } : {}),
+          metrics: { totalVisits: 0, totalSpent: 0 },
+        });
+        if (newClientResult.success && newClientResult.id) {
+          resolvedClientId = newClientResult.id;
+        }
+      }
+
       const result = await createAppointment(tenantId, {
         branchId:        branchId ?? '',
-        clientId:        newAppt.clientId ?? `guest-${Date.now()}`,
+        clientId:        resolvedClientId ?? `guest-${Date.now()}`,
         clientName,
         staffId:         selectedStaff.id,
         staffName:       selectedStaff.name,
@@ -393,6 +406,39 @@ export default function AgendaTabView() {
       }
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // ── Checkout submit ───────────────────────────────────────────────────────────
+  const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const PAY_METHODS = ['tarjeta', 'efectivo', 'transferencia'] as const;
+
+  const handleConfirmCheckout = async () => {
+    if (!checkoutAppt || !tenantId) return;
+    const method = PAY_METHODS[payMethod] ?? 'efectivo';
+    const commissionRate = staff[checkoutAppt.pro]?.commissions?.default ?? 30;
+
+    setCheckoutSubmitting(true);
+    setCheckoutError(null);
+    try {
+      const result = await closeAppointment(tenantId, checkoutAppt.id, {
+        amountPaid: checkoutAppt.amount,
+        paymentMethod: method,
+        paymentMethods: { [method]: checkoutAppt.amount } as any,
+        commissionCalculated: commissionRate,
+      });
+      if (result.success) {
+        setAppts(prev => prev.map(a =>
+          a.id === checkoutAppt.id ? { ...a, status: 'completado' as const, firestoreStatus: 'cobrado' } : a,
+        ));
+        setCheckoutId(null);
+        setSelectedId(checkoutAppt.id);
+      } else {
+        setCheckoutError(result.error ?? 'Error al cobrar.');
+      }
+    } finally {
+      setCheckoutSubmitting(false);
     }
   };
 
@@ -1118,12 +1164,25 @@ export default function AgendaTabView() {
                   </button>
                 ))}
               </div>
-              <button onClick={() => setCheckoutId(null)} className="w-full py-3.5 bg-violet-500 hover:bg-violet-400 active:scale-[0.98] text-white font-bold rounded-xl text-sm transition-all shadow-[0_0_20px_rgba(139,92,246,0.35)] cursor-pointer min-h-[44px]">
+              {checkoutError && (
+                <p className="text-rose-400 text-[11px] text-center mb-2">{checkoutError}</p>
+              )}
+              <button
+                onClick={handleConfirmCheckout}
+                disabled={checkoutSubmitting}
+                className="w-full py-3.5 bg-violet-500 hover:bg-violet-400 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] text-white font-bold rounded-xl text-sm transition-all shadow-[0_0_20px_rgba(139,92,246,0.35)] cursor-pointer min-h-[44px] flex items-center justify-center gap-2">
+                {checkoutSubmitting
+                  ? <span className="material-symbols-outlined animate-spin" style={{ fontSize: '16px' }}>progress_activity</span>
+                  : null}
                 Confirmar · ${checkoutAppt.amount.toLocaleString('es-AR')}
               </button>
               <p className="text-[10px] text-center text-[#7a766e] mt-2.5">
                 Comisión {pros[checkoutAppt.pro]?.name ?? '—'}:{' '}
-                <span className="text-violet-400 font-bold">${Math.round(checkoutAppt.amount * 0.3).toLocaleString('es-AR')}</span> (30%)
+                {(() => {
+                  const rate = staff[checkoutAppt.pro]?.commissions?.default ?? 30;
+                  return <span className="text-violet-400 font-bold">${Math.round(checkoutAppt.amount * rate / 100).toLocaleString('es-AR')}</span>;
+                })()}
+                {' '}({staff[checkoutAppt.pro]?.commissions?.default ?? 30}%)
               </p>
             </div>
 

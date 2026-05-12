@@ -40,14 +40,19 @@ export async function getCustomers(
   tenantId: string,
   opts: { lim?: number } = {},
 ): Promise<Customer[]> {
-  const lim = opts.lim ?? 50;
-  const q = query(
-    collection(db, 'tenants', tenantId, 'customers'),
-    orderBy('fullName', 'asc'),
-    limit(lim),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map(d => toSerializable({ id: d.id, ...d.data() }) as Customer);
+  try {
+    const lim = opts.lim ?? 50;
+    const q = query(
+      collection(db, 'tenants', tenantId, 'customers'),
+      orderBy('fullName', 'asc'),
+      limit(lim),
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(d => toSerializable({ id: d.id, ...d.data() }) as Customer);
+  } catch (err) {
+    console.error('[getCustomers]', err);
+    return [];
+  }
 }
 
 /**
@@ -59,38 +64,42 @@ export async function searchCustomers(
 ): Promise<Customer[]> {
   if (!searchQuery.trim()) return [];
 
-  // Búsqueda por nombre (prefix range query en Firestore)
-  const normalized = searchQuery.trim();
-  const end = normalized.slice(0, -1) + String.fromCharCode(normalized.charCodeAt(normalized.length - 1) + 1);
+  try {
+    const normalized = searchQuery.trim();
+    const end = normalized.slice(0, -1) + String.fromCharCode(normalized.charCodeAt(normalized.length - 1) + 1);
 
-  const [byName, byPhone] = await Promise.all([
-    getDocs(
-      query(
-        collection(db, 'tenants', tenantId, 'customers'),
-        orderBy('fullName'),
-        where('fullName', '>=', normalized),
-        where('fullName', '<',  end),
-        limit(20),
+    const [byName, byPhone] = await Promise.all([
+      getDocs(
+        query(
+          collection(db, 'tenants', tenantId, 'customers'),
+          orderBy('fullName'),
+          where('fullName', '>=', normalized),
+          where('fullName', '<',  end),
+          limit(20),
+        ),
       ),
-    ),
-    getDocs(
-      query(
-        collection(db, 'tenants', tenantId, 'customers'),
-        where('phone', '>=', normalized),
-        where('phone', '<',  end),
-        limit(10),
+      getDocs(
+        query(
+          collection(db, 'tenants', tenantId, 'customers'),
+          where('phone', '>=', normalized),
+          where('phone', '<',  end),
+          limit(10),
+        ),
       ),
-    ),
-  ]);
+    ]);
 
-  const seen = new Set<string>();
-  const results: Customer[] = [];
-  for (const snap of [...byName.docs, ...byPhone.docs]) {
-    if (seen.has(snap.id)) continue;
-    seen.add(snap.id);
-    results.push(toSerializable({ id: snap.id, ...snap.data() }) as Customer);
+    const seen = new Set<string>();
+    const results: Customer[] = [];
+    for (const snap of [...byName.docs, ...byPhone.docs]) {
+      if (seen.has(snap.id)) continue;
+      seen.add(snap.id);
+      results.push(toSerializable({ id: snap.id, ...snap.data() }) as Customer);
+    }
+    return results;
+  } catch (err) {
+    console.error('[searchCustomers]', err);
+    return [];
   }
-  return results;
 }
 
 /**
@@ -113,15 +122,20 @@ export async function getCustomerAppointments(
   customerId: string,
   lim = 20,
 ): Promise<Appointment[]> {
-  const snap = await getDocs(
-    query(
-      collection(db, 'tenants', tenantId, 'appointments'),
-      where('clientId', '==', customerId),
-      orderBy('date', 'desc'),
-      limit(lim),
-    ),
-  );
-  return snap.docs.map(d => toSerializable({ id: d.id, ...d.data() }) as Appointment);
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, 'tenants', tenantId, 'appointments'),
+        where('clientId', '==', customerId),
+        orderBy('date', 'desc'),
+        limit(lim),
+      ),
+    );
+    return snap.docs.map(d => toSerializable({ id: d.id, ...d.data() }) as Appointment);
+  } catch (err) {
+    console.error('[getCustomerAppointments]', err);
+    return [];
+  }
 }
 
 // ─── Admin mutations ──────────────────────────────────────────────────────────

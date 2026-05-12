@@ -6,6 +6,8 @@ import { useSession } from 'next-auth/react';
 import { useTenant } from '@/contexts/TenantContext';
 import { getDailyMetrics } from '@/actions/appointments.actions';
 import type { DailyMetrics } from '@/actions/appointments.actions';
+import { getCierreCaja } from '@/actions/caja.actions';
+import type { CierreCajaData } from '@/actions/caja.actions';
 
 const AVATAR_COLORS = ['#a78bfa', '#34d399', '#fbbf24', '#fb923c', '#f472b6', '#60a5fa'];
 const avatarColor = (name = '') => AVATAR_COLORS[(name.charCodeAt(0) || 0) % AVATAR_COLORS.length];
@@ -23,8 +25,8 @@ export default function DashboardTabView() {
   const { data: session } = useSession();
   const { tenantId, branchId } = useTenant();
   const [metrics, setMetrics] = useState<DailyMetrics | null>(null);
+  const [caja, setCaja]       = useState<CierreCajaData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [servicesPeriod, setServicesPeriod] = useState<'semana' | 'mes'>('semana');
 
   const userName = (session?.user?.name ?? '').split(' ')[0] || 'Admin';
 
@@ -45,8 +47,11 @@ export default function DashboardTabView() {
   useEffect(() => {
     if (!tenantId) return;
     setLoading(true);
-    getDailyMetrics(tenantId, branchId ?? '')
-      .then(m => setMetrics(m))
+    Promise.all([
+      getDailyMetrics(tenantId, branchId ?? ''),
+      getCierreCaja(tenantId, branchId ?? ''),
+    ])
+      .then(([m, c]) => { setMetrics(m); setCaja(c); })
       .catch(err => console.error('[DashboardTabView]', err))
       .finally(() => setLoading(false));
   }, [tenantId, branchId]);
@@ -256,62 +261,63 @@ export default function DashboardTabView() {
           </div>
         </div>
 
-        {/* Top Services Card — static for now (Fase E) */}
+        {/* Top Services — real data from caja.topServices */}
         <div className="lg:col-span-3 relative isolate rounded-[1.5rem] border border-white/[0.06] p-6 md:p-7 overflow-hidden flex flex-col bg-[#0d0d0d]/40">
           <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
           <div className="flex items-start justify-between mb-5">
             <div>
               <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label block">SERVICIOS DESTACADOS</span>
-              <p className="font-playfair text-lg text-[#f5f0e8] font-bold italic leading-tight mt-1">Más solicitados</p>
+              <p className="font-playfair text-lg text-[#f5f0e8] font-bold italic leading-tight mt-1">Hoy</p>
             </div>
-            <div className="flex items-center gap-0.5 bg-white/[0.04] border border-white/[0.06] rounded-full p-0.5">
-              {(['semana', 'mes'] as const).map((p) => (
-                <button key={p} onClick={() => setServicesPeriod(p)}
-                  className={`px-3 py-1 rounded-full text-[10px] font-bold font-label uppercase tracking-wide transition-all duration-200 cursor-pointer ${servicesPeriod === p ? 'bg-violet-500/20 text-violet-300 border border-violet-500/25' : 'text-[#7a766e] hover:text-[#f5f0e8]'}`}>
-                  {p === 'semana' ? 'Semana' : 'Mes'}
-                </button>
-              ))}
-            </div>
+            <span className="text-[9px] font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-full uppercase tracking-wide">
+              Live
+            </span>
           </div>
-          <ul className="flex flex-col gap-3 flex-1">
-            {(servicesPeriod === 'semana' ? [
-              { rank: 1, name: 'Coloración / Tinte',  count: 24, revenue: '$48.000', pct: 100 },
-              { rank: 2, name: 'Corte + Brushing',     count: 18, revenue: '$27.000', pct: 75  },
-              { rank: 3, name: 'Balayage',             count: 11, revenue: '$77.000', pct: 46  },
-              { rank: 4, name: 'Manicura',             count: 9,  revenue: '$13.500', pct: 38  },
-            ] : [
-              { rank: 1, name: 'Corte + Brushing',     count: 72, revenue: '$108.000', pct: 100 },
-              { rank: 2, name: 'Coloración / Tinte',   count: 68, revenue: '$136.000', pct: 94  },
-              { rank: 3, name: 'Manicura',             count: 45, revenue: '$67.500',  pct: 63  },
-              { rank: 4, name: 'Balayage',             count: 38, revenue: '$266.000', pct: 53  },
-            ]).map(({ rank, name, count, revenue, pct }) => {
-              const rc = [
-                { dot: '#fbbf24', bar: 'linear-gradient(to right, #92400e, #fbbf24)' },
-                { dot: '#a78bfa', bar: 'linear-gradient(to right, #4c1d95, #a78bfa)' },
-                { dot: '#e879f9', bar: 'linear-gradient(to right, #701a75, #e879f9)' },
-                { dot: '#7a766e', bar: 'rgba(167,139,250,0.15)' },
-              ][rank - 1];
-              return (
-                <li key={name}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0" style={{ background: `${rc.dot}18`, color: rc.dot }}>{rank}</span>
-                      <span className="text-[13px] text-[#f5f0e8] font-medium truncate">{name}</span>
+          {loading ? (
+            <div className="flex-1 flex items-center justify-center">
+              <span className="material-symbols-outlined text-violet-400 animate-spin" style={{ fontSize: '24px' }}>progress_activity</span>
+            </div>
+          ) : !caja?.topServices.length ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center py-4 gap-2">
+              <span className="material-symbols-outlined text-[#7a766e]/40" style={{ fontSize: '32px' }}>bar_chart_4_bars</span>
+              <p className="text-[11px] text-[#7a766e]">Sin servicios cobrados hoy</p>
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-3 flex-1">
+              {(() => {
+                const DOT_COLORS = ['#fbbf24', '#a78bfa', '#e879f9', '#34d399', '#60a5fa'];
+                const BAR_GRADIENTS = [
+                  'linear-gradient(to right, #92400e, #fbbf24)',
+                  'linear-gradient(to right, #4c1d95, #a78bfa)',
+                  'linear-gradient(to right, #701a75, #e879f9)',
+                  'linear-gradient(to right, #064e3b, #34d399)',
+                  'linear-gradient(to right, #1e3a5f, #60a5fa)',
+                ];
+                const maxCount = Math.max(...(caja?.topServices ?? []).map(s => s.count), 1);
+                return (caja?.topServices ?? []).map((svc, i) => (
+                  <li key={svc.name}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0"
+                          style={{ background: `${DOT_COLORS[i]}18`, color: DOT_COLORS[i] }}>{i + 1}</span>
+                        <span className="text-[13px] text-[#f5f0e8] font-medium truncate">{svc.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0 ml-2">
+                        <span className="text-[11px] text-[#7a766e]">{svc.count}×</span>
+                        <span className="text-[12px] font-bold text-[#f5f0e8] font-mono w-20 text-right">{fmtARS(svc.revenue)}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0 ml-2">
-                      <span className="text-[11px] text-[#7a766e]">{count} turnos</span>
-                      <span className="text-[12px] font-bold text-[#f5f0e8] font-mono w-20 text-right">{revenue}</span>
+                    <div className="h-1 rounded-full bg-white/[0.05] overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${Math.round(svc.count / maxCount * 100)}%`, background: BAR_GRADIENTS[i] }} />
                     </div>
-                  </div>
-                  <div className="h-1 rounded-full bg-white/[0.05] overflow-hidden">
-                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: rc.bar }} />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                  </li>
+                ));
+              })()}
+            </ul>
+          )}
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/[0.05]">
-            <span className="text-[10px] text-[#7a766e]">{servicesPeriod === 'semana' ? 'Esta semana' : 'Este mes'} · Datos históricos (Fase E)</span>
+            <span className="text-[10px] text-[#7a766e]">{caja?.dateLabel ?? 'Hoy'} · {caja?.cobradoCount ?? 0} turnos cobrados</span>
           </div>
         </div>
 

@@ -4,12 +4,13 @@ import { doc, updateDoc, serverTimestamp, getDoc, increment } from 'firebase/fir
 import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import type { PaymentMethod, AppointmentStatus } from '@/lib/schema';
+import type { PaymentMethod, PaymentSplit, AppointmentStatus } from '@/lib/schema';
 
-interface CheckoutPayload {
+export interface CheckoutPayload {
     amountPaid: number;
     paymentMethod: PaymentMethod;
-    commissionCalculated?: number;
+    paymentMethods?: PaymentSplit;
+    commissionCalculated?: number;  // percentage 0–100
 }
 
 export async function closeAppointment(
@@ -31,9 +32,12 @@ export async function closeAppointment(
         return { success: false, error: 'Monto inválido.' };
     }
 
+    const staffCommissionAmount = payload.commissionCalculated != null
+        ? Math.round(payload.amountPaid * payload.commissionCalculated / 100)
+        : null;
+
     const status: AppointmentStatus = 'cobrado';
 
-    // TODO: verify caller belongs to tenantId (cross-codebase RBAC gap — tracked separately)
     try {
         const appointmentRef = doc(db, 'tenants', tenantId, 'appointments', appointmentId);
         const snap = await getDoc(appointmentRef);
@@ -48,12 +52,13 @@ export async function closeAppointment(
             status,
             amountPaid: payload.amountPaid,
             paymentMethod: payload.paymentMethod,
+            ...(payload.paymentMethods ? { paymentMethods: payload.paymentMethods } : {}),
             commissionCalculated: payload.commissionCalculated ?? null,
+            ...(staffCommissionAmount != null ? { staffCommissionAmount } : {}),
             checkoutAt: serverTimestamp(),
             checkoutBy: uid,
         });
 
-        // Increment customer metrics on checkout
         if (appointmentData.clientId) {
             const customerRef = doc(db, 'tenants', tenantId, 'customers', appointmentData.clientId);
             await updateDoc(customerRef, {

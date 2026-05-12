@@ -119,6 +119,47 @@ export async function createCalendarEvent(input: CalendarEventInput): Promise<st
 }
 
 /**
+ * Updates an existing Google Calendar event (for rescheduling).
+ * Only patches the fields provided — missing fields are left unchanged.
+ */
+export async function updateCalendarEvent(
+  staffUserId: string,
+  googleEventId: string,
+  patch: {
+    clientName?: string;
+    serviceNames?: string;
+    startDate?: Date;
+    durationMinutes?: number;
+    notes?: string;
+  },
+): Promise<void> {
+  const tokenData = await getStaffTokens(staffUserId);
+  if (!tokenData) return;
+
+  try {
+    const accessToken = await refreshTokenIfNeeded(staffUserId, tokenData);
+    const oauth2Client = new google.auth.OAuth2();
+    oauth2Client.setCredentials({ access_token: accessToken });
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+
+    const body: Record<string, unknown> = {};
+    if (patch.clientName || patch.serviceNames) {
+      body.summary = `${patch.clientName ?? ''} — ${patch.serviceNames ?? ''}`.trim();
+    }
+    if (patch.startDate && patch.durationMinutes) {
+      const end = new Date(patch.startDate.getTime() + patch.durationMinutes * 60_000);
+      body.start = { dateTime: patch.startDate.toISOString(), timeZone: TIMEZONE };
+      body.end   = { dateTime: end.toISOString(), timeZone: TIMEZONE };
+    }
+
+    if (Object.keys(body).length === 0) return;
+    await calendar.events.patch({ calendarId: 'primary', eventId: googleEventId, requestBody: body });
+  } catch (err) {
+    console.error('[google-calendar] updateCalendarEvent error:', err);
+  }
+}
+
+/**
  * Deletes or cancels a Google Calendar event.
  * Safe to call even if event doesn't exist.
  */

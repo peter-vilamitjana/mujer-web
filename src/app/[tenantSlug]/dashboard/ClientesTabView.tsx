@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTenant } from '@/contexts/TenantContext';
-import { getCustomers, searchCustomers, getCustomerAppointments } from '@/actions/customer.actions';
+import { getCustomers, searchCustomers, getCustomerAppointments, createCustomer, updateCustomer } from '@/actions/customer.actions';
 import type { Customer, Appointment } from '@/lib/schema';
 
 type ClientStatus = 'vip' | 'frecuente' | 'regular' | 'nuevo' | 'inactivo';
@@ -121,6 +121,57 @@ export default function ClientesTabView() {
   const [totalCount, setTotalCount] = useState(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ── New / Edit client form state ─────────────────────────────────────────────
+  type ClientForm = { fullName: string; phone: string; email: string; notes: string };
+  const [showNewForm, setShowNewForm]   = useState(false);
+  const [newForm, setNewForm]           = useState<ClientForm>({ fullName: '', phone: '', email: '', notes: '' });
+  const [newFormSaving, setNewFormSaving] = useState(false);
+  const [newFormError, setNewFormError]   = useState<string | null>(null);
+
+  // Notes edit for selected client
+  const [editNotes, setEditNotes] = useState<string | null>(null); // null = not editing
+  const [notesSaving, setNotesSaving] = useState(false);
+
+  const handleCreateClient = async () => {
+    if (!tenantId || !newForm.fullName.trim()) return;
+    setNewFormSaving(true);
+    setNewFormError(null);
+    const result = await createCustomer(tenantId, {
+      fullName: newForm.fullName.trim(),
+      ...(newForm.phone  ? { phone: newForm.phone.trim() }  : {}),
+      ...(newForm.email  ? { email: newForm.email.trim() }  : {}),
+      ...(newForm.notes  ? { notes: newForm.notes.trim() }  : {}),
+      metrics: { totalVisits: 0, totalSpent: 0 },
+    });
+    setNewFormSaving(false);
+    if (result.success) {
+      setShowNewForm(false);
+      setNewForm({ fullName: '', phone: '', email: '', notes: '' });
+      // Reload list
+      if (tenantId) {
+        getCustomers(tenantId, { lim: 100 }).then(customers => {
+          const rows = customers.map(mapCustomer);
+          setClients(rows);
+          setTotalCount(rows.length);
+          if (result.id) setSelectedId(result.id);
+        });
+      }
+    } else {
+      setNewFormError(result.error ?? 'Error al crear cliente.');
+    }
+  };
+
+  const handleSaveNotes = async () => {
+    if (!tenantId || !selectedId || editNotes === null) return;
+    setNotesSaving(true);
+    const result = await updateCustomer(tenantId, selectedId, { notes: editNotes });
+    setNotesSaving(false);
+    if (result.success) {
+      setClients(prev => prev.map(c => c.id === selectedId ? { ...c, notes: editNotes } : c));
+      setEditNotes(null);
+    }
+  };
+
   // Initial load
   useEffect(() => {
     if (!tenantId) return;
@@ -150,6 +201,9 @@ export default function ClientesTabView() {
     }, 300);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [search, tenantId]);
+
+  // Reset notes edit when client changes
+  useEffect(() => { setEditNotes(null); }, [selectedId]);
 
   // Load history when client selected
   useEffect(() => {
@@ -187,12 +241,68 @@ export default function ClientesTabView() {
             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>download</span>
             <span className="hidden sm:inline">Exportar</span>
           </button>
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-400 active:scale-95 text-white text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer shadow-[0_0_24px_rgba(139,92,246,0.28)]">
+          <button
+            onClick={() => { setShowNewForm(true); setNewFormError(null); setNewForm({ fullName: '', phone: '', email: '', notes: '' }); }}
+            className="flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-400 active:scale-95 text-white text-sm font-semibold rounded-xl transition-all duration-200 cursor-pointer shadow-[0_0_24px_rgba(139,92,246,0.28)]">
             <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>person_add</span>
             <span className="hidden sm:inline">Nuevo Cliente</span>
           </button>
         </div>
       </div>
+
+      {/* New Client Modal */}
+      {showNewForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+          <div className="relative w-full max-w-md rounded-[1.5rem] border border-white/[0.12] bg-[#111]/90 p-6 flex flex-col gap-5 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between">
+              <h2 className="font-playfair text-xl font-bold italic text-[#f5f0e8]">Nuevo Cliente</h2>
+              <button onClick={() => setShowNewForm(false)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/[0.06] text-[#7a766e] hover:text-[#f5f0e8] transition-colors cursor-pointer">
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
+              </button>
+            </div>
+            <div className="flex flex-col gap-3">
+              {[
+                { key: 'fullName', label: 'Nombre completo *', icon: 'person', type: 'text' },
+                { key: 'phone',    label: 'WhatsApp / Teléfono',  icon: 'smartphone', type: 'tel' },
+                { key: 'email',    label: 'Email',               icon: 'email',      type: 'email' },
+              ].map(({ key, label, icon, type }) => (
+                <div key={key} className="relative group">
+                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7a766e] group-focus-within:text-violet-400 transition-colors pointer-events-none" style={{ fontSize: '17px' }}>{icon}</span>
+                  <input
+                    type={type}
+                    placeholder={label}
+                    value={newForm[key as keyof ClientForm]}
+                    onChange={e => setNewForm(f => ({ ...f, [key]: e.target.value }))}
+                    className="w-full bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.12] rounded-xl pl-11 pr-4 py-3 text-[13px] text-[#f5f0e8] placeholder-[#7a766e] focus:outline-none focus:border-violet-500/40 transition-all"
+                  />
+                </div>
+              ))}
+              <textarea
+                placeholder="Notas técnicas (opcional)"
+                value={newForm.notes}
+                onChange={e => setNewForm(f => ({ ...f, notes: e.target.value }))}
+                rows={2}
+                className="w-full bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.12] rounded-xl px-4 py-3 text-[13px] text-[#f5f0e8] placeholder-[#7a766e] focus:outline-none focus:border-violet-500/40 transition-all resize-none"
+              />
+            </div>
+            {newFormError && <p className="text-rose-400 text-[12px]">{newFormError}</p>}
+            <div className="flex gap-2">
+              <button onClick={() => setShowNewForm(false)} className="px-4 py-2.5 rounded-xl text-[12px] font-bold text-[#7a766e] hover:text-[#f5f0e8] hover:bg-white/[0.05] transition-all cursor-pointer border border-white/[0.06]">
+                Cancelar
+              </button>
+              <button
+                onClick={handleCreateClient}
+                disabled={!newForm.fullName.trim() || newFormSaving}
+                className="flex-1 py-2.5 bg-violet-500 hover:bg-violet-400 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] text-white font-bold rounded-xl text-[13px] transition-all shadow-[0_0_24px_rgba(139,92,246,0.28)] cursor-pointer flex items-center justify-center gap-2">
+                {newFormSaving
+                  ? <span className="material-symbols-outlined animate-spin" style={{ fontSize: '16px' }}>progress_activity</span>
+                  : <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>person_add</span>}
+                Crear Cliente
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch min-h-[600px]">
 
@@ -396,15 +506,56 @@ export default function ClientesTabView() {
                   </div>
                 </div>
 
-                {selectedClient.notes && (
-                  <div className="relative">
-                    <span className="text-[9px] uppercase tracking-widest text-violet-400 font-bold block mb-2 font-label">Notas Técnicas & Preferencias</span>
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] uppercase tracking-widest text-violet-400 font-bold font-label">Notas Técnicas & Preferencias</span>
+                    {editNotes === null ? (
+                      <button
+                        onClick={() => setEditNotes(selectedClient.notes ?? '')}
+                        className="text-[10px] font-bold text-[#7a766e] hover:text-violet-400 cursor-pointer transition-colors flex items-center gap-0.5">
+                        <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>edit</span>
+                        Editar
+                      </button>
+                    ) : (
+                      <div className="flex gap-1">
+                        <button onClick={() => setEditNotes(null)} className="text-[10px] font-bold text-[#7a766e] hover:text-[#f5f0e8] cursor-pointer transition-colors px-2 py-0.5 rounded-md hover:bg-white/[0.05]">
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={handleSaveNotes}
+                          disabled={notesSaving}
+                          className="text-[10px] font-bold text-violet-400 hover:text-violet-300 cursor-pointer transition-colors px-2 py-0.5 rounded-md bg-violet-500/10 hover:bg-violet-500/20 disabled:opacity-50 flex items-center gap-1">
+                          {notesSaving && <span className="material-symbols-outlined animate-spin" style={{ fontSize: '11px' }}>progress_activity</span>}
+                          Guardar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {editNotes !== null ? (
+                    <textarea
+                      value={editNotes}
+                      onChange={e => setEditNotes(e.target.value)}
+                      rows={3}
+                      autoFocus
+                      placeholder="Fórmula, alergias, preferencias..."
+                      className="w-full bg-violet-500/5 border border-violet-500/25 rounded-2xl p-3.5 text-[12px] text-[#c9c3b8] placeholder-[#7a766e]/50 focus:outline-none focus:border-violet-500/40 transition-all resize-none leading-relaxed"
+                    />
+                  ) : selectedClient.notes ? (
                     <div className="relative p-3.5 bg-violet-500/5 backdrop-blur-md rounded-2xl border border-violet-500/20 text-[12px] leading-relaxed text-[#c9c3b8] italic">
                       <span className="absolute top-2 left-2 text-violet-400/20 text-4xl leading-none font-serif">"</span>
                       <span className="relative z-10 pl-4 block">{selectedClient.notes}</span>
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <button
+                      onClick={() => setEditNotes('')}
+                      className="w-full p-3 text-center bg-white/[0.01] border border-dashed border-white/[0.06] hover:border-violet-500/25 hover:bg-violet-500/[0.03] rounded-2xl transition-all cursor-pointer group">
+                      <p className="text-[11px] text-[#7a766e] group-hover:text-violet-400 transition-colors flex items-center justify-center gap-1.5">
+                        <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>add</span>
+                        Agregar notas técnicas
+                      </p>
+                    </button>
+                  )}
+                </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-3 px-1">
