@@ -1,7 +1,7 @@
 # PLAN — Dashboard Admin → Firestore Real
 
 > Generado: 2026-05-11  
-> Última actualización: 2026-05-11  
+> Última actualización: 2026-05-12  
 > Branch activo: `database-config`  
 > Autor: Claude Code + Pedro Vila Mitjana
 
@@ -21,6 +21,10 @@
 | Extra | Comparativa Semanal con datos reales | ✅ Completa |
 | Extra | ServiciosTabView: CRUD completo (crear, editar, desactivar, staff toggle) | ✅ Completa |
 | Extra | ConfigTabView: horarios reales, staff real, todos los toggles persistidos | ✅ Completa |
+| Extra | Google Calendar OAuth flow completo (connect/callback/status/event) | ✅ Completa |
+| Extra | AgendaTabView: fecha prominente + panel GCal + sync automático al crear turno | ✅ Completa |
+| Bug fix | RSC stream error (resolveErrorDev) — auth.ts session callback sin try/catch | ✅ Corregido |
+| Bug fix | Firestore watch stream (__PRIVATE_fromRpcStatus) — onSnapshot → getDocs en Rendimiento | ✅ Corregido |
 
 ---
 
@@ -275,6 +279,8 @@ Carga: 1 tenant · 1 branch · 3 staff · 5 servicios · 5 clientes · 10 turnos
 |---|---|---|
 | Firebase Client SDK en Server Actions | P1 | Todas las actions usan Client SDK en vez de REST API con service account. Funciona en dev, puede fallar en prod con reglas estrictas. Migrar antes de prod. |
 | Índice compuesto `(clientId, date DESC)` | P2 | Falta crear en Firebase Console para que `getCustomerAppointments` funcione. El link aparece en los logs al visitar un cliente con historial. |
+| Google Calendar — credenciales en `.env.local` | P2 | `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` no están en `.env.local`. Sin ellos el OAuth flow (connect/callback) no funciona. Obtener en console.cloud.google.com y agregar `/api/google/callback` como Authorized Redirect URI. |
+| Google Calendar — Firestore rules para tokens | P2 | El callback de OAuth guarda tokens en `calendarTokens/{uid}` y `users/{uid}/integrations/google`. Las reglas de Firestore deben permitir write autenticado para que la integración funcione. |
 | Liquidación de comisiones | P3 | `PerformanceTabView` tiene botón "Generar liquidación" que solo muestra un toast. No crea ningún documento en Firestore. |
 | Galería de fotos con upload real | P3 | `ConfigTabView` acepta URLs manuales. No hay upload a Firebase Storage. |
 
@@ -292,6 +298,7 @@ Carga: 1 tenant · 1 branch · 3 staff · 5 servicios · 5 clientes · 10 turnos
 | `5e59651` | feat(dashboard): real weekly revenue chart + CierreCajaDiario dark glass |
 | `c74abf2` | feat(caja): add dedicated Caja tab |
 | `c6c4b26` | feat(dashboard): exhaustive admin pipeline fix — real data end-to-end |
+| `bc3ba9d` | feat(agenda): Google Calendar integration + prominent date + fix RSC/Firestore errors |
 
 ---
 
@@ -302,7 +309,7 @@ Carga: 1 tenant · 1 branch · 3 staff · 5 servicios · 5 clientes · 10 turnos
 | Tabs con datos reales | 7 de 7 (100%) |
 | Actions de servidor | 23 funciones en 7 archivos |
 | Mutaciones con Firestore | createAppointment, cancelAppointment, closeAppointment, createCustomer, updateCustomer, createService, updateService, toggleServiceActive, createStaffMember, updateStaffMember, updateStaffCommissions, updateTenantSettings |
-| Google Calendar | createCalendarEvent, updateCalendarEvent, deleteCalendarEvent (best-effort, nunca bloquean) |
+| Google Calendar | OAuth flow completo: /api/google/connect, /api/google/callback, /api/google/status, /api/google/event. Sync best-effort al crear turno. |
 | Breaking changes en schema | 0 (todos los campos nuevos son opcionales) |
 | Hardcoded data restante | 0 |
 
