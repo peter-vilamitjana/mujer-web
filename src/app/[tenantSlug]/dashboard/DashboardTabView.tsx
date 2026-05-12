@@ -306,46 +306,101 @@ export default function DashboardTabView() {
         <div className="lg:col-span-2 relative isolate rounded-[1.5rem] border border-white/[0.06] p-6 md:p-7 overflow-hidden flex flex-col items-center justify-between h-full bg-[#0d0d0d]/40">
           <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
           <span className="text-[10px] uppercase font-bold text-[#7a766e] tracking-[0.15em] font-label self-start block mb-8">MÉTODO DE PAGO</span>
-          <div className="relative w-44 h-44 mb-8">
-            <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_0_20px_rgba(167,139,250,0.15)]" viewBox="0 0 36 36">
-              <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="rgba(255,255,255,0.03)" strokeWidth="3" />
-              <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#a78bfa" strokeDasharray="65 35" strokeDashoffset="0" strokeWidth="3" />
-              <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#e879f9" strokeDasharray="20 80" strokeDashoffset="-65" strokeWidth="3" />
-              <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="#d8b4fe" strokeDasharray="15 85" strokeDashoffset="-85" strokeWidth="3" />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              {loading || !totalRevenue ? (
-                <span className="text-[#7a766e] text-sm">—</span>
-              ) : (
-                <>
-                  <span className="text-3xl font-bold text-[#f5f0e8] font-inter tracking-tight leading-none drop-shadow-md">
-                    {Math.round(((revenueByMethod?.tarjeta ?? 0) + (revenueByMethod?.mercadopago ?? 0)) / totalRevenue * 100)}%
-                  </span>
-                  <span className="text-[10px] text-[#7a766e] uppercase tracking-[0.2em] font-label mt-1.5">Digital</span>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="w-full mt-auto space-y-3">
-            {[
-              { key: 'tarjeta',     color: '#a78bfa', label: 'Tarjeta' },
-              { key: 'mercadopago', color: '#e879f9', label: 'Mercado Pago' },
-              { key: 'efectivo',    color: '#d8b4fe', label: 'Efectivo' },
-              { key: 'transferencia', color: '#94a3b8', label: 'Transfer.' },
-            ].map(({ key, color, label }) => {
-              const val = revenueByMethod?.[key as keyof typeof revenueByMethod] ?? 0;
-              const pct = totalRevenue > 0 ? Math.round(val / totalRevenue * 100) : 0;
-              return (
-                <div key={key} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                    <span className="text-[13px] text-[#f5f0e8] font-medium">{label}</span>
+          {(() => {
+            // r=15.915 → circumference ≈ 100, so pct == strokeDasharray value directly
+            const METHODS = [
+              { key: 'tarjeta',       color: '#a78bfa', label: 'Tarjeta'      },
+              { key: 'mercadopago',   color: '#e879f9', label: 'Mercado Pago' },
+              { key: 'efectivo',      color: '#34d399', label: 'Efectivo'     },
+              { key: 'transferencia', color: '#60a5fa', label: 'Transfer.'    },
+            ] as const;
+
+            const vals = METHODS.map(m => revenueByMethod?.[m.key] ?? 0);
+            const sum  = vals.reduce((a, b) => a + b, 0);
+            // Round pcts and fix the last one so they always sum to 100
+            const pcts = vals.map((v, i, arr) => {
+              if (sum === 0) return i === 0 ? 100 : 0;
+              if (i < arr.length - 1) return Math.round((v / sum) * 100);
+              return 100 - vals.slice(0, -1).reduce((a, w) => a + Math.round((w / sum) * 100), 0);
+            });
+
+            // Cumulative offset: each segment starts where the previous ended
+            let offset = 0;
+            const segments = METHODS.map((m, i) => {
+              const pct = pcts[i];
+              const seg = { ...m, pct, offset };
+              offset += pct;
+              return seg;
+            }).filter(s => s.pct > 0);
+
+            // Find the dominant method for the center label
+            const topIdx  = pcts.indexOf(Math.max(...pcts));
+            const topPct  = pcts[topIdx];
+            const topColor = METHODS[topIdx].color;
+            const topLabel = METHODS[topIdx].label;
+
+            const digitalPct = totalRevenue > 0
+              ? Math.round(((revenueByMethod?.tarjeta ?? 0) + (revenueByMethod?.mercadopago ?? 0)) / totalRevenue * 100)
+              : 0;
+
+            return (
+              <>
+                <div className="relative w-44 h-44 mb-8">
+                  <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_0_20px_rgba(167,139,250,0.15)]" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="rgba(255,255,255,0.04)" strokeWidth="3" />
+                    {loading ? (
+                      <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="rgba(255,255,255,0.06)" strokeDasharray="100 0" strokeWidth="3" />
+                    ) : sum === 0 ? (
+                      <circle cx="18" cy="18" fill="transparent" r="15.915" stroke="rgba(255,255,255,0.06)" strokeDasharray="100 0" strokeWidth="3" />
+                    ) : segments.map(s => (
+                      <circle
+                        key={s.key}
+                        cx="18" cy="18"
+                        fill="transparent"
+                        r="15.915"
+                        stroke={s.color}
+                        strokeWidth="3"
+                        strokeDasharray={`${s.pct} ${100 - s.pct}`}
+                        strokeDashoffset={-s.offset}
+                        style={{ transition: 'stroke-dasharray 0.6s ease, stroke-dashoffset 0.6s ease' }}
+                      />
+                    ))}
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    {loading || sum === 0 ? (
+                      <span className="text-[#7a766e] text-sm">—</span>
+                    ) : (
+                      <>
+                        <span className="text-3xl font-bold font-inter tracking-tight leading-none drop-shadow-md" style={{ color: topColor }}>
+                          {topPct}%
+                        </span>
+                        <span className="text-[10px] text-[#7a766e] uppercase tracking-[0.2em] font-label mt-1.5 text-center leading-tight max-w-[60px] truncate">
+                          {topLabel}
+                        </span>
+                      </>
+                    )}
                   </div>
-                  <span className="text-[13px] font-bold text-[#f5f0e8] font-mono">{loading ? '…' : `${pct}%`}</span>
                 </div>
-              );
-            })}
-          </div>
+
+                <div className="w-full mt-auto space-y-3">
+                  {METHODS.map(({ key, color, label }, i) => {
+                    const pct = pcts[i];
+                    return (
+                      <div key={key} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                          <span className="text-[13px] text-[#f5f0e8] font-medium">{label}</span>
+                        </div>
+                        <span className="text-[13px] font-bold text-[#f5f0e8] font-mono">
+                          {loading ? '…' : `${pct}%`}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            );
+          })()}
         </div>
 
         {/* Top Services — real data from caja.topServices */}
