@@ -319,7 +319,7 @@ export default function DashboardTabView() {
             const sum  = vals.reduce((a, b) => a + b, 0);
             // Round pcts and fix the last one so they always sum to 100
             const pcts = vals.map((v, i, arr) => {
-              if (sum === 0) return i === 0 ? 100 : 0;
+              if (sum === 0) return 0;
               if (i < arr.length - 1) return Math.round((v / sum) * 100);
               return 100 - vals.slice(0, -1).reduce((a, w) => a + Math.round((w / sum) * 100), 0);
             });
