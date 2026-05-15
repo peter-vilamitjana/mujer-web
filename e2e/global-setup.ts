@@ -164,22 +164,53 @@ export default async function globalSetup(config: FullConfig) {
   const adminStatePath = path.join(stateDir, 'admin.json');
   const customerStatePath = path.join(stateDir, 'customer.json');
 
-  console.log('[e2e setup] Creando usuarios de prueba en Firebase Auth...');
-  await firebaseSignUp(ADMIN_EMAIL, ADMIN_PASSWORD);
-  await firebaseSignUp(CUSTOMER_EMAIL, CUSTOMER_PASSWORD);
-
-  console.log('[e2e setup] Sembrando demo-salon en Firestore...');
+  // ── Firebase Auth: create test users ────────────────────────────────────────
+  // Wrapped in try/catch so public tests (registro.spec.ts) still run even if
+  // Firebase Auth is unreachable or NEXT_PUBLIC_FIREBASE_API_KEY is not set.
+  let firebaseReady = false;
   try {
-    const { idToken, localId } = await firebaseSignIn(ADMIN_EMAIL, ADMIN_PASSWORD);
-    await seedDemoSalon(idToken, localId);
-    console.log('[e2e setup] Firestore seed completado (o ignorado por reglas)');
+    console.log('[e2e setup] Creando usuarios de prueba en Firebase Auth...');
+    await firebaseSignUp(ADMIN_EMAIL, ADMIN_PASSWORD);
+    await firebaseSignUp(CUSTOMER_EMAIL, CUSTOMER_PASSWORD);
+    firebaseReady = true;
   } catch (err) {
-    console.warn('[e2e setup] Firestore seed falló (se continúa):', (err as Error).message);
+    console.warn('[e2e setup] Firebase Auth setup falló (tests autenticados serán skipped):', (err as Error).message);
   }
 
-  console.log('[e2e setup] Generando sessiones persistentes...');
-  await loginAndSaveSession(ADMIN_EMAIL, ADMIN_PASSWORD, adminStatePath);
-  await loginAndSaveSession(CUSTOMER_EMAIL, CUSTOMER_PASSWORD, customerStatePath);
+  // ── Firestore seed ───────────────────────────────────────────────────────────
+  if (firebaseReady) {
+    console.log('[e2e setup] Sembrando demo-salon en Firestore...');
+    try {
+      const { idToken, localId } = await firebaseSignIn(ADMIN_EMAIL, ADMIN_PASSWORD);
+      await seedDemoSalon(idToken, localId);
+      console.log('[e2e setup] Firestore seed completado (o ignorado por reglas)');
+    } catch (err) {
+      console.warn('[e2e setup] Firestore seed falló (se continúa):', (err as Error).message);
+    }
+  }
 
-  console.log('[e2e setup] Listo — storageState guardados en e2e/.auth/');
+  // ── Browser login → storageState ────────────────────────────────────────────
+  // If Firebase wasn't available, write empty auth files so projects that
+  // depend on storageState don't crash at startup (tests self-skip via checks).
+  console.log('[e2e setup] Generando sesiones persistentes...');
+  if (firebaseReady) {
+    try {
+      await loginAndSaveSession(ADMIN_EMAIL, ADMIN_PASSWORD, adminStatePath);
+      await loginAndSaveSession(CUSTOMER_EMAIL, CUSTOMER_PASSWORD, customerStatePath);
+      console.log('[e2e setup] Listo — storageState guardados en e2e/.auth/');
+    } catch (err) {
+      console.warn('[e2e setup] Login falló — storageState vacío (tests autenticados serán skipped):', (err as Error).message);
+      writeEmptyStorageState(adminStatePath);
+      writeEmptyStorageState(customerStatePath);
+    }
+  } else {
+    writeEmptyStorageState(adminStatePath);
+    writeEmptyStorageState(customerStatePath);
+  }
+}
+
+function writeEmptyStorageState(filePath: string): void {
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, JSON.stringify({ cookies: [], origins: [] }));
+  }
 }

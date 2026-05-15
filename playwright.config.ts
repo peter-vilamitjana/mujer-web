@@ -57,7 +57,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
+    // In CI the app is pre-built (artifact downloaded from build job) — use `start`
+    // (production server, ~3s startup). Locally use `dev` for HMR.
+    command: process.env.CI ? 'npm run start' : 'npm run dev',
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
