@@ -1,6 +1,6 @@
 # MujerApp — Análisis Técnico y Plan de Proyecto
 
-**Rama analizada**: `database-config` | **Fecha**: 2026-04-03 | **Pivot LATAM**: 2026-04-08 | **Última actualización**: 2026-05-15
+**Rama analizada**: `database-config` | **Fecha**: 2026-04-03 | **Pivot LATAM**: 2026-04-08 | **Última actualización**: 2026-05-15 (sesión 2)
 
 ---
 
@@ -8,7 +8,7 @@
 
 MujerApp es una plataforma SaaS B2B2C multi-tenant para la gestión de salones de belleza. El stack es sólido y moderno (Next.js 15, TypeScript, Firestore, NextAuth v4), con una arquitectura multi-tenant bien diseñada a nivel de schema y reglas Firestore.
 
-**Estado actual (2026-05-15)**: ✅ Fase 0 + ✅ Fase 1 + ✅ Fase 2 + ✅ Fase 3 (3.0–3.4 completas) + ✅ Fase 3.5 completadas. MercadoPago Checkout Pro + Webhook IPN integrados, CierreCaja real-time, SEO (sitemap + robots.txt), 3 specs e2e Playwright, `/perfil/cuenta` wired a Firestore, `/business` con `ScrollVideoHero` (96 frames) + tema violeta premium, **Guest Booking** operativo, confirmación de reserva `/book/confirmation/[appointmentId]`. **`src/ai/` eliminado** ✅ (Genkit removido de código y package.json). **Admin reestructurado como Single-Page App** con 7 tabs en `[tenantSlug]/dashboard`. **Pendiente Fase 3**: Planes SaaS (3.5–3.6). **Pendiente Fase 4**: reviews, performance, a11y, docs, Playwright en CI. **Próximo hito**: activar `MERCADOPAGO_ACCESS_TOKEN` en producción + `npx playwright install` en CI + Planes SaaS + desinstalar `resend`.
+**Estado actual (2026-05-15 sesión 2)**: ✅ Fase 0 + ✅ Fase 1 + ✅ Fase 2 + ✅ Fase 3 (3.0–3.4 completas) + ✅ Fase 3.5 completadas. ✅ **Reviews** (4.1): schema + actions + carrusel + wired en `/salones/[slug]`. ✅ **`shim-storage.ts`** saneado: `ExperimentalWarning: localStorage is not available` eliminado. ✅ **Firestore 500s** resueltos: `getAppointmentsForDay`, `getWeeklyRevenue` y `getRevenueTimeSeries` con try/catch graceful (dashboard ya no devuelve 500 al arrancar). ✅ **`firestore.rules`** actualizado: regla `reviews` añadida (read público, write autenticado). MercadoPago Checkout Pro + Webhook IPN, CierreCaja real-time, SEO, 3 specs e2e, Guest Booking. **Pendiente Fase 3**: Planes SaaS (3.5–3.6). **Pendiente Fase 4**: performance, a11y, docs, cobertura Playwright adicional. **Próximo hito**: activar `MERCADOPAGO_ACCESS_TOKEN` en producción + `WHATSAPP_TOKEN` en prod.
 
 La hoja de ruta para un MVP launchable es de **10–14 semanas** para un equipo de 2–3 devs (~8 semanas completadas).
 
@@ -108,7 +108,7 @@ src/
 | **next-themes** | ✅ Funcional | Baja | defaultTheme="dark", toggle funcional |
 | **Landing Global** | ✅ ~95% | Baja | 14 componentes. 0 imágenes externas no controladas. |
 | **Landing /business** | ✅ 100% | Baja | 7 secciones, `ScrollVideoHero` (96 frames), tema violeta premium. |
-| **Dashboard Admin (SPA)** | ✅ ~90% | Alta | Single-page en `[tenantSlug]/dashboard`. 7 tabs: Dashboard, Agenda, Clientes, Servicios, Caja, Rendimiento, Config. |
+| **Dashboard Admin (SPA)** | ✅ ~95% | Alta | Single-page en `[tenantSlug]/dashboard`. 7 tabs. Server actions con try/catch graceful — dashboard no devuelve 500 si Firestore deniega (retorna datos vacíos). |
 | **Agenda / Turnos** | ✅ ~80% | Alta | `AgendaTabView`: agenda visual por slots de 30min, checkout inline, búsqueda de clientes, crear turno. |
 | **Clientes** | 🟡 ~65% | Media | `ClientesTabView`: lista y búsqueda. Falta detalle completo de cliente / ficha técnica. |
 | **Servicios** | ✅ ~90% | Media | `ServiciosTabView`: CRUD completo inline. |
@@ -154,9 +154,9 @@ src/
 
 12. 4 TODOs de imágenes pendientes (`ColeccionCurada.tsx` ×3, `ElevaTuVision.tsx` ×1).
 13. ~~Genkit configurado sin uso — dependencia activa muerta.~~ ✅ Resuelto — `src/ai/` eliminado, genkit no en package.json.
-14. `patch-package` en devDependencies — verificar qué parche aplica (no documentado).
-15. `shim-storage.ts` importado en `next.config.ts` — workaround SSR pendiente de evaluar si sigue siendo necesario.
-16. **Staff CRUD incompleto en admin**: `ConfigTabView` solo edita comisiones. No hay UI para crear/editar/archivar staff members desde la nueva SPA admin (el CRUD de staff del plan original usaba rutas separadas que ya no existen).
+14. ~~`patch-package` en devDependencies~~ ✅ Eliminado — no había directorio `patches/` ni hook `postinstall`. Dead weight.
+15. ~~`shim-storage.ts` importado en `firebase.ts` — workaround SSR pendiente de evaluar~~ ✅ Evaluado y saneado: shim necesario (Firebase SDK lo requiere en SSR), pero `protect()` reescrita para no leer `global.localStorage` antes de definirlo — elimina `ExperimentalWarning: localStorage is not available` en Node.js 22+ por worker.
+16. ~~**Staff CRUD incompleto en admin**~~ ✅ `ConfigTabView`: crear profesional (formulario inline) + archivar/reactivar por card.
 
 ---
 
@@ -482,7 +482,7 @@ FASE 4                                                             │ Growth & 
 
 | # | Tarea | Días | Done cuando... | Estado |
 |---|-------|------|----------------|--------|
-| ~~4.1~~ | ~~Sistema de reviews y valoraciones~~ | ~~3~~ | ~~Clienta valora turno completado~~ | ✅ `Review` en schema.ts + `reviews.actions.ts` (submit + fetch + stats) + `SalonReviews` component con carrusel horizontal, form inline, rating stars. Wired en `/salones/[slug]`. |
+| ~~4.1~~ | ~~Sistema de reviews y valoraciones~~ | ~~3~~ | ~~Clienta valora turno completado~~ | ✅ `Review` en schema.ts + `reviews.actions.ts` (submit + fetch + stats) + `SalonReviews` component con carrusel horizontal, form inline, rating stars. Wired en `/salones/[slug]`. Regla Firestore añadida (read público, write autenticado). |
 | ~~4.2~~ | ~~SEO: sitemap dinámico, robots.txt~~ | ~~2~~ | ~~Google indexa páginas de salón~~ | ✅ (`src/app/sitemap.ts` + `src/app/robots.ts` — rutas estáticas + páginas de salón dinámicas) |
 | 4.3 | Performance: imágenes, code splitting, ISR | 3 | Lighthouse > 80 en móvil | ⏳ |
 | 4.4 | Accesibilidad (a11y) audit y correcciones | 3 | 0 errores críticos en axe-core | ⏳ |
@@ -634,7 +634,7 @@ main                     → producción (Firebase App Hosting)
 
 9. **Performance audit** — Lighthouse mobile en `/`, `/explore`, `/salones/[slug]`. Target > 80.
 10. **a11y audit** — `axe-core` scan en rutas críticas (booking flow, dashboard, perfil).
-11. **Sistema de reviews** — schema `Review` + UI post-checkout + carrusel en página de salón.
+11. ~~**Sistema de reviews**~~ ✅ schema `Review` + `reviews.actions.ts` + `SalonReviews` carrusel + regla Firestore. Wired en `/salones/[slug]`.
 12. ~~**Archivar `types.ts`**~~ ✅ Renombrado a `_types_archive.ts`, las 9 referencias actualizadas, `types.ts` eliminado.
-13. **`shim-storage.ts`** — evaluar si sigue siendo necesario y eliminar si no.
+13. ~~**`shim-storage.ts`**~~ ✅ Evaluado: shim retenido (necesario para Firebase SDK en SSR), `ExperimentalWarning` eliminado reescribiendo `protect()`.
 14. **Documentación** — README actualizado, ADR-003 para guest booking, ADR-004 para ScrollVideoHero, ADR-005 para arquitectura admin SPA-tabs.
