@@ -377,6 +377,7 @@ export default function AgendaTabView() {
   // ── Nav ───────────────────────────────────────────────────────────────────────
   const openNewAppt = (slot = 0, pro = 0) => {
     setNewAppt({ slot, pro, clientMode: 'search', clientSearch: '', clientId: null, client: '', phone: '', services: [{ serviceIdx: 0 }], notes: '', status: 'confirmado' });
+    setApptError(null);
     setSelectedId(null);
     setCheckoutId(null);
   };
@@ -403,6 +404,7 @@ export default function AgendaTabView() {
 
   // ── New appointment submit ────────────────────────────────────────────────────
   const [submitting, setSubmitting] = useState(false);
+  const [apptError, setApptError] = useState<string | null>(null);
 
   const handleSubmitNewAppt = async () => {
     if (!newAppt || !tenantId) return;
@@ -420,6 +422,7 @@ export default function AgendaTabView() {
     const selectedStaff = staff[newAppt.pro];
     if (!selectedStaff) return;
 
+    setApptError(null);
     setSubmitting(true);
     try {
       // Persist new client to Firestore if created inline
@@ -475,7 +478,7 @@ export default function AgendaTabView() {
           newAppt.notes || undefined,
         );
       } else {
-        console.error('[AgendaTabView] createAppointment failed:', result.error);
+        setApptError(result.error ?? 'No se pudo crear el turno.');
       }
     } finally {
       setSubmitting(false);
@@ -1220,8 +1223,14 @@ export default function AgendaTabView() {
 
                 {/* Footer */}
                 <div className="p-4 border-t border-white/[0.06] flex flex-col gap-2 shrink-0">
+                  {apptError && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                      <span className="material-symbols-outlined text-rose-400 shrink-0" style={{ fontSize: '15px' }}>error</span>
+                      <p className="text-[11px] text-rose-300 leading-tight">{apptError}</p>
+                    </div>
+                  )}
                   <div className="flex gap-2">
-                    <button onClick={() => setNewAppt(null)}
+                    <button onClick={() => { setNewAppt(null); setApptError(null); }}
                       className="px-4 py-2.5 rounded-xl text-[12px] font-bold text-[#7a766e] hover:text-[#f5f0e8] hover:bg-white/[0.05] transition-all cursor-pointer border border-white/[0.06]">
                       Cancelar
                     </button>

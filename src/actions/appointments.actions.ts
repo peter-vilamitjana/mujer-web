@@ -8,7 +8,7 @@ import { db } from '@/lib/firebase';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { syncAppointmentToCalendar, cancelCalendarEvent } from './calendar.actions';
-import type { Appointment, PaymentSplit } from '@/lib/schema';
+import type { Appointment, PaymentSplit, Staff } from '@/lib/schema';
 
 type ActionResult = { success: true; id?: string } | { success: false; error: string };
 
@@ -414,21 +414,57 @@ export async function createAppointment(
   try {
     const { uid } = await requireAdminSession();
 
-    // Validar slot libre para ese staff
+    // Validar horario del profesional
+    const staffSnap = await getDoc(doc(db, 'tenants', tenantId, 'staff', payload.staffId));
+    if (staffSnap.exists()) {
+      const staffData = staffSnap.data() as Staff;
+      if (staffData.schedule) {
+        const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        const dayName = DAY_NAMES[payload.date.getDay()];
+        const daySched = staffData.schedule[dayName];
+        if (daySched) {
+          if (!daySched.available) {
+            return { success: false, error: `${staffData.name} no trabaja ese día.` };
+          }
+          const [sh, sm] = daySched.start.split(':').map(Number);
+          const [eh, em] = daySched.end.split(':').map(Number);
+          const schedStartMin = sh * 60 + sm;
+          const schedEndMin   = eh * 60 + em;
+          const apptStartMin  = payload.date.getHours() * 60 + payload.date.getMinutes();
+          const apptEndMin    = apptStartMin + payload.durationMinutes;
+          if (apptStartMin < schedStartMin || apptEndMin > schedEndMin) {
+            return { success: false, error: `El turno está fuera del horario de ${staffData.name} (${daySched.start}–${daySched.end}).` };
+          }
+        }
+      }
+    }
+
+    // Detectar solapamiento real: busca turnos que empiecen dentro de la ventana de 8h previas
+    // y que terminen después del inicio del nuevo turno (overlap bidireccional).
     const slotStart = Timestamp.fromDate(payload.date);
     const slotEnd   = Timestamp.fromDate(new Date(payload.date.getTime() + payload.durationMinutes * 60_000));
+    const windowStart = new Date(payload.date.getTime() - 8 * 60 * 60_000);
 
-    const conflictSnap = await getDocs(
+    const potentialConflicts = await getDocs(
       query(
         collection(db, 'tenants', tenantId, 'appointments'),
         where('staffId', '==', payload.staffId),
         where('status', 'in', ['pending', 'confirmed']),
-        where('date', '>=', slotStart),
+        where('date', '>=', Timestamp.fromDate(windowStart)),
         where('date', '<',  slotEnd),
-        limit(1),
+        limit(30),
       ),
     );
-    if (!conflictSnap.empty) {
+
+    const slotStartMs = slotStart.toMillis();
+    const hasConflict = potentialConflicts.docs.some(d => {
+      const data = d.data();
+      const existingStartMs = (data.date as Timestamp).toMillis();
+      const existingEndMs   = existingStartMs + (data.durationMinutes ?? 30) * 60_000;
+      return existingEndMs > slotStartMs;
+    });
+
+    if (hasConflict) {
       return { success: false, error: 'El profesional ya tiene un turno en ese horario.' };
     }
 

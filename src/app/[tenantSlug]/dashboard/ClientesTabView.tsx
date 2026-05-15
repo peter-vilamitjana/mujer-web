@@ -19,6 +19,7 @@ interface ClientRow {
   avatar: string;
   color: string;
   notes?: string;
+  hairProfile?: Customer['hairProfile'];
 }
 
 const AVATAR_COLORS = [
@@ -84,6 +85,7 @@ function mapCustomer(c: Customer): ClientRow {
     avatar: initials(c.fullName),
     color: avatarColor(c.fullName),
     notes: c.notes,
+    hairProfile: c.hairProfile,
   };
 }
 
@@ -131,6 +133,23 @@ export default function ClientesTabView() {
   // Notes edit for selected client
   const [editNotes, setEditNotes] = useState<string | null>(null); // null = not editing
   const [notesSaving, setNotesSaving] = useState(false);
+
+  // Hair profile edit
+  type HairProfile = Customer['hairProfile'];
+  const [editHair, setEditHair] = useState<HairProfile | null>(null); // null = not editing
+  const [hairSaving, setHairSaving] = useState(false);
+
+  const handleSaveHair = async () => {
+    if (!tenantId || !selectedId || editHair === null) return;
+    setHairSaving(true);
+    const result = await updateCustomer(tenantId, selectedId, { hairProfile: editHair });
+    setHairSaving(false);
+    if (result.success) {
+      const saved = editHair ?? undefined;
+      setClients(prev => prev.map(c => c.id === selectedId ? { ...c, hairProfile: saved } : c));
+      setEditHair(null);
+    }
+  };
 
   const handleCreateClient = async () => {
     if (!tenantId || !newForm.fullName.trim()) return;
@@ -202,8 +221,8 @@ export default function ClientesTabView() {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [search, tenantId]);
 
-  // Reset notes edit when client changes
-  useEffect(() => { setEditNotes(null); }, [selectedId]);
+  // Reset edit states when client changes
+  useEffect(() => { setEditNotes(null); setEditHair(null); }, [selectedId]);
 
   // Load history when client selected
   useEffect(() => {
@@ -552,6 +571,153 @@ export default function ClientesTabView() {
                       <p className="text-[11px] text-[#7a766e] group-hover:text-violet-400 transition-colors flex items-center justify-center gap-1.5">
                         <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>add</span>
                         Agregar notas técnicas
+                      </p>
+                    </button>
+                  )}
+                </div>
+
+                {/* ── Ficha Capilar ── */}
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[9px] uppercase tracking-widest text-emerald-400/80 font-bold font-label flex items-center gap-1.5">
+                      <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>content_cut</span>
+                      Ficha Capilar
+                    </span>
+                    {editHair === null ? (
+                      <button
+                        onClick={() => setEditHair(selectedClient.hairProfile ?? {})}
+                        className="text-[10px] font-bold text-[#7a766e] hover:text-emerald-400 cursor-pointer transition-colors flex items-center gap-0.5">
+                        <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>edit</span>
+                        Editar
+                      </button>
+                    ) : (
+                      <div className="flex gap-1">
+                        <button onClick={() => setEditHair(null)} className="text-[10px] font-bold text-[#7a766e] hover:text-[#f5f0e8] cursor-pointer transition-colors px-2 py-0.5 rounded-md hover:bg-white/[0.05]">
+                          Cancelar
+                        </button>
+                        <button
+                          onClick={handleSaveHair}
+                          disabled={hairSaving}
+                          className="text-[10px] font-bold text-emerald-400 hover:text-emerald-300 cursor-pointer transition-colors px-2 py-0.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 disabled:opacity-50 flex items-center gap-1">
+                          {hairSaving && <span className="material-symbols-outlined animate-spin" style={{ fontSize: '11px' }}>progress_activity</span>}
+                          Guardar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {editHair !== null ? (
+                    <div className="flex flex-col gap-3 p-3.5 bg-emerald-500/[0.04] border border-emerald-500/20 rounded-2xl">
+                      {/* Tipo */}
+                      <div>
+                        <p className="text-[9px] uppercase tracking-widest text-[#7a766e] font-bold mb-1.5">Tipo</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(['liso', 'ondulado', 'rizado', 'afro'] as const).map(v => (
+                            <button key={v} onClick={() => setEditHair(h => ({ ...h, type: v }))}
+                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer border"
+                              style={editHair?.type === v
+                                ? { background: 'rgba(52,211,153,0.15)', borderColor: 'rgba(52,211,153,0.35)', color: '#6ee7b7' }
+                                : { background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)', color: '#7a766e' }}>
+                              {v}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Grosor */}
+                      <div>
+                        <p className="text-[9px] uppercase tracking-widest text-[#7a766e] font-bold mb-1.5">Grosor</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(['fino', 'normal', 'grueso'] as const).map(v => (
+                            <button key={v} onClick={() => setEditHair(h => ({ ...h, thickness: v }))}
+                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer border"
+                              style={editHair?.thickness === v
+                                ? { background: 'rgba(52,211,153,0.15)', borderColor: 'rgba(52,211,153,0.35)', color: '#6ee7b7' }
+                                : { background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)', color: '#7a766e' }}>
+                              {v}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Estado */}
+                      <div>
+                        <p className="text-[9px] uppercase tracking-widest text-[#7a766e] font-bold mb-1.5">Estado</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(['sano', 'dañado', 'procesado', 'muy-dañado'] as const).map(v => (
+                            <button key={v} onClick={() => setEditHair(h => ({ ...h, condition: v }))}
+                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer border"
+                              style={editHair?.condition === v
+                                ? { background: 'rgba(52,211,153,0.15)', borderColor: 'rgba(52,211,153,0.35)', color: '#6ee7b7' }
+                                : { background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.06)', color: '#7a766e' }}>
+                              {v}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Alergias */}
+                      <div>
+                        <p className="text-[9px] uppercase tracking-widest text-[#7a766e] font-bold mb-1.5">Alergias / Sensibilidades</p>
+                        <input
+                          type="text"
+                          placeholder="ej: amoniaco, keratina (separadas por coma)"
+                          value={(editHair?.allergies ?? []).join(', ')}
+                          onChange={e => setEditHair(h => ({ ...h, allergies: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+                          className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-3 py-2 text-[12px] text-[#f5f0e8] placeholder-[#7a766e]/60 focus:outline-none focus:border-emerald-500/30 transition-all"
+                        />
+                      </div>
+                      {/* Objetivo */}
+                      <div>
+                        <p className="text-[9px] uppercase tracking-widest text-[#7a766e] font-bold mb-1.5">Objetivo</p>
+                        <input
+                          type="text"
+                          placeholder="ej: aclarar 2 tonos, definir rizos"
+                          value={editHair?.goal ?? ''}
+                          onChange={e => setEditHair(h => ({ ...h, goal: e.target.value }))}
+                          className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-3 py-2 text-[12px] text-[#f5f0e8] placeholder-[#7a766e]/60 focus:outline-none focus:border-emerald-500/30 transition-all"
+                        />
+                      </div>
+                    </div>
+                  ) : selectedClient.hairProfile && Object.values(selectedClient.hairProfile).some(Boolean) ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {selectedClient.hairProfile.type && (
+                        <div className="p-2.5 bg-white/[0.02] border border-white/[0.04] rounded-xl flex flex-col gap-0.5">
+                          <span className="text-[9px] uppercase text-[#7a766e] font-bold tracking-wide">Tipo</span>
+                          <span className="text-[12px] font-semibold text-[#f5f0e8] capitalize">{selectedClient.hairProfile.type}</span>
+                        </div>
+                      )}
+                      {selectedClient.hairProfile.thickness && (
+                        <div className="p-2.5 bg-white/[0.02] border border-white/[0.04] rounded-xl flex flex-col gap-0.5">
+                          <span className="text-[9px] uppercase text-[#7a766e] font-bold tracking-wide">Grosor</span>
+                          <span className="text-[12px] font-semibold text-[#f5f0e8] capitalize">{selectedClient.hairProfile.thickness}</span>
+                        </div>
+                      )}
+                      {selectedClient.hairProfile.condition && (
+                        <div className="p-2.5 bg-white/[0.02] border border-white/[0.04] rounded-xl flex flex-col gap-0.5">
+                          <span className="text-[9px] uppercase text-[#7a766e] font-bold tracking-wide">Estado</span>
+                          <span className="text-[12px] font-semibold text-[#f5f0e8] capitalize">{selectedClient.hairProfile.condition}</span>
+                        </div>
+                      )}
+                      {selectedClient.hairProfile.goal && (
+                        <div className="col-span-2 p-2.5 bg-white/[0.02] border border-white/[0.04] rounded-xl flex flex-col gap-0.5">
+                          <span className="text-[9px] uppercase text-[#7a766e] font-bold tracking-wide">Objetivo</span>
+                          <span className="text-[12px] font-semibold text-[#f5f0e8]">{selectedClient.hairProfile.goal}</span>
+                        </div>
+                      )}
+                      {selectedClient.hairProfile.allergies?.length ? (
+                        <div className="col-span-2 flex flex-wrap gap-1.5">
+                          <span className="text-[9px] uppercase text-rose-400/70 font-bold tracking-wide w-full">Alergias</span>
+                          {selectedClient.hairProfile.allergies.map(a => (
+                            <span key={a} className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-500/10 border border-rose-500/20 text-rose-300">{a}</span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setEditHair(selectedClient.hairProfile ?? {})}
+                      className="w-full p-3 text-center bg-white/[0.01] border border-dashed border-white/[0.06] hover:border-emerald-500/25 hover:bg-emerald-500/[0.03] rounded-2xl transition-all cursor-pointer group">
+                      <p className="text-[11px] text-[#7a766e] group-hover:text-emerald-400 transition-colors flex items-center justify-center gap-1.5">
+                        <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>add</span>
+                        Completar ficha capilar
                       </p>
                     </button>
                   )}
