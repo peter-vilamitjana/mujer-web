@@ -45,8 +45,13 @@ export async function getAppointmentsForDay(
   ];
   if (branchId) constraints.unshift(where('branchId', '==', branchId));
 
-  const snap = await getDocs(query(collection(db, 'tenants', tenantId, 'appointments'), ...constraints));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }) as Appointment);
+  try {
+    const snap = await getDocs(query(collection(db, 'tenants', tenantId, 'appointments'), ...constraints));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }) as Appointment);
+  } catch (err) {
+    console.warn('[getAppointmentsForDay] Firestore read failed (returning []):', (err as Error)?.message);
+    return [];
+  }
 }
 
 /**
@@ -240,9 +245,15 @@ export async function getWeeklyRevenue(
   ];
   if (branchId) constraints.unshift(where('branchId', '==', branchId));
 
-  const snap = await getDocs(
-    query(collection(db, 'tenants', tenantId, 'appointments'), ...constraints),
-  );
+  let snap;
+  try {
+    snap = await getDocs(
+      query(collection(db, 'tenants', tenantId, 'appointments'), ...constraints),
+    );
+  } catch (err) {
+    console.warn('[getWeeklyRevenue] Firestore read failed (returning empty):', (err as Error)?.message);
+    snap = { docs: [] };
+  }
 
   const DAY_LABELS = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
   const todayStr = today.toDateString();
@@ -340,9 +351,15 @@ export async function getRevenueTimeSeries(
   ];
   if (branchId) constraints.unshift(where('branchId', '==', branchId));
 
-  const snap = await getDocs(
-    query(collection(db, 'tenants', tenantId, 'appointments'), ...constraints),
-  );
+  let snap;
+  try {
+    snap = await getDocs(
+      query(collection(db, 'tenants', tenantId, 'appointments'), ...constraints),
+    );
+  } catch (err) {
+    console.warn('[getRevenueTimeSeries] Firestore read failed (returning empty):', (err as Error)?.message);
+    snap = { docs: [] };
+  }
 
   const buckets = Array<number>(30).fill(0);
   for (const docSnap of snap.docs) {

@@ -12,20 +12,16 @@
     [Symbol.iterator]: [][Symbol.iterator],
   } as unknown as Storage;
 
-  const isBroken = (s: unknown) => !s || typeof (s as Storage).getItem !== 'function';
-
   const protect = (target: typeof globalThis, prop: 'localStorage' | 'sessionStorage') => {
-    let actual: Storage | undefined;
-    try { actual = target[prop]; } catch { /* absent on some runtimes */ }
     try {
       Object.defineProperty(target, prop, {
-        get: () => (isBroken(actual) ? noopStorage : actual),
-        set: (v: Storage) => { if (!isBroken(v)) actual = v; },
+        value: noopStorage,
         configurable: true,
+        writable: true,
         enumerable: true,
       });
     } catch {
-      (target as Record<string, unknown>)[prop] = actual ?? noopStorage;
+      try { (target as Record<string, unknown>)[prop] = noopStorage; } catch { /* ignore */ }
     }
   };
 
