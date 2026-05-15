@@ -1,6 +1,6 @@
 # MujerApp — Análisis Técnico y Plan de Proyecto
 
-**Rama analizada**: `database-config` | **Fecha**: 2026-04-03 | **Pivot LATAM**: 2026-04-08 | **Última actualización**: 2026-05-07
+**Rama analizada**: `database-config` | **Fecha**: 2026-04-03 | **Pivot LATAM**: 2026-04-08 | **Última actualización**: 2026-05-15
 
 ---
 
@@ -8,7 +8,7 @@
 
 MujerApp es una plataforma SaaS B2B2C multi-tenant para la gestión de salones de belleza. El stack es sólido y moderno (Next.js 15, TypeScript, Firestore, NextAuth v4), con una arquitectura multi-tenant bien diseñada a nivel de schema y reglas Firestore.
 
-**Estado actual (2026-05-07)**: ✅ Fase 0 + ✅ Fase 1 + ✅ Fase 2 + ✅ Fase 3 (3.0–3.4 completas) + ✅ Fase 3.5 completadas. MercadoPago Checkout Pro + Webhook IPN integrados, CierreCajaDiario real-time en dashboard, SEO (sitemap + robots.txt), tests e2e con Playwright (estructura lista), `/perfil/cuenta` wired a Firestore, `/business` completamente rediseñada con `ScrollVideoHero` (96 frames) y tema violeta premium, **Guest Booking** operativo (sin auth wall), confirmación de reserva con `/book/confirmation/[appointmentId]`. **Pendiente Fase 3**: Planes SaaS (3.5–3.6). **Pendiente Fase 4**: reviews, performance, a11y, docs, Playwright en CI. **Próximo hito**: activar `MERCADOPAGO_ACCESS_TOKEN` en producción + `npx playwright install` en CI + Planes SaaS.
+**Estado actual (2026-05-15)**: ✅ Fase 0 + ✅ Fase 1 + ✅ Fase 2 + ✅ Fase 3 (3.0–3.4 completas) + ✅ Fase 3.5 completadas. MercadoPago Checkout Pro + Webhook IPN integrados, CierreCaja real-time, SEO (sitemap + robots.txt), 3 specs e2e Playwright, `/perfil/cuenta` wired a Firestore, `/business` con `ScrollVideoHero` (96 frames) + tema violeta premium, **Guest Booking** operativo, confirmación de reserva `/book/confirmation/[appointmentId]`. **`src/ai/` eliminado** ✅ (Genkit removido de código y package.json). **Admin reestructurado como Single-Page App** con 7 tabs en `[tenantSlug]/dashboard`. **Pendiente Fase 3**: Planes SaaS (3.5–3.6). **Pendiente Fase 4**: reviews, performance, a11y, docs, Playwright en CI. **Próximo hito**: activar `MERCADOPAGO_ACCESS_TOKEN` en producción + `npx playwright install` en CI + Planes SaaS + desinstalar `resend`.
 
 La hoja de ruta para un MVP launchable es de **10–14 semanas** para un equipo de 2–3 devs (~8 semanas completadas).
 
@@ -21,29 +21,78 @@ La hoja de ruta para un MVP launchable es de **10–14 semanas** para un equipo 
 ```
 src/
 ├── app/
-│   ├── (admin)/          → rutas protegidas: dashboard, agenda, clientes, servicios, turnos
-│   ├── (marketplace)/    → rutas públicas B2C: landing, /salones/[slug], /book
-│   ├── business/         → landing B2B (marketing)
-│   ├── api/              → NextAuth, Google Calendar, notificaciones
-│   └── admin/            → seed/migrate utilities (dev only)
+│   ├── [tenantSlug]/
+│   │   ├── layout.tsx              → guard: redirect a /login si no hay sesión admin
+│   │   └── dashboard/
+│   │       ├── page.tsx            → SPA admin con sidebar + 7 tabs
+│   │       ├── DashboardTabView.tsx → métricas del día, caja resumida, turnos próximos
+│   │       ├── AgendaTabView.tsx   → agenda visual por slots, checkout inline
+│   │       ├── ClientesTabView.tsx → lista + búsqueda de clientes
+│   │       ├── ServiciosTabView.tsx → CRUD de servicios
+│   │       ├── CajaTabView.tsx     → cierre de caja, revenue semanal por método
+│   │       ├── PerformanceTabView.tsx → analytics / rendimiento
+│   │       └── ConfigTabView.tsx   → horarios, comisiones de equipo, ajustes del local
+│   ├── (marketplace)/
+│   │   ├── layout.tsx
+│   │   ├── (public)/
+│   │   │   ├── page.tsx            → landing B2C (homepage)
+│   │   │   ├── explore/page.tsx    → explorar salones con filtros
+│   │   │   ├── registro/page.tsx   → registro B2C
+│   │   │   └── salones/[tenantSlug]/
+│   │   │       ├── page.tsx        → perfil público del salón
+│   │   │       ├── login/page.tsx  → login contextual del salón
+│   │   │       ├── book/
+│   │   │       │   ├── page.tsx                          → booking flow multi-step
+│   │   │       │   ├── confirmation/[appointmentId]/page.tsx → confirmación de reserva
+│   │   │       │   └── payment/{success,failure,pending}/page.tsx → retorno MercadoPago
+│   │   │       └── dashboard/
+│   │   │           ├── layout.tsx
+│   │   │           ├── page.tsx        → portal de cliente (citas activas)
+│   │   │           └── mis-turnos/page.tsx → historial de turnos
+│   │   └── perfil/
+│   │       ├── page.tsx            → perfil B2C (overview)
+│   │       ├── cuenta/page.tsx     → datos de cuenta (wired a Firestore)
+│   │       ├── historial/page.tsx  → historial de reservas
+│   │       └── favoritos/page.tsx  → salones favoritos
+│   ├── business/
+│   │   ├── page.tsx                → landing B2B (7 secciones, ScrollVideoHero)
+│   │   └── register/page.tsx       → onboarding wizard 5 pasos
+│   ├── login/page.tsx              → login unificado (tab B2B/B2C)
+│   ├── perfil/layout.tsx           → layout standalone (force light theme)
+│   ├── api/
+│   │   ├── auth/[...nextauth]/route.ts
+│   │   ├── google/{callback,connect,disconnect,event,status,sync/bootstrap,webhook}/route.ts
+│   │   ├── mercadopago/webhook/route.ts
+│   │   └── notifications/route.ts
+│   └── admin/
+│       ├── seed/page.tsx           → utilidad dev (→ notFound() en prod)
+│       └── migrate/page.tsx        → utilidad dev (→ notFound() en prod)
 ├── components/
-│   ├── ui/               → 35 componentes shadcn/Radix
-│   ├── landing/          → 12 componentes de landing global
+│   ├── ui/               → 44 componentes shadcn/Radix
+│   ├── landing/          → 14 componentes de landing global
 │   ├── salon/            → 5 componentes de página de salón
-│   ├── marketplace/      → BookingFlow y variantes
-│   └── business/         → mock dashboard + features B2B
+│   ├── marketplace/      → BookingFlow, SalonMap, ExploreSidebar, etc.
+│   ├── business/         → 11 componentes B2B (ScrollVideoHero, etc.)
+│   ├── charts/           → MonthlyVolumeChart, PopularServicesChart, WeeklyTurnosChart
+│   └── admin/            → CheckoutDrawer, CierreCajaDiario
 ├── lib/
 │   ├── auth.ts           → NextAuth config (Credentials + Google OAuth)
-│   ├── firebase.ts       → Firebase init
-│   ├── schema.ts         → tipos Firestore canónicos
-│   └── services/         → marketplace, auth, user, catalog, notification
-├── contexts/             → Tenant, User, UI
-├── hooks/                → useRole, useTenant, useCatalog, useMetrics, useOcupacionEnVivo
-├── actions/              → booking.actions.ts (Server Actions)
-└── ai/                   → Genkit + Gemini 2.0 Flash (configurado, no usado)
+│   ├── firebase.ts       → Firebase init (SDK — también usado en cliente para listeners)
+│   ├── schema.ts         → tipos Firestore canónicos (source of truth)
+│   ├── types.ts          → schema legacy (78 líneas — pendiente de archivar)
+│   ├── mercadopago.ts    → helper REST Checkout Pro
+│   ├── whatsapp.ts       → WhatsApp Business API helper
+│   ├── whatsapp-templates.ts
+│   ├── google-calendar.server.ts → helper GCal con token refresh
+│   ├── shim-storage.ts   → workaround SSR (pendiente de evaluar si sigue siendo necesario)
+│   └── services/         → marketplace, auth, user, catalog, customer, notification
+├── contexts/             → TenantContext, UserContext
+├── hooks/                → useBranches, useCatalog, useMetrics, useOcupacionEnVivo, useRole, useStaff, use-toast
+├── actions/              → 15 Server Actions (booking, checkout, calendar, staff, services, etc.)
+└── [src/ai/ ELIMINADO]   → Genkit removido del código y de package.json ✅
 ```
 
-**Patrón arquitectónico**: Server Components para fetching (Firestore REST), Client Components para interacción, Server Actions para mutaciones autenticadas. Multi-tenancy via `tenants/{tenantId}/*` en Firestore con RBAC en reglas.
+**Patrón arquitectónico**: El admin es una **Single-Page App** en `[tenantSlug]/dashboard/page.tsx` con navegación por tabs (no rutas separadas). Los tabs son Client Components con llamadas a Server Actions. El marketplace usa Server Components para fetching + Client Components para interacción. Multi-tenancy via `tenants/{tenantId}/*` en Firestore con RBAC en reglas.
 
 ---
 
@@ -52,33 +101,33 @@ src/
 | Módulo | Estado | Complejidad | Notas |
 |--------|--------|-------------|-------|
 | **NextAuth** | 🟡 Funcional con deuda | Alta | Google OAuth + Credentials. Token refresh OK. Memberships no reactivas. |
-| **Firestore REST (SSR)** | ✅ Funcional | Baja | Usado correctamente en Server Components |
-| **Middleware** | ✅ Completo | Baja | Protege rutas admin + `/salones/*/dashboard`. `/admin/seed` + `/admin/migrate` → 404 en prod. |
-| **UI / shadcn** | ✅ Completo | Baja | 35 componentes, Tailwind dark/light con MD3 colors |
+| **Firestore SDK (cliente)** | ✅ Funcional | Baja | Firebase SDK usado en AgendaTabView para listeners real-time. REST en Server Components. |
+| **Middleware** | ✅ Actualizado | Baja | Cubre `/:slug/dashboard/:path*`, `/admin/:path*`, `/perfil/:path*`. |
+| **UI / shadcn** | ✅ Completo | Baja | 44 componentes, Tailwind dark/light con tokens `brand-*` |
 | **Framer Motion** | ✅ Activo | Baja | Landing y /business con animaciones premium |
 | **next-themes** | ✅ Funcional | Baja | defaultTheme="dark", toggle funcional |
-| **Landing Global** | ✅ ~95% | Baja | 12 secciones. Todas las imágenes externas reemplazadas por gradientes locales |
-| **Landing /business** | ✅ 100% | Baja | Rediseñada completa: 7 secciones, `ScrollVideoHero` (96 frames), tema violeta premium. Bug Safari resuelto. |
-| **Dashboard Admin** | ✅ ~90% | Alta | Métricas reales (ingresos mes, ocupación, próximos turnos) |
-| **Agenda / Turnos** | 🟡 ~60% | Alta | UI existe, branchId dinámico resuelto |
-| **Clientes** | 🟡 ~55% | Media | Lista y detalle. Role real de sesión |
-| **Servicios** | ✅ ~95% | Media | CRUD completo: crear, editar, archivar, loading states |
-| **Staff** | ✅ ~90% | Media | CRUD completo con horarios multi-step, schedules |
-| **Sucursales** | ✅ ~90% | Alta | CRUD + selector en header + localStorage |
-| **Configuración salón** | ✅ ~90% | Media | 4 tabs, slug validation, horarios de atención |
-| **Onboarding wizard** | ✅ ~95% | Alta | 5 pasos, localStorage, batch atómico |
-| **Booking Flow** | ✅ ~85% | Alta | Multi-step con captura de teléfono (WhatsApp), WhatsApp on booking. Falta disponibilidad real de staff. |
-| **Google Calendar** | ✅ ~80% | Alta | Bidireccional: App→GCal + GCal→App webhook. Token refresh |
-| ~~**Email (Resend)**~~ | ❌ **Eliminado** | — | **Pivot**: reemplazado por WhatsApp nativo. Sin emails en el flujo de notificaciones. |
-| **Portal Cliente** | ✅ ~75% | Media | Dashboard real (citas, historial, filtros), cancelación, vista guest por teléfono. Perfil: shell con mock data. |
-| **Checkout / Caja** | ✅ ~70% | Media | `CheckoutDrawer` en agenda, `closeAppointment()`, métricas CRM incrementadas. Falta cierre de caja diario. |
-| **Auth B2C** | ✅ ~85% | Media | `UserRole` incluye `'customer'`, JWT lleva `role`, `registerCustomer()`, `/registro` + `/perfil` multi-sección (historial, cuenta, favoritos). `/perfil/cuenta` wired a Firestore con `profile.actions.ts`. `/perfil/historial` y main aún con mock data. |
-| **Guest Booking** | ✅ ~90% | Media | Reservas sin auth wall. `guest-booking.actions.ts`, `/book/confirmation/[appointmentId]`, WhatsApp structuralmente conectado. Necesita `WHATSAPP_TOKEN` en prod. |
-| **Analytics / Métricas** | ✅ ~80% | Alta | Datos reales: ingresos mes, ocupación, top servicios, próximos turnos |
-| **Loading states** | ✅ 100% | Baja | 8 skeletons + error boundary global |
-| ~~**AI (Genkit)**~~ | ❌ **Eliminado** | — | **Pivot**: removido del roadmap. Dependencia muerta a desinstalar. |
-| **Tests** | 🟡 ~40% | Media | Playwright configurado. 3 specs e2e: booking-flow, checkout, registro. Fixtures con auth admin/customer. Falta `npx playwright install` + más cobertura de flujos críticos. |
-| **CI/CD** | ✅ Configurado | Media | GitHub Actions: lint + typecheck + build en verde |
+| **Landing Global** | ✅ ~95% | Baja | 14 componentes. 0 imágenes externas no controladas. |
+| **Landing /business** | ✅ 100% | Baja | 7 secciones, `ScrollVideoHero` (96 frames), tema violeta premium. |
+| **Dashboard Admin (SPA)** | ✅ ~90% | Alta | Single-page en `[tenantSlug]/dashboard`. 7 tabs: Dashboard, Agenda, Clientes, Servicios, Caja, Rendimiento, Config. |
+| **Agenda / Turnos** | ✅ ~80% | Alta | `AgendaTabView`: agenda visual por slots de 30min, checkout inline, búsqueda de clientes, crear turno. |
+| **Clientes** | 🟡 ~65% | Media | `ClientesTabView`: lista y búsqueda. Falta detalle completo de cliente / ficha técnica. |
+| **Servicios** | ✅ ~90% | Media | `ServiciosTabView`: CRUD completo inline. |
+| **Staff** | ✅ ~75% | Media | Gestión de equipo en `ConfigTabView`: edición de comisiones inline. Falta CRUD completo (agregar/eliminar staff). |
+| **Caja** | ✅ ~85% | Media | `CajaTabView`: cierre de caja diario, revenue semanal por método de pago. |
+| **Rendimiento / Analytics** | ✅ ~70% | Media | `PerformanceTabView`: métricas de rendimiento. |
+| **Configuración salón** | ✅ ~85% | Media | `ConfigTabView`: horarios semanales, comisiones del equipo, ajustes del local. |
+| **Onboarding wizard** | ✅ ~95% | Alta | 5 pasos en `/business/register`, localStorage, batch atómico. |
+| **Booking Flow** | ✅ ~85% | Alta | Multi-step + captura teléfono + Guest Booking. Falta disponibilidad real de staff. |
+| **Google Calendar** | ✅ ~80% | Alta | Bidireccional: App→GCal + GCal→App webhook. Token refresh. |
+| ~~**Email (Resend)**~~ | ⚠️ **Paquete activo, flujo eliminado** | — | `resend` sigue en package.json pero sin uso. Pendiente `npm uninstall resend`. |
+| **Portal Cliente** | ✅ ~75% | Media | Dashboard real (citas, historial), cancelación, vista guest por teléfono. `/perfil/historial` aún con mock data. |
+| **Checkout / Caja** | ✅ ~85% | Media | `CheckoutDrawer` + `closeAppointment()` + `CajaTabView` con real-time. |
+| **Auth B2C** | ✅ ~85% | Media | `UserRole` = `'customer'`, JWT con `role`, `registerCustomer()`, `/perfil/cuenta` wired a Firestore. |
+| **Guest Booking** | ✅ ~90% | Media | Reservas sin auth wall, `/book/confirmation/[appointmentId]`. Necesita `WHATSAPP_TOKEN` en prod. |
+| **MercadoPago** | ✅ ~90% | Alta | Checkout Pro + webhook IPN. Pendiente activar token de producción. |
+| ~~**AI (Genkit)**~~ | ✅ **Eliminado** | — | `src/ai/` borrado. No figura en package.json. |
+| **Tests** | 🟡 ~40% | Media | 3 specs e2e en `e2e/`. `npx playwright install` NO está en CI. |
+| **CI/CD** | ✅ Configurado | Media | GitHub Actions: typecheck + lint + build. Sin e2e aún. |
 
 ---
 
@@ -86,26 +135,28 @@ src/
 
 #### Crítica (bloquea producción)
 
-1. ~~`ignoreBuildErrors: true` y `ignoreDuringBuilds: true` en `next.config.ts`~~ ✅ Resuelto — ambas flags en `false`, TypeScript y ESLint estrictos activos.
-2. ~~Credenciales de test hardcodeadas en login.~~ ✅ Resuelto — eliminadas del código fuente.
+1. ~~`ignoreBuildErrors: true` y `ignoreDuringBuilds: true` en `next.config.ts`~~ ✅ Resuelto.
+2. ~~Credenciales de test hardcodeadas en login.~~ ✅ Resuelto.
 3. ~~`branchId: 'sucursal_centro'` hardcodeado~~ ✅ Resuelto — propaga desde TenantContext.
 4. ~~`const userRole = 'admin'` hardcodeado~~ ✅ Resuelto — rol real leído de sesión.
-5. ~~Rutas `/admin/seed` y `/admin/migrate` sin protección en middleware.~~ ✅ Resuelto — devuelven 404 en producción vía `notFound()`.
+5. ~~Rutas `/admin/seed` y `/admin/migrate` sin protección~~ ✅ Resuelto — `notFound()` en producción.
+6. **`MERCADOPAGO_ACCESS_TOKEN` de sandbox en producción** — activar clave real antes del launch.
+7. **`WHATSAPP_TOKEN` no configurado en prod** — WhatsApp en modo dry-run.
 
 #### Alta
 
-6. ~~Imágenes de landing usando dominios externos no controlados (placehold.co, Unsplash, Instagram CDN).~~ ✅ Resuelto — reemplazadas por gradientes locales. `remotePatterns` reducido a 2 dominios (Firebase Storage, Google User Content).
-7. ~~Middleware no cubre rutas de marketplace autenticadas.~~ ✅ Resuelto — matcher cubre `/admin/*`, `/agenda`, `/dashboard`, `/perfil`, `/mis-turnos`.
-8. ~~Sin error boundaries ni estados de loading consistentes.~~ ✅ Resuelto — 8 skeletons + error boundary global en todas las rutas admin.
-9. Mezcla de schema legacy (`types.ts`) / nuevo (`schema.ts`) sin capa de abstracción clara. `types.ts` (78 líneas) pendiente de archivar como `_archive`.
-10. `tenantIds` en JWT no reactivos — cambio de rol requiere re-login.
+8. ~~Imágenes de landing con dominios externos~~ ✅ Resuelto — gradientes locales, 0 dominios externos.
+9. ~~`tenantIds` en JWT no reactivos~~ ✅ JWT callback maneja `trigger === 'update'`. `session.update()` re-fetches memberships de Firestore sin re-login.
+10. **`resend` en package.json sin uso** — `npm uninstall resend`. El paquete ocupa espacio y confunde sobre la intención (WhatsApp es el canal, no email).
+11. ~~Mezcla de schema legacy (`src/lib/types.ts`)~~ ✅ Renombrado a `_types_archive.ts`, 9 referencias actualizadas, `types.ts` eliminado.
 
 #### Media
 
-11. 4 TODOs de imágenes pendientes (`ColeccionCurada.tsx` ×3, `ElevaTuVision.tsx` ×1).
-12. ~~Genkit configurado sin uso — dependencia activa muerta.~~ → **Acción**: `npm uninstall @genkit-ai/googleai genkit` + borrar `src/ai/`
-13. `patch-package` en devDependencies — verificar qué parche aplica.
-14. `shim-storage.ts` importado en `next.config.ts` — workaround que debería ser innecesario.
+12. 4 TODOs de imágenes pendientes (`ColeccionCurada.tsx` ×3, `ElevaTuVision.tsx` ×1).
+13. ~~Genkit configurado sin uso — dependencia activa muerta.~~ ✅ Resuelto — `src/ai/` eliminado, genkit no en package.json.
+14. `patch-package` en devDependencies — verificar qué parche aplica (no documentado).
+15. `shim-storage.ts` importado en `next.config.ts` — workaround SSR pendiente de evaluar si sigue siendo necesario.
+16. **Staff CRUD incompleto en admin**: `ConfigTabView` solo edita comisiones. No hay UI para crear/editar/archivar staff members desde la nueva SPA admin (el CRUD de staff del plan original usaba rutas separadas que ya no existen).
 
 ---
 
@@ -121,7 +172,7 @@ src/
 | Framer Motion | 12.34.0 | Bajo |
 | **Tailwind CSS** | **3.4.1** | **Bajo-Medio** — v4 disponible, migración no trivial |
 | googleapis | 140.0.1 | Bajo |
-| Genkit | 1.13.0 | Bajo (no en uso activo) |
+| ~~Genkit~~ | ~~1.13.0~~ | ~~Eliminado de package.json~~ ✅ |
 | **patch-package** | **8.0.0** | **Medio** — ¿qué se está parchando? |
 
 ---
@@ -193,7 +244,7 @@ src/
 | **CDN / Media** (Firebase Storage) | P1 | Baja | Performance e imágenes de salones |
 | **Mapas** (Google Maps API) | P2 | Media | UX de exploración de salones |
 | **Stripe** (para salones con terminal internacional) | P2 | Alta | Solo para el segmento premium/internacional. No es el core de LATAM. |
-| ~~**AI features** (Genkit)~~ | ❌ **Pospuesto** | — | Eliminado del roadmap activo. Sin uso en producción, dependencia muerta. |
+| ~~**AI features** (Genkit)~~ | ✅ **Eliminado** | — | `src/ai/` borrado. Genkit removido de package.json. |
 
 ### 2.4 Riesgos Técnicos Priorizados
 
@@ -209,7 +260,7 @@ src/
 | R8 | JWT no reactivo para roles | **P1** | Implementar `session.update()` en cambios de rol |
 | R9 | Tests no corren en CI — regressions invisibles | **P1** | `npx playwright install` en `.github/workflows/ci.yml`. Estructura e2e lista. |
 | R10 | Schema legacy `types.ts` (78 líneas) sin deprecation plan | **P2** | Marcar como `_archive`, migrar referencias a `schema.ts` |
-| R11 | Genkit muerto en `package.json` + `src/ai/` | **P2** | `npm uninstall @genkit-ai/googleai genkit` + borrar `src/ai/` |
+| ~~R11~~ | ~~Genkit muerto en `package.json` + `src/ai/`~~ | ~~P2~~ | ✅ `src/ai/` borrado. Genkit removido de package.json. |
 | R12 | `MERCADOPAGO_ACCESS_TOKEN` de sandbox en producción | **P1** | Activar clave real de producción antes del launch |
 
 ---
@@ -415,8 +466,9 @@ FASE 4                                                             │ Growth & 
 | S8 | **44 componentes shadcn/ui** — 9 nuevos vs. 35 del plan original | `src/components/ui/` | ✅ |
 
 **Deuda generada**:
-- `src/ai/` + dependencias Genkit siguen vivos — eliminar con `npm uninstall @genkit-ai/googleai genkit`
-- `src/lib/types.ts` (legacy schema, 78 líneas) — pendiente de archivar
+- ~~`src/ai/` + dependencias Genkit siguen vivos~~ ✅ Eliminados.
+- `src/lib/types.ts` (legacy schema, 78 líneas) — pendiente de archivar como `_types_archive.ts`.
+- `resend` sigue en package.json sin uso — `npm uninstall resend`.
 
 ---
 
@@ -430,7 +482,7 @@ FASE 4                                                             │ Growth & 
 
 | # | Tarea | Días | Done cuando... | Estado |
 |---|-------|------|----------------|--------|
-| 4.1 | Sistema de reviews y valoraciones | 3 | Clienta valora turno completado | ⏳ |
+| ~~4.1~~ | ~~Sistema de reviews y valoraciones~~ | ~~3~~ | ~~Clienta valora turno completado~~ | ✅ `Review` en schema.ts + `reviews.actions.ts` (submit + fetch + stats) + `SalonReviews` component con carrusel horizontal, form inline, rating stars. Wired en `/salones/[slug]`. |
 | ~~4.2~~ | ~~SEO: sitemap dinámico, robots.txt~~ | ~~2~~ | ~~Google indexa páginas de salón~~ | ✅ (`src/app/sitemap.ts` + `src/app/robots.ts` — rutas estáticas + páginas de salón dinámicas) |
 | 4.3 | Performance: imágenes, code splitting, ISR | 3 | Lighthouse > 80 en móvil | ⏳ |
 | 4.4 | Accesibilidad (a11y) audit y correcciones | 3 | 0 errores críticos en axe-core | ⏳ |
@@ -562,27 +614,27 @@ main                     → producción (Firebase App Hosting)
 
 ---
 
-## ACCIONES INMEDIATAS (estado 2026-05-07)
-
-~~Las acciones de la Semana 1 (Fase 0) están 100% completadas.~~ A continuación las prioridades vigentes:
+## ACCIONES INMEDIATAS (estado 2026-05-15)
 
 ### 🔴 P0 — Antes de ir a producción
 
 1. **Activar `MERCADOPAGO_ACCESS_TOKEN` real** — sandbox todavía activo. Sin esto no hay cobros reales.
-2. **`npx playwright install` en `.github/workflows/ci.yml`** — e2e tests no corren en CI. Añadir step y ejecutar los 3 specs existentes.
-3. **Remover Genkit** — `npm uninstall @genkit-ai/googleai genkit` + borrar `src/ai/`. Dependencia muerta que infla el bundle.
-4. **Activar `WHATSAPP_TOKEN` en producción** — la estructura WhatsApp está lista. Sin token solo funciona en modo dry-run.
+2. ~~**`npx playwright install` en `.github/workflows/ci.yml`**~~ ✅ Añadido job `e2e` con `playwright install --with-deps chromium`.
+3. **Activar `WHATSAPP_TOKEN` en producción** — la estructura WhatsApp está lista. Sin token solo funciona en modo dry-run.
+4. ~~**`npm uninstall resend`**~~ ✅ Removido. API route `/api/notifications` eliminada. `notification.service.ts` convertido a stub no-op.
 
 ### 🟡 P1 — Próximo sprint (Fase 3.5–3.6)
 
-5. **Schema Planes SaaS** — añadir `plan: 'free' | 'pro' | 'enterprise'` a `Tenant` en `schema.ts` + documento Firestore
-6. **Feature flags por plan** — hook `usePlan()` que devuelve qué features están desbloqueadas según plan del tenant
-7. **UI de selección de plan** — página en `/business/pricing` o dentro del onboarding
+5. ~~**Staff CRUD completo en SPA admin**~~ ✅ `ConfigTabView` ahora permite crear profesionales (formulario inline) y archivar/reactivar por staff.
+6. ~~**Schema Planes SaaS**~~ ✅ `Tenant.plan` alineado a `'free' | 'pro' | 'enterprise'` en `schema.ts`.
+7. ~~**Feature flags por plan**~~ ✅ `usePlan()` hook creado en `src/hooks/usePlan.ts` con matriz de features por plan. Beta default = `'pro'`.
+8. ~~**UI de selección de plan**~~ ✅ `PricingSection4` (3 planes ARS, copy español) ya integrada en `/business`. Plan display en `ConfigTabView` con `usePlan()` hook.
 
 ### 🟢 P2 — Fase 4 (quality & scale)
 
-8. **Performance audit** — Lighthouse mobile en `/`, `/explore`, `/salones/[slug]`. Target > 80.
-9. **a11y audit** — `axe-core` scan en rutas críticas (booking flow, dashboard, perfil)
-10. **Sistema de reviews** — schema `Review` + UI post-checkout + carrusel en página de salón
-11. **Archivar `types.ts`** — renombrar a `_types_archive.ts`, migrar referencias restantes a `schema.ts`
-12. **Documentación** — README actualizado, ADR-003 para guest booking, ADR-004 para ScrollVideoHero
+9. **Performance audit** — Lighthouse mobile en `/`, `/explore`, `/salones/[slug]`. Target > 80.
+10. **a11y audit** — `axe-core` scan en rutas críticas (booking flow, dashboard, perfil).
+11. **Sistema de reviews** — schema `Review` + UI post-checkout + carrusel en página de salón.
+12. ~~**Archivar `types.ts`**~~ ✅ Renombrado a `_types_archive.ts`, las 9 referencias actualizadas, `types.ts` eliminado.
+13. **`shim-storage.ts`** — evaluar si sigue siendo necesario y eliminar si no.
+14. **Documentación** — README actualizado, ADR-003 para guest booking, ADR-004 para ScrollVideoHero, ADR-005 para arquitectura admin SPA-tabs.

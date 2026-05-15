@@ -1,212 +1,321 @@
-# MujerApp — Mapeo Fase 0 a Código Concreto
+# MujerApp — Review de Implementación Técnica
 
-**Rama**: `database-config` | **Fecha**: 2026-04-03 | **Equipo**: plan-review
-
----
-
-## FASE 0 — Cimientos Estables (2 semanas)
-
-Mapeo de cada tarea (0.1–0.10) a archivos y cambios puntuales:
+**Rama**: `database-config` | **Última actualización**: 2026-05-15
 
 ---
 
-### 0.1 — Eliminar `ignoreBuildErrors` + corregir errores TS
+## ESTADO GENERAL
 
-**Archivo**: `next.config.ts`
-- Línea 8: `ignoreBuildErrors: true,`
-- Línea 11: `ignoreDuringBuilds: true,`
-
-**Cambio**: Cambiar a `false` ambas flags y ejecutar `tsc --noEmit` para mapear todos los errores reales.
-
-**Errores conocidos** (del output de tsc):
-- `src/components/VolumenTiempoReal.tsx:3` — recharts no exporta `Defs`, `linearGradient`, `Stop`
-- `src/lib/firebase.ts:22` — `Property '_settings' does not exist on type 'Firestore'`
-
-**Complejidad**: Media
+Este documento mapea el código real del proyecto a su estado de implementación, incluyendo rutas, acciones, servicios y deuda técnica vigente. Sirve como fuente de verdad para entender dónde estamos parados hoy.
 
 ---
 
-### 0.2 — Eliminar credenciales de test hardcodeadas
+## ARQUITECTURA DE RUTAS (estado 2026-05-15)
 
-**Archivos afectados**:
-1. `src/app/(admin)/login/page.tsx`
-   - Línea 29: `const [email, setEmail] = useState('clienta@mujer.com');`
-   - Línea 30: `const [password, setPassword] = useState('password123');`
-   - Líneas 184–185: Hints de credenciales visibles en UI
+### Admin — SPA con tabs
 
-2. `src/lib/auth.ts`
-   - Verificar presencia de credenciales hardcodeadas en CredentialsProvider
+El admin NO usa un route group `(admin)` con páginas separadas. Es una **Single-Page App** en:
 
-**Cambio**:
-- Dejar campos vacíos (`useState('')`)
-- Mover datos de test a `.env.local` (no comitear)
-- Remover hints de credenciales de la UI
-
-**Complejidad**: Baja — 3 líneas a cambiar, sin lógica.
-
----
-
-### 0.3 — Crear `.env.example` documentado
-
-**Archivo a crear**: `.env.example`
-
-**Variables necesarias** (basado en `next.config.ts`):
 ```
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-NEXTAUTH_URL=
-NEXTAUTH_SECRET=
-NEXTAUTH_CALLBACK_URL=
-FIREBASE_API_KEY=
-FIREBASE_AUTH_DOMAIN=
-FIREBASE_PROJECT_ID=
-FIREBASE_STORAGE_BUCKET=
-FIREBASE_MESSAGING_SENDER_ID=
-FIREBASE_APP_ID=
+src/app/[tenantSlug]/
+├── layout.tsx                  → guard: redirect /login si !session || role === 'customer'
+└── dashboard/
+    ├── page.tsx                → SPA con sidebar flotante + 7 tabs
+    ├── DashboardTabView.tsx    → métricas del día (ingresos, turnos, caja)
+    ├── AgendaTabView.tsx       → agenda visual por slots 30min, checkout inline, crear turno
+    ├── ClientesTabView.tsx     → búsqueda y lista de clientes
+    ├── ServiciosTabView.tsx    → CRUD de servicios
+    ├── CajaTabView.tsx         → cierre de caja diario, revenue semanal por método
+    ├── PerformanceTabView.tsx  → analytics / rendimiento
+    └── ConfigTabView.tsx       → horarios semanales, comisiones del equipo, ajustes del local
 ```
 
-**Complejidad**: Baja
+**Acceso**: `/{tenantSlug}/dashboard` (ej: `/mi-salon/dashboard`)
 
----
+**Guard**: `src/app/[tenantSlug]/layout.tsx` — `getServerSession()` en el layout. Si no hay sesión o `role === 'customer'`, redirige a `/login`.
 
-### 0.4 — Corregir `userRole = 'admin'` → leer de sesión
-
-**Archivos afectados**:
-1. `src/app/(admin)/clientes/page.tsx`
-   - Línea 24: `const userRole = 'admin'; // TODO: Get role from user auth state`
-
-2. `src/app/(admin)/clientes/[id]/page.tsx`
-   - Línea 39: `const userRole = 'admin' as UserRole;`
-
-**Cambio**: Reemplazar con lectura desde sesión:
+**Middleware**: `src/middleware.ts` protege con `withAuth`:
 ```typescript
-const session = await auth();
-const userRole = session?.user?.role || 'clienta';
+matcher: [
+  '/:slug/dashboard/:path*',
+  '/admin/:path*',
+  '/perfil/:path*',
+]
 ```
 
-**Complejidad**: Media — Requiere que `role` esté propagado en el JWT de NextAuth.
-
 ---
 
-### 0.5 — Desacoplar `branchId` hardcodeado → leer de TenantContext
+### Marketplace — Rutas públicas B2C
 
-**Archivos afectados**:
-1. `src/actions/booking.actions.ts`
-   - Línea 104: `branchId: 'sucursal_centro', // TODO: dinámico cuando existan múltiples branches`
-
-2. `src/app/(admin)/turnos/page.tsx`
-   - Línea 305: `branchId: 'sucursal_centro', // TODO: Get from context when generic branch support is added`
-
-**Cambio**:
-- En `turnos/page.tsx`: usar `const { branchId } = useTenant();`
-- En `booking.actions.ts` (Server Action): recibir `branchId` como parámetro desde el cliente
-- Validar en Firestore rules que el `branchId` pertenece al tenant del usuario
-
-**Complejidad**: Alta — Refactor de Server Actions + validación en reglas + pruebas e2e.
-
----
-
-### 0.6 — Proteger `/admin/seed` y `/admin/migrate` en middleware
-
-**Archivo**: `src/middleware.ts`
-
-**Estado actual del matcher** (líneas 13–20):
-```typescript
-export const config = {
-  matcher: [
-    '/agenda/:path*',
-    '/clientes/:path*',
-    '/dashboard/:path*',
-    '/servicios/:path*',
-    '/turnos/:path*',
-    '/mis-turnos/:path*',
-  ],
-};
+```
+src/app/(marketplace)/
+├── layout.tsx
+├── (public)/
+│   ├── layout.tsx
+│   ├── page.tsx                        → / (landing B2C)
+│   ├── explore/page.tsx                → /explore
+│   ├── registro/page.tsx               → /registro
+│   └── salones/[tenantSlug]/
+│       ├── page.tsx                    → /salones/{slug} (perfil público)
+│       ├── login/page.tsx              → /salones/{slug}/login
+│       ├── book/
+│       │   ├── page.tsx                → /salones/{slug}/book (booking flow)
+│       │   ├── confirmation/[appointmentId]/page.tsx
+│       │   └── payment/
+│       │       ├── success/page.tsx
+│       │       ├── pending/page.tsx
+│       │       └── failure/page.tsx
+│       └── dashboard/
+│           ├── layout.tsx
+│           ├── page.tsx                → /salones/{slug}/dashboard (portal cliente)
+│           └── mis-turnos/page.tsx
+└── perfil/
+    ├── page.tsx                        → /perfil (overview B2C)
+    ├── cuenta/page.tsx                 → /perfil/cuenta (wired a Firestore)
+    ├── historial/page.tsx              → /perfil/historial (mock data aún)
+    └── favoritos/page.tsx
 ```
 
-**Cambio**: Añadir:
-```typescript
-'/admin/seed/:path*',
-'/admin/migrate/:path*',
+**Nota**: `src/app/perfil/layout.tsx` es un layout standalone (fuera del grupo marketplace) que fuerza `light` como colorScheme. Probablemente es un artefacto — revisar si es necesario o colisiona con el layout de `(marketplace)/perfil/`.
+
+---
+
+### B2B / Business
+
+```
+src/app/
+├── business/
+│   ├── page.tsx                → /business (landing B2B, 7 secciones, ScrollVideoHero)
+│   └── register/page.tsx       → /business/register (onboarding wizard 5 pasos)
+└── login/page.tsx              → /login (unificado, tab B2B/B2C)
 ```
 
-**Complejidad**: Baja — 2 líneas al matcher.
-
 ---
 
-### 0.7 — Cubrir rutas marketplace autenticadas en middleware
+### API Routes
 
-**Archivo**: `src/middleware.ts`
-
-**Cambio**: Añadir al matcher:
-```typescript
-'/salones/:slug/dashboard/:path*',
+```
+src/app/api/
+├── auth/[...nextauth]/route.ts
+├── google/
+│   ├── callback/route.ts
+│   ├── connect/route.ts
+│   ├── disconnect/route.ts
+│   ├── event/route.ts
+│   ├── status/route.ts
+│   ├── sync/bootstrap/route.ts
+│   └── webhook/route.ts
+├── mercadopago/webhook/route.ts
+└── notifications/route.ts
 ```
 
-**Complejidad**: Baja — Una línea al matcher.
+---
+
+### Dev Utilities (protegidas en prod)
+
+```
+src/app/admin/
+├── seed/page.tsx       → guard notFound() en producción
+└── migrate/page.tsx    → guard notFound() en producción
+```
 
 ---
 
-### 0.8 — Setup CI/CD (GitHub Actions)
+## SERVER ACTIONS (src/actions/)
 
-**Archivo a crear**: `.github/workflows/ci.yml`
-
-**Pasos mínimos**:
-1. Checkout + setup Node.js
-2. `npm ci`
-3. `npm run lint`
-4. `npx tsc --noEmit`
-5. `npm run build`
-
-**Complejidad**: Media — Requiere que 0.1 esté completo primero (build limpio).
-
----
-
-### 0.9 — Configurar Sentry
-
-**Cambios**:
-1. `npm install @sentry/nextjs`
-2. Crear `sentry.client.config.ts` y `sentry.server.config.ts`
-3. `src/app/layout.tsx` — inicializar Sentry
-4. Añadir `NEXT_PUBLIC_SENTRY_DSN=` a `.env.example`
-
-**Complejidad**: Media — Integración estándar Next.js + Sentry, ~2h.
+| Archivo | Propósito |
+|---------|-----------|
+| `appointments.actions.ts` | getDailyMetrics, getWeeklyRevenue, getRevenueTimeSeries, createAppointment |
+| `auth.actions.ts` | registerCustomer, login helpers |
+| `booking.actions.ts` | createBooking (marketplace, con guest support) |
+| `branches.actions.ts` | createBranch, updateBranch, toggleBranchActive |
+| `caja.actions.ts` | getCierreCaja |
+| `calendar.actions.ts` | syncAppointmentToCalendar, cancelCalendarEvent |
+| `checkout.actions.ts` | closeAppointment (marca cobrado + incrementa CRM metrics) |
+| `customer.actions.ts` | getMyAppointments, searchCustomers, createCustomer, cancelAppointment |
+| `guest-booking.actions.ts` | createGuestBooking (sin sesión NextAuth) |
+| `mercadopago.actions.ts` | createDepositPreference |
+| `onboarding.actions.ts` | createTenantWithAdmin (batch atómico Firestore) |
+| `profile.actions.ts` | getMyProfile, updateMyProfile, getMyHistorial, getMyUpcomingAppointments |
+| `reviews.actions.ts` | getSalonReviews, getSalonRatingStats, submitReview |
+| `services.actions.ts` | createService, updateService, toggleServiceActive |
+| `staff.actions.ts` | createStaffMember, updateStaffMember, toggleStaffActive, updateStaffCommissions |
+| `tenant.actions.ts` | getTenantSettings, updateTenantSettings, checkSlugAvailability |
 
 ---
 
-### 0.10 — Configurar staging environment
+## SERVICIOS (src/lib/services/)
 
-**Cambios**:
-1. Crear `.env.staging` apuntando a proyecto Firebase de staging
-2. Verificar `firebase.json` para configuración de App Hosting
-3. Añadir workflow en CI para deploy automático a staging en merge a rama `staging`
-
-**Complejidad**: Media — Requiere segundo proyecto Firebase.
-
----
-
-## RESUMEN POR COMPLEJIDAD
-
-| Complejidad | Tareas | Estimado |
-|-------------|--------|----------|
-| **Baja** | 0.2, 0.3, 0.6, 0.7 | 2 días |
-| **Media** | 0.4, 0.8, 0.9, 0.10 | 5 días |
-| **Alta** | 0.1, 0.5 | 3 días |
-| **TOTAL** | — | **10 días ≈ 2 semanas** |
+| Archivo | Propósito |
+|---------|-----------|
+| `auth.service.ts` | helpers de autenticación Firebase |
+| `catalog.service.ts` | getServices, getPromotions por tenant |
+| `customer.service.ts` | getAppointmentsByClientId, getCustomerByPhone, getAppointmentsByPhone |
+| `marketplace.service.ts` | getPublicSalons, getSalonBySlug |
+| `notification.service.ts` | notificaciones internas |
+| `user.service.ts` | getUserProfile, updateUserProfile |
 
 ---
 
-## ARCHIVOS CRÍTICOS — CHECKLIST
+## HOOKS (src/hooks/)
 
-- [ ] `next.config.ts` — líneas 8, 11
-- [ ] `src/app/(admin)/login/page.tsx` — líneas 29–30, 184–185
-- [ ] `src/app/(admin)/clientes/page.tsx` — línea 24
-- [ ] `src/app/(admin)/clientes/[id]/page.tsx` — línea 39
-- [ ] `src/actions/booking.actions.ts` — línea 104
-- [ ] `src/app/(admin)/turnos/page.tsx` — línea 305
-- [ ] `src/middleware.ts` — añadir 4 rutas al matcher
-- [ ] `src/lib/auth.ts` — verificar CredentialsProvider
-- [ ] `.env.example` — crear (nuevo)
-- [ ] `.github/workflows/ci.yml` — crear (nuevo)
-- [ ] `sentry.*.config.ts` — crear (nuevos)
-- [ ] `.env.staging` — crear (nuevo)
+| Hook | Propósito |
+|------|-----------|
+| `useBranches` | lista de sucursales del tenant activo |
+| `useCatalog` | servicios del catálogo del tenant |
+| `useMetrics` | métricas del dashboard |
+| `useOcupacionEnVivo` | ocupación en tiempo real (Firestore listener) |
+| `useRole` | rol del usuario de la sesión |
+| `useStaff` | lista de staff del tenant |
+| `use-toast` | sistema de toasts (shadcn) |
+
+---
+
+## CONTEXTOS (src/contexts/)
+
+| Contexto | Propósito |
+|----------|-----------|
+| `TenantContext` | tenantId, branchId, datos básicos del tenant activo |
+| `UserContext` | datos del usuario autenticado |
+
+---
+
+## SCHEMA (src/lib/schema.ts) — Source of Truth
+
+Tipos principales exportados:
+- `UserProfile`, `UserRole` (`'admin' | 'employee' | 'client' | 'customer'`), `Membership`
+- `Tenant` (con `plan?: 'free' | 'basic' | 'premium'`)
+- `Branch`, `Service`, `ServicePrice`, `ServicePriceByLength`, `Promotion`
+- `Staff`, `StaffCommissions`
+- `Appointment`, `AppointmentStatus`, `PaymentMethod`, `PaymentSplit`
+- `Customer`, `TechnicalRecord`
+
+**Nota de alineación pendiente**: `Tenant.plan` tiene valores `'free' | 'basic' | 'premium'` pero el plan de Planes SaaS (3.5) usa `'free' | 'pro' | 'enterprise'`. Alinear antes de implementar Planes SaaS.
+
+**`src/lib/types.ts`**: Schema legacy (78 líneas). Todavía existe. Pendiente renombrar a `_types_archive.ts` y migrar referencias.
+
+---
+
+## COMPONENTES — INVENTARIO REAL
+
+### admin/
+- `CheckoutDrawer.tsx` — Sheet de cobro (efectivo/MP/tarjeta/transferencia)
+- `CierreCajaDiario.tsx` — Resumen de caja real-time
+
+### business/ (11 componentes)
+- `ScrollVideoHero.tsx`, `BusinessHero.tsx`, `BusinessCTA.tsx`, `BusinessFeatures.tsx`
+- `CTAFinalSection.tsx`, `ComoFuncionaSection.tsx`, `DolorSection.tsx`
+- `FeaturesSection.tsx`, `PricingSection.tsx`, `SocialProofSection.tsx`
+- `BusinessDashboardMock.tsx`
+
+### charts/ (3 componentes)
+- `MonthlyVolumeChart.tsx`, `PopularServicesChart.tsx`, `WeeklyTurnosChart.tsx`
+
+### landing/ (14 componentes)
+- `Hero.tsx`, `LandingHeader.tsx`, `LandingFooter.tsx`, `Footer.tsx`
+- `Categorias.tsx`, `ColeccionCurada.tsx`, `ElevaTuVision.tsx`
+- `FeaturedServices.tsx`, `SalonesDestacados.tsx`, `Testimonials.tsx`
+- `MapAndReviews.tsx`, `PromoSection.tsx`, `CTABusiness.tsx`, `InfoBar.tsx`
+- `ScrollReveal.tsx`
+
+### marketplace/ (10 componentes)
+- `BookingFlow.tsx`, `CancelAppointmentDialog.tsx`, `ExploreSidebar.tsx`
+- `PublicHeader.tsx`, `PublicSalonCard.tsx`, `PublicSalonHero.tsx`
+- `PublicServiceCard.tsx`, `PublicStaffCard.tsx`, `SalonCard.tsx`, `SalonMap.tsx`
+
+### salon/ (5 componentes)
+- `SalonFeaturedServices.tsx`, `SalonHeader.tsx`, `SalonHero.tsx`
+- `SalonSidebar.tsx`, `ScrollReveal.tsx`
+
+### ui/ (44 componentes shadcn/Radix)
+Incluyendo: `accordion`, `alert`, `alert-dialog`, `avatar`, `badge`, `button`, `calendar`,
+`card`, `carousel`, `chart`, `checkbox`, `collapsible`, `command`, `dialog`,
+`dropdown-menu`, `form`, `input`, `label`, `menubar`, `popover`, `progress`,
+`radio-group`, `scroll-area`, `select`, `separator`, `sheet`, `skeleton`,
+`slider`, `switch`, `table`, `tabs`, `textarea`, `toast`, `toaster`, `tooltip`
++ componentes premium: `background-paths`, `container-scroll-animation`, `hero-1`,
+`pricing-section-4`, `sparkles`, `timeline-animation`, `vertical-cut-reveal`
+
+---
+
+## TESTS (e2e/)
+
+Playwright configurado. 3 specs en `e2e/`:
+- `booking-flow.spec.ts`
+- `checkout.spec.ts`
+- `registro.spec.ts`
+- `fixtures/` + `global-setup.ts` con storageState para auth
+
+**Estado**: ⚠️ `npx playwright install` NO está en `.github/workflows/ci.yml`. Los e2e no corren en CI.
+
+**CI actual** (`.github/workflows/ci.yml`): 3 jobs — TypeScript, ESLint, Build. Sin e2e.
+
+---
+
+## DEUDA TÉCNICA VIGENTE (2026-05-15)
+
+### 🔴 P0 — Bloquea producción
+
+| # | Deuda | Acción |
+|---|-------|--------|
+| D1 | `MERCADOPAGO_ACCESS_TOKEN` de sandbox activo | Activar clave de producción |
+| D2 | `WHATSAPP_TOKEN` no configurado en prod | Activar en variables de entorno de producción |
+| ~~D3~~ | ~~e2e no corren en CI~~ | ✅ Job `e2e` añadido a `ci.yml` con `playwright install --with-deps chromium` |
+
+### 🟡 P1
+
+| # | Deuda | Acción |
+|---|-------|--------|
+| ~~D4~~ | ~~`resend` en package.json sin uso~~ | ✅ `npm uninstall resend`. API route eliminada. `notification.service.ts` → stub no-op. |
+| ~~D5~~ | ~~Staff CRUD incompleto en admin SPA~~ | ✅ `ConfigTabView`: crear profesional (form inline) + archivar/reactivar por card. |
+| ~~D6~~ | ~~`tenantIds` JWT no reactivos~~ | ✅ JWT callback ahora maneja `trigger === 'update'`: re-fetches memberships de Firestore. Llamar `update()` de `useSession()` después de cambios de rol/tenant. |
+| ~~D7~~ | ~~`Tenant.plan` valores desalineados con roadmap~~ | ✅ Alineado a `'free' \| 'pro' \| 'enterprise'` en `schema.ts`. `usePlan()` hook creado. |
+
+### 🟢 P2
+
+| # | Deuda | Acción |
+|---|-------|--------|
+| ~~D8~~ | ~~`src/lib/types.ts` legacy (78 líneas)~~ | ✅ Renombrado a `_types_archive.ts`, las 9 referencias actualizadas, `types.ts` eliminado. |
+| ~~D9~~ | ~~`shim-storage.ts` en `next.config.ts`~~ | ✅ Conservado como shim silencioso. Diagnósticos eliminados (eran spam en prod logs). |
+| ~~D10~~ | ~~`patch-package` en devDependencies~~ | ✅ Eliminado — no tenía directorio `patches/` ni `postinstall` hook. Era dead weight. |
+| ~~D11~~ | ~~`src/app/perfil/layout.tsx` standalone~~ | ✅ Eliminado — era dead code sin `page.tsx` sibling. No wrapeaba nada. |
+| D12 | 4 TODOs de imágenes (`ColeccionCurada.tsx` ×3, `ElevaTuVision.tsx` ×1) | Reemplazar con assets reales |
+| ~~D13~~ | ~~`/perfil/historial` con mock data~~ | ✅ `getMyHistorial` + `getMyUpcomingAppointments` wired cross-tenant. `/perfil/page.tsx` usa datos reales para próximos turnos. |
+
+---
+
+## CHECKLIST DE INTEGRACIONES
+
+| Integración | Estado | Notas |
+|-------------|--------|-------|
+| **Firebase Auth** | ✅ Activo | `signInWithEmailAndPassword` vía Credentials provider |
+| **Firestore** | ✅ Activo | REST en Server Components, SDK en Client para listeners |
+| **Google OAuth** | ✅ Activo | Con scopes de Calendar |
+| **Google Calendar** | ✅ ~80% | Bidireccional. Token refresh OK. |
+| **MercadoPago** | ✅ ~90% | Checkout Pro + webhook IPN. Sandbox activo. |
+| **WhatsApp Business** | ⚠️ Estructural | `whatsapp.ts` + templates listos. Sin token real. |
+| **Resend / Email** | ✅ Eliminado | Paquete desinstalado. API route borrada. Service → no-op stub. |
+| **Sentry** | ❌ No configurado | P1 post-launch |
+| **PostHog / Analytics** | ❌ No configurado | P2 |
+| **Google Maps** | ✅ Activo | `SalonMap.tsx` con dark theme + fallback sin API key |
+
+---
+
+## HISTORIAL DE CAMBIOS ARQUITECTÓNICOS RELEVANTES
+
+| Fecha | Cambio |
+|-------|--------|
+| 2026-04-08 | **Pivot LATAM**: eliminado Resend/email. WhatsApp como canal principal. |
+| 2026-04-08 | **Pivot LATAM**: eliminada IA/Genkit del roadmap. |
+| 2026-04-09 | Guest Booking implementado (reservas sin auth wall). |
+| 2026-04-09 | `ScrollVideoHero` (96 frames) + rediseño completo `/business`. |
+| 2026-04-29 | MercadoPago Checkout Pro + webhook IPN. |
+| 2026-04-29 | `CierreCajaDiario` real-time en dashboard. |
+| 2026-05-07 | `src/ai/` eliminado. Genkit removido de package.json. |
+| 2026-05-07 | Admin reestructurado como SPA con 7 tabs en `[tenantSlug]/dashboard`. |
+| 2026-05-07 | `CajaTabView` y `PerformanceTabView` añadidos como tabs del admin. |
+| 2026-05-15 | `resend` desinstalado. `/api/notifications` eliminado. `notification.service.ts` → stub. |
+| 2026-05-15 | Playwright añadido a CI (job `e2e` con `chromium`). |
+| 2026-05-15 | `Tenant.plan` alineado a `'free' \| 'pro' \| 'enterprise'`. `usePlan()` hook creado. |
+| 2026-05-15 | Staff CRUD completo en `ConfigTabView`: crear + archivar/reactivar profesionales. |
+| 2026-05-15 | `getMyHistorial` + `getMyUpcomingAppointments` wired cross-tenant en `profile.actions.ts`. `/perfil/page.tsx` y `/perfil/historial` usan datos reales. |

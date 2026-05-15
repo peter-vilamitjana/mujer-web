@@ -44,7 +44,7 @@ export interface Tenant {
         currency: string;
         timezone: string;
     };
-    plan?: 'free' | 'basic' | 'premium';
+    plan?: 'free' | 'pro' | 'enterprise';
     slotDurationMinutes?: number;
     cancellationPolicy?: {
         hoursInAdvance: number;
@@ -206,4 +206,16 @@ export interface TechnicalRecord {
     serviceSummary: string;
     formula: string; // tono/mezcla
     notes?: string;
+}
+
+export interface Review {
+    id: string;
+    clientId?: string;        // undefined for anonymous/guest reviews
+    clientName: string;
+    rating: number;            // 1–5
+    comment?: string;
+    serviceName?: string;
+    createdAt: Timestamp;
+    verified: boolean;         // true when tied to a real confirmed appointment
+    appointmentId?: string;
 }

@@ -9,7 +9,7 @@ import {
   Timestamp,
   type Firestore,
 } from "firebase/firestore";
-import type { Turno } from "@/lib/types";
+import type { Turno } from "@/lib/_types_archive";
 import { safeFormatDate } from "@/lib/utils";
 
 const INTERVAL_MS = 3000; // 3 seconds

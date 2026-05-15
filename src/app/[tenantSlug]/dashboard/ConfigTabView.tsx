@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useTenant } from '@/contexts/TenantContext';
 import { useStaff } from '@/hooks/useStaff';
 import { getTenantSettings, updateTenantSettings } from '@/actions/tenant.actions';
-import { updateStaffCommissions } from '@/actions/staff.actions';
+import { updateStaffCommissions, createStaffMember, toggleStaffActive } from '@/actions/staff.actions';
+import { usePlan } from '@/hooks/usePlan';
 
 const DAYS_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const DAY_LABELS: Record<string, string> = {
@@ -28,6 +29,7 @@ function defaultHours(): HoursMap {
 export default function ConfigTabView() {
   const { tenantId } = useTenant();
   const { staff }    = useStaff();
+  const planFeatures = usePlan();
 
   // ── Perfil del local ──────────────────────────────────────────────────────
   const [name, setName]         = useState('');
@@ -50,6 +52,16 @@ export default function ConfigTabView() {
   // ── Comisiones del equipo (editables inline) ──────────────────────────────
   const [commEdits, setCommEdits]   = useState<Record<string, string>>({});
   const [savingComm, setSavingComm] = useState<string | null>(null);
+
+  // ── Agregar nuevo profesional ─────────────────────────────────────────────
+  const [showNewStaff, setShowNewStaff] = useState(false);
+  const [newName, setNewName]           = useState('');
+  const [newRole, setNewRole]           = useState('');
+  const [newPhone, setNewPhone]         = useState('');
+  const [newEmail, setNewEmail]         = useState('');
+  const [newComm, setNewComm]           = useState('30');
+  const [creatingStaff, setCreatingStaff] = useState(false);
+  const [togglingStaff, setTogglingStaff] = useState<string | null>(null);
 
   // ── Save state ────────────────────────────────────────────────────────────
   const [saving, setSaving]   = useState(false);
@@ -111,6 +123,33 @@ export default function ConfigTabView() {
     setSaving(false);
     setSaveMsg(result.success ? '¡Guardado!' : (result as { success: false; error: string }).error);
     setTimeout(() => setSaveMsg(null), 3000);
+  }
+
+  // ── Crear nuevo profesional ───────────────────────────────────────────────
+  async function handleCreateStaff() {
+    if (!tenantId || !newName.trim() || !newRole.trim()) return;
+    setCreatingStaff(true);
+    const commVal = parseInt(newComm, 10);
+    await createStaffMember(tenantId, {
+      name: newName.trim(),
+      role: newRole.trim(),
+      phone: newPhone.trim() || undefined,
+      email: newEmail.trim() || undefined,
+      assignedBranchIds: [],
+      active: true,
+      commissions: { default: isNaN(commVal) ? 30 : commVal },
+    });
+    setNewName(''); setNewRole(''); setNewPhone(''); setNewEmail(''); setNewComm('30');
+    setShowNewStaff(false);
+    setCreatingStaff(false);
+  }
+
+  // ── Archivar / reactivar profesional ─────────────────────────────────────
+  async function handleToggleStaff(staffId: string, currentActive: boolean) {
+    if (!tenantId) return;
+    setTogglingStaff(staffId);
+    await toggleStaffActive(tenantId, staffId, !currentActive);
+    setTogglingStaff(null);
   }
 
   // ── Save single staff commission ──────────────────────────────────────────
@@ -292,21 +331,92 @@ export default function ConfigTabView() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h3 className="font-playfair text-xl font-bold italic text-violet-300">Gestión de Equipo</h3>
-              <p className="text-[12px] text-[#7a766e] mt-1">Comisiones por profesional. Guardado por separado.</p>
+              <p className="text-[12px] text-[#7a766e] mt-1">Añadí, archivá y ajustá comisiones por profesional.</p>
             </div>
-            <span className="material-symbols-outlined text-violet-400/40" style={{ fontSize: '24px' }}>people</span>
+            <button
+              onClick={() => setShowNewStaff(v => !v)}
+              className="flex items-center gap-2 px-4 py-2 bg-violet-500/15 hover:bg-violet-500/30 border border-violet-500/20 text-violet-300 rounded-xl text-[11px] font-bold transition-all cursor-pointer"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '16px', fontVariationSettings: "'FILL' 1" }}>
+                {showNewStaff ? 'close' : 'person_add'}
+              </span>
+              {showNewStaff ? 'Cancelar' : 'Agregar Profesional'}
+            </button>
           </div>
 
+          {/* ── Formulario nuevo profesional ── */}
+          {showNewStaff && (
+            <div className="mb-6 p-5 bg-violet-500/5 border border-violet-500/15 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+              <h4 className="text-[12px] font-bold text-violet-300 uppercase tracking-widest mb-4">Nuevo Profesional</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-bold text-[#7a766e] uppercase tracking-widest ml-1">Nombre *</label>
+                  <input
+                    type="text" value={newName} onChange={e => setNewName(e.target.value)}
+                    placeholder="Nombre completo"
+                    className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2.5 text-[13px] text-[#f5f0e8] focus:outline-none focus:border-violet-500/40 transition-all"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-bold text-[#7a766e] uppercase tracking-widest ml-1">Rol *</label>
+                  <input
+                    type="text" value={newRole} onChange={e => setNewRole(e.target.value)}
+                    placeholder="Estilista, Colorista…"
+                    className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2.5 text-[13px] text-[#f5f0e8] focus:outline-none focus:border-violet-500/40 transition-all"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-bold text-[#7a766e] uppercase tracking-widest ml-1">Teléfono</label>
+                  <input
+                    type="text" value={newPhone} onChange={e => setNewPhone(e.target.value)}
+                    placeholder="+54 11 …"
+                    className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2.5 text-[13px] text-[#f5f0e8] focus:outline-none focus:border-violet-500/40 transition-all"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-bold text-[#7a766e] uppercase tracking-widest ml-1">Email</label>
+                  <input
+                    type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)}
+                    placeholder="profesional@mail.com"
+                    className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2.5 text-[13px] text-[#f5f0e8] focus:outline-none focus:border-violet-500/40 transition-all"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-bold text-[#7a766e] uppercase tracking-widest ml-1">Comisión %</label>
+                  <input
+                    type="number" min="0" max="100" value={newComm} onChange={e => setNewComm(e.target.value)}
+                    className="w-full bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2.5 text-[13px] font-mono text-violet-300 focus:outline-none focus:border-violet-500/40 transition-all"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={handleCreateStaff}
+                disabled={creatingStaff || !newName.trim() || !newRole.trim()}
+                className="px-6 py-2.5 bg-violet-500 hover:bg-violet-400 disabled:opacity-40 text-white font-bold rounded-xl text-[12px] transition-all active:scale-95 cursor-pointer flex items-center gap-2"
+              >
+                {creatingStaff ? (
+                  <span className="material-symbols-outlined animate-spin" style={{ fontSize: '16px' }}>progress_activity</span>
+                ) : (
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px', fontVariationSettings: "'FILL' 1" }}>person_add</span>
+                )}
+                {creatingStaff ? 'Guardando…' : 'Guardar Profesional'}
+              </button>
+            </div>
+          )}
+
+          {/* ── Lista de profesionales ── */}
           {staff.length === 0 ? (
             <p className="text-[#7a766e] text-sm py-4 text-center">No hay profesionales cargados aún.</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {staff.filter(s => s.active !== false).map(s => {
+              {staff.map(s => {
+                const isActive = s.active !== false;
                 const color = avatarColor(s.name);
                 const commVal = commEdits[s.id] ?? String(s.commissions?.default ?? 30);
                 const isSaving = savingComm === s.id;
+                const isToggling = togglingStaff === s.id;
                 return (
-                  <div key={s.id} className="bg-[#0d0d0d]/60 border border-white/[0.06] p-4 rounded-2xl hover:border-violet-400/20 transition-all">
+                  <div key={s.id} className={`bg-[#0d0d0d]/60 border rounded-2xl p-4 transition-all ${isActive ? 'border-white/[0.06] hover:border-violet-400/20' : 'border-white/[0.03] opacity-50'}`}>
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-12 h-12 rounded-full flex items-center justify-center text-[13px] font-black border shrink-0"
                         style={{ background: `${color}15`, color, borderColor: `${color}30` }}>
@@ -318,30 +428,53 @@ export default function ConfigTabView() {
                         <h4 className="text-[14px] font-bold text-[#f5f0e8] truncate">{s.name}</h4>
                         <p className="text-[11px] text-[#7a766e] truncate">{s.role}</p>
                       </div>
+                      {/* Toggle activo / archivado */}
+                      <button
+                        onClick={() => handleToggleStaff(s.id, isActive)}
+                        disabled={isToggling}
+                        title={isActive ? 'Archivar' : 'Reactivar'}
+                        className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center border transition-all cursor-pointer disabled:opacity-40 ${
+                          isActive
+                            ? 'border-rose-500/20 text-rose-400 hover:bg-rose-500/10'
+                            : 'border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10'
+                        }`}
+                      >
+                        {isToggling ? (
+                          <span className="material-symbols-outlined animate-spin" style={{ fontSize: '13px' }}>progress_activity</span>
+                        ) : (
+                          <span className="material-symbols-outlined" style={{ fontSize: '13px', fontVariationSettings: "'FILL' 1" }}>
+                            {isActive ? 'archive' : 'unarchive'}
+                          </span>
+                        )}
+                      </button>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] font-bold text-[#7a766e] uppercase tracking-widest">Comisión %</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="number"
-                          min="0" max="100"
-                          value={commVal}
-                          onChange={e => setCommEdits(prev => ({ ...prev, [s.id]: e.target.value }))}
-                          className="flex-1 bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2 text-[14px] font-bold font-mono text-violet-300 focus:outline-none focus:border-violet-500/40"
-                        />
-                        <button
-                          onClick={() => handleSaveComm(s.id)}
-                          disabled={isSaving}
-                          className="px-3 py-2 bg-violet-500/15 hover:bg-violet-500/30 border border-violet-500/20 text-violet-300 rounded-xl text-[11px] font-bold transition-all cursor-pointer disabled:opacity-50 shrink-0"
-                        >
-                          {isSaving ? (
-                            <span className="material-symbols-outlined animate-spin" style={{ fontSize: '14px' }}>progress_activity</span>
-                          ) : (
-                            <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>save</span>
-                          )}
-                        </button>
+                    {isActive && (
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] font-bold text-[#7a766e] uppercase tracking-widest">Comisión %</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="number" min="0" max="100"
+                            value={commVal}
+                            onChange={e => setCommEdits(prev => ({ ...prev, [s.id]: e.target.value }))}
+                            className="flex-1 bg-white/[0.03] border border-white/[0.08] rounded-xl px-3 py-2 text-[14px] font-bold font-mono text-violet-300 focus:outline-none focus:border-violet-500/40"
+                          />
+                          <button
+                            onClick={() => handleSaveComm(s.id)}
+                            disabled={isSaving}
+                            className="px-3 py-2 bg-violet-500/15 hover:bg-violet-500/30 border border-violet-500/20 text-violet-300 rounded-xl text-[11px] font-bold transition-all cursor-pointer disabled:opacity-50 shrink-0"
+                          >
+                            {isSaving ? (
+                              <span className="material-symbols-outlined animate-spin" style={{ fontSize: '14px' }}>progress_activity</span>
+                            ) : (
+                              <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>save</span>
+                            )}
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    )}
+                    {!isActive && (
+                      <p className="text-[10px] text-[#7a766e] text-center py-1">Archivado · no aparece en la agenda</p>
+                    )}
                   </div>
                 );
               })}
@@ -401,33 +534,76 @@ export default function ConfigTabView() {
           <p className="text-[10px] text-[#7a766e]/60 mt-4">Los cambios de sistema se guardan con el botón "Guardar Cambios" de arriba.</p>
         </section>
 
-        {/* ── Plan SaaS (read-only info) ── */}
+        {/* ── Plan SaaS ── */}
         <section className="md:col-span-6 relative isolate rounded-[24px] border border-white/[0.08] p-6 bg-[#0d0d0d]/40 overflow-hidden flex flex-col">
           <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
           <div className="flex items-center gap-3 mb-6">
             <span className="material-symbols-outlined text-violet-400" style={{ fontSize: '24px' }}>workspace_premium</span>
             <h3 className="font-playfair text-xl font-bold italic text-violet-300">Plan & Suscripción</h3>
           </div>
-          <div className="flex-1 flex flex-col gap-3">
-            <div className="p-4 bg-violet-500/5 border border-violet-500/15 rounded-2xl">
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-[13px] font-bold text-[#f5f0e8]">Plan Premium</p>
-                <span className="text-[9px] font-bold text-violet-400 bg-violet-400/10 border border-violet-400/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Activo</span>
-              </div>
-              <p className="text-[11px] text-[#7a766e]">Turnos ilimitados · Staff ilimitado · Caja · Google Calendar</p>
+
+          {planFeatures.loading ? (
+            <div className="flex-1 flex items-center justify-center">
+              <span className="material-symbols-outlined animate-spin text-violet-400/40" style={{ fontSize: '24px' }}>progress_activity</span>
             </div>
-            {[
-              { icon: 'check_circle', label: 'Booking público con marketplace', ok: true },
-              { icon: 'check_circle', label: 'WhatsApp nativo', ok: true },
-              { icon: 'check_circle', label: 'MercadoPago integrado', ok: true },
-              { icon: 'check_circle', label: 'Reportes y rendimiento', ok: true },
-            ].map(f => (
-              <div key={f.label} className="flex items-center gap-2.5">
-                <span className="material-symbols-outlined text-emerald-400" style={{ fontSize: '16px', fontVariationSettings: "'FILL' 1" }}>{f.icon}</span>
-                <span className="text-[12px] text-[#f5f0e8]">{f.label}</span>
+          ) : (
+            <div className="flex-1 flex flex-col gap-3">
+              {/* Plan badge */}
+              <div className={`p-4 rounded-2xl border ${planFeatures.plan === 'enterprise' ? 'bg-amber-500/5 border-amber-500/15' : planFeatures.plan === 'pro' ? 'bg-violet-500/5 border-violet-500/15' : 'bg-white/[0.02] border-white/[0.06]'}`}>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[13px] font-bold text-[#f5f0e8] capitalize">
+                    Plan {planFeatures.plan === 'free' ? 'Gratis' : planFeatures.plan === 'pro' ? 'Pro' : 'Enterprise'}
+                  </p>
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border ${planFeatures.plan === 'enterprise' ? 'text-amber-400 bg-amber-400/10 border-amber-400/20' : planFeatures.plan === 'pro' ? 'text-violet-400 bg-violet-400/10 border-violet-400/20' : 'text-[#7a766e] bg-white/[0.03] border-white/[0.06]'}`}>
+                    Activo
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#7a766e]">
+                  {planFeatures.plan === 'enterprise'
+                    ? 'Multi-sucursal · Analytics avanzado · Todo incluido'
+                    : planFeatures.plan === 'pro'
+                    ? 'Turnos ilimitados · Staff ilimitado · Caja · Google Calendar'
+                    : 'Agenda básica · Hasta 3 turnos/día'}
+                </p>
               </div>
-            ))}
-          </div>
+
+              {/* Features checklist */}
+              {([
+                { key: 'guestBooking',           label: 'Booking público sin cuenta' },
+                { key: 'onlinePayments',          label: 'Cobros online (MercadoPago)' },
+                { key: 'whatsappNotifications',   label: 'Notificaciones WhatsApp' },
+                { key: 'googleCalendarSync',      label: 'Sync Google Calendar' },
+                { key: 'performanceReports',      label: 'Reportes de rendimiento' },
+                { key: 'advancedAnalytics',       label: 'Analytics avanzado' },
+                { key: 'multipleBranches',        label: 'Multi-sucursal' },
+              ] as { key: keyof typeof planFeatures; label: string }[]).map(f => {
+                const enabled = planFeatures[f.key] as boolean;
+                return (
+                  <div key={f.key} className="flex items-center gap-2.5">
+                    <span
+                      className={`material-symbols-outlined ${enabled ? 'text-emerald-400' : 'text-[#7a766e]/40'}`}
+                      style={{ fontSize: '15px', fontVariationSettings: "'FILL' 1" }}
+                    >
+                      {enabled ? 'check_circle' : 'radio_button_unchecked'}
+                    </span>
+                    <span className={`text-[12px] ${enabled ? 'text-[#f5f0e8]' : 'text-[#7a766e]/50 line-through'}`}>
+                      {f.label}
+                    </span>
+                  </div>
+                );
+              })}
+
+              {/* Upgrade CTA */}
+              {planFeatures.plan !== 'enterprise' && (
+                <a
+                  href="/business#pricing"
+                  className="mt-2 w-full py-2.5 rounded-xl text-center text-[11px] font-bold uppercase tracking-widest transition-all border border-violet-500/20 text-violet-300 hover:bg-violet-500/10 cursor-pointer"
+                >
+                  {planFeatures.plan === 'free' ? 'Upgradeá a Pro →' : 'Ver plan Enterprise →'}
+                </a>
+              )}
+            </div>
+          )}
         </section>
 
       </div>

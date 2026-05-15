@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { AlertTriangle, Target } from 'lucide-react';
+import { getMyUpcomingAppointments, type HistorialEntry } from '@/actions/profile.actions';
 
 type HairHealthData = {
   score: number;
@@ -22,6 +23,7 @@ type HairHealthData = {
   updatedWeeksAgo: number;
 };
 
+// Placeholder until TechnicalRecord feature is built
 const mockHairHealth: HairHealthData = {
   score: 80,
   status: 'buen estado',
@@ -46,78 +48,32 @@ const mockHairHealth: HairHealthData = {
   updatedWeeksAgo: 2
 };
 
-type Appointment = {
-  id: string;
-  day: string;
-  month: string;
-  salonName: string;
-  service: string;
-  professional: string;
-  time: string;
-  location: string;
-  status: 'confirmado' | 'pendiente' | 'cancelado';
-  image: string;
-  qrPattern: boolean[]; // array de 36 booleans para el grid 6x6
-};
-
-const appointments: Appointment[] = [
-  {
-    id: '1',
-    day: '21',
-    month: 'AGOSTO',
-    salonName: "L'Atelier de Beauté",
-    service: 'Balayage & Brushing Premium',
-    professional: 'Valentina Gómez',
-    time: '15:30 HS',
-    location: 'Recoleta, CABA',
-    status: 'confirmado',
-    image: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?q=80&w=800',
-    qrPattern: [true,true,false,true,true,true, true,false,true,false,true,false,
-                false,true,true,true,false,true, true,false,true,false,true,true,
-                true,true,false,true,false,true, true,false,true,true,true,true]
-  },
-  {
-    id: '2',
-    day: '24',
-    month: 'AGOSTO',
-    salonName: 'Skin Medical Spa',
-    service: 'Facial de Oxígeno Glow & Detox',
-    professional: 'Dra. Elena Rossi',
-    time: '11:00 HS',
-    location: 'Palermo Soho',
-    status: 'confirmado',
-    image: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=800',
-    qrPattern: [true,true,false,true,true,false, false,true,true,false,true,true,true,
-                false,false,true,false,true,false, true,true,true,true,false,true,
-                true,false,true,true,true,true, true,true,false,false,true,true]
-  },
-  {
-    id: '3',
-    day: '02',
-    month: 'SEPTIEMBRE',
-    salonName: 'Nail Boutique',
-    service: 'Manicura Rusa & Nail Art',
-    professional: 'Micaela Sanz',
-    time: '17:00 HS',
-    location: 'Jerónimo Salguero 2400, CABA',
-    status: 'confirmado',
-    image: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?q=80&w=800',
-    qrPattern: [false,true,true,false,true,true, true,false,false,true,false,true,
-                true,true,false,true,true,false, false,true,true,false,true,true,
-                true,false,true,true,false,true, true,true,false,true,true,false]
-  }
-];
 const mySalons = [
   { id: 1, name: 'Maison de Beauté', rating: 5, visits: 3, coords: { x: '35%', y: '45%' } },
   { id: 2, name: 'Studio Lumière', rating: 4, visits: 1, coords: { x: '65%', y: '25%' } },
 ];
 
+function fmtDay(ms: number) { return new Date(ms).toLocaleDateString('es-AR', { day: '2-digit' }); }
+function fmtMonth(ms: number) { return new Date(ms).toLocaleDateString('es-AR', { month: 'long' }).toUpperCase(); }
+function fmtTime(ms: number) { return new Date(ms).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: true }); }
+
 export default function MisTurnosPage() {
   const { data: session } = useSession();
-  const userName = session?.user?.name || 'Sofia R.';
-  const confirmedCount = appointments.filter(a => a.status === 'confirmado').length;
+  const userName = session?.user?.name || '';
 
   const [activeTab, setActiveTab] = React.useState<'panel' | 'turnos' | 'perfil' | 'ajustes' | 'explorar'>('panel');
+  const [upcomingAppointments, setUpcomingAppointments] = React.useState<HistorialEntry[]>([]);
+  const [loadingTurnos, setLoadingTurnos] = React.useState(true);
+
+  React.useEffect(() => {
+    getMyUpcomingAppointments()
+      .then(setUpcomingAppointments)
+      .catch(() => setUpcomingAppointments([]))
+      .finally(() => setLoadingTurnos(false));
+  }, []);
+
+  const confirmedCount = upcomingAppointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length;
+  const nextAppointment = upcomingAppointments[0] ?? null;
 
   // Estados locales para el demo interactivo
   const [whatsapp, setWhatsapp] = React.useState('+54 911 5000-0000');
@@ -267,48 +223,48 @@ export default function MisTurnosPage() {
                   {/* Próximo Turno */}
                   <div>
                     <p className="text-[9px] font-label uppercase tracking-[0.2em] text-[#7a766e] mb-3 ml-1">Tu próximo turno</p>
+                    {loadingTurnos ? (
+                      <div className="relative isolate z-0 overflow-hidden rounded-[2rem] flex items-center justify-center h-[140px] border border-white/10">
+                        <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20"></div>
+                        <p className="text-[#7a766e] text-sm animate-pulse">Cargando...</p>
+                      </div>
+                    ) : nextAppointment ? (
                     <div className="relative isolate z-0 overflow-hidden rounded-[2rem] p-0 flex flex-row w-full transition-all duration-700 hover:scale-[1.01] hover:bg-white/[0.02] border border-white/10 group" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
                       <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20"></div>
-                      
-                      {/* Fondo Escenográfico (Depth Layer) - Maison de Beauté */}
-                      <div className="absolute inset-y-0 right-0 w-[45%] z-0 pointer-events-none [mask-image:linear-gradient(to_right,transparent,black_50%)]">
-                        <img 
-                          src="https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800" 
-                          alt="Maison de Beauté" 
-                          className="object-cover w-full h-full opacity-15 grayscale mix-blend-luminosity transition-transform duration-1000 group-hover:scale-110" 
-                        />
-                      </div>
 
                       {/* FECHA y HORA */}
                       <div className="flex flex-col items-center justify-center w-[150px] shrink-0 border-r border-dashed border-white/10 px-6 py-8 relative z-10">
-                        <span className="text-5xl font-headline text-[#f1c97d] leading-none" style={{ textShadow: '0 0 30px rgba(241,201,125,0.3)' }}>15</span>
-                        <span className="text-[10px] font-headline italic tracking-[0.1em] text-[#7a766e] mt-2 lowercase">abril</span>
-                        <span className="text-sm font-headline italic text-[#f5f0e8] mt-3">10:30am</span>
+                        <span className="text-5xl font-headline text-[#f1c97d] leading-none" style={{ textShadow: '0 0 30px rgba(241,201,125,0.3)' }}>{fmtDay(nextAppointment.dateMs)}</span>
+                        <span className="text-[10px] font-headline italic tracking-[0.1em] text-[#7a766e] mt-2 lowercase">{fmtMonth(nextAppointment.dateMs)}</span>
+                        <span className="text-sm font-headline italic text-[#f5f0e8] mt-3">{fmtTime(nextAppointment.dateMs)}</span>
                       </div>
 
                       {/* INFO */}
                       <div className="flex-1 px-8 py-6 flex flex-col justify-center relative z-10">
                         <div className="flex items-center gap-2.5 mb-2">
-                          <p className="text-[10px] font-label uppercase tracking-[0.2em] text-[#f1c97d]">MAISON DE BEAUTÉ</p>
-                          <span className="w-1 h-1 rounded-full bg-[#f1c97d]/30"></span>
-                          <p className="text-[#7a766e] text-[10px] uppercase tracking-widest font-label flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[13px]">location_on</span> Palermo Soho
-                          </p>
+                          <p className="text-[10px] font-label uppercase tracking-[0.2em] text-[#f1c97d]">{nextAppointment.salonName}</p>
                         </div>
-                        <h2 className="text-2xl font-headline italic text-[#f5f0e8] mb-1 leading-tight">Balayage con Valentina</h2>
+                        <h2 className="text-2xl font-headline italic text-[#f5f0e8] mb-1 leading-tight">{nextAppointment.service}</h2>
+                        {nextAppointment.staffName && (
+                          <p className="text-[11px] text-[#7a766e] mt-1">con {nextAppointment.staffName}</p>
+                        )}
                         <div className="flex flex-wrap items-center gap-2 mt-4">
-                          <button className="h-8 px-4 rounded-full border border-white/10 hover:border-[#f1c97d]/30 hover:bg-[#f1c97d]/5 transition-all text-[10px] uppercase tracking-[0.1em] font-label text-[#7a766e] hover:text-[#f1c97d] flex items-center gap-2 cursor-pointer">
-                            <span className="material-symbols-outlined text-[14px]">map</span> Ver en mapa
-                          </button>
-                          <button className="h-8 px-4 rounded-full border border-white/10 hover:border-white/30 hover:bg-white/5 transition-all text-[10px] uppercase tracking-[0.1em] font-label text-[#7a766e] hover:text-[#f5f0e8] flex items-center gap-2 cursor-pointer">
-                            <span className="material-symbols-outlined text-[14px]">edit_calendar</span> Reagendar
-                          </button>
-                          <button className="h-8 px-4 rounded-full border border-transparent hover:border-red-500/20 hover:bg-red-500/10 transition-all text-[10px] uppercase tracking-[0.1em] font-label text-[#7a766e] hover:text-red-400 flex items-center gap-2 ml-auto cursor-pointer">
-                            <span className="material-symbols-outlined text-[14px]">close</span> Cancelar
-                          </button>
+                          <Link
+                            href={`/salones/${nextAppointment.salonSlug}`}
+                            className="h-8 px-4 rounded-full border border-white/10 hover:border-[#f1c97d]/30 hover:bg-[#f1c97d]/5 transition-all text-[10px] uppercase tracking-[0.1em] font-label text-[#7a766e] hover:text-[#f1c97d] flex items-center gap-2"
+                          >
+                            <span className="material-symbols-outlined text-[14px]">storefront</span> Ver salón
+                          </Link>
                         </div>
                       </div>
                     </div>
+                    ) : (
+                      <div className="relative isolate z-0 overflow-hidden rounded-[2rem] flex flex-col items-center justify-center h-[140px] border border-white/10 gap-3">
+                        <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20"></div>
+                        <p className="text-[#7a766e] text-sm">No tenés turnos próximos</p>
+                        <Link href="/explore" className="text-[10px] font-label uppercase tracking-widest text-[#f1c97d] hover:opacity-70 transition-opacity">Explorar salones →</Link>
+                      </div>
+                    )}
                   </div>
 
                   {/* Sugerencia Valentina */}
@@ -541,33 +497,38 @@ export default function MisTurnosPage() {
               <div className="flex flex-col gap-3 mb-8">
                 <div className="flex items-center gap-5">
                   <h1 className="text-5xl font-body font-light text-[#f5f0e8]">Mis Turnos</h1>
-                  <div className="liquid-glass-rich px-4 py-1.5 rounded-full border border-[#f1c97d]/20">
-                    <span className="text-[#f1c97d] text-[9px] font-bold uppercase tracking-[0.2em]">
-                      {confirmedCount} CONFIRMADOS
-                    </span>
-                  </div>
+                  {confirmedCount > 0 && (
+                    <div className="liquid-glass-rich px-4 py-1.5 rounded-full border border-[#f1c97d]/20">
+                      <span className="text-[#f1c97d] text-[9px] font-bold uppercase tracking-[0.2em]">
+                        {confirmedCount} PRÓXIMOS
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <p className="text-[#7a766e] text-xs tracking-wide">Gestiona tus próximas citas de belleza.</p>
+                <p className="text-[#7a766e] text-xs tracking-wide">Tus próximas citas de belleza.</p>
               </div>
 
-              {/* Tickets */}
+              {loadingTurnos ? (
+                <div className="flex items-center justify-center py-24">
+                  <p className="text-[#7a766e] text-sm animate-pulse">Cargando tus turnos...</p>
+                </div>
+              ) : upcomingAppointments.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-24 rounded-[2rem] border border-white/10" style={{ backgroundColor: '#111010' }}>
+                  <p className="font-vogue text-xl text-[#7a766e]">No tenés turnos próximos.</p>
+                  <Link href="/explore" className="mt-4 text-[13px] font-medium transition-opacity hover:opacity-70 text-[#D4AF37]">
+                    Explorá salones →
+                  </Link>
+                </div>
+              ) : (
               <div className="space-y-5">
-                {appointments.map((appt) => (
-                  <div key={appt.id} className="relative group overflow-hidden specular-highlight liquid-glass-rich ticket-mask rounded-[1.5rem] flex min-h-[120px] transition-all duration-700 hover:scale-[1.02] hover:bg-white/[0.05]" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
-                    
-                    {/* Fondo Escenográfico (Depth Layer) - Refined with mask-image */}
-                    <div className="absolute inset-y-0 right-0 w-[42%] z-0 pointer-events-none [mask-image:linear-gradient(to_right,transparent,black_40%)]">
-                      <img 
-                        src={appt.image} 
-                        alt={appt.salonName} 
-                        className="object-cover w-full h-full opacity-20 grayscale mix-blend-luminosity transition-transform duration-1000 group-hover:scale-110" 
-                      />
-                    </div>
+                {upcomingAppointments.map((appt) => (
+                  <div key={appt.id} className="relative group overflow-hidden liquid-glass-rich rounded-[1.5rem] flex min-h-[120px] transition-all duration-700 hover:scale-[1.02] hover:bg-white/[0.05]" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
 
                     {/* FECHA col */}
                     <div className="relative z-10 flex flex-col items-center justify-center min-w-[90px] px-5 py-4">
-                      <span className="text-4xl font-headline text-[#f1c97d]" style={{ textShadow: '0 0 30px rgba(241,201,125,0.3)' }}>{appt.day}</span>
-                      <span className="text-[9px] font-label uppercase tracking-[0.3em] text-[#7a766e] mt-0.5">{appt.month}</span>
+                      <span className="text-4xl font-headline text-[#f1c97d]" style={{ textShadow: '0 0 30px rgba(241,201,125,0.3)' }}>{fmtDay(appt.dateMs)}</span>
+                      <span className="text-[9px] font-label uppercase tracking-[0.3em] text-[#7a766e] mt-0.5">{fmtMonth(appt.dateMs)}</span>
+                      <span className="text-[10px] font-headline italic text-[#f5f0e8] mt-1">{fmtTime(appt.dateMs)}</span>
                     </div>
 
                     {/* Separador */}
@@ -577,45 +538,37 @@ export default function MisTurnosPage() {
                     <div className="relative z-10 flex-grow px-7 py-4 flex flex-col justify-center">
                       <div className="flex items-center gap-3.5 mb-1.5">
                         <h2 className="text-2xl font-body font-light tracking-wide">{appt.salonName}</h2>
-                        {appt.status === 'confirmado' && (
+                        {(appt.status === 'confirmed' || appt.status === 'pending') && (
                           <span className="bg-emerald-500/10 text-emerald-400 text-[8px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-widest border border-emerald-500/20">
-                            Confirmado
+                            {appt.status === 'confirmed' ? 'Confirmado' : 'Pendiente'}
                           </span>
                         )}
                       </div>
                       <p className="text-[#7a766e] text-base font-headline italic mb-2.5">{appt.service}</p>
-                      <div className="grid grid-cols-3 gap-5">
+                      {appt.staffName && (
                         <div className="flex items-center gap-2.5">
                           <span className="material-symbols-outlined text-[#f1c97d]/60 text-[18px]">person</span>
                           <div>
                             <p className="text-[7px] text-[#7a766e] uppercase tracking-widest">Profesional</p>
-                            <p className="text-[10px] uppercase tracking-wider font-medium">{appt.professional}</p>
+                            <p className="text-[10px] uppercase tracking-wider font-medium">{appt.staffName}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2.5">
-                          <span className="material-symbols-outlined text-[#f1c97d]/60 text-[18px]">location_on</span>
-                          <div>
-                            <p className="text-[7px] text-[#7a766e] uppercase tracking-widest">Ubicación</p>
-                            <p className="text-[10px] uppercase tracking-wider font-medium">{appt.location}</p>
-                          </div>
-                        </div>
-                      </div>
+                      )}
                     </div>
 
-                    {/* QR col */}
-                    <div className="relative z-10 w-[120px] flex-shrink-0 flex flex-col items-center justify-center gap-1.5 border-l border-dashed border-white/15 px-3 py-3">
-                      <div className="bg-white/95 p-1.5 rounded-lg shadow-2xl transition-transform duration-500 hover:rotate-3">
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '2px', width: '58px', height: '58px', opacity: 0.9 }}>
-                          {appt.qrPattern.map((isFilled, idx) => (
-                            <div key={idx} style={{ backgroundColor: isFilled ? '#000000' : 'transparent', width: '100%', height: '100%' }} />
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-[6.5px] text-[#7a766e] uppercase tracking-[0.2em] mt-0.5">CHECK-IN QR</p>
+                    {/* Link al salón */}
+                    <div className="relative z-10 flex-shrink-0 flex flex-col items-center justify-center border-l border-dashed border-white/15 px-5">
+                      <Link
+                        href={`/salones/${appt.salonSlug}`}
+                        className="text-[9px] text-[#f1c97d] uppercase tracking-widest font-label hover:opacity-70 transition-opacity flex items-center gap-1"
+                      >
+                        Ver salón <span className="material-symbols-outlined text-[13px]">chevron_right</span>
+                      </Link>
                     </div>
                   </div>
                 ))}
               </div>
+              )}
             </div>
           )}
 

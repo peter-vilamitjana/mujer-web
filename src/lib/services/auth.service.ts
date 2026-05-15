@@ -2,7 +2,7 @@ import { auth, db, storage } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile, User } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Usuario, Cliente } from '@/lib/types';
+import { Usuario, Cliente } from '@/lib/_types_archive';
 import { notificationService } from './notification.service';
 
 interface RegisterData {

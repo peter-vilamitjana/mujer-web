@@ -17,7 +17,7 @@ import { getAvailableSlots, createBooking } from '@/actions/booking.actions';
 import { createGuestBooking } from '@/actions/guest-booking.actions';
 import { createDepositPreference } from '@/actions/mercadopago.actions';
 import type { Service, Staff, ServicePriceByLength } from '@/lib/schema';
-import type { LargoPelo } from '@/lib/types';
+import type { LargoPelo } from '@/lib/_types_archive';
 import {
   Popover,
   PopoverContent,

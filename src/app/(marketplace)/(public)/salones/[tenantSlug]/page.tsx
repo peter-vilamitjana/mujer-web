@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation';
 import { getSalonBySlug } from '@/lib/services/marketplace.service';
+import { getSalonReviews, getSalonRatingStats } from '@/actions/reviews.actions';
 import SalonHero from '@/components/salon/SalonHero';
 import SalonFeaturedServices from '@/components/salon/SalonFeaturedServices';
+import SalonReviews from '@/components/salon/SalonReviews';
 import InfoBar from '@/components/landing/InfoBar';
 import PromoSection from '@/components/landing/PromoSection';
-import Testimonials from '@/components/landing/Testimonials';
 import MapAndReviews from '@/components/landing/MapAndReviews';
 import Footer from '@/components/landing/Footer';
 
@@ -53,6 +54,11 @@ export default async function SalonPage({ params }: Props) {
   const salon = await getSalonBySlug(tenantSlug);
   if (!salon) notFound();
 
+  const [salonReviews, salonStats] = await Promise.all([
+    getSalonReviews(salon.id, 20),
+    getSalonRatingStats(salon.id),
+  ]);
+
   return (
     <div className="min-h-screen">
       <SalonHero
@@ -65,7 +71,11 @@ export default async function SalonPage({ params }: Props) {
         tenantSlug={tenantSlug}
       />
       <PromoSection tenantSlug={tenantSlug} />
-      <Testimonials />
+      <SalonReviews
+        tenantSlug={tenantSlug}
+        initialReviews={salonReviews}
+        stats={salonStats}
+      />
       <MapAndReviews />
       <Footer tenantSlug={tenantSlug} />
     </div>

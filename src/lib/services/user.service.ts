@@ -1,6 +1,6 @@
 import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import type { Usuario } from '@/lib/types';
+import type { Usuario } from '@/lib/_types_archive';
 
 /**
  * Obtiene el perfil del usuario desde Firestore.

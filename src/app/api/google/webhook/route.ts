@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimestamp, setDoc, getDoc, Timestamp } from 'firebase/firestore';
 import { google } from 'googleapis';
-import type { Turno } from '@/lib/types';
+import type { Turno } from '@/lib/_types_archive';
 import { getToken } from 'next-auth/jwt';
 
 

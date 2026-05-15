@@ -7,7 +7,7 @@ import { format, parseISO, isFuture, isPast, subDays, startOfDay } from "date-fn
 import { es } from "date-fns/locale";
 import { db } from "@/lib/firebase";
 import { collectionGroup, onSnapshot, query, orderBy, Timestamp, where, doc, updateDoc } from "firebase/firestore";
-import type { Turno } from "@/lib/types";
+import type { Turno } from "@/lib/_types_archive";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/contexts/UserContext";
 import Link from "next/link";

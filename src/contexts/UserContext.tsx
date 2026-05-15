@@ -6,7 +6,7 @@ import { onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { getUserProfile } from '@/lib/services/user.service';
 import { useTenant } from '@/contexts/TenantContext';
-import type { Usuario, UserRole } from '@/lib/types';
+import type { Usuario, UserRole } from '@/lib/_types_archive';
 
 // El contexto expone el usuario ya construido con rol resuelto
 const UserContext = createContext<Usuario | null>(null);

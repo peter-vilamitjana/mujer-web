@@ -87,7 +87,24 @@ export const authOptions: NextAuthOptions = {
     ],
     secret: process.env.NEXTAUTH_SECRET,
     callbacks: {
-        async jwt({ token, user, account }) {
+        async jwt({ token, user, account, trigger }) {
+            // session.update() — re-fetch memberships from Firestore
+            if (trigger === 'update' && token.uid) {
+                try {
+                    const membershipsRef = collection(db, 'users', token.uid as string, 'memberships');
+                    const snap = await getDocs(membershipsRef);
+                    token.tenantIds = snap.docs.map(d => d.id);
+                    token.role = snap.docs.length === 0 ? 'customer' : 'staff';
+                    if (snap.docs.length > 0) {
+                        const tenantSnap = await getDoc(doc(db, 'tenants', snap.docs[0].id));
+                        if (tenantSnap.exists()) token.salonSlug = tenantSnap.data().slug;
+                    }
+                } catch (err) {
+                    console.error('[auth] session.update memberships refresh failed:', err);
+                }
+                return token;
+            }
+
             // Primer login: account y user están presentes
             if (account && user) {
                 token.provider = account.provider; // para evitar refresh en Credentials

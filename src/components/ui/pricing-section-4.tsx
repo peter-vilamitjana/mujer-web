@@ -10,36 +10,61 @@ import { useCallback, useRef, useState } from "react";
 
 const plans = [
   {
+    key: "free",
     name: "Gratis",
-    description:
-      "Para salones que recién empiezan y quieren ordenar su negocio sin costo.",
+    description: "Para salones que recién arrancan y quieren ordenar su operación sin costo.",
     price: 0,
     yearlyPrice: 0,
     buttonText: "Empezar gratis",
+    buttonHref: "/business/register",
     buttonVariant: "outline" as const,
     includes: [
-      "Todo lo que necesitás:",
-      "Agenda inteligente",
+      "Incluye:",
+      "Agenda inteligente (hasta 50 turnos/mes)",
       "Gestión de clientes básica",
-      "Recordatorios automáticos",
+      "1 profesional",
+      "1 sucursal",
       "Soporte por email",
     ],
   },
   {
-    name: "Premium",
-    description:
-      "La solución completa para salones en crecimiento que buscan potenciar sus ventas.",
-    price: 48,
-    yearlyPrice: 399,
-    buttonText: "Subir de nivel",
+    key: "pro",
+    name: "Pro",
+    description: "La solución completa para salones en crecimiento que quieren potenciar sus ingresos.",
+    price: 14900,
+    yearlyPrice: 119900,
+    buttonText: "Empezar con Pro",
+    buttonHref: "/business/register",
     buttonVariant: "default" as const,
     popular: true,
     includes: [
       "Todo lo de Gratis, más:",
-      "Métricas y reportes avanzados",
-      "Cobros integrados",
-      "Gestión de stock",
+      "Turnos ilimitados · Staff ilimitado",
+      "Booking público en marketplace",
+      "Cobros online con MercadoPago",
+      "Notificaciones WhatsApp automáticas",
+      "Sync Google Calendar",
+      "Reportes y rendimiento",
       "Soporte prioritario",
+    ],
+  },
+  {
+    key: "enterprise",
+    name: "Enterprise",
+    description: "Para cadenas y franquicias con múltiples sucursales que necesitan control total.",
+    price: 34900,
+    yearlyPrice: 279900,
+    buttonText: "Hablar con ventas",
+    buttonHref: "https://wa.me/549XXXXXXXXXX",
+    buttonVariant: "outline" as const,
+    includes: [
+      "Todo lo de Pro, más:",
+      "Multi-sucursal ilimitado",
+      "Analytics avanzado y comparativas",
+      "Gestor de comisiones por sucursal",
+      "Integración con sistemas de facturación",
+      "SLA garantizado",
+      "Onboarding personalizado",
     ],
   },
 ];
@@ -87,7 +112,7 @@ const PricingSwitch = ({ onSwitch }: { onSwitch: (value: string) => void }) => {
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />
           )}
-          <span className="relative">Monthly</span>
+          <span className="relative">Mensual</span>
         </button>
 
         <button
@@ -104,7 +129,7 @@ const PricingSwitch = ({ onSwitch }: { onSwitch: (value: string) => void }) => {
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             />
           )}
-          <span className="relative flex items-center gap-2">Yearly</span>
+          <span className="relative flex items-center gap-2">Anual <span className="text-[10px] text-purple-300 font-bold">-30%</span></span>
         </button>
       </div>
     </div>
@@ -174,10 +199,10 @@ export default function PricingSection6() {
               type: "spring",
               stiffness: 250,
               damping: 40,
-              delay: 0, // First element
+              delay: 0,
             }}
           >
-            Plans that works best for your
+            Planes pensados para salones reales
           </VerticalCutReveal>
         </h2>
 
@@ -188,8 +213,7 @@ export default function PricingSection6() {
           customVariants={revealVariants}
           className="text-gray-300"
         >
-          Trusted by millions, We help teams all around the world, Explore which
-          option is right for you.
+          Sin comisiones por turno. Precio fijo en pesos. Cancelá cuando quieras.
         </TimelineContent>
 
         <TimelineContent
@@ -213,7 +237,7 @@ export default function PricingSection6() {
         }}
       />
 
-      <div className="grid md:grid-cols-2 max-w-4xl gap-8 py-6 mx-auto px-4 sm:px-6">
+      <div className="grid md:grid-cols-3 max-w-5xl gap-6 py-6 mx-auto px-4 sm:px-6">
         {plans.map((plan, index) => (
           <TimelineContent
             key={plan.name}
@@ -223,58 +247,67 @@ export default function PricingSection6() {
             customVariants={revealVariants}
           >
             <Card
-              className={`relative text-white border-neutral-800 ${
+              className={`relative text-white border-neutral-800 h-full flex flex-col ${
                 plan.popular
                   ? "bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900 shadow-[0px_-13px_300px_0px_#8350e8] z-20"
                   : "bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900 z-10"
               }`}
             >
-              <CardHeader className="text-left ">
-                <div className="flex justify-between">
-                  <h3 className="text-3xl mb-2">{plan.name}</h3>
-                </div>
-                <div className="flex items-baseline">
-                  <span className="text-4xl font-semibold ">
-                    $
-                    <NumberFlow
-                      format={{
-                        currency: "USD",
-                      }}
-                      value={isYearly ? plan.yearlyPrice : plan.price}
-                      className="text-4xl font-semibold"
-                    />
-                  </span>
-                  <span className="text-gray-300 ml-1">
-                    /{isYearly ? "year" : "month"}
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="bg-purple-600 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                    Más elegido
                   </span>
                 </div>
-                <p className="text-sm text-gray-300 mb-4">{plan.description}</p>
+              )}
+              <CardHeader className="text-left">
+                <div className="flex justify-between items-start">
+                  <h3 className="text-2xl mb-2">{plan.name}</h3>
+                </div>
+                <div className="flex items-baseline gap-1">
+                  {plan.price === 0 ? (
+                    <span className="text-4xl font-semibold">Gratis</span>
+                  ) : (
+                    <>
+                      <span className="text-lg font-medium text-gray-400">$</span>
+                      <NumberFlow
+                        format={{ style: 'decimal', minimumFractionDigits: 0 }}
+                        value={isYearly ? Math.round(plan.yearlyPrice / 12) : plan.price}
+                        className="text-4xl font-semibold"
+                      />
+                      <span className="text-gray-300 text-sm ml-1">ARS/mes</span>
+                    </>
+                  )}
+                </div>
+                {plan.price > 0 && isYearly && (
+                  <p className="text-[11px] text-purple-400 mt-1">
+                    ${plan.yearlyPrice.toLocaleString('es-AR')} ARS/año
+                  </p>
+                )}
+                <p className="text-sm text-gray-300 mt-2">{plan.description}</p>
               </CardHeader>
 
-              <CardContent className="pt-0">
-                <button
-                  className={`w-full mb-6 p-4 text-xl rounded-xl ${
+              <CardContent className="pt-0 flex flex-col flex-1">
+                <a
+                  href={plan.buttonHref}
+                  className={cn(
+                    "w-full mb-6 p-4 text-base font-semibold rounded-xl text-center block transition-all",
                     plan.popular
-                      ? "bg-gradient-to-t from-purple-500 to-purple-600 shadow-lg shadow-purple-800 border border-purple-500 text-white"
-                      : plan.buttonVariant === "outline"
-                        ? "bg-gradient-to-t from-neutral-950 to-neutral-600 shadow-lg shadow-neutral-900 border border-neutral-800 text-white"
-                        : ""
-                  }`}
+                      ? "bg-gradient-to-t from-purple-500 to-purple-600 shadow-lg shadow-purple-800 border border-purple-500 text-white hover:opacity-90"
+                      : "bg-gradient-to-t from-neutral-950 to-neutral-600 shadow-lg shadow-neutral-900 border border-neutral-800 text-white hover:opacity-80"
+                  )}
                 >
                   {plan.buttonText}
-                </button>
+                </a>
 
-                <div className="space-y-3 pt-4 border-t border-neutral-700">
-                  <h4 className="font-medium text-base mb-3">
+                <div className="space-y-3 pt-4 border-t border-neutral-700 flex-1">
+                  <h4 className="font-medium text-sm text-gray-400 mb-3">
                     {plan.includes[0]}
                   </h4>
                   <ul className="space-y-2">
                     {plan.includes.slice(1).map((feature, featureIndex) => (
-                      <li
-                        key={featureIndex}
-                        className="flex items-center gap-2"
-                      >
-                        <span className="h-2.5 w-2.5 bg-neutral-500 rounded-full grid place-content-center"></span>
+                      <li key={featureIndex} className="flex items-start gap-2">
+                        <span className="h-2 w-2 bg-purple-500 rounded-full mt-1.5 shrink-0" />
                         <span className="text-sm text-gray-300">{feature}</span>
                       </li>
                     ))}
