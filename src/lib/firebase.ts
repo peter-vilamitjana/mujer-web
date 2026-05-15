@@ -1,6 +1,6 @@
 import "@/lib/shim-storage";
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, memoryLocalCache } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
@@ -16,11 +16,13 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-// [HARDENING] Enable ignoreUndefinedProperties to prevent crashes on undefined fields
-const db = getFirestore(app);
-if (db) {
-  (db as any)._settings = { ...(db as any)._settings, ignoreUndefinedProperties: true };
-}
+
+// Use memory-only cache: disables IndexedDB offline persistence so the SDK
+// never retries stale onSnapshot subscriptions across page loads.
+const db = initializeFirestore(app, {
+  localCache: memoryLocalCache(),
+  ignoreUndefinedProperties: true,
+});
 
 let storage: ReturnType<typeof getStorage>;
 try {
