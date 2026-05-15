@@ -6,7 +6,7 @@ import { Calendar, Clock, Scissors, Plus, XCircle, RefreshCw, User, CheckCircle,
 import { format, parseISO, isFuture, isPast, subDays, startOfDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { db } from "@/lib/firebase";
-import { collectionGroup, onSnapshot, query, orderBy, Timestamp, where, doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import type { Turno } from "@/lib/_types_archive";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/contexts/UserContext";
@@ -32,6 +32,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn, safeFormatDate } from "@/lib/utils";
+import { getMyAppointments } from "@/actions/appointments.actions";
 
 function ProximoTurnoCard({ turno, onCancel }: { turno: Turno & { tenantId: string }, onCancel: (id: string, tenantId: string) => void }) {
   const services = turno.servicio.split(',').map(s => s.trim());
@@ -135,81 +136,44 @@ export default function MisTurnosPage() {
   }, [filter]);
 
   useEffect(() => {
-    if (!user || !user.id) {
+    if (!user?.id) {
       setLoading(false);
       return;
     }
 
     setLoading(true);
+    getMyAppointments(user.id).then((data) => {
+      const mapped: (Turno & { tenantId: string })[] = data.map(d => {
+        let estado: Turno['estado'] = 'pendiente';
+        if (d.status === 'completed') estado = 'realizado';
+        else if (d.status === 'cancelled') estado = 'cancelado';
+        else if (d.status === 'pending_payment') estado = 'pendiente_pago';
 
-    try {
-      const turnosRef = collectionGroup(db, 'appointments');
-      const turnosQuery = query(
-        turnosRef,
-        where('clientId', '==', user.id),
-        orderBy('date', 'desc')
-      );
-
-      const unsubscribe = onSnapshot(turnosQuery, {
-        next: (snapshot) => {
-          const turnosData = snapshot.docs.map(doc => {
-            const data = doc.data();
-            // Safe date parsing
-            let fecha = new Date().toISOString();
-            try {
-              fecha = data.date instanceof Timestamp ? data.date.toDate().toISOString() : safeFormatDate(data.date);
-            } catch (e) { console.error("Date parse error", e); }
-
-            let estado: Turno['estado'] = 'pendiente';
-            if (data.status === 'completed') estado = 'realizado';
-            else if (data.status === 'cancelled') estado = 'cancelado';
-            else if (data.status === 'pending_payment') estado = 'pendiente_pago';
-
-            return {
-              id: doc.id,
-              clienteNombre: data.clientName || '',
-              empleadaNombre: data.staffName || '',
-              servicio: data.serviceNames || '',
-              fecha: fecha,
-              estado: estado,
-              precio: data.priceEstimated || 0,
-              duracion: data.durationMinutes || 0,
-              clienteId: data.clientId,
-              tenantId: data.tenantId,
-            } as Turno & { tenantId: string };
-          });
-
-          // Safe sort
-          turnosData.sort((a, b) => {
-            const dateA = new Date(a.fecha).getTime();
-            const dateB = new Date(b.fecha).getTime();
-            return (isNaN(dateB) ? 0 : dateB) - (isNaN(dateA) ? 0 : dateA);
-          });
-
-          setTurnos(turnosData);
-          setLoading(false);
-        },
-        error: (error) => {
-          console.error("Firestore Error (MisTurnos):", error);
-          setLoading(false);
-          if (error.code !== 'permission-denied') {
-            toast({ title: "Error", description: "No se pudieron cargar tus turnos.", variant: "destructive" });
-          }
-        }
+        return {
+          id: d.id,
+          clienteNombre: user.nombre || '',
+          empleadaNombre: d.staffName,
+          servicio: d.serviceNames,
+          fecha: d.date,
+          estado,
+          precio: d.priceEstimated,
+          duracion: d.durationMinutes,
+          clienteId: user.id,
+          tenantId: d.tenantId,
+        } as Turno & { tenantId: string };
       });
 
-      return () => unsubscribe();
-    } catch (e) {
-      console.error("Error setting up listener:", e);
+      setTurnos(mapped);
       setLoading(false);
-    }
-  }, [user, toast]);
+    }).catch(() => setLoading(false));
+  }, [user?.id]);
 
   const handleCancelTurno = async (turnoId: string, turnoTenantId: string) => {
     if (!turnoTenantId) return;
     try {
       const turnoRef = doc(db, 'tenants', turnoTenantId, 'appointments', turnoId);
       await updateDoc(turnoRef, { status: 'cancelled' });
+      setTurnos(prev => prev.map(t => t.id === turnoId ? { ...t, estado: 'cancelado' as const } : t));
       toast({ title: "Turno cancelado", description: "Tu turno ha sido cancelado con éxito." });
     } catch (error) {
       console.error("Error al cancelar turno:", error);
@@ -236,20 +200,10 @@ export default function MisTurnosPage() {
 
   const historialTurnos = useMemo(() => {
     const allPastTurnos = turnos.filter(t => !proximosTurnos.some(pt => pt.id === t.id));
-    if (filter === 'all') {
-      return allPastTurnos;
-    }
-    const now = new Date();
-    const daysToSubtract = {
-      week: 7,
-      month: 30,
-      quarter: 90
-    }[filter] || 30;
-
-    const startDate = startOfDay(subDays(now, daysToSubtract));
-
+    if (filter === 'all') return allPastTurnos;
+    const daysToSubtract = ({ week: 7, month: 30, quarter: 90 } as Record<string, number>)[filter] ?? 30;
+    const startDate = startOfDay(subDays(new Date(), daysToSubtract));
     return allPastTurnos.filter(t => new Date(t.fecha) >= startDate);
-
   }, [turnos, proximosTurnos, filter]);
 
   const visibleHistorial = historialTurnos.slice(0, visibleCount);

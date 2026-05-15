@@ -54,6 +54,103 @@ export async function getAppointmentsForDay(
   }
 }
 
+// ─── Client-facing reads (Firestore REST — no Firebase Auth required) ─────────
+
+const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'mujer-app';
+const FIRESTORE_BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
+
+function parseFirestoreValue(value: any): any {
+  if (!value) return null;
+  if ('stringValue' in value) return value.stringValue;
+  if ('integerValue' in value) return parseInt(value.integerValue, 10);
+  if ('doubleValue' in value) return value.doubleValue;
+  if ('booleanValue' in value) return value.booleanValue;
+  if ('nullValue' in value) return null;
+  if ('timestampValue' in value) return new Date(value.timestampValue);
+  if ('mapValue' in value) {
+    const fields = value.mapValue?.fields || {};
+    return Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, parseFirestoreValue(v)]));
+  }
+  if ('arrayValue' in value) return (value.arrayValue?.values || []).map(parseFirestoreValue);
+  return null;
+}
+
+function parseFirestoreDoc(doc: any): Record<string, any> {
+  const fields = doc.fields || {};
+  const parsed: Record<string, any> = {};
+  for (const [key, value] of Object.entries(fields)) parsed[key] = parseFirestoreValue(value);
+  const nameParts = (doc.name || '').split('/');
+  parsed._id = nameParts[nameParts.length - 1];
+  parsed._tenantId = nameParts[nameParts.indexOf('tenants') + 1] ?? null;
+  return parsed;
+}
+
+export interface ClientAppointment {
+  id: string;
+  tenantId: string;
+  serviceNames: string;
+  staffName: string;
+  date: string;         // ISO string
+  status: string;
+  priceEstimated: number;
+  durationMinutes: number;
+}
+
+/**
+ * Fetches all appointments for a given clientId across all tenants.
+ * Uses Firestore REST API (collectionGroup) — no Firebase Auth required.
+ */
+export async function getMyAppointments(clientId: string): Promise<ClientAppointment[]> {
+  const url = `${FIRESTORE_BASE}:runQuery`;
+  const structuredQuery = {
+    from: [{ collectionId: 'appointments', allDescendants: true }],
+    where: {
+      fieldFilter: {
+        field: { fieldPath: 'clientId' },
+        op: 'EQUAL',
+        value: { stringValue: clientId },
+      },
+    },
+    orderBy: [{ field: { fieldPath: 'date' }, direction: 'DESCENDING' }],
+    limit: 100,
+  };
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ structuredQuery }),
+      cache: 'no-store',
+    });
+
+    if (!res.ok) {
+      console.warn('[getMyAppointments] Firestore REST error:', await res.text());
+      return [];
+    }
+
+    const results = await res.json();
+    return results
+      .filter((r: any) => r.document)
+      .map((r: any) => {
+        const d = parseFirestoreDoc(r.document);
+        const dateRaw = d.date instanceof Date ? d.date : new Date(d.date ?? 0);
+        return {
+          id: d._id as string,
+          tenantId: d._tenantId as string,
+          serviceNames: (d.serviceNames as string) || '',
+          staffName: (d.staffName as string) || '',
+          date: dateRaw.toISOString(),
+          status: (d.status as string) || 'pending',
+          priceEstimated: (d.priceEstimated as number) || 0,
+          durationMinutes: (d.durationMinutes as number) || 0,
+        } satisfies ClientAppointment;
+      });
+  } catch (err) {
+    console.warn('[getMyAppointments] error:', (err as Error).message);
+    return [];
+  }
+}
+
 /**
  * Devuelve los turnos de hoy para un tenant (opcionalmente filtrado por sucursal).
  */
