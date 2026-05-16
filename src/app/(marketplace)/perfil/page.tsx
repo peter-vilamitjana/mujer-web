@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { AlertTriangle, Target } from 'lucide-react';
 import { getMyUpcomingAppointments, type HistorialEntry } from '@/actions/profile.actions';
+import ExplorarTab from './ExplorarTab';
 
 type HairHealthData = {
   score: number;
@@ -893,6 +894,9 @@ export default function MisTurnosPage() {
             </div>
           )}
 
+
+          {/* EXPLORAR TAB */}
+          {activeTab === 'explorar' && <ExplorarTab />}
 
           {/* Editorial Section */}
           <section className="mt-32 pb-12">
