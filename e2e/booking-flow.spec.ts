@@ -35,21 +35,21 @@ test.describe('Booking Flow — autenticado', () => {
   test('paso 1 → paso 2: navegar a profesional', async ({ page }) => {
     await page.locator('div.rounded-xl.cursor-pointer').first().click();
     await page.getByRole('button', { name: /Continuar a Profesional/i }).click();
-    await expect(page.getByText(/Elegí a tu profesional/i)).toBeVisible();
+    // UI shows "Paso 2: Elige a tu profesional" (imperative, not past tense)
+    await expect(page.getByText(/Elige a tu profesional/i)).toBeVisible();
   });
 });
 
 test.describe('Booking Flow — sin autenticación', () => {
-  test('redirige al login o muestra CTA de login', async ({ browser }) => {
+  test('la página de reserva es pública (acepta invitadas)', async ({ browser }) => {
     // Crear contexto limpio sin storageState
     const context = await browser.newContext();
     const page = await context.newPage();
     await page.goto(`/salones/${TEST_SALON_SLUG}/book`);
-    // El servidor redirige a /login, o BookingFlow muestra un botón "Iniciar sesión"
-    const isLoginUrl = page.url().includes('login');
-    const loginBtn = page.getByRole('button', { name: /Iniciar sesión/i });
-    const loginBtnVisible = await loginBtn.isVisible({ timeout: 8_000 }).catch(() => false);
-    expect(isLoginUrl || loginBtnVisible).toBe(true);
+    // BookingFlow allows guest bookings — the page loads and shows the wizard,
+    // it does NOT redirect to /login. Guest data is collected at step 4 (Resumen).
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText('Tus servicios').first()).toBeVisible();
     await context.close();
   });
 });
