@@ -6,6 +6,7 @@ import FeaturesSection from '@/components/business/FeaturesSection';
 import PricingSection4 from '@/components/ui/pricing-section-4';
 import SocialProofSection from '@/components/business/SocialProofSection';
 import CTAFinalSection from '@/components/business/CTAFinalSection';
+import LandingFooter from '@/components/landing/LandingFooter';
 
 export const metadata = {
   title: 'Para Salones | Ouleeh',
@@ -25,6 +26,7 @@ export default function BusinessPage() {
         <SocialProofSection />
         <CTAFinalSection />
       </main>
+      <LandingFooter />
     </div>
   );
 }

@@ -82,14 +82,6 @@ export default function LandingHeader() {
               "font-vogue text-3xl font-black tracking-tighter uppercase transition-colors duration-300",
               textWhite ? "text-white" : "text-[#1A1A1A]"
             )}>Ouleeh</span>
-            <div className={cn(
-              "w-px h-6 transition-colors duration-300",
-              textWhite ? "bg-white/20" : "bg-black/20"
-            )} />
-            <span className={cn(
-              "text-[9px] tracking-[0.5em] uppercase opacity-40 font-bold hidden sm:block transition-colors duration-300",
-              textWhite ? "text-white" : "text-[#1A1A1A]"
-            )}>Volume No. 01</span>
           </div>
 
           {/* Links de navegación */}
@@ -102,7 +94,7 @@ export default function LandingHeader() {
                 key={label}
                 href={href}
                 className={cn(
-                  "relative px-4 py-2 rounded-full text-[10px] tracking-[0.35em] uppercase font-medium transition-all duration-300",
+                  "relative px-4 py-2 rounded-full text-[11px] tracking-wider uppercase font-semibold transition-all duration-300",
                   "before:absolute before:inset-0 before:rounded-full before:opacity-0 before:transition-all before:duration-300",
                   "hover:before:opacity-100",
                   textWhite
@@ -146,15 +138,13 @@ export default function LandingHeader() {
             <Link
               href={status === 'authenticated' ? '/perfil' : loginUrl}
               className={cn(
-                "relative text-[10px] uppercase tracking-[0.3em] font-bold px-8 py-3 rounded-full font-inter overflow-hidden group",
-                "transition-all duration-500 ease-out hover:px-12",
+                "relative text-[11px] uppercase tracking-wider font-semibold px-8 py-3 rounded-full font-inter transition-all duration-300 ease-out active:scale-95 flex items-center justify-center",
                 textWhite
-                  ? "bg-white/15 backdrop-blur-md border border-white/25 text-white hover:bg-white/25 hover:border-white/40 hover:shadow-[0_0_24px_rgba(255,255,255,0.15)]"
-                  : "bg-black/10 backdrop-blur-md border border-black/20 text-[#1A1A1A] hover:bg-black/20 hover:border-black/30 hover:shadow-[0_0_24px_rgba(0,0,0,0.1)]"
+                  ? "bg-white text-[#09090b] hover:bg-white/90 shadow-[0_4px_14px_0_rgba(255,255,255,0.15)]"
+                  : "bg-[#09090b] text-white hover:bg-black/90 shadow-[0_4px_14px_0_rgba(0,0,0,0.15)]"
               )}
             >
-              <span className="absolute inset-x-0 top-0 h-px rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-white/50" />
-              <span className="relative z-10 group-hover:tracking-[0.45em] transition-all duration-500">
+              <span className="relative z-10 transition-all duration-300">
                 {status === 'authenticated' ? 'Mi Perfil' : 'Sign In'}
               </span>
             </Link>

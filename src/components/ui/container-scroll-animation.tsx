@@ -34,7 +34,7 @@ export const ContainerScroll = ({
   }, []);
 
   const scaleDimensions = () => {
-    return isMobile ? [0.7, 0.85] : [0.95, 0.85];
+    return isMobile ? [0.8, 0.9] : [1.05, 0.95];
   };
 
   const rotate = useTransform(smoothProgress, [0, 1], [20, 0]);

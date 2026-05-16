@@ -247,10 +247,10 @@ export default function PricingSection6() {
             customVariants={revealVariants}
           >
             <Card
-              className={`relative text-white border-neutral-800 h-full flex flex-col ${
+              className={`relative text-white border h-full flex flex-col transition-all duration-300 ${
                 plan.popular
-                  ? "bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900 shadow-[0px_-13px_300px_0px_#8350e8] z-20"
-                  : "bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900 z-10"
+                  ? "bg-[#111111] border-purple-500/50 shadow-[0_0_40px_rgba(131,80,232,0.15)] z-20"
+                  : "bg-[#09090b] border-white/[0.08] hover:border-white/[0.15] backdrop-blur-xl z-10"
               }`}
             >
               {plan.popular && (
@@ -291,10 +291,10 @@ export default function PricingSection6() {
                 <a
                   href={plan.buttonHref}
                   className={cn(
-                    "w-full mb-6 p-4 text-base font-semibold rounded-xl text-center block transition-all",
+                    "w-full mb-6 p-4 text-sm font-semibold rounded-xl text-center block transition-all duration-300 active:scale-[0.98]",
                     plan.popular
-                      ? "bg-gradient-to-t from-purple-500 to-purple-600 shadow-lg shadow-purple-800 border border-purple-500 text-white hover:opacity-90"
-                      : "bg-gradient-to-t from-neutral-950 to-neutral-600 shadow-lg shadow-neutral-900 border border-neutral-800 text-white hover:opacity-80"
+                      ? "bg-white text-black hover:bg-white/90 shadow-[0_4px_14px_0_rgba(255,255,255,0.15)]"
+                      : "bg-white/10 text-white hover:bg-white/15 border border-white/10"
                   )}
                 >
                   {plan.buttonText}
