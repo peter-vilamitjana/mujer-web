@@ -52,11 +52,6 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm install
       - run: npm run build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: next-build
-          path: .next/
-          retention-days: 1
 
   e2e:
     name: Playwright E2E
@@ -79,10 +74,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
       - run: npm install
-      - uses: actions/download-artifact@v4
-        with:
-          name: next-build
-          path: .next/
+      - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test --reporter=list
         env:
