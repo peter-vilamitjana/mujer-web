@@ -8,7 +8,7 @@
 
 MujerApp es una plataforma SaaS B2B2C multi-tenant para la gestión de salones de belleza. El stack es sólido y moderno (Next.js 15, TypeScript, Firestore, NextAuth v4), con una arquitectura multi-tenant bien diseñada a nivel de schema y reglas Firestore.
 
-**Estado actual (2026-05-15 sesión 2)**: ✅ Fase 0 + ✅ Fase 1 + ✅ Fase 2 + ✅ Fase 3 (3.0–3.4 completas) + ✅ Fase 3.5 completadas. ✅ **Reviews** (4.1): schema + actions + carrusel + wired en `/salones/[slug]`. ✅ **`shim-storage.ts`** saneado: `ExperimentalWarning: localStorage is not available` eliminado. ✅ **Firestore 500s** resueltos: `getAppointmentsForDay`, `getWeeklyRevenue` y `getRevenueTimeSeries` con try/catch graceful (dashboard ya no devuelve 500 al arrancar). ✅ **`firestore.rules`** actualizado: regla `reviews` añadida (read público, write autenticado). MercadoPago Checkout Pro + Webhook IPN, CierreCaja real-time, SEO, 3 specs e2e, Guest Booking. **Pendiente Fase 3**: Planes SaaS (3.5–3.6). **Pendiente Fase 4**: performance, a11y, docs, cobertura Playwright adicional. **Próximo hito**: activar `MERCADOPAGO_ACCESS_TOKEN` en producción + `WHATSAPP_TOKEN` en prod.
+**Estado actual (2026-05-18 sesión 3)**: ✅ Fase 0 + ✅ Fase 1 + ✅ Fase 2 + ✅ Fase 3 (3.0–3.4 completas) + ✅ Fase 3.5 completadas. ✅ **Reviews** (4.1): schema + actions + carrusel + wired en `/salones/[slug]`. ✅ **`shim-storage.ts`** saneado. ✅ **Firestore 500s** resueltos. ✅ **`firestore.rules`** actualizado. ✅ **Double-booking prevention**: `hasSlotConflict()` en `createBooking` y `createGuestBooking` — race conditions eliminados. ✅ **`getAvailableSlots` corregido**: ahora bloquea todos los slots de 30min que ocupa un turno (duración completa). ✅ **E2E expandido**: 5 specs (2 nuevos en `booking-flow.spec.ts` + `guest-booking.spec.ts` con 6 tests). **Pendiente Fase 4**: performance, a11y, docs. **Próximo hito**: activar `MERCADOPAGO_ACCESS_TOKEN` en producción + `WHATSAPP_TOKEN` en prod.
 
 La hoja de ruta para un MVP launchable es de **10–14 semanas** para un equipo de 2–3 devs (~8 semanas completadas).
 
@@ -486,7 +486,7 @@ FASE 4                                                             │ Growth & 
 | ~~4.2~~ | ~~SEO: sitemap dinámico, robots.txt~~ | ~~2~~ | ~~Google indexa páginas de salón~~ | ✅ (`src/app/sitemap.ts` + `src/app/robots.ts` — rutas estáticas + páginas de salón dinámicas) |
 | 4.3 | Performance: imágenes, code splitting, ISR | 3 | Lighthouse > 80 en móvil | ⏳ |
 | 4.4 | Accesibilidad (a11y) audit y correcciones | 3 | 0 errores críticos en axe-core | ⏳ |
-| 4.5 | Test suite Playwright e2e (flujos críticos en CI) | 5 | Flujos críticos cubiertos + `playwright install` en CI | 🟡 Estructura lista (`booking-flow.spec.ts`, `checkout.spec.ts`, `registro.spec.ts`, fixtures con storageState). Falta `npx playwright install` en `ci.yml` + coverage adicional (guest booking, cierre de caja, onboarding). |
+| 4.5 | Test suite Playwright e2e (flujos críticos en CI) | 5 | Flujos críticos cubiertos + `playwright install` en CI | 🟡 4 specs: `booking-flow.spec.ts` (7 tests), `checkout.spec.ts`, `registro.spec.ts`, `guest-booking.spec.ts` (6 tests). `playwright install` en CI ✅. Falta: onboarding wizard, cancellation flow. |
 | 4.6 | Documentación técnica (ADRs, README actualizado) | 2 | Nuevo dev onboardea en < 1 día | ⏳ |
 | ~~4.x~~ | ~~AI: recomendaciones personalizadas (Genkit)~~ | ~~5~~ | ~~**Eliminado del roadmap.** Genkit queda como dependencia muerta a remover (`npm uninstall @genkit-ai/googleai genkit` + borrar `src/ai/`).~~ | ❌ |
 

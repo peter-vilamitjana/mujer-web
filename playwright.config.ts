@@ -48,7 +48,7 @@ export default defineConfig({
     {
       name: 'public — chromium',
       use: { ...devices['Desktop Chrome'] },
-      testMatch: /registro\.spec\.ts/,
+      testMatch: /\/(registro|guest-booking)\.spec\.ts/,
     },
     {
       name: 'public — mobile',

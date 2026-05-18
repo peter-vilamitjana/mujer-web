@@ -7,6 +7,7 @@ import { authOptions } from '@/lib/auth';
 import { syncAppointmentToCalendar } from './calendar.actions';
 import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import { buildConfirmationMessage } from '@/lib/whatsapp-templates';
+import { hasSlotConflict, buildOccupiedSlots } from '@/lib/booking-utils';
 
 // ─────────────────────────────────────────────
 // ACTION 1: getAvailableSlots
@@ -37,12 +38,13 @@ export async function getAvailableSlots(
 
     const snap = await getDocs(q);
 
-    // Extraer SOLO el horario — ningún dato personal sale del servidor
-    const occupiedSlots = snap.docs.map(doc => {
-      const data = doc.data();
-      const date: Date = data.date.toDate();
-      return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-    });
+    // Build occupied slots accounting for each appointment's full duration.
+    // A 90-min appointment at 10:00 blocks 10:00, 10:30 AND 11:00.
+    const appointments = snap.docs.map(d => ({
+      startDate: (d.data().date as Timestamp).toDate(),
+      durationMinutes: (d.data().durationMinutes as number) ?? 30,
+    }));
+    const occupiedSlots = buildOccupiedSlots(appointments);
 
     return { occupiedSlots };
   } catch (error) {
@@ -113,11 +115,23 @@ export async function createBooking(
     }
     const tenantName: string = tenantSnap.data().name ?? 'tu salón'; // TODO 1 resolved
 
+    // 2. Verificar que el slot sigue disponible (previene race conditions entre usuarios)
+    const conflict = await hasSlotConflict(
+      payload.tenantId,
+      payload.staffId,
+      payload.date,
+      payload.time,
+      payload.durationMinutes
+    );
+    if (conflict) {
+      return { success: false, error: 'El horario ya no está disponible. Por favor elegí otro.' };
+    }
+
     const [hour, minute] = payload.time.split(':').map(Number);
     const appointmentDateTime = new Date(payload.date);
     appointmentDateTime.setHours(hour, minute, 0, 0);
 
-    // 2. ESCRITURA 1: Crear appointment
+    // 3. ESCRITURA 1: Crear appointment
     const appointmentRef = doc(collection(db, 'tenants', payload.tenantId, 'appointments'));
     const appointmentData = {
       id: appointmentRef.id,
@@ -142,7 +156,7 @@ export async function createBooking(
     };
     await setDoc(appointmentRef, appointmentData);
 
-    // 3. ESCRITURA 2: Crear o actualizar customer en el CRM privado del tenant
+    // 4. ESCRITURA 2: Crear o actualizar customer en el CRM privado del tenant
     // Usamos el uid como ID del documento para garantizar unicidad por usuario global
     const customerRef = doc(db, 'tenants', payload.tenantId, 'customers', uid);
     const customerData: Record<string, unknown> = {

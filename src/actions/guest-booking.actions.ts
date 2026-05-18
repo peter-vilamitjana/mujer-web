@@ -6,6 +6,7 @@ import {
 import { db } from '@/lib/firebase';
 import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import { buildConfirmationMessage } from '@/lib/whatsapp-templates';
+import { hasSlotConflict } from '@/lib/booking-utils';
 
 export interface GuestBookingPayload {
   tenantId: string;
@@ -41,6 +42,18 @@ export async function createGuestBooking(
       return { success: false, error: 'Este salón no está disponible para reservas.' };
     }
     const tenantName: string = tenantSnap.data().name ?? 'tu salón';
+
+    // Verificar que el slot sigue disponible antes de escribir (previene race conditions)
+    const conflict = await hasSlotConflict(
+      payload.tenantId,
+      payload.staffId,
+      payload.date,
+      payload.time,
+      payload.durationMinutes
+    );
+    if (conflict) {
+      return { success: false, error: 'El horario ya no está disponible. Por favor elegí otro.' };
+    }
 
     const [hour, minute] = payload.time.split(':').map(Number);
     const appointmentDateTime = new Date(payload.date);

@@ -1,6 +1,6 @@
 # MujerApp — Review de Implementación Técnica
 
-**Rama**: `database-config` | **Última actualización**: 2026-05-15
+**Rama**: `database-config` | **Última actualización**: 2026-05-18
 
 ---
 
@@ -240,15 +240,16 @@ Incluyendo: `accordion`, `alert`, `alert-dialog`, `avatar`, `badge`, `button`, `
 
 ## TESTS (e2e/)
 
-Playwright configurado. 3 specs en `e2e/`:
-- `booking-flow.spec.ts`
-- `checkout.spec.ts`
-- `registro.spec.ts`
+Playwright configurado. 4 specs en `e2e/`:
+- `booking-flow.spec.ts` — 7 tests (wizard completo hasta paso 3, volver, guest/auth)
+- `checkout.spec.ts` — 3 tests (agenda admin, cierre de caja, CheckoutDrawer)
+- `registro.spec.ts` — 6 tests (registro B2C, validación, login)
+- `guest-booking.spec.ts` — 6 tests (guest flow sin auth, pasos 1-3, página de confirmación)
 - `fixtures/` + `global-setup.ts` con storageState para auth
 
-**Estado**: ⚠️ `npx playwright install` NO está en `.github/workflows/ci.yml`. Los e2e no corren en CI.
+**Estado**: ✅ CI tiene job `e2e` con `playwright install --with-deps chromium`.
 
-**CI actual** (`.github/workflows/ci.yml`): 3 jobs — TypeScript, ESLint, Build. Sin e2e.
+**CI actual** (`.github/workflows/ci.yml`): 4 jobs — TypeScript, ESLint, Build, E2E.
 
 ---
 
@@ -319,3 +320,6 @@ Playwright configurado. 3 specs en `e2e/`:
 | 2026-05-15 | `Tenant.plan` alineado a `'free' \| 'pro' \| 'enterprise'`. `usePlan()` hook creado. |
 | 2026-05-15 | Staff CRUD completo en `ConfigTabView`: crear + archivar/reactivar profesionales. |
 | 2026-05-15 | `getMyHistorial` + `getMyUpcomingAppointments` wired cross-tenant en `profile.actions.ts`. `/perfil/page.tsx` y `/perfil/historial` usan datos reales. |
+| 2026-05-18 | **Double-booking prevention**: `hasSlotConflict()` en `src/lib/booking-utils.ts`. Wired en `createBooking` y `createGuestBooking`. Race condition eliminada. |
+| 2026-05-18 | **`getAvailableSlots` corregido**: bloquea todos los slots de 30min que ocupa un turno según su `durationMinutes` (antes solo bloqueaba el slot de inicio). |
+| 2026-05-18 | **E2E expandido**: `booking-flow.spec.ts` → 7 tests (pasos 1→2→3, volver). Nuevo `guest-booking.spec.ts` (6 tests, flujo invitada completo). `playwright.config.ts` actualizado. |

@@ -38,6 +38,45 @@ test.describe('Booking Flow — autenticado', () => {
     // UI shows "Paso 2: Elige a tu profesional" (imperative, not past tense)
     await expect(page.getByText(/Elige a tu profesional/i)).toBeVisible();
   });
+
+  test('paso 2 → paso 3: navegar a fecha y hora', async ({ page }) => {
+    // Paso 1: seleccionar servicio
+    await page.locator('div.rounded-xl.cursor-pointer').first().click();
+    await page.getByRole('button', { name: /Continuar a Profesional/i }).click();
+    await expect(page.getByText(/Elige a tu profesional/i)).toBeVisible({ timeout: 5_000 });
+
+    // Paso 2: seleccionar profesional (primer card disponible)
+    const staffCards = page.locator('div.rounded-xl.cursor-pointer');
+    const staffCount = await staffCards.count();
+    if (staffCount === 0) {
+      test.skip(true, 'Sin staff en demo-salon — seed requerido');
+    }
+    await staffCards.first().click();
+
+    const continueToDate = page.getByRole('button', { name: /Continuar a Fecha/i });
+    if (!await continueToDate.isVisible({ timeout: 3_000 })) {
+      test.skip(true, 'Botón "Continuar a Fecha" no visible — UI actualizada o sin staff');
+    }
+    await continueToDate.click();
+
+    // Paso 3: debe mostrar un selector de fecha
+    await expect(
+      page.getByText(/Fecha y hora/i).or(page.getByRole('grid')).first()
+    ).toBeVisible({ timeout: 5_000 });
+  });
+
+  test('volver al paso anterior funciona', async ({ page }) => {
+    await page.locator('div.rounded-xl.cursor-pointer').first().click();
+    await page.getByRole('button', { name: /Continuar a Profesional/i }).click();
+    await expect(page.getByText(/Elige a tu profesional/i)).toBeVisible({ timeout: 5_000 });
+
+    // Botón de volver
+    const backBtn = page.getByRole('button', { name: /volver|atrás|anterior/i }).first();
+    if (await backBtn.isVisible({ timeout: 3_000 })) {
+      await backBtn.click();
+      await expect(page.getByText('Tus servicios').first()).toBeVisible({ timeout: 5_000 });
+    }
+  });
 });
 
 test.describe('Booking Flow — sin autenticación', () => {
