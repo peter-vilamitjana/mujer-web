@@ -75,19 +75,21 @@ export default function SalonSidebar({ isOpen, onClose, tenantSlug }: SalonSideb
       />
       <div
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 transform border-r bg-card transition-transform duration-300 ease-in-out md:hidden',
+          'fixed inset-y-0 left-0 z-50 w-64 transform border-r bg-transparent isolate transition-transform duration-300 ease-in-out md:hidden',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        {content}
-        <Button variant="ghost" size="icon" className="absolute top-3 right-3 md:hidden" onClick={onClose}>
+        <div className="liquid-glass-lens absolute inset-0 -z-10 pointer-events-none" />
+        <div className="relative z-10 h-full">{content}</div>
+        <Button variant="ghost" size="icon" className="absolute top-3 right-3 md:hidden z-20" onClick={onClose}>
           <X className="h-6 w-6" />
         </Button>
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:fixed md:inset-y-0 md:left-0 md:z-10 md:block md:w-64 bg-card">
-        {content}
+      <aside className="hidden md:fixed md:inset-y-0 md:left-0 md:z-10 md:block md:w-64 bg-transparent isolate border-r">
+        <div className="liquid-glass-lens absolute inset-0 -z-10 pointer-events-none" />
+        <div className="relative z-10 h-full">{content}</div>
       </aside>
     </>
   );

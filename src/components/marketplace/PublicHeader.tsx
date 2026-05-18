@@ -7,8 +7,9 @@ export default function PublicHeader() {
   const { data: session } = useSession();
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-md shadow-sm dark:shadow-none tonal-transition">
-      <div className="flex justify-between items-center px-4 sm:px-8 py-4 max-w-screen-2xl mx-auto">
+    <nav className="fixed top-0 w-full z-50 bg-transparent isolate tonal-transition">
+      <div className="liquid-glass-lens absolute inset-0 -z-10 pointer-events-none border-b border-black/5 dark:border-white/5" />
+      <div className="relative z-10 flex justify-between items-center px-4 sm:px-8 py-4 max-w-screen-2xl mx-auto">
         <div className="flex items-center gap-8">
           <Link href="/explore">
             <span className="text-2xl font-semibold tracking-tighter text-[#191c1d] dark:text-white italic">Ouleeh</span>

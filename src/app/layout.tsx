@@ -5,6 +5,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Providers } from "@/components/Providers";
 import SmoothScroll from "@/components/ui/SmoothScroll";
+import { LiquidGlassFilter } from "@/components/ui/liquid-glass-filter";
 
 const inter = Inter({ 
   subsets: ['latin'], 
@@ -53,6 +54,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body selection:bg-primary/20 antialiased">
+        <LiquidGlassFilter />
         <SmoothScroll>
           <Providers>
             {children}

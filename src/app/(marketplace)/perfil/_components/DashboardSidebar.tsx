@@ -23,7 +23,8 @@ export function DashboardSidebar() {
   const nameInitial = userName.charAt(0).toUpperCase() || '?'
 
   return (
-    <aside className="w-[280px] liquid-glass-floating flex flex-col h-screen sticky top-0 shrink-0">
+    <aside className="relative isolate w-[280px] bg-transparent flex flex-col h-screen sticky top-0 shrink-0">
+      <div className="liquid-glass-lens absolute inset-0 -z-10 pointer-events-none" />
 
       {/* Brand */}
       <div className="px-8 py-7 border-b border-white/[0.06]">

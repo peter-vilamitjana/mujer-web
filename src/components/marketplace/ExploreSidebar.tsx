@@ -13,10 +13,11 @@ export default function ExploreSidebar({
   const { data: session } = useSession();
 
   return (
-    <aside className="w-full md:w-[300px] h-[calc(100vh-5rem)] sticky top-20 bg-surface flex flex-col gap-4 py-8 overflow-y-auto hide-scrollbar border-r-0 md:bg-zinc-50 dark:bg-zinc-800/50">
+    <aside className="relative isolate w-full md:w-[300px] h-[calc(100vh-5rem)] sticky top-20 bg-transparent flex flex-col gap-4 py-8 overflow-y-auto hide-scrollbar border-r-0">
+      <div className="liquid-glass-lens absolute inset-0 -z-10 pointer-events-none rounded-2xl md:rounded-none" />
       
       {/* Profile Section */}
-      <div className="px-6 mb-4 flex flex-col items-center text-center">
+      <div className="px-6 mb-4 flex flex-col items-center text-center relative z-10">
         <div className="relative w-24 h-24 mb-4">
           {session?.user?.image ? (
             <img 

@@ -7,8 +7,9 @@ export default function Header() {
   const { data: session } = useSession();
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur px-4 sm:px-6">
-      <div className="flex-1" />
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 bg-transparent isolate px-4 sm:px-6">
+      <div className="liquid-glass-lens absolute inset-0 -z-10 pointer-events-none border-b border-black/5 dark:border-white/5" />
+      <div className="relative z-10 flex-1" />
       {session?.user && (
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
