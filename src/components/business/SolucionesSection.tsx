@@ -67,45 +67,15 @@ function MockupReserva() {
 }
 
 function MockupAgenda() {
-  const staff = [
-    { name: 'Valeria', hex: '#a78bfa', appts: [{ top: 4, h: 52, text: 'Coloración · Ana P.' }, { top: 92, h: 38, text: 'Corte · Sol R.' }] },
-    { name: 'Lucía', hex: '#fbbf24', appts: [{ top: 22, h: 68, text: 'Mechas · María J.' }] },
-    { name: 'Camila', hex: '#34d399', appts: [{ top: 0, h: 44, text: 'Keratina · Vane' }, { top: 100, h: 52, text: 'Balayage · Caro' }] },
-  ];
   return (
-    <div className="w-full h-full bg-[#0d0d0f] flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.05] shrink-0">
-        <span className="text-white text-[11px] font-semibold">Agenda · Lunes 15</span>
-        <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-semibold">HOY</span>
-      </div>
-      <div className="flex flex-1 overflow-hidden">
-        <div className="w-9 border-r border-white/[0.04] pt-4 shrink-0">
-          {['9','10','11','12','13','14'].map(h => (
-            <div key={h} className="h-[34px] flex items-start justify-end pr-1.5 text-[8px] text-zinc-700 pt-0.5">{h}</div>
-          ))}
-        </div>
-        <div className="flex flex-1">
-          {staff.map((s) => (
-            <div key={s.name} className="flex-1 border-r border-white/[0.03] relative">
-              <div className="text-center py-1.5 text-[8px] font-semibold shrink-0" style={{ color: s.hex }}>{s.name}</div>
-              <div className="relative" style={{ height: '204px' }}>
-                {[0,1,2,3,4,5].map(i => (
-                  <div key={i} className="absolute left-0 right-0 border-t border-white/[0.03]" style={{ top: `${i * 34}px` }} />
-                ))}
-                {s.appts.map((a, i) => (
-                  <div
-                    key={i}
-                    className="absolute left-0.5 right-0.5 rounded-md px-1 py-0.5 overflow-hidden"
-                    style={{ top: `${a.top}px`, height: `${a.h}px`, backgroundColor: `${s.hex}18`, borderLeft: `2px solid ${s.hex}` }}
-                  >
-                    <p className="text-[8px] leading-tight font-medium" style={{ color: s.hex }}>{a.text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+    <div className="w-full h-full bg-[#0d0d0f] overflow-hidden">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/landing/calendar-preview.png"
+        alt="Vista previa de la agenda inteligente"
+        className="w-full h-full object-cover object-top"
+        draggable={false}
+      />
     </div>
   );
 }
