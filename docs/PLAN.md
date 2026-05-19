@@ -8,7 +8,7 @@
 
 MujerApp es una plataforma SaaS B2B2C multi-tenant para la gestión de salones de belleza. El stack es sólido y moderno (Next.js 15, TypeScript, Firestore, NextAuth v4), con una arquitectura multi-tenant bien diseñada a nivel de schema y reglas Firestore.
 
-**Estado actual (2026-05-19 sesión 4–5)**: ✅ Fase 0 + ✅ Fase 1 + ✅ Fase 2 + ✅ Fase 3 (3.0–3.4 completas) + ✅ Fase 3.5 completadas. ✅ **Reviews** (4.1). ✅ **E2E completo** (4.5): 6 specs — `onboarding.spec.ts` (8 tests) + `cancellation-flow.spec.ts` (5 tests) añadidos. `playwright.config.ts` actualizado con proyectos public/customer para los nuevos specs. **Pendiente Fase 4**: performance (4.3), a11y (4.4), docs (4.6). **Próximo hito**: activar `MERCADOPAGO_ACCESS_TOKEN` en producción + `WHATSAPP_TOKEN` en prod.
+**Estado actual (2026-05-19 sesión 4–6)**: ✅ Fase 0 + ✅ Fase 1 + ✅ Fase 2 + ✅ Fase 3 (3.0–3.4 completas) + ✅ Fase 3.5 completadas. ✅ **Reviews** (4.1). ✅ **E2E completo** (4.5): 6 specs — `onboarding.spec.ts` (8 tests) + `cancellation-flow.spec.ts` (5 tests) añadidos. `playwright.config.ts` actualizado con proyectos public/customer para los nuevos specs. ✅ **Fase 4 completada** (4.1 Reviews, 4.2 SEO, 4.3 Performance, 4.4 A11y, 4.5 Tests, 4.6 Docs). **Próximo hito**: activar `MERCADOPAGO_ACCESS_TOKEN` en producción + `WHATSAPP_TOKEN` en prod → **launch**.
 
 La hoja de ruta para un MVP launchable es de **10–14 semanas** para un equipo de 2–3 devs (~8 semanas completadas).
 
@@ -487,7 +487,7 @@ FASE 4                                                             │ Growth & 
 | 4.3 | Performance: imágenes, code splitting, ISR | 3 | Lighthouse > 80 en móvil | 🟡 ISR: landing (`revalidate=3600`) + salon page (`revalidate=1800`). Dynamic import: `BookingFlow` con `ssr:false` + skeleton. next/image: 3 hero images en `SalonHero.tsx`. Pendiente: Lighthouse audit real. |
 | 4.4 | Accesibilidad (a11y) audit y correcciones | 3 | 0 errores críticos en axe-core | ✅ BookingFlow staff cards: `role="button"` + `tabIndex` + `onKeyDown` + `aria-pressed`. AgendaTabView slots: idem + `aria-label`. registro/page.tsx: `htmlFor`/`id` en 4 inputs + `aria-label` en password toggle. SalonHero: `aria-hidden` en imágenes decorativas laterales. |
 | 4.5 | Test suite Playwright e2e (flujos críticos en CI) | 5 | Flujos críticos cubiertos + `playwright install` en CI | ✅ 6 specs: `booking-flow.spec.ts` (7 tests), `checkout.spec.ts`, `registro.spec.ts`, `guest-booking.spec.ts` (6 tests), `onboarding.spec.ts` (8 tests), `cancellation-flow.spec.ts` (5 tests). `playwright install` en CI ✅. |
-| 4.6 | Documentación técnica (ADRs, README actualizado) | 2 | Nuevo dev onboardea en < 1 día | ⏳ |
+| 4.6 | Documentación técnica (ADRs, README actualizado) | 2 | Nuevo dev onboardea en < 1 día | ✅ README reescrito (setup, arquitectura, comandos, tests, ADRs). ADR-003 (guest booking), ADR-004 (ScrollVideoHero diferido), ADR-005 (admin SPA-tabs) en vault Obsidian. |
 | ~~4.x~~ | ~~AI: recomendaciones personalizadas (Genkit)~~ | ~~5~~ | ~~**Eliminado del roadmap.** Genkit queda como dependencia muerta a remover (`npm uninstall @genkit-ai/googleai genkit` + borrar `src/ai/`).~~ | ❌ |
 
 **Total**: ~18 días → **~3 semanas** con equipo completo
