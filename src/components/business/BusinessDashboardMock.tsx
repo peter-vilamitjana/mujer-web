@@ -29,116 +29,12 @@ export default function BusinessDashboardMock() {
           </div>
         }
       >
-        {/* Top bar */}
-        <div className="px-6 py-3 border-b border-white/[0.06] flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <span className="font-playfair text-sm italic text-white/70">Pro Workspace</span>
-            <div className="hidden md:flex items-center gap-1">
-              {['Dashboard', 'Agenda', 'Clientes', 'Finanzas'].map((item, i) => (
-                <span
-                  key={item}
-                  className="px-3 py-1 rounded-full text-xs font-inter transition-colors"
-                  style={{
-                    background: i === 0 ? 'rgba(255,255,255,0.1)' : 'transparent',
-                    color: i === 0 ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.25)',
-                  }}
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div
-            className="w-6 h-6 rounded-full border border-white/[0.1] flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.06)' }}
-          >
-            <div className="w-2 h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.35)' }} />
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-6">
-          {/* Greeting */}
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h4 className="text-base font-light text-white/75 mb-0.5 font-inter">Buenos días, Carolina</h4>
-              <p className="text-xs text-white/25 font-inter">Tenés 12 turnos para hoy</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-              <span className="text-[10px] text-green-400 font-inter">94% ocupación</span>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 mb-5">
-            {[
-              { label: 'Ingresos', value: '$45.200', sub: '+12%', subColor: 'rgba(74,222,128,0.8)' },
-              { label: 'Nuevas clientas', value: '+8', sub: 'este mes', subColor: 'rgba(255,255,255,0.25)' },
-              { label: 'Turnos hoy', value: '12', sub: '4 completados', subColor: 'rgba(255,255,255,0.25)' },
-            ].map(stat => (
-              <div
-                key={stat.label}
-                className="rounded-xl p-4"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
-              >
-                <p className="text-[9px] uppercase tracking-widest mb-1.5 font-inter" style={{ color: 'rgba(255,255,255,0.25)' }}>
-                  {stat.label}
-                </p>
-                <p className="font-playfair text-xl text-white">{stat.value}</p>
-                <p className="text-[10px] font-inter mt-0.5" style={{ color: stat.subColor }}>{stat.sub}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Gráfico */}
-          <div
-            className="rounded-xl p-5"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-          >
-            <div className="flex justify-between items-center mb-5">
-              <div>
-                <h5 className="text-sm font-inter text-white/65">Rendimiento semanal</h5>
-                <p className="text-[10px] text-white/25 font-inter mt-0.5">Ingresos por día</p>
-              </div>
-              <div className="flex gap-1.5">
-                <span
-                  className="px-3 py-1 rounded-full text-[10px] font-inter font-semibold"
-                  style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}
-                >Semana</span>
-                <span
-                  className="px-3 py-1 rounded-full text-[10px] font-inter"
-                  style={{ color: 'rgba(255,255,255,0.25)' }}
-                >Mes</span>
-              </div>
-            </div>
-
-            <div className="flex items-end justify-between gap-3" style={{ height: '80px' }}>
-              {weekData.map(({ label, height, highlight }) => (
-                <div key={label} className="flex-1 flex flex-col items-center gap-1.5" style={{ height: '100%' }}>
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', width: '100%' }}>
-                    <div
-                      style={{
-                        width: '100%',
-                        height: `${height}%`,
-                        borderRadius: '4px 4px 0 0',
-                        backgroundColor: highlight
-                          ? 'rgba(255,255,255,0.55)'
-                          : 'rgba(255,255,255,0.08)',
-                        transition: 'background-color 0.3s',
-                      }}
-                    />
-                  </div>
-                  <span
-                    className="text-[9px] font-inter"
-                    style={{ color: highlight ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.2)' }}
-                  >
-                    {label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="w-full h-full rounded-2xl overflow-hidden bg-[#0d0d0d]">
+          <img 
+            src="/landing/dashboard-preview.png" 
+            alt="Dashboard Profesional" 
+            className="w-full h-full object-cover object-top opacity-90 transition-opacity duration-500 hover:opacity-100"
+          />
         </div>
       </ContainerScroll>
     </section>

@@ -13,85 +13,12 @@ const headline = [
 
 function DashboardMockup() {
   return (
-    <div className="h-full w-full flex flex-col p-1 sm:p-2">
-      {/* Window chrome */}
-      <div className="flex items-center justify-between mb-4 px-1">
-        <div className="flex items-center gap-1.5" aria-hidden="true">
-          <div className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
-          <div className="w-2.5 h-2.5 rounded-full bg-amber-400/60" />
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/60" />
-        </div>
-        <div className="h-4 w-32 rounded-full bg-white/[0.05] border border-white/[0.07]" aria-hidden="true" />
-        <div className="flex items-center gap-1.5" aria-hidden="true">
-          <div className="w-3.5 h-3.5 rounded-full bg-white/[0.05]" />
-          <div className="w-3.5 h-3.5 rounded-full bg-purple-500/20 border border-purple-400/20" />
-        </div>
-      </div>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-3 gap-2.5 mb-4">
-        {[
-          { label: 'Turnos hoy', value: '12', color: 'text-emerald-400', bg: 'bg-emerald-400/[0.06]', border: 'border-emerald-400/[0.10]' },
-          { label: 'Ingresos del mes', value: '$84k', color: 'text-purple-400', bg: 'bg-purple-400/[0.06]', border: 'border-purple-400/[0.10]' },
-          { label: 'Clientas activas', value: '248', color: 'text-amber-400', bg: 'bg-amber-400/[0.06]', border: 'border-amber-400/[0.10]' },
-        ].map(({ label, value, color, bg, border }) => (
-          <div key={label} className={`rounded-xl ${bg} border ${border} p-3`}>
-            <p className={`font-playfair text-xl font-bold ${color}`}>{value}</p>
-            <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">{label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Section label */}
-      <p className="text-[9px] text-zinc-600 uppercase tracking-[0.25em] font-bold mb-2 px-1">
-        Agenda de hoy
-      </p>
-
-      {/* Appointments */}
-      <div className="flex-1 space-y-2 overflow-hidden">
-        {[
-          { time: '09:00', name: 'Valentina G.', service: 'Corte + color', duration: '90 min', confirmed: true },
-          { time: '11:00', name: 'Martina R.', service: 'Keratina brasileña', duration: '120 min', confirmed: false },
-          { time: '14:30', name: 'Carolina S.', service: 'Peinado de novia', duration: '60 min', confirmed: true },
-          { time: '16:00', name: 'Ana P.', service: 'Balayage', duration: '150 min', confirmed: true },
-        ].map(({ time, name, service, duration, confirmed }) => (
-          <div
-            key={name}
-            className="flex items-center gap-3 rounded-xl bg-white/[0.03] border border-white/[0.06] px-3 py-2.5"
-          >
-            <span className="text-[10px] font-mono text-zinc-500 w-9 shrink-0">{time}</span>
-            <div
-              className={`w-1.5 h-1.5 rounded-full shrink-0 ${confirmed ? 'bg-emerald-400' : 'bg-amber-400'}`}
-              aria-hidden="true"
-            />
-            <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-semibold text-white truncate">{name}</p>
-              <p className="text-[10px] text-zinc-600 truncate">{service} · {duration}</p>
-            </div>
-            <span className={`hidden sm:block text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0
-              ${confirmed ? 'bg-emerald-400/[0.10] text-emerald-400' : 'bg-amber-400/[0.10] text-amber-400'}`}>
-              {confirmed ? 'Confirmado' : 'Pendiente'}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Bottom bar */}
-      <div className="mt-3 pt-3 border-t border-white/[0.05] flex items-center justify-between px-1">
-        <div className="flex items-center gap-4">
-          {['Agenda', 'Clientas', 'Reportes'].map((tab, i) => (
-            <span
-              key={tab}
-              className={`text-[10px] font-medium ${i === 0 ? 'text-purple-400' : 'text-zinc-600'}`}
-            >
-              {tab}
-            </span>
-          ))}
-        </div>
-        <div className="w-16 h-1 rounded-full bg-white/[0.06]">
-          <div className="w-1/3 h-full rounded-full bg-purple-400/60" />
-        </div>
-      </div>
+    <div className="w-full h-full rounded-2xl overflow-hidden bg-[#0d0d0d]">
+      <img 
+        src="/landing/dashboard-preview.png" 
+        alt="Dashboard Profesional Ouleeh" 
+        className="w-full h-full object-cover object-top opacity-90 transition-opacity duration-500 hover:opacity-100"
+      />
     </div>
   );
 }
