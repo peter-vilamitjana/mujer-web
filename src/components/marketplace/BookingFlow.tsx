@@ -447,7 +447,13 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
           </CardHeader>
           <CardContent className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {staff.map(prof => (
-              <div key={prof.id} onClick={() => handleStaffSelect(prof)}
+              <div
+                key={prof.id}
+                role="button"
+                tabIndex={0}
+                aria-pressed={selectedStaff?.id === prof.id}
+                onClick={() => handleStaffSelect(prof)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleStaffSelect(prof); } }}
                 className={cn("p-4 border rounded-xl cursor-pointer transition-all flex flex-col items-center gap-3 text-center bg-background",
                   selectedStaff?.id === prof.id ? "border-primary ring-2 ring-primary/20 shadow-md bg-primary/5" : "hover:border-primary/50 dark:border-border/50"
                 )}>

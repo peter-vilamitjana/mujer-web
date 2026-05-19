@@ -127,9 +127,10 @@ export default function RegistroPage() {
             <div className="space-y-4">
               {/* Nombre */}
               <div className="space-y-1.5">
-                <Label className="text-zinc-400 text-sm font-inter ml-1">Nombre completo</Label>
+                <Label htmlFor="r-nombre" className="text-zinc-400 text-sm font-inter ml-1">Nombre completo</Label>
                 <div className="relative group">
-                  <Input 
+                  <Input
+                    id="r-nombre"
                     placeholder="Ej. Carolina Müller"
                     className={cn(
                       "bg-zinc-900 border-white/10 h-12 rounded-xl text-white placeholder:text-zinc-600 focus-visible:ring-0 focus-visible:border-white/30 transition-all font-inter",
@@ -145,8 +146,9 @@ export default function RegistroPage() {
 
               {/* Email */}
               <div className="space-y-1.5">
-                <Label className="text-zinc-400 text-sm font-inter ml-1">Email</Label>
-                <Input 
+                <Label htmlFor="r-email" className="text-zinc-400 text-sm font-inter ml-1">Email</Label>
+                <Input
+                  id="r-email"
                   type="email"
                   placeholder="tu@email.com"
                   className={cn(
@@ -162,9 +164,10 @@ export default function RegistroPage() {
 
               {/* Password */}
               <div className="space-y-1.5">
-                <Label className="text-zinc-400 text-sm font-inter ml-1">Contraseña</Label>
+                <Label htmlFor="r-password" className="text-zinc-400 text-sm font-inter ml-1">Contraseña</Label>
                 <div className="relative">
-                  <Input 
+                  <Input
+                    id="r-password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Mínimo 8 caracteres"
                     className={cn(
@@ -175,8 +178,9 @@ export default function RegistroPage() {
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     onBlur={() => setTouched({ ...touched, password: true })}
                   />
-                  <button 
+                  <button
                     type="button"
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
                   >
@@ -188,15 +192,16 @@ export default function RegistroPage() {
 
               {/* Celular */}
               <div className="space-y-1.5">
-                <Label className="text-zinc-400 text-sm font-inter ml-1">Tu celular (para WhatsApp)</Label>
+                <Label htmlFor="r-phone" className="text-zinc-400 text-sm font-inter ml-1">Tu celular (para WhatsApp)</Label>
                 <div className={cn(
                   "flex items-center bg-zinc-900 border border-white/10 rounded-xl overflow-hidden focus-within:border-white/30 transition-all",
                   errors.phone && "border-red-400/50"
                 )}>
-                  <div className="bg-zinc-800 border-r border-white/10 px-4 h-12 flex items-center text-zinc-500 font-inter text-sm select-none">
+                  <div className="bg-zinc-800 border-r border-white/10 px-4 h-12 flex items-center text-zinc-500 font-inter text-sm select-none" aria-hidden="true">
                     +54
                   </div>
-                  <Input 
+                  <Input
+                    id="r-phone"
                     type="tel"
                     placeholder="9 11 XXXX-XXXX"
                     className="bg-transparent border-none h-12 text-white placeholder:text-zinc-600 focus-visible:ring-0 font-inter no-ring"

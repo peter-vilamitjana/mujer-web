@@ -682,7 +682,14 @@ export default function AgendaTabView() {
                         }}
                       >
                         {!isDragging && (
-                          <div onClick={() => openNewAppt(slot, pro)} className="w-full h-full rounded-lg border border-dashed border-transparent group-hover/add:border-violet-500/25 group-hover/add:bg-violet-500/[0.04] transition-all duration-200 flex items-center justify-center cursor-pointer">
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            aria-label="Agregar turno"
+                            onClick={() => openNewAppt(slot, pro)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openNewAppt(slot, pro); } }}
+                            className="w-full h-full rounded-lg border border-dashed border-transparent group-hover/add:border-violet-500/25 group-hover/add:bg-violet-500/[0.04] transition-all duration-200 flex items-center justify-center cursor-pointer"
+                          >
                             <span className="material-symbols-outlined text-violet-400/0 group-hover/add:text-violet-400/50 transition-all" style={{ fontSize: '13px' }}>add</span>
                           </div>
                         )}
