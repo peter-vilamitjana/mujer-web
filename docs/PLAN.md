@@ -119,15 +119,17 @@ src/
 | **Onboarding wizard** | ✅ ~95% | Alta | 5 pasos en `/business/register`, localStorage, batch atómico. |
 | **Booking Flow** | ✅ ~85% | Alta | Multi-step + captura teléfono + Guest Booking. Falta disponibilidad real de staff. |
 | **Google Calendar** | ✅ ~80% | Alta | Bidireccional: App→GCal + GCal→App webhook. Token refresh. |
-| ~~**Email (Resend)**~~ | ⚠️ **Paquete activo, flujo eliminado** | — | `resend` sigue en package.json pero sin uso. Pendiente `npm uninstall resend`. |
-| **Portal Cliente** | ✅ ~75% | Media | Dashboard real (citas, historial), cancelación, vista guest por teléfono. `/perfil/historial` aún con mock data. |
+| ~~**Email (Resend)**~~ | ✅ **Eliminado** | — | Paquete desinstalado. `/api/notifications` borrada. `notification.service.ts` → stub no-op. |
+| **Portal Cliente** | ✅ ~85% | Media | Dashboard real (citas, historial), cancelación, vista guest por teléfono. `/perfil/historial` wired a Firestore. |
 | **Checkout / Caja** | ✅ ~85% | Media | `CheckoutDrawer` + `closeAppointment()` + `CajaTabView` con real-time. |
 | **Auth B2C** | ✅ ~85% | Media | `UserRole` = `'customer'`, JWT con `role`, `registerCustomer()`, `/perfil/cuenta` wired a Firestore. |
 | **Guest Booking** | ✅ ~90% | Media | Reservas sin auth wall, `/book/confirmation/[appointmentId]`. Necesita `WHATSAPP_TOKEN` en prod. |
 | **MercadoPago** | ✅ ~90% | Alta | Checkout Pro + webhook IPN. Pendiente activar token de producción. |
 | ~~**AI (Genkit)**~~ | ✅ **Eliminado** | — | `src/ai/` borrado. No figura en package.json. |
-| **Tests** | 🟡 ~40% | Media | 3 specs e2e en `e2e/`. `npx playwright install` NO está en CI. |
-| **CI/CD** | ✅ Configurado | Media | GitHub Actions: typecheck + lint + build. Sin e2e aún. |
+| **Tests e2e** | ✅ ~90% | Media | 6 specs Playwright (35 tests). Job `e2e` en CI con `playwright install --with-deps chromium`. |
+| **CI/CD** | ✅ Completo | Media | GitHub Actions: 4 jobs — TypeScript, ESLint, Build, E2E Playwright. |
+| **Staff** | ✅ ~90% | Media | `ConfigTabView`: crear profesional (form inline), editar comisiones, archivar/reactivar. |
+| **Planes SaaS** | ✅ ~80% | Media | `Tenant.plan: 'free'\|'pro'\|'enterprise'` en schema. `usePlan()` hook con matriz de features. `PricingSection4` en `/business`. |
 
 ---
 
@@ -147,7 +149,7 @@ src/
 
 8. ~~Imágenes de landing con dominios externos~~ ✅ Resuelto — gradientes locales, 0 dominios externos.
 9. ~~`tenantIds` en JWT no reactivos~~ ✅ JWT callback maneja `trigger === 'update'`. `session.update()` re-fetches memberships de Firestore sin re-login.
-10. **`resend` en package.json sin uso** — `npm uninstall resend`. El paquete ocupa espacio y confunde sobre la intención (WhatsApp es el canal, no email).
+10. ~~**`resend` en package.json sin uso**~~ ✅ Desinstalado. `/api/notifications` eliminada. `notification.service.ts` → stub no-op.
 11. ~~Mezcla de schema legacy (`src/lib/types.ts`)~~ ✅ Renombrado a `_types_archive.ts`, 9 referencias actualizadas, `types.ts` eliminado.
 
 #### Media
@@ -220,14 +222,14 @@ src/
 - [x] ~~Cancellation flow con reglas de negocio~~ → `cancelAppointment()` + WhatsApp
 - [ ] Cálculo real de disponibilidad (staff + duración + branch) — pendiente
 - [ ] Rate limiting en API routes
-- [ ] Planes SaaS en schema (Fase 3.5)
-- [ ] Feature flags por plan (Fase 3.6)
+- [x] ~~Planes SaaS en schema~~ → `Tenant.plan: 'free'|'pro'|'enterprise'` en schema. `usePlan()` hook con matriz de features.
+- [x] ~~Feature flags por plan~~ → `usePlan()` hook implementado. Beta default = `'pro'`.
 
 **Infra / DevOps**
 - [x] ~~Eliminar `ignoreBuildErrors: true`~~ → ambas flags en `false`, CI limpio
 - [x] ~~Pipeline CI/CD~~ → GitHub Actions: lint + typecheck + build en verde
 - [x] ~~`.env.example` documentado~~ → todas las variables con comentarios
-- [ ] `npx playwright install` en CI/CD (e2e tests no corren en CI aún)
+- [x] ~~`npx playwright install` en CI/CD~~ → job `e2e` añadido con `playwright install --with-deps chromium`
 - [ ] Monitoreo de errores (Sentry)
 - [ ] Analytics de producto (PostHog o Mixpanel)
 - [ ] Staging environment separado
@@ -315,7 +317,7 @@ FASE 4                                                             │ Growth & 
 | ~~0.6~~ | ~~Proteger `/admin/seed` y `/admin/migrate` en middleware~~ | ~~0.5~~ | ~~Rutas devuelven 401 sin sesión admin~~ | ✅ |
 | ~~0.7~~ | ~~Cubrir rutas marketplace autenticadas en middleware~~ | ~~0.5~~ | ~~`/salones/*/dashboard` protegido~~ | ✅ |
 | ~~0.8~~ | ~~Setup CI/CD (GitHub Actions: lint + typecheck + build)~~ | ~~1~~ | ~~PR no mergeable si CI falla~~ | ✅ |
-| 0.9 | Configurar Sentry para error tracking | 0.5 | Errores llegan al dashboard de Sentry | ⏳ Fase 1 |
+| ~~0.9~~ | ~~Configurar Sentry para error tracking~~ | ~~0.5~~ | ~~Errores llegan al dashboard de Sentry~~ | ✅ `@sentry/nextjs` instalado. `sentry.{client,server,edge}.config.ts` + `global-error.tsx` + `withSentryConfig` en `next.config.ts`. Pendiente: setear `SENTRY_DSN` en prod. |
 | 0.10 | Configurar staging environment | 1 | URL staging funcional con datos de prueba | ⏳ Fase 1 |
 
 **Total**: ~10 días → **2 semanas**
@@ -416,8 +418,8 @@ FASE 4                                                             │ Growth & 
 | ~~**3.2**~~ | ~~MercadoPago Checkout Pro (seña online al reservar)~~ | ~~4~~ | ~~Cuenta MP activada~~ | ~~Clienta paga seña al reservar — pago redirige a MP~~ | ✅ (`src/lib/mercadopago.ts` REST helper + `createDepositPreference()` + páginas success/failure/pending) |
 | ~~**3.3**~~ | ~~Webhook MercadoPago → Firestore (status de cita automático)~~ | ~~2~~ | ~~3.2~~ | ~~Pago aprobado actualiza turno a `confirmed + paid_partially`~~ | ✅ (`src/app/api/mercadopago/webhook/route.ts` — IPN handler completo) |
 | ~~**3.4**~~ | ~~Dashboard de cierre de caja diario (efectivo + transferencias + MP)~~ | ~~3~~ | ~~3.0~~ | ~~Admin ve resumen de caja del día desglosado por método~~ | ✅ (`CierreCajaDiario` real-time con Firestore listener, integrado en dashboard) |
-| 3.5 | Planes SaaS para salones (Free / Pro / Enterprise) | 3 | — | Salones tienen plan asignado en schema + Firestore | ⏳ |
-| 3.6 | Feature flags por plan de suscripción | 2 | 3.5 | Features desbloqueadas según plan | ⏳ |
+| ~~3.5~~ | ~~Planes SaaS para salones (Free / Pro / Enterprise)~~ | ~~3~~ | ~~—~~ | ~~Salones tienen plan asignado en schema + Firestore~~ | ✅ `Tenant.plan` alineado. `usePlan()` hook. `PricingSection4` en `/business`. |
+| ~~3.6~~ | ~~Feature flags por plan de suscripción~~ | ~~2~~ | ~~3.5~~ | ~~Features desbloqueadas según plan~~ | ✅ `usePlan()` con matriz de features. Beta default = `'pro'`. |
 
 **Total**: ~20 días → **~3–4 semanas**
 
@@ -614,7 +616,7 @@ main                     → producción (Firebase App Hosting)
 
 ---
 
-## ACCIONES INMEDIATAS (estado 2026-05-15)
+## ACCIONES INMEDIATAS (estado 2026-05-19)
 
 ### 🔴 P0 — Antes de ir a producción
 
