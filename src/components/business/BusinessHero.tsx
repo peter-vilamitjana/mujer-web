@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { ContainerScroll } from '@/components/ui/container-scroll-animation';
 
 const headline = [
@@ -15,7 +15,7 @@ function DashboardMockup() {
   return (
     <div className="w-full h-full rounded-2xl overflow-hidden bg-[#0d0d0d]">
       <img 
-        src="/landing/dashboard-preview.png" 
+        src="/landing/dashboard-preview.png?v=2" 
         alt="Dashboard Profesional Ouleeh" 
         className="w-full h-full object-cover object-top opacity-90 transition-opacity duration-500 hover:opacity-100"
       />
@@ -63,30 +63,10 @@ export default function BusinessHero() {
       </div>
 
       {/* ContainerScroll — offsets the fixed navbar */}
-      <div className="relative z-10 pt-36 lg:pt-48">
+      <div className="relative z-10 pt-28 lg:pt-36">
         <ContainerScroll
           titleComponent={
             <div className="flex flex-col items-center text-center">
-              {/* Badge */}
-              <motion.div
-                initial={{ opacity: 0, y: -12, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                className="mb-8"
-              >
-                <Link
-                  href="#como-funciona"
-                  className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full
-                    backdrop-blur-xl bg-white/[0.05] border border-white/[0.12]
-                    text-[11px] font-semibold text-zinc-300 tracking-[0.12em] uppercase
-                    hover:bg-white/[0.09] hover:border-white/[0.20] transition-all duration-300 cursor-pointer"
-                >
-                  <Sparkles className="w-3 h-3 text-purple-400" aria-hidden="true" />
-                  Ouleeh para negocios
-                  <span className="w-px h-3.5 bg-white/[0.18]" />
-                  <span className="text-purple-400 normal-case tracking-normal font-medium">Conocé más →</span>
-                </Link>
-              </motion.div>
 
               {/* Headline — word by word */}
               <h1
