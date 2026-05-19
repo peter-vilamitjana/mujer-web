@@ -65,19 +65,13 @@ export default function LandingHeader() {
             }
             .nav-liquid-lens {
               background-color: oklch(from var(--foreground) l c h / 3%);
-              backdrop-filter: blur(12px) url(#liquid-glass-nav) saturate(180%);
-              -webkit-backdrop-filter: blur(12px) saturate(180%);
+              backdrop-filter: blur(16px) url(#liquid-glass-nav) saturate(180%);
+              -webkit-backdrop-filter: blur(16px) saturate(180%);
               box-shadow: 
-                inset 0 0 0 1px color-mix(in srgb, white calc(var(--glass-reflex-light) * 10%), transparent),
-                inset 1.8px 3px 0px -2px color-mix(in srgb, white calc(var(--glass-reflex-light) * 90%), transparent), 
-                inset -2px -2px 0px -2px color-mix(in srgb, white calc(var(--glass-reflex-light) * 80%), transparent), 
-                inset -3px -8px 1px -6px color-mix(in srgb, white calc(var(--glass-reflex-light) * 60%), transparent), 
-                inset -0.3px -1px 4px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 12%), transparent), 
-                inset -1.5px 2.5px 0px -2px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 20%), transparent), 
-                inset 0px 3px 4px -2px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 20%), transparent), 
-                inset 2px -6.5px 1px -4px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 10%), transparent), 
-                0px 1px 5px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 10%), transparent), 
-                0px 6px 16px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 8%), transparent);
+                inset 0 1px 1px color-mix(in srgb, white calc(var(--glass-reflex-light) * 15%), transparent),
+                inset 0 0 0 1px color-mix(in srgb, white calc(var(--glass-reflex-light) * 8%), transparent),
+                inset 0 -1px 1px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 30%), transparent),
+                0 8px 32px rgba(0,0,0,0.2);
               transition: background-color 400ms cubic-bezier(1, 0.0, 0.4, 1), box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1);
             }
           `}</style>

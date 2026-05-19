@@ -40,11 +40,11 @@ export function LiquidGlassFilter() {
           href={WEBP_DISPLACEMENT_MAP}
           preserveAspectRatio="none"
         />
-        <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur" />
+        <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" result="blur" />
         <feDisplacementMap
           in="blur"
           in2="map"
-          scale="22"
+          scale="8"
           xChannelSelector="R"
           yChannelSelector="G"
         />
