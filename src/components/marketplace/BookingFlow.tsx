@@ -3,6 +3,7 @@
 import { useState, useMemo, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { usePostHog } from 'posthog-js/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -76,6 +77,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
   const { data: session, status } = useSession();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const posthog = usePostHog();
 
   const [step, setStep] = useState(1);
   const [selectedServices, setSelectedServices] = useState<SelectedServiceWithLargo[]>([]);
@@ -310,6 +312,12 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
           guestEmail: guestEmail.trim(),
         }),
       });
+      posthog?.capture('booking_confirmed', {
+        tenant_slug: tenantSlug,
+        is_guest: !isAuthenticated,
+        services_count: selectedServices.length,
+        has_deposit: depositAmount > 0,
+      });
       router.push(`/salones/${tenantSlug}/book/confirmation/${appointmentId}?${params.toString()}`);
     });
   };
@@ -433,7 +441,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
               </div>
             )}
             <div className='flex items-center justify-end w-full md:w-auto mt-2 md:mt-0'>
-              <Button size="lg" className="w-full md:w-auto shadow-md hover:shadow-lg transition-shadow" onClick={() => { canGoNextFromStep1 ? setStep(2) : setShowLengthError(true) }} disabled={selectedServices.length === 0}> Continuar a Profesional </Button>
+              <Button size="lg" className="w-full md:w-auto shadow-md hover:shadow-lg transition-shadow" onClick={() => { if (canGoNextFromStep1) { posthog?.capture('booking_step_completed', { step: 1, step_name: 'services', tenant_slug: tenantSlug, services_count: selectedServices.length }); setStep(2); } else { setShowLengthError(true); } }} disabled={selectedServices.length === 0}> Continuar a Profesional </Button>
             </div>
           </CardFooter>
         </Card>
@@ -471,7 +479,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
           </CardContent>
           <CardFooter className="flex justify-between border-t bg-muted/20 p-6 rounded-b-2xl">
             <Button variant="outline" onClick={() => setStep(1)}>Volver a Servicios</Button>
-            <Button onClick={() => setStep(3)} disabled={!selectedStaff}>Siguiente Paso</Button>
+            <Button onClick={() => { posthog?.capture('booking_step_completed', { step: 2, step_name: 'staff', tenant_slug: tenantSlug, staff_id: selectedStaff?.id }); setStep(3); }} disabled={!selectedStaff}>Siguiente Paso</Button>
           </CardFooter>
         </Card>
       )}
@@ -523,7 +531,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
           </CardContent>
           <CardFooter className="flex justify-between border-t bg-muted/20 p-6 rounded-b-2xl">
             <Button variant="outline" onClick={() => setStep(2)}>Atrás</Button>
-            <Button onClick={() => setStep(4)} disabled={!selectedDate || !selectedTime}>Ver Resumen Final</Button>
+            <Button onClick={() => { posthog?.capture('booking_step_completed', { step: 3, step_name: 'datetime', tenant_slug: tenantSlug }); setStep(4); }} disabled={!selectedDate || !selectedTime}>Ver Resumen Final</Button>
           </CardFooter>
         </Card>
       )}
