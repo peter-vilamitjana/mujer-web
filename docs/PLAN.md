@@ -230,8 +230,8 @@ src/
 - [x] ~~Pipeline CI/CD~~ → GitHub Actions: lint + typecheck + build en verde
 - [x] ~~`.env.example` documentado~~ → todas las variables con comentarios
 - [x] ~~`npx playwright install` en CI/CD~~ → job `e2e` añadido con `playwright install --with-deps chromium`
-- [ ] Monitoreo de errores (Sentry)
-- [ ] Analytics de producto (PostHog o Mixpanel)
+- [x] ~~Monitoreo de errores (Sentry)~~ → `@sentry/nextjs` + configs + `global-error.tsx`. Falta: `SENTRY_DSN` en prod.
+- [x] ~~Analytics de producto (PostHog)~~ → `posthog-js` + funnel booking. Falta: `NEXT_PUBLIC_POSTHOG_KEY` en prod.
 - [ ] Staging environment separado
 
 ### 2.3 Integraciones Faltantes Críticas
@@ -387,7 +387,7 @@ FASE 4                                                             │ Growth & 
 | ~~2.5~~ | ~~Historial de citas del cliente~~ | ~~2~~ | ~~2.4~~ | ~~Clienta ve historial completo~~ | ✅ (filtros semana/mes/3 meses/todo) |
 | ~~2.6~~ | ~~Cancellation flow (clienta cancela cita)~~ | ~~2~~ | ~~Reglas definidas~~ | ~~Clienta puede cancelar con confirmación~~ | ✅ (`cancelAppointment` + WhatsApp notification) |
 | **2.7** | **🔴 Notificaciones nativas por WhatsApp** (confirmación + recordatorio 24h) | **4** | **WhatsApp Business API key** | **Clienta recibe WhatsApp al reservar y 24h antes** | ⚠️ Estructural listo (`whatsapp.ts` + templates). Necesita `WHATSAPP_TOKEN` en prod. |
-| 2.8 | Analytics de producto (PostHog) | 1 | — | Funnel de booking trackeado | ⏳ Pendiente |
+| ~~2.8~~ | ~~Analytics de producto (PostHog)~~ | ~~1~~ | ~~—~~ | ~~Funnel de booking trackeado~~ | ✅ `posthog-js` + `posthog-node` instalados. `PostHogProvider` + pageview tracking manual. Eventos `booking_step_completed` (pasos 1-3) + `booking_confirmed` en `BookingFlow`. Pendiente: setear `NEXT_PUBLIC_POSTHOG_KEY` en prod. |
 
 **Total**: ~20 días → ejecutado en ~4 sesiones paralelas
 
