@@ -235,11 +235,11 @@ export default function SolucionesSection() {
             // Exit animation wraps the entire grid
             <motion.div
               style={{ opacity: exitOpacity, scale: exitScale }}
-              className="grid grid-cols-12 gap-12 w-full items-center"
+              className="grid grid-cols-12 gap-10 w-full items-center"
             >
 
               {/* LEFT — Monitor: stays fixed while scroll budget drains */}
-              <div className="col-span-6 flex flex-col justify-center relative">
+              <div className="col-span-7 flex flex-col justify-center relative">
                 <div
                   className="pointer-events-none absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-30 transition-all duration-700 blur-[80px]"
                   style={{ background: `radial-gradient(circle, ${solutions[activeStep].glow} 0%, transparent 70%)` }}
@@ -267,17 +267,17 @@ export default function SolucionesSection() {
                       boxShadow:
                         "inset 0 1px 1px rgba(255,255,255,0.15), 0 24px 48px -12px rgba(0,0,0,0.5), 0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026",
                     }}
-                    className="w-full max-w-xl h-[280px] sm:h-[330px] border border-[#444] p-2 bg-[#222222] rounded-[24px] shadow-2xl relative overflow-hidden"
+                    className="w-full h-[360px] lg:h-[420px] border border-[#444] p-1.5 bg-[#222222] rounded-[28px] shadow-2xl relative overflow-hidden"
                   >
                     <motion.div
-                      className="absolute inset-0 pointer-events-none z-50 rounded-[24px]"
+                      className="absolute inset-0 pointer-events-none z-50 rounded-[28px]"
                       style={{
                         opacity: glareOpacity,
                         background: "linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%)",
                         translateY: glareY,
                       }}
                     />
-                    <div className="h-full w-full overflow-hidden rounded-[16px] bg-[#050504] relative z-10">
+                    <div className="h-full w-full overflow-hidden rounded-[20px] bg-[#050504] relative z-10">
                       <div className="flex items-center gap-1.5 px-3 py-2 bg-black/40 border-b border-white/[0.04] absolute top-0 inset-x-0 z-30">
                         <div className="w-2 h-2 rounded-full bg-red-400/50" />
                         <div className="w-2 h-2 rounded-full bg-amber-400/50" />
@@ -310,7 +310,7 @@ export default function SolucionesSection() {
               </div>
 
               {/* RIGHT — Features */}
-              <div className="col-span-6 flex flex-col justify-center gap-2">
+              <div className="col-span-5 flex flex-col justify-center gap-2">
 
                 {/* Step counter + animated progress bar */}
                 <div className="flex items-center gap-3 mb-2">
