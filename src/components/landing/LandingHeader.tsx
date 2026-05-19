@@ -57,28 +57,6 @@ export default function LandingHeader() {
           without child sub-contexts interfering.
         */}
         <nav className="nav-liquid relative flex items-center justify-between w-full rounded-full px-10 py-[18px]">
-          {/* INVISIBLE SVG FILTER DEFINITION EXACTLY AS IN THE GLASS BUTTON */}
-          <svg className="absolute w-0 h-0 overflow-hidden pointer-events-none" aria-hidden="true">
-            <filter id="liquid-glass-nav-inline" primitiveUnits="objectBoundingBox">
-              <feImage 
-                result="map" 
-                width="100%" 
-                height="100%" 
-                x="0" 
-                y="0" 
-                href={WEBP_DISPLACEMENT_MAP} 
-                preserveAspectRatio="none" 
-              />
-              <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" result="blur" />
-              <feDisplacementMap 
-                in="blur" 
-                in2="map" 
-                scale="0.5" 
-                xChannelSelector="R" 
-                yChannelSelector="G" 
-              />
-            </filter>
-          </svg>
 
           <style>{`
             .nav-liquid {
@@ -86,9 +64,9 @@ export default function LandingHeader() {
               --glass-reflex-dark: 1;
             }
             .nav-liquid-lens {
-              background-color: oklch(from var(--foreground) l c h / 5%);
-              backdrop-filter: blur(8px) url(#liquid-glass-nav-inline) saturate(150%);
-              -webkit-backdrop-filter: blur(8px) saturate(150%);
+              background-color: oklch(from var(--foreground) l c h / 3%);
+              backdrop-filter: blur(12px) url(#liquid-glass-nav) saturate(180%);
+              -webkit-backdrop-filter: blur(12px) saturate(180%);
               box-shadow: 
                 inset 0 0 0 1px color-mix(in srgb, white calc(var(--glass-reflex-light) * 10%), transparent),
                 inset 1.8px 3px 0px -2px color-mix(in srgb, white calc(var(--glass-reflex-light) * 90%), transparent), 
