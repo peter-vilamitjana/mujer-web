@@ -31,7 +31,7 @@ export default function BusinessDashboardMock() {
       >
         <div className="w-full h-full rounded-2xl overflow-hidden bg-[#0d0d0d]">
           <img 
-            src="/landing/dashboard-preview.png" 
+            src="/landing/dashboard-preview.png?v=2" 
             alt="Dashboard Profesional" 
             className="w-full h-full object-cover object-top opacity-90 transition-opacity duration-500 hover:opacity-100"
           />
