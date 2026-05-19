@@ -211,9 +211,8 @@ export default function SolucionesSection() {
   const isCompleteRef = useRef(false);
   const prefersReducedMotion = useReducedMotion();
 
-  // MotionValue for progress — avoids re-renders on every Lenis tick
+  // MotionValue for raw progress — set directly in Lenis RAF, no re-renders
   const scrollProgress = useMotionValue(0);
-  const progressBarScaleX = useTransform(scrollProgress, [0, 1], [0, 1]);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -228,11 +227,20 @@ export default function SolucionesSection() {
     offset: ['start start', 'end end'],
   });
 
+  // Soft spring — drives 3D tilt with a trailing, elastic feel
   const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 80,
+    stiffness: 42,
+    damping: 14,
+    restDelta: 0.001,
+  });
+
+  // Separate spring for the progress bar so it eases in/out instead of jumping
+  const smoothBarProgress = useSpring(scrollProgress, {
+    stiffness: 55,
     damping: 20,
     restDelta: 0.001,
   });
+  const progressBarScaleX = useTransform(smoothBarProgress, [0, 1], [0, 1]);
 
   // 3D Tilt
   const rotateX = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [15, 5]);
@@ -346,10 +354,10 @@ export default function SolucionesSection() {
                             return (
                               <motion.div
                                 key={activeStep}
-                                initial={{ opacity: 0, y: 10, filter: prefersReducedMotion ? 'none' : 'blur(6px)' }}
+                                initial={{ opacity: 0, y: 14, filter: prefersReducedMotion ? 'none' : 'blur(8px)' }}
                                 animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                                exit={{ opacity: 0, y: -6, filter: prefersReducedMotion ? 'none' : 'blur(6px)' }}
-                                transition={{ duration: prefersReducedMotion ? 0 : 0.38, ease: [0.25, 0.46, 0.45, 0.94] }}
+                                exit={{ opacity: 0, y: -8, filter: prefersReducedMotion ? 'none' : 'blur(4px)' }}
+                                transition={{ duration: prefersReducedMotion ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] }}
                                 className="absolute inset-0"
                               >
                                 <MockupComponent />
@@ -392,7 +400,7 @@ export default function SolucionesSection() {
                     <motion.div
                       key={sol.id}
                       animate={{ opacity: isActive ? 1 : 0.2 }}
-                      transition={{ duration: prefersReducedMotion ? 0 : 0.45, ease: 'easeOut' }}
+                      transition={{ duration: prefersReducedMotion ? 0 : 0.65, ease: [0.4, 0, 0.2, 1] }}
                       className={`rounded-2xl border transition-colors duration-500 overflow-hidden ${
                         isActive
                           ? 'border-white/[0.1] bg-white/[0.03]'
@@ -426,7 +434,7 @@ export default function SolucionesSection() {
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: prefersReducedMotion ? 0 : 0.4, ease: [0.4, 0, 0.2, 1] }}
+                            transition={{ duration: prefersReducedMotion ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] }}
                             className="space-y-3 px-5 pb-5 overflow-hidden"
                           >
                             {sol.bullets.map((bullet, bIdx) => (
@@ -435,9 +443,9 @@ export default function SolucionesSection() {
                                 initial={{ opacity: 0, x: -8 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{
-                                  duration: prefersReducedMotion ? 0 : 0.35,
-                                  delay: prefersReducedMotion ? 0 : 0.15 + bIdx * 0.12,
-                                  ease: 'easeOut',
+                                  duration: prefersReducedMotion ? 0 : 0.45,
+                                  delay: prefersReducedMotion ? 0 : 0.12 + bIdx * 0.1,
+                                  ease: [0.22, 1, 0.36, 1],
                                 }}
                                 className="flex gap-3 items-start text-sm text-zinc-400"
                               >
