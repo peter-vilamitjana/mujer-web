@@ -93,7 +93,7 @@
     background-attachment: fixed;
     color: #f5f0e8;
     font-family: var(--font-inter), 'Inter', sans-serif;
-    overflow-x: hidden;
+    overflow-x: clip; /* clip ≠ hidden: no crea scroll container, no rompe position:sticky */
     letter-spacing: -0.01em;
     transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -101,7 +101,7 @@
   html {
     @apply scroll-smooth;
     scroll-padding-top: 5rem;
-    overflow-x: hidden;
+    overflow-x: clip; /* clip: no crea scroll container, preserva position:sticky */
     transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }

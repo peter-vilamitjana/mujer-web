@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { useScroll, useTransform, useMotionValueEvent, useSpring, motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useScroll, useTransform, useSpring, motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useLenis } from 'lenis/react';
 import { Calendar, TrendingUp, Smartphone, CheckCircle } from 'lucide-react';
 
 const solutions = [
@@ -236,15 +237,17 @@ export default function SolucionesSection() {
   const glareOpacity = useTransform(smoothProgress, [0, 1], [0.25, 0.1]);
   const glareY = useTransform(smoothProgress, [0, 1], ['-20%', '80%']);
 
-  // Change active slide index depending on scroll progress
-  useMotionValueEvent(scrollYProgress, 'change', (latest) => {
-    if (latest < 0.25) {
-      setActiveStep(0);
-    } else if (latest < 0.75) {
-      setActiveStep(1);
-    } else {
-      setActiveStep(2);
-    }
+  // Step tracking via Lenis — más confiable que useScroll cuando Lenis está activo
+  useLenis(({ scroll }) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const containerTop = rect.top + scroll;
+    const scrollable = containerRef.current.offsetHeight - window.innerHeight;
+    if (scrollable <= 0) return;
+    const progress = Math.max(0, Math.min(1, (scroll - containerTop) / scrollable));
+    if (progress < 0.25) setActiveStep(0);
+    else if (progress < 0.75) setActiveStep(1);
+    else setActiveStep(2);
   });
 
   // Hex colors for progress dots (can't use dynamic Tailwind bg- classes)
