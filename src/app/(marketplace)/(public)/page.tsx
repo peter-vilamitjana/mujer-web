@@ -1,5 +1,7 @@
 import { getPublicSalons } from '@/lib/services/marketplace.service';
 import Hero from '@/components/landing/Hero';
+
+export const revalidate = 3600;
 import Categorias from '@/components/landing/Categorias';
 import SalonesDestacados from '@/components/landing/SalonesDestacados';
 import CTABusiness from '@/components/landing/CTABusiness';

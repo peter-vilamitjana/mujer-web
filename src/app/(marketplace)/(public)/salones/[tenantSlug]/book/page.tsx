@@ -2,7 +2,19 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getSalonBySlug, getSalonServices, getSalonStaff } from '@/lib/services/marketplace.service';
 import { notFound } from 'next/navigation';
-import BookingFlow from '@/components/marketplace/BookingFlow';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const BookingFlow = dynamic(() => import('@/components/marketplace/BookingFlow'), {
+  ssr: false,
+  loading: () => (
+    <div className="space-y-4 mt-4">
+      <Skeleton className="h-12 w-full rounded-xl" />
+      <Skeleton className="h-64 w-full rounded-xl" />
+      <Skeleton className="h-12 w-full rounded-xl" />
+    </div>
+  ),
+});
 
 interface Props {
   params: Promise<{ tenantSlug: string }>;

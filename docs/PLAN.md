@@ -8,7 +8,7 @@
 
 MujerApp es una plataforma SaaS B2B2C multi-tenant para la gestión de salones de belleza. El stack es sólido y moderno (Next.js 15, TypeScript, Firestore, NextAuth v4), con una arquitectura multi-tenant bien diseñada a nivel de schema y reglas Firestore.
 
-**Estado actual (2026-05-19 sesión 4)**: ✅ Fase 0 + ✅ Fase 1 + ✅ Fase 2 + ✅ Fase 3 (3.0–3.4 completas) + ✅ Fase 3.5 completadas. ✅ **Reviews** (4.1). ✅ **E2E completo** (4.5): 6 specs — `onboarding.spec.ts` (8 tests) + `cancellation-flow.spec.ts` (5 tests) añadidos. `playwright.config.ts` actualizado con proyectos public/customer para los nuevos specs. **Pendiente Fase 4**: performance (4.3), a11y (4.4), docs (4.6). **Próximo hito**: activar `MERCADOPAGO_ACCESS_TOKEN` en producción + `WHATSAPP_TOKEN` en prod.
+**Estado actual (2026-05-19 sesión 4–5)**: ✅ Fase 0 + ✅ Fase 1 + ✅ Fase 2 + ✅ Fase 3 (3.0–3.4 completas) + ✅ Fase 3.5 completadas. ✅ **Reviews** (4.1). ✅ **E2E completo** (4.5): 6 specs — `onboarding.spec.ts` (8 tests) + `cancellation-flow.spec.ts` (5 tests) añadidos. `playwright.config.ts` actualizado con proyectos public/customer para los nuevos specs. **Pendiente Fase 4**: performance (4.3), a11y (4.4), docs (4.6). **Próximo hito**: activar `MERCADOPAGO_ACCESS_TOKEN` en producción + `WHATSAPP_TOKEN` en prod.
 
 La hoja de ruta para un MVP launchable es de **10–14 semanas** para un equipo de 2–3 devs (~8 semanas completadas).
 
@@ -484,7 +484,7 @@ FASE 4                                                             │ Growth & 
 |---|-------|------|----------------|--------|
 | ~~4.1~~ | ~~Sistema de reviews y valoraciones~~ | ~~3~~ | ~~Clienta valora turno completado~~ | ✅ `Review` en schema.ts + `reviews.actions.ts` (submit + fetch + stats) + `SalonReviews` component con carrusel horizontal, form inline, rating stars. Wired en `/salones/[slug]`. Regla Firestore añadida (read público, write autenticado). |
 | ~~4.2~~ | ~~SEO: sitemap dinámico, robots.txt~~ | ~~2~~ | ~~Google indexa páginas de salón~~ | ✅ (`src/app/sitemap.ts` + `src/app/robots.ts` — rutas estáticas + páginas de salón dinámicas) |
-| 4.3 | Performance: imágenes, code splitting, ISR | 3 | Lighthouse > 80 en móvil | ⏳ |
+| 4.3 | Performance: imágenes, code splitting, ISR | 3 | Lighthouse > 80 en móvil | 🟡 ISR: landing (`revalidate=3600`) + salon page (`revalidate=1800`). Dynamic import: `BookingFlow` con `ssr:false` + skeleton. next/image: 3 hero images en `SalonHero.tsx`. Pendiente: Lighthouse audit real. |
 | 4.4 | Accesibilidad (a11y) audit y correcciones | 3 | 0 errores críticos en axe-core | ⏳ |
 | 4.5 | Test suite Playwright e2e (flujos críticos en CI) | 5 | Flujos críticos cubiertos + `playwright install` en CI | ✅ 6 specs: `booking-flow.spec.ts` (7 tests), `checkout.spec.ts`, `registro.spec.ts`, `guest-booking.spec.ts` (6 tests), `onboarding.spec.ts` (8 tests), `cancellation-flow.spec.ts` (5 tests). `playwright install` en CI ✅. |
 | 4.6 | Documentación técnica (ADRs, README actualizado) | 2 | Nuevo dev onboardea en < 1 día | ⏳ |

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -34,13 +35,13 @@ export default function SalonHero({ tenantSlug, salonName }: SalonHeroProps) {
                   }}
                 >
                   <div className="relative w-[200px] h-[360px] rounded-[2rem] overflow-hidden shrink-0 select-none pointer-events-none shadow-sm">
-                    <img src="/landing/hero-left.png" alt="" className="w-full h-full object-cover" />
+                    <Image src="/landing/hero-left.png" alt="" fill className="object-cover" />
                   </div>
                   <div className="relative z-20 w-[320px] aspect-[4/5] shadow-xl rounded-[2rem] overflow-hidden shrink-0">
-                    <img src="/landing/hero-mobile.jpg" alt="Mujer disfrutando" className="w-full h-full object-cover" />
+                    <Image src="/landing/hero-mobile.jpg" alt="Mujer disfrutando" fill priority className="object-cover" />
                   </div>
                   <div className="relative w-[200px] h-[360px] rounded-[2rem] overflow-hidden shrink-0 select-none pointer-events-none shadow-sm">
-                    <img src="/landing/hero-right.png" alt="" className="w-full h-full object-cover" />
+                    <Image src="/landing/hero-right.png" alt="" fill className="object-cover" />
                   </div>
                 </div>
               </div>

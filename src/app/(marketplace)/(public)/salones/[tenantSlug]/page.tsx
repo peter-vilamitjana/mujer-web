@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getSalonBySlug } from '@/lib/services/marketplace.service';
+
+export const revalidate = 1800;
 import { getSalonReviews, getSalonRatingStats } from '@/actions/reviews.actions';
 import SalonHero from '@/components/salon/SalonHero';
 import SalonFeaturedServices from '@/components/salon/SalonFeaturedServices';
