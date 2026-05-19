@@ -54,46 +54,14 @@ const solutions = [
 
 function MockupReserva() {
   return (
-    <div className="w-full h-full bg-[#0d0d0f] flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.05] shrink-0">
-        <span className="text-white text-[11px] font-semibold tracking-tight">Estilismo Vane</span>
-        <span className="text-[9px] text-purple-400 font-bold uppercase tracking-wider">Online</span>
-      </div>
-      <div className="flex flex-col gap-1.5 px-3 pt-3 pb-2 shrink-0">
-        {[
-          { name: 'Corte & Estilo', price: '$15.999', dur: '60 min', active: false },
-          { name: 'Coloración Completa', price: '$24.999', dur: '2 hs', active: true },
-          { name: 'Keratina Profesional', price: '$39.999', dur: '2.5 hs', active: false },
-        ].map((s) => (
-          <div key={s.name} className={`flex items-center justify-between px-3 py-2 rounded-xl border ${s.active ? 'border-purple-400/40 bg-purple-500/10' : 'border-white/[0.05] bg-white/[0.02]'}`}>
-            <div>
-              <p className={`text-[10px] font-semibold ${s.active ? 'text-purple-200' : 'text-zinc-300'}`}>{s.name}</p>
-              <p className="text-[9px] text-zinc-600">{s.dur}</p>
-            </div>
-            <span className={`text-[10px] font-bold ${s.active ? 'text-purple-400' : 'text-zinc-500'}`}>{s.price}</span>
-          </div>
-        ))}
-      </div>
-      <div className="px-3 pb-2 shrink-0">
-        <div className="grid grid-cols-7 gap-0.5 mb-1.5">
-          {['L','M','X','J','V','S','D'].map(d => (
-            <div key={d} className="text-center text-[8px] text-zinc-600">{d}</div>
-          ))}
-          {[12,13,14,15,16,17,18].map((d) => (
-            <div key={d} className={`text-center text-[9px] py-1 rounded-lg ${d === 15 ? 'bg-purple-500 text-white' : 'text-zinc-500'}`}>{d}</div>
-          ))}
-        </div>
-        <div className="flex gap-1.5">
-          {[{ t: '09:00', sel: true }, { t: '10:30', ok: false }, { t: '14:00', ok: true }, { t: '15:30', ok: true }].map(({ t, sel, ok }, i) => (
-            <div key={t} className={`flex-1 text-center text-[9px] py-1 rounded-lg border ${sel ? 'border-purple-400 bg-purple-500/15 text-purple-300' : ok ? 'border-white/[0.06] text-zinc-500' : 'border-white/[0.03] text-zinc-700 opacity-40'}`}>{t}</div>
-          ))}
-        </div>
-      </div>
-      <div className="px-3 pb-3 mt-auto shrink-0">
-        <div className="w-full bg-purple-600 text-white text-[10px] font-bold text-center py-2 rounded-xl tracking-wide cursor-pointer">
-          Confirmar turno →
-        </div>
-      </div>
+    <div className="w-full h-full bg-[#0d0d0f] overflow-hidden">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/landing/dashboard-preview.png"
+        alt="Vista previa del link de reservas"
+        className="w-full h-full object-cover object-top"
+        draggable={false}
+      />
     </div>
   );
 }
