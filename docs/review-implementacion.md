@@ -240,11 +240,13 @@ Incluyendo: `accordion`, `alert`, `alert-dialog`, `avatar`, `badge`, `button`, `
 
 ## TESTS (e2e/)
 
-Playwright configurado. 4 specs en `e2e/`:
-- `booking-flow.spec.ts` — 7 tests (wizard completo hasta paso 3, volver, guest/auth)
-- `checkout.spec.ts` — 3 tests (agenda admin, cierre de caja, CheckoutDrawer)
-- `registro.spec.ts` — 6 tests (registro B2C, validación, login)
-- `guest-booking.spec.ts` — 6 tests (guest flow sin auth, pasos 1-3, página de confirmación)
+Playwright configurado. 6 specs en `e2e/`:
+- `booking-flow.spec.ts` — 7 tests (wizard completo hasta paso 3, volver, guest/auth) → proyecto `customer`
+- `checkout.spec.ts` — 3 tests (agenda admin, cierre de caja, CheckoutDrawer) → proyecto `admin`
+- `registro.spec.ts` — 6 tests (registro B2C, validación, login) → proyectos `public`
+- `guest-booking.spec.ts` — 6 tests (guest flow sin auth, pasos 1-3, confirmación) → proyecto `public`
+- `onboarding.spec.ts` — 8 tests (wizard 5 pasos, validaciones, navegación back/forward) → proyectos `public` + `public mobile`
+- `cancellation-flow.spec.ts` — 5 tests (portal cliente, AlertDialog open/close, mis-turnos, guest phone search) → proyecto `customer`
 - `fixtures/` + `global-setup.ts` con storageState para auth
 
 **Estado**: ✅ CI tiene job `e2e` con `playwright install --with-deps chromium`.
@@ -323,3 +325,4 @@ Playwright configurado. 4 specs en `e2e/`:
 | 2026-05-18 | **Double-booking prevention**: `hasSlotConflict()` en `src/lib/booking-utils.ts`. Wired en `createBooking` y `createGuestBooking`. Race condition eliminada. |
 | 2026-05-18 | **`getAvailableSlots` corregido**: bloquea todos los slots de 30min que ocupa un turno según su `durationMinutes` (antes solo bloqueaba el slot de inicio). |
 | 2026-05-18 | **E2E expandido**: `booking-flow.spec.ts` → 7 tests (pasos 1→2→3, volver). Nuevo `guest-booking.spec.ts` (6 tests, flujo invitada completo). `playwright.config.ts` actualizado. |
+| 2026-05-19 | **E2E completado (Fase 4.5)**: `onboarding.spec.ts` (8 tests — wizard 5 pasos, validaciones, progreso, navegación). `cancellation-flow.spec.ts` (5 tests — portal cliente, AlertDialog, mis-turnos, guest phone). `playwright.config.ts` actualizado con nuevos proyectos. |

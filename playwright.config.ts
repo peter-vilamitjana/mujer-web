@@ -42,18 +42,18 @@ export default defineConfig({
         storageState: 'e2e/.auth/customer.json',
       },
       dependencies: ['setup'],
-      testMatch: /booking-flow\.spec\.ts/,
+      testMatch: /\/(booking-flow|cancellation-flow)\.spec\.ts/,
     },
     // Tests públicos (sin sesión)
     {
       name: 'public — chromium',
       use: { ...devices['Desktop Chrome'] },
-      testMatch: /\/(registro|guest-booking)\.spec\.ts/,
+      testMatch: /\/(registro|guest-booking|onboarding)\.spec\.ts/,
     },
     {
       name: 'public — mobile',
       use: { ...devices['Pixel 5'] },
-      testMatch: /registro\.spec\.ts/,
+      testMatch: /\/(registro|onboarding)\.spec\.ts/,
     },
   ],
   webServer: {
