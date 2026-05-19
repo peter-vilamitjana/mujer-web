@@ -247,217 +247,237 @@ export default function SolucionesSection() {
     }
   });
 
+  // Hex colors for progress dots (can't use dynamic Tailwind bg- classes)
+  const STEP_HEX = ['#c084fc', '#fbbf24', '#34d399'];
+
   return (
-    <section 
-      ref={containerRef} 
-      className={`relative z-10 bg-[#09090b] border-b border-white/[0.04] 
-        ${isMobile ? 'py-20' : 'h-[300vh]'}`}
+    // ── Outer wrapper: 300vh creates the scroll "budget" ──────────────────────
+    <div
+      ref={containerRef}
+      className={`relative z-10 ${isMobile ? '' : 'h-[300vh]'}`}
     >
-      {/* Main Container */}
-      <div className={`max-w-6xl mx-auto px-6 h-full ${isMobile ? 'block' : 'relative'}`}>
+      {/* ── Sticky section: toda la sección se clava mientras se scrollea ──── */}
+      <section
+        className={`bg-[#09090b] border-b border-white/[0.04]
+          ${isMobile ? 'py-20' : 'sticky top-0 h-screen overflow-hidden'}`}
+      >
+        <div className={`max-w-6xl mx-auto px-6 ${isMobile ? 'block' : 'h-full flex items-center'}`}>
 
-        {/* Desktop Sticky Layout */}
-        {!isMobile ? (
-          <div className="grid grid-cols-12 gap-8 h-full items-start">
+          {/* ── DESKTOP ─────────────────────────────────────────────────────── */}
+          {!isMobile ? (
+            <div className="grid grid-cols-12 gap-12 w-full items-center">
 
-            {/* Left Column: Sticky 3D Monitor container */}
-            <div className="col-span-6 h-screen sticky top-0 self-start flex flex-col justify-center">
-              {/* Background radial glow — inside sticky col so no viewport leak */}
-              <div
-                className="pointer-events-none absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-30 transition-all duration-700 blur-[80px]"
-                style={{ background: `radial-gradient(circle, ${solutions[activeStep].glow} 0%, transparent 70%)` }}
-              />
-              <div className="mb-8 max-w-md">
+              {/* LEFT — Monitor: nunca se mueve (ya está dentro de la sticky section) */}
+              <div className="col-span-6 flex flex-col justify-center relative">
+                {/* Glow — absolute dentro de la columna, no leakea fuera de la sección */}
+                <div
+                  className="pointer-events-none absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-30 transition-all duration-700 blur-[80px]"
+                  style={{ background: `radial-gradient(circle, ${solutions[activeStep].glow} 0%, transparent 70%)` }}
+                />
+
+                <div className="mb-8 max-w-md relative z-10">
+                  <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
+                    Potencia y Simplicidad
+                  </p>
+                  <h2 className="font-playfair text-[clamp(2.2rem,4vw,3rem)] text-white italic leading-tight">
+                    Tu salón bajo control,{' '}
+                    <span className="text-purple-400">capa por capa.</span>
+                  </h2>
+                </div>
+
+                <div
+                  className="w-full flex justify-center relative z-10"
+                  style={{ perspective: '1200px', transformStyle: 'preserve-3d' }}
+                >
+                  <motion.div
+                    style={{
+                      rotateX,
+                      rotateY,
+                      scale,
+                      boxShadow:
+                        "inset 0 1px 1px rgba(255,255,255,0.15), 0 24px 48px -12px rgba(0,0,0,0.5), 0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026",
+                    }}
+                    className="w-full max-w-xl h-[280px] sm:h-[330px] border border-[#444] p-2 bg-[#222222] rounded-[24px] shadow-2xl relative overflow-hidden"
+                  >
+                    <motion.div
+                      className="absolute inset-0 pointer-events-none z-50 rounded-[24px]"
+                      style={{
+                        opacity: glareOpacity,
+                        background: "linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%)",
+                        translateY: glareY,
+                      }}
+                    />
+                    <div className="h-full w-full overflow-hidden rounded-[16px] bg-[#050504] relative z-10">
+                      <div className="flex items-center gap-1.5 px-3 py-2 bg-black/40 border-b border-white/[0.04] absolute top-0 inset-x-0 z-30">
+                        <div className="w-2 h-2 rounded-full bg-red-400/50" />
+                        <div className="w-2 h-2 rounded-full bg-amber-400/50" />
+                        <div className="w-2 h-2 rounded-full bg-emerald-400/50" />
+                        <div className="h-3 w-28 rounded-full bg-white/[0.04] border border-white/[0.06] mx-auto" />
+                      </div>
+                      {/* Solo cambia la imagen/mockup dentro de la pantalla */}
+                      <div className="w-full h-full pt-7 relative">
+                        <AnimatePresence mode="wait">
+                          {(() => {
+                            const MockupComponent = MOCKUPS[activeStep];
+                            return (
+                              <motion.div
+                                key={activeStep}
+                                initial={{ opacity: 0, filter: prefersReducedMotion ? 'none' : 'blur(6px)' }}
+                                animate={{ opacity: 1, filter: 'blur(0px)' }}
+                                exit={{ opacity: 0, filter: prefersReducedMotion ? 'none' : 'blur(6px)' }}
+                                transition={{ duration: prefersReducedMotion ? 0 : 0.35, ease: 'easeOut' }}
+                                className="absolute inset-0"
+                              >
+                                <MockupComponent />
+                              </motion.div>
+                            );
+                          })()}
+                        </AnimatePresence>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              </div>
+
+              {/* RIGHT — Features: las 3 siempre visibles, la activa se expande */}
+              <div className="col-span-6 flex flex-col justify-center gap-2">
+                {solutions.map((sol, index) => {
+                  const Icon = sol.icon;
+                  const isActive = activeStep === index;
+
+                  return (
+                    <motion.div
+                      key={sol.id}
+                      animate={{ opacity: isActive ? 1 : 0.2 }}
+                      transition={{ duration: prefersReducedMotion ? 0 : 0.45, ease: 'easeOut' }}
+                      className={`rounded-2xl border transition-colors duration-500 overflow-hidden ${
+                        isActive
+                          ? 'border-white/[0.1] bg-white/[0.03]'
+                          : 'border-white/[0.04] bg-transparent'
+                      }`}
+                    >
+                      {/* Header — siempre visible */}
+                      <div className="flex gap-4 items-center p-5">
+                        <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0 transition-all duration-500 ${
+                          isActive
+                            ? 'bg-white/[0.06] border-white/20 scale-105'
+                            : 'bg-white/[0.02] border-white/[0.06]'
+                        }`}>
+                          <Icon className={`w-5 h-5 ${sol.color}`} />
+                        </div>
+                        <div>
+                          <h3 className="font-playfair text-xl font-medium text-white leading-tight">
+                            {sol.title}
+                          </h3>
+                          <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mt-0.5">
+                            {sol.subtitle}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Bullets — solo aparecen cuando la feature está activa */}
+                      <AnimatePresence initial={false}>
+                        {isActive && (
+                          <motion.ul
+                            key="bullets"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: prefersReducedMotion ? 0 : 0.4, ease: [0.4, 0, 0.2, 1] }}
+                            className="space-y-3 px-5 pb-5 overflow-hidden"
+                          >
+                            {sol.bullets.map((bullet, bIdx) => (
+                              <li key={bIdx} className="flex gap-3 items-start text-sm text-zinc-400">
+                                <CheckCircle className={`w-4 h-4 shrink-0 mt-0.5 ${sol.color}`} />
+                                <span>{bullet}</span>
+                              </li>
+                            ))}
+                          </motion.ul>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  );
+                })}
+
+                {/* Progress dots */}
+                <div className="flex gap-2 justify-center pt-3">
+                  {solutions.map((_, i) => (
+                    <div
+                      key={i}
+                      className="rounded-full transition-all duration-500"
+                      style={{
+                        width: i === activeStep ? '16px' : '6px',
+                        height: '6px',
+                        backgroundColor: i === activeStep ? STEP_HEX[i] : 'rgba(255,255,255,0.15)',
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          ) : (
+
+            /* ── MOBILE — stacked, sin efectos de scroll ─────────────────── */
+            <div className="space-y-16">
+              <div className="text-center">
                 <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
                   Potencia y Simplicidad
                 </p>
-                <h2 className="font-playfair text-[clamp(2.2rem,4vw,3rem)] text-white italic leading-tight">
-                  Tu salón bajo control,{' '}
+                <h2 className="font-playfair text-3xl text-white italic leading-tight">
+                  Tu salón bajo control,<br />
                   <span className="text-purple-400">capa por capa.</span>
                 </h2>
               </div>
 
-              {/* 3D Monitor mockup frame (smaller scale, styled like container-scroll-animation) */}
-              <div 
-                className="w-full flex justify-center"
-                style={{
-                  perspective: '1200px',
-                  transformStyle: 'preserve-3d',
-                }}
-              >
-                <motion.div
-                  style={{
-                    rotateX,
-                    rotateY,
-                    scale,
-                    boxShadow:
-                      "inset 0 1px 1px rgba(255,255,255,0.15), 0 24px 48px -12px rgba(0,0,0,0.5), 0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026",
-                  }}
-                  className="w-full max-w-xl h-[280px] sm:h-[330px] border border-[#444] p-2 bg-[#222222] rounded-[24px] shadow-2xl relative overflow-hidden"
-                >
-                  {/* Glare effect */}
-                  <motion.div 
-                    className="absolute inset-0 pointer-events-none z-50 rounded-[24px]"
-                    style={{
-                      opacity: glareOpacity,
-                      background: "linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%)",
-                      translateY: glareY,
-                    }}
-                  />
+              <div className="space-y-24">
+                {solutions.map((sol, index) => {
+                  const Icon = sol.icon;
+                  const MockupComponent = MOCKUPS[index];
 
-                  {/* Window Screen Area */}
-                  <div className="h-full w-full overflow-hidden rounded-[16px] bg-[#050504] relative z-10">
-                    {/* Window Chrome Controls */}
-                    <div className="flex items-center gap-1.5 px-3 py-2 bg-black/40 border-b border-white/[0.04] absolute top-0 inset-x-0 z-30">
-                      <div className="w-2 h-2 rounded-full bg-red-400/50" />
-                      <div className="w-2 h-2 rounded-full bg-amber-400/50" />
-                      <div className="w-2 h-2 rounded-full bg-emerald-400/50" />
-                      <div className="h-3 w-28 rounded-full bg-white/[0.04] border border-white/[0.06] mx-auto" />
-                    </div>
+                  return (
+                    <div key={sol.id} className="space-y-8">
+                      <div className="w-full max-w-sm mx-auto border border-[#444] p-1.5 bg-[#222222] rounded-[20px] shadow-xl overflow-hidden">
+                        <div className="overflow-hidden rounded-[14px] bg-[#050504]">
+                          <div className="flex items-center gap-1 px-3 py-1.5 bg-black/40 border-b border-white/[0.04]">
+                            <div className="w-1.5 h-1.5 rounded-full bg-red-400/50" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400/50" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400/50" />
+                          </div>
+                          <div className="h-48">
+                            <MockupComponent />
+                          </div>
+                        </div>
+                      </div>
 
-                    {/* Content Display: Fade between active mockups */}
-                    <div className="w-full h-full pt-7 relative">
-                      <AnimatePresence mode="wait">
-                        {(() => {
-                          const MockupComponent = MOCKUPS[activeStep];
-                          return (
-                            <motion.div
-                              key={activeStep}
-                              initial={{ opacity: 0, filter: prefersReducedMotion ? 'none' : 'blur(6px)' }}
-                              animate={{ opacity: 1, filter: 'blur(0px)' }}
-                              exit={{ opacity: 0, filter: prefersReducedMotion ? 'none' : 'blur(6px)' }}
-                              transition={{ duration: prefersReducedMotion ? 0 : 0.35, ease: 'easeInOut' }}
-                              className="absolute inset-0"
-                            >
-                              <MockupComponent />
-                            </motion.div>
-                          );
-                        })()}
-                      </AnimatePresence>
+                      <div className="space-y-4 max-w-md mx-auto">
+                        <div className="flex gap-3 items-center">
+                          <div className="w-10 h-10 rounded-xl border flex items-center justify-center bg-white/[0.03] border-white/[0.08]">
+                            <Icon className={`w-4 h-4 ${sol.color}`} />
+                          </div>
+                          <div>
+                            <h3 className="font-playfair text-xl font-bold text-white">{sol.title}</h3>
+                            <p className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">{sol.subtitle}</p>
+                          </div>
+                        </div>
+                        <ul className="space-y-2.5 pl-1">
+                          {sol.bullets.map((bullet, bIdx) => (
+                            <li key={bIdx} className="flex gap-2.5 items-start text-xs text-zinc-400">
+                              <CheckCircle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${sol.color}`} />
+                              <span>{bullet}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
+                  );
+                })}
               </div>
             </div>
+          )}
 
-            {/* Right Column: Scrollable text blocks — 3 × 100vh = 300vh (matches section) */}
-            <div className="col-span-6">
-              {solutions.map((sol, index) => {
-                const Icon = sol.icon;
-                const isActive = activeStep === index;
-
-                return (
-                  <div
-                    key={sol.id}
-                    className="h-[100vh] flex flex-col justify-center"
-                  >
-                    <motion.div
-                      animate={{
-                        opacity: isActive ? 1 : 0.25,
-                        x: isActive ? 0 : -10,
-                      }}
-                      transition={{ duration: 0.5 }}
-                      className="space-y-6"
-                    >
-                      <div className="flex gap-4 items-center">
-                        <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0
-                          bg-white/[0.03] border-white/[0.08] ${isActive ? 'scale-105 border-white/20' : ''}`}
-                        >
-                          <Icon className={`w-5 h-5 ${sol.color}`} />
-                        </div>
-                        <div>
-                          <h3 className="font-playfair text-2xl font-medium text-white">
-                            {sol.title}
-                          </h3>
-                          <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mt-1">
-                            {sol.subtitle}
-                          </p>
-                        </div>
-                      </div>
-
-                      <ul className="space-y-3.5 pl-2">
-                        {sol.bullets.map((bullet, bIdx) => (
-                          <li key={bIdx} className="flex gap-3 items-start text-sm text-zinc-400">
-                            <CheckCircle className={`w-4 h-4 shrink-0 mt-0.5 ${sol.color}`} />
-                            <span>{bullet}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </motion.div>
-                  </div>
-                );
-              })}
-            </div>
-            
-          </div>
-        ) : (
-          /* Mobile Flat Layout: Stacked inline content */
-          <div className="space-y-16">
-            <div className="text-center">
-              <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
-                Potencia y Simplicidad
-              </p>
-              <h2 className="font-playfair text-3xl text-white italic leading-tight">
-                Tu salón bajo control,<br/>
-                <span className="text-purple-400">capa por capa.</span>
-              </h2>
-            </div>
-
-            <div className="space-y-24">
-              {solutions.map((sol) => {
-                const Icon = sol.icon;
-
-                return (
-                  <div key={sol.id} className="space-y-8">
-                    {/* 3D Monitor Mockup */}
-                    <div className="w-full max-w-sm mx-auto border border-[#444] p-1.5 bg-[#222222] rounded-[20px] shadow-xl relative overflow-hidden">
-                      <div className="h-full w-full overflow-hidden rounded-[14px] bg-[#050504] relative">
-                        <div className="flex items-center gap-1 px-3 py-1.5 bg-black/40 border-b border-white/[0.04]">
-                          <div className="w-1.5 h-1.5 rounded-full bg-red-400/50" />
-                          <div className="w-1.5 h-1.5 rounded-full bg-amber-400/50" />
-                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400/50" />
-                        </div>
-                        <img
-                          src={sol.image}
-                          alt={sol.title}
-                          className="w-full h-48 object-cover object-top"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Text description */}
-                    <div className="space-y-4 max-w-md mx-auto">
-                      <div className="flex gap-3 items-center">
-                        <div className="w-10 h-10 rounded-xl border flex items-center justify-center bg-white/[0.03] border-white/[0.08]">
-                          <Icon className={`w-4 h-4 ${sol.color}`} />
-                        </div>
-                        <div>
-                          <h3 className="font-playfair text-xl font-bold text-white">
-                            {sol.title}
-                          </h3>
-                          <p className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">
-                            {sol.subtitle}
-                          </p>
-                        </div>
-                      </div>
-
-                      <ul className="space-y-2.5 pl-1">
-                        {sol.bullets.map((bullet, bIdx) => (
-                          <li key={bIdx} className="flex gap-2.5 items-start text-xs text-zinc-400">
-                            <CheckCircle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${sol.color}`} />
-                            <span>{bullet}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-      </div>
-    </section>
+        </div>
+      </section>
+    </div>
   );
 }
