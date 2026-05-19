@@ -1,6 +1,7 @@
 import LandingHeader from '@/components/landing/LandingHeader';
 import BusinessHero from '@/components/business/BusinessHero';
 import DolorSection from '@/components/business/DolorSection';
+import SolucionesSection from '@/components/business/SolucionesSection';
 import ComoFuncionaSection from '@/components/business/ComoFuncionaSection';
 import FeaturesSection from '@/components/business/FeaturesSection';
 import PricingSection4 from '@/components/ui/pricing-section-4';
@@ -20,6 +21,7 @@ export default function BusinessPage() {
       <main>
         <BusinessHero />
         <DolorSection />
+        <SolucionesSection />
         <ComoFuncionaSection />
         <FeaturesSection />
         <PricingSection4 />
