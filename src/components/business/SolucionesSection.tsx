@@ -235,11 +235,11 @@ export default function SolucionesSection() {
             // Exit animation wraps the entire grid
             <motion.div
               style={{ opacity: exitOpacity, scale: exitScale }}
-              className="grid grid-cols-12 gap-10 w-full items-center"
+              className="grid grid-cols-12 gap-8 w-full items-center"
             >
 
               {/* LEFT — Monitor: stays fixed while scroll budget drains */}
-              <div className="col-span-7 flex flex-col justify-center relative">
+              <div className="col-span-8 flex flex-col justify-center relative">
                 <div
                   className="pointer-events-none absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-30 transition-all duration-700 blur-[80px]"
                   style={{ background: `radial-gradient(circle, ${solutions[activeStep].glow} 0%, transparent 70%)` }}
@@ -310,7 +310,7 @@ export default function SolucionesSection() {
               </div>
 
               {/* RIGHT — Features */}
-              <div className="col-span-5 flex flex-col justify-center gap-2">
+              <div className="col-span-4 flex flex-col justify-center gap-2">
 
                 {/* Step counter + animated progress bar */}
                 <div className="flex items-center gap-3 mb-2">
