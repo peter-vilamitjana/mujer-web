@@ -1,15 +1,18 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, updateDoc, addDoc, serverTimestamp, setDoc, getDoc, Timestamp } from 'firebase/firestore';
 import { google } from 'googleapis';
 import type { Turno } from '@/lib/_types_archive';
 import { getToken } from 'next-auth/jwt';
-
-
-
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+    // Rate limit: 120 requests/min per IP (Google can send bursts on busy calendars)
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+    if (!rateLimit(`gcal-webhook:${ip}`, 120)) {
+        return NextResponse.json({ error: 'Too Many Requests' }, { status: 429 });
+    }
+
     const headers = req.headers;
     const channelId = headers.get('x-goog-channel-id');
     const resourceId = headers.get('x-goog-resource-id');
@@ -35,10 +38,15 @@ export async function POST(req: NextRequest) {
         const channelData = channelDoc.data();
         const userId = channelData.userId; // Critical link
 
+        // Verify the channel token Google echoes back matches what we stored
+        const receivedToken = headers.get('x-goog-channel-token');
+        if (channelData.token && receivedToken !== channelData.token) {
+            console.warn('[GCal Webhook] Token mismatch — request rechazado');
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         if (channelData.resourceId !== resourceId) {
             console.warn('Webhook resourceId mismatch.');
-            // Continue anyway or return? Google sometimes changes resourceId? strict check usually good.
-            // return NextResponse.json({ message: 'Mismatch' }, { status: 400 });
         }
 
         // 2. Identify Tenant (User -> Tenant)
