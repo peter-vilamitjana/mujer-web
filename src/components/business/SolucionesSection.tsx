@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { useScroll, useTransform, useSpring, motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useScroll, useTransform, useSpring, useMotionValue, motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useLenis } from 'lenis/react';
 import { Calendar, TrendingUp, Smartphone, CheckCircle } from 'lucide-react';
 
@@ -205,20 +205,24 @@ const MOCKUPS = [MockupReserva, MockupAgenda, MockupMetricas];
 export default function SolucionesSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeStep, setActiveStep] = useState<number>(0);
+  const [isComplete, setIsComplete] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const activeStepRef = useRef(0);
+  const isCompleteRef = useRef(false);
   const prefersReducedMotion = useReducedMotion();
 
-  // Check mobile state
+  // MotionValue for progress — avoids re-renders on every Lenis tick
+  const scrollProgress = useMotionValue(0);
+  const progressBarScaleX = useTransform(scrollProgress, [0, 1], [0, 1]);
+
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Framer Motion Scroll tracking
+  // scrollYProgress drives 3D tilt + exit fade
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
@@ -230,36 +234,50 @@ export default function SolucionesSection() {
     restDelta: 0.001,
   });
 
-  // 3D Tilt values animated with scroll progress (disabled when prefers-reduced-motion)
+  // 3D Tilt
   const rotateX = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [15, 5]);
   const rotateY = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [-12, -4]);
   const scale = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [0.95, 1.02]);
   const glareOpacity = useTransform(smoothProgress, [0, 1], [0.25, 0.1]);
   const glareY = useTransform(smoothProgress, [0, 1], ['-20%', '80%']);
 
-  // Step tracking via Lenis — más confiable que useScroll cuando Lenis está activo
+  // Exit: section gently fades + shrinks as scroll leaves it
+  const exitOpacity = useTransform(scrollYProgress, [0.85, 1], [1, 0.82]);
+  const exitScale = useTransform(scrollYProgress, [0.85, 1], [1, 0.97]);
+
+  // Step tracking via Lenis RAF — more reliable than useScroll with Lenis active
   useLenis(({ scroll }) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const containerTop = rect.top + scroll;
     const scrollable = containerRef.current.offsetHeight - window.innerHeight;
     if (scrollable <= 0) return;
-    const progress = Math.max(0, Math.min(1, (scroll - containerTop) / scrollable));
-    if (progress < 0.25) setActiveStep(0);
-    else if (progress < 0.75) setActiveStep(1);
-    else setActiveStep(2);
+    const p = Math.max(0, Math.min(1, (scroll - containerTop) / scrollable));
+
+    scrollProgress.set(p);
+
+    // Each step gets a generous share of the scroll budget
+    const newStep = p < 0.30 ? 0 : p < 0.65 ? 1 : 2;
+    if (newStep !== activeStepRef.current) {
+      activeStepRef.current = newStep;
+      setActiveStep(newStep);
+    }
+
+    const complete = p >= 0.90;
+    if (complete !== isCompleteRef.current) {
+      isCompleteRef.current = complete;
+      setIsComplete(complete);
+    }
   });
 
-  // Hex colors for progress dots (can't use dynamic Tailwind bg- classes)
   const STEP_HEX = ['#c084fc', '#fbbf24', '#34d399'];
 
   return (
-    // ── Outer wrapper: 300vh creates the scroll "budget" ──────────────────────
+    // 400vh gives each step ~100vh of scroll budget (scrollable = 300vh)
     <div
       ref={containerRef}
-      className={`relative z-10 ${isMobile ? '' : 'h-[300vh]'}`}
+      className={`relative z-10 ${isMobile ? '' : 'h-[400vh]'}`}
     >
-      {/* ── Sticky section: toda la sección se clava mientras se scrollea ──── */}
       <section
         className={`bg-[#09090b] border-b border-white/[0.04]
           ${isMobile ? 'py-20' : 'sticky top-0 h-screen overflow-hidden'}`}
@@ -268,11 +286,14 @@ export default function SolucionesSection() {
 
           {/* ── DESKTOP ─────────────────────────────────────────────────────── */}
           {!isMobile ? (
-            <div className="grid grid-cols-12 gap-12 w-full items-center">
+            // Exit animation wraps the entire grid
+            <motion.div
+              style={{ opacity: exitOpacity, scale: exitScale }}
+              className="grid grid-cols-12 gap-12 w-full items-center"
+            >
 
-              {/* LEFT — Monitor: nunca se mueve (ya está dentro de la sticky section) */}
+              {/* LEFT — Monitor: stays fixed while scroll budget drains */}
               <div className="col-span-6 flex flex-col justify-center relative">
-                {/* Glow — absolute dentro de la columna, no leakea fuera de la sección */}
                 <div
                   className="pointer-events-none absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-30 transition-all duration-700 blur-[80px]"
                   style={{ background: `radial-gradient(circle, ${solutions[activeStep].glow} 0%, transparent 70%)` }}
@@ -317,7 +338,7 @@ export default function SolucionesSection() {
                         <div className="w-2 h-2 rounded-full bg-emerald-400/50" />
                         <div className="h-3 w-28 rounded-full bg-white/[0.04] border border-white/[0.06] mx-auto" />
                       </div>
-                      {/* Solo cambia la imagen/mockup dentro de la pantalla */}
+                      {/* Mockup swaps with y-slide + blur */}
                       <div className="w-full h-full pt-7 relative">
                         <AnimatePresence mode="wait">
                           {(() => {
@@ -325,10 +346,10 @@ export default function SolucionesSection() {
                             return (
                               <motion.div
                                 key={activeStep}
-                                initial={{ opacity: 0, filter: prefersReducedMotion ? 'none' : 'blur(6px)' }}
-                                animate={{ opacity: 1, filter: 'blur(0px)' }}
-                                exit={{ opacity: 0, filter: prefersReducedMotion ? 'none' : 'blur(6px)' }}
-                                transition={{ duration: prefersReducedMotion ? 0 : 0.35, ease: 'easeOut' }}
+                                initial={{ opacity: 0, y: 10, filter: prefersReducedMotion ? 'none' : 'blur(6px)' }}
+                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                                exit={{ opacity: 0, y: -6, filter: prefersReducedMotion ? 'none' : 'blur(6px)' }}
+                                transition={{ duration: prefersReducedMotion ? 0 : 0.38, ease: [0.25, 0.46, 0.45, 0.94] }}
                                 className="absolute inset-0"
                               >
                                 <MockupComponent />
@@ -342,8 +363,27 @@ export default function SolucionesSection() {
                 </div>
               </div>
 
-              {/* RIGHT — Features: las 3 siempre visibles, la activa se expande */}
+              {/* RIGHT — Features */}
               <div className="col-span-6 flex flex-col justify-center gap-2">
+
+                {/* Step counter + animated progress bar */}
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-xs text-zinc-500 font-mono tabular-nums">
+                    <span className="text-white font-semibold">{activeStep + 1}</span>
+                    <span className="text-zinc-600"> / 3</span>
+                  </span>
+                  <div className="flex-1 h-[2px] bg-white/[0.06] rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full origin-left rounded-full"
+                      style={{
+                        scaleX: progressBarScaleX,
+                        backgroundColor: STEP_HEX[activeStep],
+                      }}
+                      transition={{ backgroundColor: { duration: 0.4 } }}
+                    />
+                  </div>
+                </div>
+
                 {solutions.map((sol, index) => {
                   const Icon = sol.icon;
                   const isActive = activeStep === index;
@@ -359,7 +399,7 @@ export default function SolucionesSection() {
                           : 'border-white/[0.04] bg-transparent'
                       }`}
                     >
-                      {/* Header — siempre visible */}
+                      {/* Header — always visible */}
                       <div className="flex gap-4 items-center p-5">
                         <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0 transition-all duration-500 ${
                           isActive
@@ -378,7 +418,7 @@ export default function SolucionesSection() {
                         </div>
                       </div>
 
-                      {/* Bullets — solo aparecen cuando la feature está activa */}
+                      {/* Bullets — staggered entrance when active */}
                       <AnimatePresence initial={false}>
                         {isActive && (
                           <motion.ul
@@ -390,10 +430,20 @@ export default function SolucionesSection() {
                             className="space-y-3 px-5 pb-5 overflow-hidden"
                           >
                             {sol.bullets.map((bullet, bIdx) => (
-                              <li key={bIdx} className="flex gap-3 items-start text-sm text-zinc-400">
+                              <motion.li
+                                key={bIdx}
+                                initial={{ opacity: 0, x: -8 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{
+                                  duration: prefersReducedMotion ? 0 : 0.35,
+                                  delay: prefersReducedMotion ? 0 : 0.15 + bIdx * 0.12,
+                                  ease: 'easeOut',
+                                }}
+                                className="flex gap-3 items-start text-sm text-zinc-400"
+                              >
                                 <CheckCircle className={`w-4 h-4 shrink-0 mt-0.5 ${sol.color}`} />
                                 <span>{bullet}</span>
-                              </li>
+                              </motion.li>
                             ))}
                           </motion.ul>
                         )}
@@ -416,9 +466,35 @@ export default function SolucionesSection() {
                     />
                   ))}
                 </div>
+
+                {/* Completion nudge — appears when all steps are done */}
+                <AnimatePresence>
+                  {isComplete && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 6 }}
+                      transition={{ duration: 0.5, ease: 'easeOut' }}
+                      className="flex items-center justify-center gap-3 pt-1"
+                    >
+                      <div className="h-px flex-1 bg-white/[0.06]" />
+                      <span className="text-[11px] text-zinc-600 flex items-center gap-1.5 select-none">
+                        <motion.span
+                          animate={{ y: [0, 3, 0] }}
+                          transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                        >
+                          ↓
+                        </motion.span>
+                        Seguí explorando
+                      </span>
+                      <div className="h-px flex-1 bg-white/[0.06]" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
               </div>
 
-            </div>
+            </motion.div>
           ) : (
 
             /* ── MOBILE — stacked, sin efectos de scroll ─────────────────── */
