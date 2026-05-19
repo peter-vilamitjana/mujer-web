@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { useScroll, useTransform, useMotionValueEvent, useSpring, motion, AnimatePresence } from 'framer-motion';
+import { useScroll, useTransform, useMotionValueEvent, useSpring, motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Calendar, TrendingUp, Smartphone, CheckCircle } from 'lucide-react';
 
 const solutions = [
@@ -49,10 +49,163 @@ const solutions = [
   },
 ];
 
+// ─── Mockups inline — reemplazar con screenshots reales cuando estén listos ───
+
+function MockupReserva() {
+  return (
+    <div className="w-full h-full bg-[#0d0d0f] flex flex-col overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.05] shrink-0">
+        <span className="text-white text-[11px] font-semibold tracking-tight">Estilismo Vane</span>
+        <span className="text-[9px] text-purple-400 font-bold uppercase tracking-wider">Online</span>
+      </div>
+      <div className="flex flex-col gap-1.5 px-3 pt-3 pb-2 shrink-0">
+        {[
+          { name: 'Corte & Estilo', price: '$15.999', dur: '60 min', active: false },
+          { name: 'Coloración Completa', price: '$24.999', dur: '2 hs', active: true },
+          { name: 'Keratina Profesional', price: '$39.999', dur: '2.5 hs', active: false },
+        ].map((s) => (
+          <div key={s.name} className={`flex items-center justify-between px-3 py-2 rounded-xl border ${s.active ? 'border-purple-400/40 bg-purple-500/10' : 'border-white/[0.05] bg-white/[0.02]'}`}>
+            <div>
+              <p className={`text-[10px] font-semibold ${s.active ? 'text-purple-200' : 'text-zinc-300'}`}>{s.name}</p>
+              <p className="text-[9px] text-zinc-600">{s.dur}</p>
+            </div>
+            <span className={`text-[10px] font-bold ${s.active ? 'text-purple-400' : 'text-zinc-500'}`}>{s.price}</span>
+          </div>
+        ))}
+      </div>
+      <div className="px-3 pb-2 shrink-0">
+        <div className="grid grid-cols-7 gap-0.5 mb-1.5">
+          {['L','M','X','J','V','S','D'].map(d => (
+            <div key={d} className="text-center text-[8px] text-zinc-600">{d}</div>
+          ))}
+          {[12,13,14,15,16,17,18].map((d) => (
+            <div key={d} className={`text-center text-[9px] py-1 rounded-lg ${d === 15 ? 'bg-purple-500 text-white' : 'text-zinc-500'}`}>{d}</div>
+          ))}
+        </div>
+        <div className="flex gap-1.5">
+          {[{ t: '09:00', sel: true }, { t: '10:30', ok: false }, { t: '14:00', ok: true }, { t: '15:30', ok: true }].map(({ t, sel, ok }, i) => (
+            <div key={t} className={`flex-1 text-center text-[9px] py-1 rounded-lg border ${sel ? 'border-purple-400 bg-purple-500/15 text-purple-300' : ok ? 'border-white/[0.06] text-zinc-500' : 'border-white/[0.03] text-zinc-700 opacity-40'}`}>{t}</div>
+          ))}
+        </div>
+      </div>
+      <div className="px-3 pb-3 mt-auto shrink-0">
+        <div className="w-full bg-purple-600 text-white text-[10px] font-bold text-center py-2 rounded-xl tracking-wide cursor-pointer">
+          Confirmar turno →
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MockupAgenda() {
+  const staff = [
+    { name: 'Valeria', hex: '#a78bfa', appts: [{ top: 4, h: 52, text: 'Coloración · Ana P.' }, { top: 92, h: 38, text: 'Corte · Sol R.' }] },
+    { name: 'Lucía', hex: '#fbbf24', appts: [{ top: 22, h: 68, text: 'Mechas · María J.' }] },
+    { name: 'Camila', hex: '#34d399', appts: [{ top: 0, h: 44, text: 'Keratina · Vane' }, { top: 100, h: 52, text: 'Balayage · Caro' }] },
+  ];
+  return (
+    <div className="w-full h-full bg-[#0d0d0f] flex flex-col overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.05] shrink-0">
+        <span className="text-white text-[11px] font-semibold">Agenda · Lunes 15</span>
+        <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-semibold">HOY</span>
+      </div>
+      <div className="flex flex-1 overflow-hidden">
+        <div className="w-9 border-r border-white/[0.04] pt-4 shrink-0">
+          {['9','10','11','12','13','14'].map(h => (
+            <div key={h} className="h-[34px] flex items-start justify-end pr-1.5 text-[8px] text-zinc-700 pt-0.5">{h}</div>
+          ))}
+        </div>
+        <div className="flex flex-1">
+          {staff.map((s) => (
+            <div key={s.name} className="flex-1 border-r border-white/[0.03] relative">
+              <div className="text-center py-1.5 text-[8px] font-semibold shrink-0" style={{ color: s.hex }}>{s.name}</div>
+              <div className="relative" style={{ height: '204px' }}>
+                {[0,1,2,3,4,5].map(i => (
+                  <div key={i} className="absolute left-0 right-0 border-t border-white/[0.03]" style={{ top: `${i * 34}px` }} />
+                ))}
+                {s.appts.map((a, i) => (
+                  <div
+                    key={i}
+                    className="absolute left-0.5 right-0.5 rounded-md px-1 py-0.5 overflow-hidden"
+                    style={{ top: `${a.top}px`, height: `${a.h}px`, backgroundColor: `${s.hex}18`, borderLeft: `2px solid ${s.hex}` }}
+                  >
+                    <p className="text-[8px] leading-tight font-medium" style={{ color: s.hex }}>{a.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MockupMetricas() {
+  const bars = [45, 62, 38, 78, 55, 91, 67];
+  const days = ['L','M','X','J','V','S','D'];
+  return (
+    <div className="w-full h-full bg-[#0d0d0f] flex flex-col overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.05] shrink-0">
+        <span className="text-white text-[11px] font-semibold">Reportes · Mayo 2026</span>
+        <span className="text-[9px] text-emerald-400 font-semibold">↑ +18% vs abril</span>
+      </div>
+      <div className="grid grid-cols-3 border-b border-white/[0.04] shrink-0">
+        {[
+          { label: 'Ingresos', val: '$48.500', color: '#34d399' },
+          { label: 'Turnos', val: '23', color: '#a78bfa' },
+          { label: 'Valoración', val: '4.8 ★', color: '#fbbf24' },
+        ].map((s, i) => (
+          <div key={s.label} className={`px-3 py-2 ${i < 2 ? 'border-r border-white/[0.04]' : ''}`}>
+            <p className="text-[8px] text-zinc-600 mb-0.5">{s.label}</p>
+            <p className="text-[11px] font-bold" style={{ color: s.color }}>{s.val}</p>
+          </div>
+        ))}
+      </div>
+      <div className="flex-1 px-3 pt-2.5 pb-1 flex flex-col min-h-0">
+        <p className="text-[8px] text-zinc-600 mb-2 shrink-0">Ingresos por día esta semana</p>
+        <div className="flex items-end gap-1.5 flex-1">
+          {bars.map((h, i) => (
+            <div key={i} className="flex flex-col items-center flex-1 gap-1 h-full">
+              <div className="flex-1 w-full flex items-end">
+                <div
+                  className="w-full rounded-t-sm"
+                  style={{
+                    height: `${h}%`,
+                    background: i === 5 ? 'linear-gradient(to top, #059669, #34d399)' : 'rgba(52,211,153,0.18)',
+                  }}
+                />
+              </div>
+              <span className="text-[7px] text-zinc-600 shrink-0">{days[i]}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="px-3 pb-2.5 border-t border-white/[0.04] pt-2 shrink-0">
+        <p className="text-[8px] text-zinc-600 mb-1.5">Servicios más pedidos</p>
+        {[{ name: 'Coloración', pct: 78 }, { name: 'Keratina', pct: 55 }, { name: 'Corte', pct: 42 }].map(s => (
+          <div key={s.name} className="flex items-center gap-2 mb-1">
+            <span className="text-[8px] text-zinc-500 w-16 shrink-0">{s.name}</span>
+            <div className="flex-1 h-1 bg-white/[0.04] rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-500/60 rounded-full" style={{ width: `${s.pct}%` }} />
+            </div>
+            <span className="text-[8px] text-zinc-600 w-6 text-right">{s.pct}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const MOCKUPS = [MockupReserva, MockupAgenda, MockupMetricas];
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function SolucionesSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeStep, setActiveStep] = useState<number>(0);
   const [isMobile, setIsMobile] = useState<boolean>(false);
+  const prefersReducedMotion = useReducedMotion();
 
   // Check mobile state
   useEffect(() => {
@@ -76,18 +229,18 @@ export default function SolucionesSection() {
     restDelta: 0.001,
   });
 
-  // 3D Tilt values animated with scroll progress
-  const rotateX = useTransform(smoothProgress, [0, 1], [15, 5]);
-  const rotateY = useTransform(smoothProgress, [0, 1], [-12, -4]);
-  const scale = useTransform(smoothProgress, [0, 1], [0.95, 1.02]);
+  // 3D Tilt values animated with scroll progress (disabled when prefers-reduced-motion)
+  const rotateX = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [15, 5]);
+  const rotateY = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [-12, -4]);
+  const scale = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [0.95, 1.02]);
   const glareOpacity = useTransform(smoothProgress, [0, 1], [0.25, 0.1]);
   const glareY = useTransform(smoothProgress, [0, 1], ['-20%', '80%']);
 
   // Change active slide index depending on scroll progress
   useMotionValueEvent(scrollYProgress, 'change', (latest) => {
-    if (latest < 0.35) {
+    if (latest < 0.25) {
       setActiveStep(0);
-    } else if (latest < 0.7) {
+    } else if (latest < 0.75) {
       setActiveStep(1);
     } else {
       setActiveStep(2);
@@ -100,25 +253,20 @@ export default function SolucionesSection() {
       className={`relative z-10 bg-[#09090b] border-b border-white/[0.04] 
         ${isMobile ? 'py-20' : 'h-[300vh]'}`}
     >
-      {/* Background radial glow synced with active slide */}
-      {!isMobile && (
-        <div 
-          className="pointer-events-none absolute left-1/4 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full opacity-35 transition-all duration-700 blur-[90px] fixed"
-          style={{
-            background: `radial-gradient(circle, ${solutions[activeStep].glow} 0%, transparent 70%)`
-          }}
-        />
-      )}
-
       {/* Main Container */}
       <div className={`max-w-6xl mx-auto px-6 h-full ${isMobile ? 'block' : 'relative'}`}>
-        
+
         {/* Desktop Sticky Layout */}
         {!isMobile ? (
           <div className="grid grid-cols-12 gap-8 h-full items-start">
-            
+
             {/* Left Column: Sticky 3D Monitor container */}
             <div className="col-span-6 h-screen sticky top-0 self-start flex flex-col justify-center">
+              {/* Background radial glow — inside sticky col so no viewport leak */}
+              <div
+                className="pointer-events-none absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-30 transition-all duration-700 blur-[80px]"
+                style={{ background: `radial-gradient(circle, ${solutions[activeStep].glow} 0%, transparent 70%)` }}
+              />
               <div className="mb-8 max-w-md">
                 <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
                   Potencia y Simplicidad
@@ -167,19 +315,24 @@ export default function SolucionesSection() {
                       <div className="h-3 w-28 rounded-full bg-white/[0.04] border border-white/[0.06] mx-auto" />
                     </div>
 
-                    {/* Content Display: Fade between active images */}
+                    {/* Content Display: Fade between active mockups */}
                     <div className="w-full h-full pt-7 relative">
                       <AnimatePresence mode="wait">
-                        <motion.img
-                          key={activeStep}
-                          src={solutions[activeStep].image}
-                          alt={solutions[activeStep].title}
-                          initial={{ opacity: 0, filter: 'blur(6px)' }}
-                          animate={{ opacity: 1, filter: 'blur(0px)' }}
-                          exit={{ opacity: 0, filter: 'blur(6px)' }}
-                          transition={{ duration: 0.35, ease: 'easeInOut' }}
-                          className="w-full h-full object-cover object-top"
-                        />
+                        {(() => {
+                          const MockupComponent = MOCKUPS[activeStep];
+                          return (
+                            <motion.div
+                              key={activeStep}
+                              initial={{ opacity: 0, filter: prefersReducedMotion ? 'none' : 'blur(6px)' }}
+                              animate={{ opacity: 1, filter: 'blur(0px)' }}
+                              exit={{ opacity: 0, filter: prefersReducedMotion ? 'none' : 'blur(6px)' }}
+                              transition={{ duration: prefersReducedMotion ? 0 : 0.35, ease: 'easeInOut' }}
+                              className="absolute inset-0"
+                            >
+                              <MockupComponent />
+                            </motion.div>
+                          );
+                        })()}
                       </AnimatePresence>
                     </div>
                   </div>
@@ -187,16 +340,16 @@ export default function SolucionesSection() {
               </div>
             </div>
 
-            {/* Right Column: Scrollable text blocks */}
-            <div className="col-span-6 space-y-[20vh] py-[10vh]">
+            {/* Right Column: Scrollable text blocks — 3 × 100vh = 300vh (matches section) */}
+            <div className="col-span-6">
               {solutions.map((sol, index) => {
                 const Icon = sol.icon;
                 const isActive = activeStep === index;
 
                 return (
-                  <div 
-                    key={sol.id} 
-                    className="h-[60vh] flex flex-col justify-center"
+                  <div
+                    key={sol.id}
+                    className="h-[100vh] flex flex-col justify-center"
                   >
                     <motion.div
                       animate={{
