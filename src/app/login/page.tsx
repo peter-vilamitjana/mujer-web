@@ -42,9 +42,10 @@ function Spinner() {
 const FIELD = cn(
   'w-full rounded-xl px-4 py-3 text-[13px] font-light tracking-[0.12em] uppercase',
   'placeholder:text-white/20 text-white',
-  'outline-none transition-all duration-200',
-  'border focus:ring-1 focus:ring-white/20',
-  'bg-white/[0.06] border-white/[0.10] focus:bg-white/[0.10] focus:border-white/25'
+  'outline-none transition-all duration-300',
+  'border border-white/10 focus:border-white/30',
+  'bg-black/30 focus:bg-black/50',
+  'shadow-[inset_0_2px_12px_rgba(0,0,0,0.5)]'
 );
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -198,16 +199,16 @@ export default function LoginPage() {
             className="w-full"
             style={{ maxWidth: '420px' }}
           >
-            {/* ── Selector B2C / B2B ────────────────────────────────────── */}
-            <div className="flex gap-2 mb-4">
+            {/* ── Selector B2C / B2B (Glass Segmented Control) ────────────── */}
+            <div className="flex p-1 mb-5 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 shadow-[inset_0_2px_12px_rgba(0,0,0,0.5)]">
               <button
                 type="button"
                 onClick={() => setUserType('clienta')}
                 className={cn(
-                  'flex-1 py-2.5 rounded-xl text-[9px] tracking-[0.35em] uppercase font-bold transition-all duration-200 cursor-pointer',
+                  'flex-1 py-2.5 rounded-xl text-[9px] tracking-[0.35em] uppercase font-bold transition-all duration-300 cursor-pointer',
                   userType === 'clienta'
-                    ? 'bg-white text-black'
-                    : 'bg-white/[0.07] text-white/40 border border-white/10 hover:bg-white/[0.12] hover:text-white/70'
+                    ? 'bg-white/15 text-white shadow-[0_2px_10px_rgba(0,0,0,0.3)] border border-white/10'
+                    : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/[0.02]'
                 )}
               >
                 Soy clienta
@@ -216,10 +217,10 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setUserType('duena')}
                 className={cn(
-                  'flex-1 py-2.5 rounded-xl text-[9px] tracking-[0.35em] uppercase font-bold transition-all duration-200 cursor-pointer',
+                  'flex-1 py-2.5 rounded-xl text-[9px] tracking-[0.35em] uppercase font-bold transition-all duration-300 cursor-pointer',
                   userType === 'duena'
-                    ? 'bg-white text-black'
-                    : 'bg-white/[0.07] text-white/40 border border-white/10 hover:bg-white/[0.12] hover:text-white/70'
+                    ? 'bg-white/15 text-white shadow-[0_2px_10px_rgba(0,0,0,0.3)] border border-white/10'
+                    : 'text-white/40 hover:text-white/80 border border-transparent hover:bg-white/[0.02]'
                 )}
               >
                 Soy dueña de salón
@@ -227,30 +228,29 @@ export default function LoginPage() {
             </div>
 
             {/* ── Liquid Glass Card ─────────────────────────────────────── */}
-            <div
-              className="relative rounded-[28px] overflow-hidden"
-              style={{
-                background: 'rgba(255,255,255,0.065)',
-                backdropFilter: 'blur(48px) saturate(200%)',
-                WebkitBackdropFilter: 'blur(48px) saturate(200%)',
-                border: '1px solid rgba(255,255,255,0.14)',
-                boxShadow: `
-                  inset 0 1px 0 rgba(255,255,255,0.18),
-                  inset 0 -1px 0 rgba(0,0,0,0.25),
-                  0 0 0 0.5px rgba(255,255,255,0.06),
-                  0 8px 24px rgba(0,0,0,0.45),
-                  0 32px 80px rgba(0,0,0,0.38),
-                  0 64px 120px rgba(0,0,0,0.22)
-                `,
-              }}
-            >
-              {/* Specular highlight strip at top */}
-              <div
-                className="absolute top-0 left-6 right-6 h-px pointer-events-none"
-                style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }}
-              />
+            <div className="card-liquid relative rounded-[32px] isolate">
+              <style>{`
+                .card-liquid {
+                  --glass-reflex-light: 1;
+                  --glass-reflex-dark: 1;
+                }
+                .card-liquid-lens {
+                  background-color: rgba(255, 255, 255, 0.03);
+                  backdrop-filter: blur(48px) saturate(200%);
+                  -webkit-backdrop-filter: blur(48px) saturate(200%);
+                  box-shadow: 
+                    inset 0 1px 1px color-mix(in srgb, white calc(var(--glass-reflex-light) * 15%), transparent),
+                    inset 0 0 0 1px color-mix(in srgb, white calc(var(--glass-reflex-light) * 8%), transparent),
+                    inset 0 -1px 1px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 30%), transparent),
+                    0 12px 32px rgba(0,0,0,0.25),
+                    0 32px 80px rgba(0,0,0,0.38);
+                }
+              `}</style>
+              
+              {/* Isolated lens layer */}
+              <div className="card-liquid-lens absolute inset-0 rounded-[32px] pointer-events-none -z-10" />
 
-              <div className="px-9 pt-8 pb-7">
+              <div className="relative z-10 px-9 pt-8 pb-7">
 
                 {/* ── Brand + Mode Heading ─────────────────────────────── */}
                 <div className="mb-6">
