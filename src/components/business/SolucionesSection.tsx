@@ -115,10 +115,10 @@ export default function SolucionesSection() {
         
         {/* Desktop Sticky Layout */}
         {!isMobile ? (
-          <div className="grid grid-cols-12 gap-8 h-full">
+          <div className="grid grid-cols-12 gap-8 h-full items-start">
             
             {/* Left Column: Sticky 3D Monitor container */}
-            <div className="col-span-6 h-screen sticky top-0 flex flex-col justify-center">
+            <div className="col-span-6 h-screen sticky top-0 self-start flex flex-col justify-center">
               <div className="mb-8 max-w-md">
                 <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
                   Potencia y Simplicidad
