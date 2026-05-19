@@ -37,7 +37,7 @@ const STATUS_CFG = {
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type ApptStatus = keyof typeof STATUS_CFG;
-type Pro = { id: string; name: string; initials: string; color: string };
+type Pro = { id: string; name: string; initials: string; color: string; avatar?: string };
 type Appt = {
   id: string; pro: number; slot: number; dur: number;
   client: string; service: string; status: ApptStatus;
@@ -134,6 +134,7 @@ export default function AgendaTabView() {
       name:     s.name.split(' ')[0], // first name only for column headers
       initials: initials(s.name),
       color:    staffColor(s.name),
+      avatar:   s.avatarUrl,
     })),
     [staff],
   );
@@ -641,9 +642,13 @@ export default function AgendaTabView() {
                 <div className="px-3 py-2.5 flex items-center justify-center text-[#7a766e] text-xs">Sin profesionales</div>
               ) : pros.map((pro, i) => (
                 <div key={pro.id} className="px-3 py-2.5 flex items-center gap-2.5 border-r border-white/[0.05] last:border-r-0">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0" style={{ background: `${pro.color}1a`, color: pro.color, border: `1px solid ${pro.color}33` }}>
-                    {pro.initials}
-                  </div>
+                  {pro.avatar ? (
+                    <img src={pro.avatar} alt={pro.name} className="w-8 h-8 rounded-full object-cover shrink-0 border border-white/10" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black shrink-0" style={{ background: `${pro.color}1a`, color: pro.color, border: `1px solid ${pro.color}33` }}>
+                      {pro.initials}
+                    </div>
+                  )}
                   <div className="min-w-0">
                     <p className="font-playfair font-bold italic text-[#f5f0e8] text-sm leading-none truncate">{pro.name}</p>
                     <p className="text-[10px] text-[#7a766e] mt-0.5">{appts.filter(a => a.pro === i).length} turnos</p>
@@ -784,7 +789,11 @@ export default function AgendaTabView() {
                   className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer border ${weekPro === i ? 'border-current' : 'border-transparent text-[#7a766e] hover:text-[#f5f0e8] hover:bg-white/[0.05]'}`}
                   style={weekPro === i ? { background: `${pro.color}15`, color: pro.color, borderColor: `${pro.color}40` } : {}}
                 >
-                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: pro.color }} />
+                  {pro.avatar ? (
+                    <img src={pro.avatar} alt="" className="w-3.5 h-3.5 rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: pro.color }} />
+                  )}
                   {pro.name}
                 </button>
               ))}
