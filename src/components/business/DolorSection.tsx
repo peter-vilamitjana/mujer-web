@@ -87,15 +87,15 @@ const PainColumn = (props: {
     <div className={props.className}>
       <motion.div
         animate={shouldReduce ? {} : {
-          translateY: "-33.333%",
+          y: ["0%", "-33.333%"],
         }}
         transition={{
-          duration: props.duration || 15,
+          duration: props.duration || 20,
           repeat: Infinity,
           ease: "linear",
           repeatType: "loop",
         }}
-        className="flex flex-col gap-4 pb-4"
+        className="flex flex-col gap-4 pb-4 will-change-transform"
       >
         {[
           ...new Array(3).fill(0).map((_, index) => (
@@ -152,9 +152,9 @@ export default function DolorSection() {
 
         {/* Vertically Scrolling Columns Grid with Gradient Mask */}
         <div className="w-full px-6 flex justify-center gap-6 mt-8 [mask-image:linear-gradient(to_bottom,transparent,black_18%,black_82%,transparent)] max-h-[520px] overflow-hidden">
-          <PainColumn pains={col1} className="flex-1 max-w-[360px] w-full" duration={16} />
-          <PainColumn pains={col2} className="hidden sm:block flex-1 max-w-[360px] w-full" duration={22} />
-          <PainColumn pains={col3} className="hidden lg:block flex-1 max-w-[360px] w-full" duration={18} />
+          <PainColumn pains={col1} className="flex-1 max-w-[360px] w-full" duration={24} />
+          <PainColumn pains={col2} className="hidden sm:block flex-1 max-w-[360px] w-full" duration={32} />
+          <PainColumn pains={col3} className="hidden lg:block flex-1 max-w-[360px] w-full" duration={27} />
         </div>
 
         {/* Bridge to solution */}
