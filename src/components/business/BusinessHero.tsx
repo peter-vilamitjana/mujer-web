@@ -6,7 +6,7 @@ import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { ContainerScroll } from '@/components/ui/container-scroll-animation';
 
-const words = ['quilombo.', 'despelote.', 'papelerío.', 'WhatsApp explotado.'];
+const words = ['el papelerío.', 'las planillas.', 'los olvidos.', 'las demoras.'];
 
 function DashboardMockup() {
   return (
@@ -93,7 +93,7 @@ export default function BusinessHero() {
                   transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
                   className="font-playfair font-normal italic text-purple-300 tracking-normal mr-[0.2em]"
                 >
-                  sin el
+                  sin
                 </motion.span>
                 <span className="relative inline-flex overflow-hidden h-[1.25em] items-center pr-3">
                   <AnimatePresence mode="wait">
