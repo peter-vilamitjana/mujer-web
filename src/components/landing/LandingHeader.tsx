@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useId } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useSession } from 'next-auth/react';
@@ -18,6 +18,8 @@ export default function LandingHeader() {
   const { theme } = useTheme();
   const glassRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const rawId = useId();
+  const filterId = rawId.replace(/:/g, '');
 
   useEffect(() => {
     setMounted(true);
@@ -42,8 +44,23 @@ export default function LandingHeader() {
   const textWhite = (mounted && theme === 'dark') || overHero;
 
   return (
-    // No transform-gpu here: creates a permanent stacking context that breaks
-    // Chrome's backdrop-filter when scrollY = 0. Top offset applied via DOM.
+    <>
+    {/* Invisible SVG displacement filter — same pattern as GlassButton */}
+    <svg className="absolute w-0 h-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      <filter id={`liquid-glass-${filterId}`} primitiveUnits="objectBoundingBox">
+        <feImage
+          result="map"
+          width="100%" height="100%" x="0" y="0"
+          href={WEBP_DISPLACEMENT_MAP}
+          preserveAspectRatio="none"
+        />
+        <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" result="blur" />
+        <feDisplacementMap in="blur" in2="map" scale="0.5" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
+
+    {/* No transform-gpu here: creates a permanent stacking context that breaks
+        Chrome's backdrop-filter when scrollY = 0. Top offset applied via DOM. */}
     <header
       id="main-header"
       className="fixed top-0 inset-x-0 z-[100] isolate flex justify-center pt-6 px-6 transition-[top] duration-700"
@@ -65,14 +82,23 @@ export default function LandingHeader() {
             }
             .nav-liquid-lens {
               background-color: oklch(from var(--foreground) l c h / 3%);
-              backdrop-filter: blur(16px) url(#liquid-glass-nav) saturate(180%);
+              backdrop-filter: blur(16px) url(#liquid-glass-${filterId}) saturate(180%);
               -webkit-backdrop-filter: blur(16px) saturate(180%);
-              box-shadow: 
-                inset 0 1px 1px color-mix(in srgb, white calc(var(--glass-reflex-light) * 15%), transparent),
-                inset 0 0 0 1px color-mix(in srgb, white calc(var(--glass-reflex-light) * 8%), transparent),
-                inset 0 -1px 1px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 30%), transparent),
-                0 8px 32px rgba(0,0,0,0.2);
+              box-shadow:
+                inset 0 0 0 1px color-mix(in srgb, white calc(var(--glass-reflex-light) * 10%), transparent),
+                inset 1.8px 3px 0px -2px color-mix(in srgb, white calc(var(--glass-reflex-light) * 90%), transparent),
+                inset -2px -2px 0px -2px color-mix(in srgb, white calc(var(--glass-reflex-light) * 80%), transparent),
+                inset -3px -8px 1px -6px color-mix(in srgb, white calc(var(--glass-reflex-light) * 60%), transparent),
+                inset -0.3px -1px 4px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 12%), transparent),
+                inset -1.5px 2.5px 0px -2px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 20%), transparent),
+                inset 0px 3px 4px -2px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 20%), transparent),
+                inset 2px -6.5px 1px -4px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 10%), transparent),
+                0px 1px 5px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 10%), transparent),
+                0px 8px 32px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 20%), transparent);
               transition: background-color 400ms cubic-bezier(1, 0.0, 0.4, 1), box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1);
+            }
+            .nav-liquid-text {
+              text-shadow: 0 1px 2px oklch(from var(--background) l c h / 30%);
             }
           `}</style>
 
@@ -86,7 +112,7 @@ export default function LandingHeader() {
           {/* ── Logo ── */}
           <div className="relative z-10 flex items-center">
             <span className={cn(
-              'font-vogue text-3xl font-black tracking-tighter uppercase transition-colors duration-300',
+              'nav-liquid-text font-vogue text-3xl font-black tracking-tighter uppercase transition-colors duration-300',
               textWhite ? 'text-white' : 'text-[#1A1A1A]'
             )}>
               Ouleeh
@@ -112,7 +138,7 @@ export default function LandingHeader() {
                     : 'text-[#1A1A1A]/60 hover:text-[#1A1A1A] before:bg-black/[0.06] before:border before:border-black/10'
                 )}
               >
-                <span className="relative z-10">{label}</span>
+                <span className="nav-liquid-text relative z-10">{label}</span>
               </Link>
             ))}
 
@@ -139,5 +165,6 @@ export default function LandingHeader() {
         </nav>
       </div>
     </header>
+    </>
   );
 }
