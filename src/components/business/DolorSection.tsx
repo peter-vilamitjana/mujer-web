@@ -1,8 +1,8 @@
 'use client';
 
+import React, { useRef } from 'react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { MessageCircle, Calendar, DollarSign, UserX, Clock, Phone } from 'lucide-react';
-import { useRef } from 'react';
 
 const pains = [
   {
@@ -41,50 +41,84 @@ function PainCard({
   icon: Icon,
   quote,
   description,
-  index,
 }: {
   icon: React.ElementType;
   quote: string;
   description: string;
-  index: number;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-60px' });
-  const shouldReduce = useReducedMotion();
-
   return (
-    <motion.div
-      ref={ref}
-      initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 36, scale: 0.96 }}
-      animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
-      transition={{ duration: 0.6, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
+    <div
       className="group relative rounded-3xl p-6 overflow-hidden cursor-default
-        backdrop-blur-xl bg-white/[0.03] border border-white/[0.07]
-        hover:border-red-400/[0.20] hover:bg-red-500/[0.03]
-        transition-colors duration-300"
+        backdrop-blur-xl bg-white/[0.02] border border-white/[0.06]
+        hover:border-red-400/[0.18] hover:bg-red-500/[0.02]
+        transition-colors duration-300 w-full max-w-[310px] shrink-0"
     >
       {/* Hover glow */}
       <div
         className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(248,113,113,0.06) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(248,113,113,0.05) 0%, transparent 70%)' }}
         aria-hidden="true"
       />
 
       <div className="relative z-10">
-        <div className="w-10 h-10 rounded-2xl bg-red-500/[0.08] border border-red-400/[0.15]
-          flex items-center justify-center mb-5 group-hover:border-red-400/[0.30]
-          group-hover:bg-red-500/[0.12] transition-all duration-300">
-          <Icon className="w-5 h-5 text-red-400" aria-hidden="true" />
+        <div className="w-9 h-9 rounded-2xl bg-red-500/[0.06] border border-red-400/[0.12]
+          flex items-center justify-center mb-4 group-hover:border-red-400/[0.25]
+          group-hover:bg-red-500/[0.10] transition-all duration-300">
+          <Icon className="w-4.5 h-4.5 text-red-400" aria-hidden="true" />
         </div>
 
-        <p className="font-playfair text-[1.05rem] text-white italic leading-snug mb-3">
+        <p className="font-playfair text-[0.98rem] text-white italic leading-snug mb-2.5">
           &ldquo;{quote}&rdquo;
         </p>
-        <p className="text-sm text-zinc-500 leading-relaxed">{description}</p>
+        <p className="text-xs text-zinc-500 leading-relaxed">{description}</p>
       </div>
-    </motion.div>
+    </div>
   );
 }
+
+const PainColumn = (props: {
+  className?: string;
+  pains: typeof pains;
+  duration?: number;
+}) => {
+  const shouldReduce = useReducedMotion();
+  
+  return (
+    <div className={props.className}>
+      <motion.div
+        animate={shouldReduce ? {} : {
+          translateY: "-33.333%",
+        }}
+        transition={{
+          duration: props.duration || 15,
+          repeat: Infinity,
+          ease: "linear",
+          repeatType: "loop",
+        }}
+        className="flex flex-col gap-4 pb-4"
+      >
+        {[
+          ...new Array(3).fill(0).map((_, index) => (
+            <React.Fragment key={index}>
+              {props.pains.map(({ icon, quote, description }, i) => (
+                <PainCard
+                  key={`${i}-${index}`}
+                  icon={icon}
+                  quote={quote}
+                  description={description}
+                />
+              ))}
+            </React.Fragment>
+          )),
+        ]}
+      </motion.div>
+    </div>
+  );
+};
+
+const col1 = [pains[0], pains[1]];
+const col2 = [pains[2], pains[3]];
+const col3 = [pains[4], pains[5]];
 
 export default function DolorSection() {
   const headingRef = useRef<HTMLDivElement>(null);
@@ -96,48 +130,42 @@ export default function DolorSection() {
       {/* Subtle top separator */}
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" aria-hidden="true" />
 
-      <div className="py-28 px-6 max-w-5xl mx-auto">
+      <div className="py-24 px-6 max-w-5xl mx-auto">
         {/* Heading */}
         <motion.div
           ref={headingRef}
-          initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 28 }}
+          initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 24 }}
           animate={headingInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center mb-16"
+          className="text-center mb-12"
         >
-          <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-4">
+          <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
             El problema
           </p>
           <h2 className="font-playfair text-[clamp(2.2rem,5vw,3.5rem)] text-white italic leading-tight">
             ¿Te suena familiar?
           </h2>
-          <p className="text-zinc-500 text-[0.95rem] mt-4 max-w-sm mx-auto leading-relaxed">
+          <p className="text-zinc-500 text-xs mt-3.5 max-w-xs mx-auto leading-relaxed">
             Cada dueña de salón pasa por esto. No tenés que seguir así.
           </p>
         </motion.div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {pains.map(({ icon, quote, description }, i) => (
-            <PainCard
-              key={quote}
-              icon={icon}
-              quote={quote}
-              description={description}
-              index={i}
-            />
-          ))}
+        {/* Vertically Scrolling Columns Grid with Gradient Mask */}
+        <div className="flex justify-center gap-4 mt-8 [mask-image:linear-gradient(to_bottom,transparent,black_18%,black_82%,transparent)] max-h-[500px] overflow-hidden">
+          <PainColumn pains={col1} duration={16} />
+          <PainColumn pains={col2} className="hidden sm:block" duration={22} />
+          <PainColumn pains={col3} className="hidden lg:block" duration={18} />
         </div>
 
         {/* Bridge to solution */}
         <motion.div
-          initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 20 }}
+          initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-14 text-center"
+          className="mt-10 text-center"
         >
-          <p className="text-zinc-500 text-sm">
+          <p className="text-zinc-500 text-xs">
             Con Ouleeh,{' '}
             <span className="text-white font-semibold">todo eso queda atrás.</span>
           </p>
