@@ -70,7 +70,7 @@ export default function BusinessHero() {
 
               {/* Headline — word by word */}
               <h1
-                className="font-playfair text-[clamp(3rem,8vw,7rem)] leading-[1.02] tracking-[-0.02em] mb-6"
+                className="text-[clamp(3rem,8vw,6.5rem)] leading-[1.02] tracking-[-0.03em] mb-6 font-extrabold text-white"
                 aria-label="Tu salón, sin el caos."
               >
                 {headline.map(({ text, accent }, i) => (
@@ -79,7 +79,11 @@ export default function BusinessHero() {
                     initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
                     animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                     transition={{ duration: 0.7, delay: 0.1 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                    className={`inline-block mr-[0.22em] last:mr-0 ${accent ? 'italic text-purple-400' : 'text-white'}`}
+                    className={`inline-block mr-[0.2em] last:mr-0 ${
+                      accent 
+                        ? 'font-playfair font-normal italic text-purple-300 tracking-normal' 
+                        : 'font-sans font-extrabold'
+                    }`}
                   >
                     {text}
                   </motion.span>
