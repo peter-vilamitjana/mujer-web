@@ -3,35 +3,35 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useScroll, useTransform, useSpring, useMotionValue, motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useLenis } from 'lenis/react';
-import { Calendar, TrendingUp, Smartphone, CheckCircle } from 'lucide-react';
+import { Calendar, TrendingUp, LayoutDashboard, CheckCircle } from 'lucide-react';
 
 const solutions = [
   {
     id: 'reserva',
-    title: 'Capa 1: Tu Link de Reservas',
-    subtitle: 'La cara de tu salón ante tus clientas',
-    icon: Smartphone,
+    title: 'Capa 1: Dashboard',
+    subtitle: 'El centro de control de tu salón',
+    icon: LayoutDashboard,
     color: 'text-purple-400',
     glow: 'rgba(168,85,247,0.15)',
-    image: '/landing/booking-preview.png',
+    image: '/landing/dashboard-preview.png',
     bullets: [
-      'Perfil web autogestionable y adaptado a celulares.',
-      'Tus clientas reservan solas en 3 simples clics.',
-      'Sincronización en tiempo real con tu agenda interna.',
+      'Visualiza tus ingresos diarios y turnos agendados al instante.',
+      'Acceso rápido al expediente técnico de cada cliente.',
+      'Control centralizado de caja y colaboradores.',
     ],
   },
   {
     id: 'agenda',
-    title: 'Capa 2: Agenda Inteligente',
+    title: 'Capa 2: Agenda inteligente',
     subtitle: 'Adiós a los olvidos y superposiciones',
     icon: Calendar,
     color: 'text-amber-400',
     glow: 'rgba(234,179,8,0.15)',
     image: '/landing/calendar-preview.png',
     bullets: [
-      'Organización de turnos por profesional y servicio.',
-      'Bloqueo inteligente de horarios no disponibles.',
-      'Recordatorios automáticos de turnos por WhatsApp.',
+      'Organización de turnos por profesional, día y horario.',
+      'Historial de visitas y notas especiales de clientes integradas.',
+      'Envío automático de notificaciones de cobro y reservas.',
     ],
   },
   {
