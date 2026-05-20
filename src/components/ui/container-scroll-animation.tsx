@@ -84,28 +84,16 @@ export const Card = ({
   translate: MotionValue<number>;
   children: React.ReactNode;
 }) => {
-  // Glare effect based on rotation angle to simulate 3D light reflection
-  const glareOpacity = useTransform(rotate, [0, 20], [0, 0.25]);
-  const glareY = useTransform(rotate, [0, 20], ["100%", "-20%"]);
-
   return (
     <motion.div
       style={{
         rotateX: rotate,
         scale,
         boxShadow:
-          "inset 0 1px 1px rgba(255,255,255,0.15), 0 24px 48px -12px rgba(0,0,0,0.5), 0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026",
+          "0 24px 48px -12px rgba(0,0,0,0.5), 0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026",
       }}
       className="max-w-7xl mt-6 mx-auto h-[30rem] md:h-[46rem] w-full border border-[#444] p-2 md:p-6 bg-[#222222] rounded-[30px] shadow-2xl relative overflow-hidden"
     >
-      <motion.div 
-        className="absolute inset-0 pointer-events-none z-50 rounded-[30px]"
-        style={{
-          opacity: glareOpacity,
-          background: "linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%)",
-          translateY: glareY,
-        }}
-      />
       <div className="h-full w-full overflow-hidden rounded-2xl bg-[#050504] md:rounded-2xl md:p-4 relative z-10">
         {children}
       </div>
