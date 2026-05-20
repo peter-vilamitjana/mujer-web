@@ -51,7 +51,7 @@ function PainCard({
       className="group relative rounded-3xl p-6 overflow-hidden cursor-default
         backdrop-blur-xl bg-white/[0.02] border border-white/[0.06]
         hover:border-red-400/[0.18] hover:bg-red-500/[0.02]
-        transition-colors duration-300 w-full max-w-[310px] shrink-0"
+        transition-colors duration-300 w-full shrink-0"
     >
       {/* Hover glow */}
       <div
@@ -126,18 +126,18 @@ export default function DolorSection() {
   const shouldReduce = useReducedMotion();
 
   return (
-    <section className="relative z-10 bg-[#09090b] overflow-hidden">
+    <section className="relative z-10 bg-[#09090b] overflow-hidden w-full">
       {/* Subtle top separator */}
       <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" aria-hidden="true" />
 
-      <div className="py-24 px-6 max-w-5xl mx-auto">
+      <div className="py-24 w-full flex flex-col items-center">
         {/* Heading */}
         <motion.div
           ref={headingRef}
           initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 24 }}
           animate={headingInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center mb-12"
+          className="text-center mb-12 px-6 max-w-xl"
         >
           <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
             El problema
@@ -145,16 +145,16 @@ export default function DolorSection() {
           <h2 className="font-playfair text-[clamp(2.2rem,5vw,3.5rem)] text-white italic leading-tight">
             ¿Te suena familiar?
           </h2>
-          <p className="text-zinc-500 text-xs mt-3.5 max-w-xs mx-auto leading-relaxed">
+          <p className="text-zinc-500 text-xs mt-3.5 leading-relaxed">
             Cada dueña de salón pasa por esto. No tenés que seguir así.
           </p>
         </motion.div>
 
         {/* Vertically Scrolling Columns Grid with Gradient Mask */}
-        <div className="flex justify-center gap-4 mt-8 [mask-image:linear-gradient(to_bottom,transparent,black_18%,black_82%,transparent)] max-h-[500px] overflow-hidden">
-          <PainColumn pains={col1} duration={16} />
-          <PainColumn pains={col2} className="hidden sm:block" duration={22} />
-          <PainColumn pains={col3} className="hidden lg:block" duration={18} />
+        <div className="w-full px-6 flex justify-center gap-6 mt-8 [mask-image:linear-gradient(to_bottom,transparent,black_18%,black_82%,transparent)] max-h-[520px] overflow-hidden">
+          <PainColumn pains={col1} className="flex-1 max-w-[360px] w-full" duration={16} />
+          <PainColumn pains={col2} className="hidden sm:block flex-1 max-w-[360px] w-full" duration={22} />
+          <PainColumn pains={col3} className="hidden lg:block flex-1 max-w-[360px] w-full" duration={18} />
         </div>
 
         {/* Bridge to solution */}
@@ -163,7 +163,7 @@ export default function DolorSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-10 text-center"
+          className="mt-12 text-center px-6"
         >
           <p className="text-zinc-500 text-xs">
             Con Ouleeh,{' '}
