@@ -1,15 +1,12 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { ContainerScroll } from '@/components/ui/container-scroll-animation';
 
-const headline = [
-  { text: 'Tu salón,', accent: false },
-  { text: 'sin el', accent: true },
-  { text: 'caos.', accent: true },
-];
+const words = ['caos.', 'estrés.', 'papeleo.', 'teléfono.'];
 
 function DashboardMockup() {
   return (
@@ -25,6 +22,15 @@ function DashboardMockup() {
 
 export default function BusinessHero() {
   const shouldReduce = useReducedMotion();
+  const [wordIndex, setWordIndex] = useState(0);
+
+  useEffect(() => {
+    if (shouldReduce) return;
+    const interval = setInterval(() => {
+      setWordIndex((prev) => (prev + 1) % words.length);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [shouldReduce]);
 
   return (
     <section
@@ -68,26 +74,41 @@ export default function BusinessHero() {
           titleComponent={
             <div className="flex flex-col items-center text-center">
 
-              {/* Headline — word by word */}
+              {/* Headline — animated word-by-word with cycling ending */}
               <h1
-                className="text-[clamp(3rem,8vw,6.5rem)] leading-[1.02] tracking-[-0.03em] mb-6 font-extrabold text-white"
+                className="text-[clamp(2.8rem,7.5vw,6rem)] leading-[1.05] tracking-[-0.03em] mb-6 font-extrabold text-white flex flex-wrap justify-center items-center"
                 aria-label="Tu salón, sin el caos."
               >
-                {headline.map(({ text, accent }, i) => (
-                  <motion.span
-                    key={text}
-                    initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
-                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                    transition={{ duration: 0.7, delay: 0.1 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                    className={`inline-block mr-[0.2em] last:mr-0 ${
-                      accent 
-                        ? 'font-playfair font-normal italic text-purple-300 tracking-normal' 
-                        : 'font-sans font-extrabold'
-                    }`}
-                  >
-                    {text}
-                  </motion.span>
-                ))}
+                <motion.span
+                  initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                  className="font-sans font-extrabold mr-[0.2em]"
+                >
+                  Tu salón,
+                </motion.span>
+                <motion.span
+                  initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                  className="font-playfair font-normal italic text-purple-300 tracking-normal mr-[0.2em]"
+                >
+                  sin el
+                </motion.span>
+                <span className="relative inline-flex overflow-hidden h-[1.25em] items-center pr-3">
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={wordIndex}
+                      initial={{ opacity: 0, y: 35, filter: 'blur(6px)' }}
+                      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                      exit={{ opacity: 0, y: -35, filter: 'blur(6px)' }}
+                      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                      className="font-playfair font-normal italic text-purple-300 tracking-normal inline-block"
+                    >
+                      {words[wordIndex]}
+                    </motion.span>
+                  </AnimatePresence>
+                </span>
               </h1>
 
               {/* Subheadline */}
