@@ -184,8 +184,6 @@ export default function SolucionesSection() {
   const rotateX = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [15, 5]);
   const rotateY = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [-12, -4]);
   const scale = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [0.95, 1.02]);
-  const glareOpacity = useTransform(smoothProgress, [0, 1], [0.25, 0.1]);
-  const glareY = useTransform(smoothProgress, [0, 1], ['-20%', '80%']);
 
   // Exit: section gently fades + shrinks as scroll leaves it
   const exitOpacity = useTransform(scrollYProgress, [0.85, 1], [1, 0.82]);
@@ -269,14 +267,6 @@ export default function SolucionesSection() {
                     }}
                     className="w-full h-[360px] lg:h-[420px] border border-[#444] p-1.5 bg-[#222222] rounded-[28px] shadow-2xl relative overflow-hidden"
                   >
-                    <motion.div
-                      className="absolute inset-0 pointer-events-none z-50 rounded-[28px]"
-                      style={{
-                        opacity: glareOpacity,
-                        background: "linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%)",
-                        translateY: glareY,
-                      }}
-                    />
                     <div className="h-full w-full overflow-hidden rounded-[20px] bg-[#050504] relative z-10">
                       <div className="flex items-center gap-1.5 px-3 py-2 bg-black/40 border-b border-white/[0.04] absolute top-0 inset-x-0 z-30">
                         <div className="w-2 h-2 rounded-full bg-red-400/50" />
