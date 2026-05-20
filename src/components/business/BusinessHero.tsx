@@ -6,7 +6,7 @@ import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { ContainerScroll } from '@/components/ui/container-scroll-animation';
 
-const words = ['caos.', 'estrés.', 'papeleo.', 'teléfono.'];
+const words = ['quilombo.', 'despelote.', 'papelerío.', 'WhatsApp explotado.'];
 
 function DashboardMockup() {
   return (
