@@ -45,20 +45,6 @@ export default function LandingHeader() {
 
   return (
     <>
-    {/* Invisible SVG displacement filter — same pattern as GlassButton */}
-    <svg className="absolute w-0 h-0 overflow-hidden pointer-events-none" aria-hidden="true">
-      <filter id={`liquid-glass-${filterId}`} primitiveUnits="objectBoundingBox">
-        <feImage
-          result="map"
-          width="100%" height="100%" x="0" y="0"
-          href={WEBP_DISPLACEMENT_MAP}
-          preserveAspectRatio="none"
-        />
-        <feGaussianBlur in="SourceGraphic" stdDeviation="0.01" result="blur" />
-        <feDisplacementMap in="blur" in2="map" scale="0.5" xChannelSelector="R" yChannelSelector="G" />
-      </filter>
-    </svg>
-
     {/* No transform-gpu here: creates a permanent stacking context that breaks
         Chrome's backdrop-filter when scrollY = 0. Top offset applied via DOM. */}
     <header
@@ -66,6 +52,26 @@ export default function LandingHeader() {
       className="fixed top-0 inset-x-0 z-[100] isolate flex justify-center pt-6 px-6 transition-[top] duration-700"
       suppressHydrationWarning
     >
+      {/*
+        SVG inside the <header> so it lives in the same Chrome compositing layer
+        as the lens div that references it via backdrop-filter: url(#...).
+        scale="0.04" instead of "0.5": with objectBoundingBox, scale is a fraction
+        of the element's width. A 1200px navbar at scale=0.5 = 600px displacement
+        (catastrophic). At 0.04 = ~48px max, ~2-4px effective — matches the button.
+        stdDeviation="0.002" = ~2.4px pre-blur (vs 12px with 0.01 on a wide pill).
+      */}
+      <svg className="absolute w-0 h-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        <filter id={`liquid-glass-${filterId}`} primitiveUnits="objectBoundingBox">
+          <feImage
+            result="map"
+            width="100%" height="100%" x="0" y="0"
+            href={WEBP_DISPLACEMENT_MAP}
+            preserveAspectRatio="none"
+          />
+          <feGaussianBlur in="SourceGraphic" stdDeviation="0.002" result="blur" />
+          <feDisplacementMap in="blur" in2="map" scale="0.04" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </svg>
       <div className="w-full max-w-[1600px]">
         {/*
           The <nav> is the relative container with no background of its own.
@@ -81,24 +87,17 @@ export default function LandingHeader() {
               --glass-reflex-dark: 1;
             }
             .nav-liquid-lens {
+              background-color: rgba(255, 255, 255, 0.08);
               background-color: oklch(from var(--foreground) l c h / 3%);
-              backdrop-filter: blur(16px) url(#liquid-glass-${filterId}) saturate(180%);
               -webkit-backdrop-filter: blur(16px) saturate(180%);
+              backdrop-filter: blur(16px) url(#liquid-glass-${filterId}) saturate(180%);
               box-shadow:
-                inset 0 0 0 1px color-mix(in srgb, white calc(var(--glass-reflex-light) * 10%), transparent),
-                inset 1.8px 3px 0px -2px color-mix(in srgb, white calc(var(--glass-reflex-light) * 90%), transparent),
-                inset -2px -2px 0px -2px color-mix(in srgb, white calc(var(--glass-reflex-light) * 80%), transparent),
-                inset -3px -8px 1px -6px color-mix(in srgb, white calc(var(--glass-reflex-light) * 60%), transparent),
-                inset -0.3px -1px 4px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 12%), transparent),
-                inset -1.5px 2.5px 0px -2px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 20%), transparent),
-                inset 0px 3px 4px -2px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 20%), transparent),
-                inset 2px -6.5px 1px -4px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 10%), transparent),
-                0px 1px 5px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 10%), transparent),
-                0px 8px 32px 0px color-mix(in srgb, black calc(var(--glass-reflex-dark) * 20%), transparent);
+                0px 1px 5px 0px rgba(0, 0, 0, 0.08),
+                0px 8px 32px 0px rgba(0, 0, 0, 0.14);
               transition: background-color 400ms cubic-bezier(1, 0.0, 0.4, 1), box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1);
             }
             .nav-liquid-text {
-              text-shadow: 0 1px 2px oklch(from var(--background) l c h / 30%);
+              text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
             }
           `}</style>
 

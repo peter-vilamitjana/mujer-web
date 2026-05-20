@@ -82,12 +82,11 @@ const GlassButton = React.forwardRef<HTMLButtonElement, GlassButtonProps>(
              the background behind the button, guaranteeing zero text-ghosting!
           */
           .btn-liquid-lens {
-            /* If no glassColor is provided, default to a subtle, neutral frosted glass */
+            background-color: rgba(255, 255, 255, 0.08);
             background-color: ${glassColor || "oklch(from var(--foreground) l c h / 5%)"};
-            
-            /* Chrome/Edge mathematically refracts via the SVG. Safari falls back to blur. */
-            backdrop-filter: blur(8px) url(#liquid-glass-${filterId}) saturate(150%);
+
             -webkit-backdrop-filter: blur(8px) saturate(150%);
+            backdrop-filter: blur(8px) url(#liquid-glass-${filterId}) saturate(150%);
             
             /* The intricate, highly realistic Box Shadow stack from the CodePen */
             box-shadow: 
