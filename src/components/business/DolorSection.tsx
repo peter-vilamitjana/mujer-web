@@ -220,21 +220,26 @@ export default function DolorSection() {
         </div>
 
         {/* Bridge to solution */}
-        <motion.div
-          initial={shouldReduce ? {} : { opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-14 text-center px-6"
-        >
-          <p className="text-zinc-400 text-sm md:text-base tracking-wide flex flex-wrap justify-center items-center gap-x-1.5 gap-y-1 font-sans">
-            <span>Con</span>
-            <span className="text-white font-extrabold tracking-tight">Ouleeh</span>,
-            <span className="font-playfair italic text-purple-300 font-normal text-lg md:text-xl ml-0.5">
-              todo eso queda atrás.
-            </span>
-          </p>
-        </motion.div>
+        <div className="mt-16 text-center px-6 flex flex-col items-center gap-3">
+          <motion.span
+            initial={shouldReduce ? {} : { opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="font-sans font-extrabold text-white text-[clamp(1.5rem,3.5vw,2.2rem)] tracking-tight leading-none"
+          >
+            Con Ouleeh,
+          </motion.span>
+          <motion.span
+            initial={shouldReduce ? {} : { opacity: 0, y: 22 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.65, delay: 0.13, ease: [0.22, 1, 0.36, 1] }}
+            className="font-playfair font-normal italic text-purple-300 text-[clamp(1.8rem,4.5vw,2.8rem)] leading-none"
+          >
+            todo eso queda atrás.
+          </motion.span>
+        </div>
       </div>
     </section>
   );
