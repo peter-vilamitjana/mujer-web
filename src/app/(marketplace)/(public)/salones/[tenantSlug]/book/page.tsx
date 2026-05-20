@@ -2,19 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getSalonBySlug, getSalonServices, getSalonStaff } from '@/lib/services/marketplace.service';
 import { notFound } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import { Skeleton } from '@/components/ui/skeleton';
-
-const BookingFlow = dynamic(() => import('@/components/marketplace/BookingFlow'), {
-  ssr: false,
-  loading: () => (
-    <div className="space-y-4 mt-4">
-      <Skeleton className="h-12 w-full rounded-xl" />
-      <Skeleton className="h-64 w-full rounded-xl" />
-      <Skeleton className="h-12 w-full rounded-xl" />
-    </div>
-  ),
-});
+import BookingFlowClient from './BookingFlowClient';
 
 interface Props {
   params: Promise<{ tenantSlug: string }>;
@@ -40,13 +28,14 @@ export default async function BookPage({ params }: Props) {
         <h1 className="text-2xl font-bold mb-1 tracking-tight">Reservar turno en {salon.name}</h1>
         <p className="text-sm text-muted-foreground">Elegí tus servicios, profesional y horario.</p>
       </div>
-      <BookingFlow
+      <BookingFlowClient
         tenantId={salon.id}
         tenantSlug={tenantSlug}
         services={services}
         staff={staff}
         isAuthenticated={!!session}
       />
+
     </div>
   );
 }
