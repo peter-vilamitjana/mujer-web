@@ -226,7 +226,7 @@ export default function SolucionesSection() {
         className={`bg-[#09090b] border-b border-white/[0.04]
           ${isMobile ? 'py-20' : 'sticky top-0 h-screen overflow-hidden'}`}
       >
-        <div className={`max-w-6xl mx-auto px-6 ${isMobile ? 'block' : 'h-full flex items-center'}`}>
+        <div className={`max-w-6xl mx-auto px-6 ${isMobile ? 'block' : 'h-full flex items-center pt-20'}`}>
 
           {/* ── DESKTOP ─────────────────────────────────────────────────────── */}
           {!isMobile ? (
