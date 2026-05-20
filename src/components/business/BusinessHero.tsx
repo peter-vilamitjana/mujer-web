@@ -76,39 +76,41 @@ export default function BusinessHero() {
 
               {/* Headline — animated word-by-word with cycling ending */}
               <h1
-                className="text-[clamp(2.8rem,7.5vw,6rem)] leading-[1.05] tracking-[-0.03em] mb-6 font-extrabold text-white flex flex-wrap justify-center items-center"
+                className="text-[clamp(2.8rem,7.5vw,6rem)] leading-[1.05] tracking-[-0.03em] mb-6 font-extrabold text-white flex flex-col items-center text-center"
                 aria-label="Tu salón, sin el caos."
               >
                 <motion.span
                   initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
                   animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                   transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-                  className="font-sans font-extrabold mr-[0.2em]"
+                  className="font-sans font-extrabold"
                 >
                   Tu salón,
                 </motion.span>
-                <motion.span
-                  initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
-                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                  transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                  className="font-playfair font-normal italic text-purple-300 tracking-normal mr-[0.2em]"
-                >
-                  sin
-                </motion.span>
-                <span className="relative inline-flex overflow-hidden h-[1.25em] items-center pr-3">
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={wordIndex}
-                      initial={{ opacity: 0, y: 35, filter: 'blur(6px)' }}
-                      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                      exit={{ opacity: 0, y: -35, filter: 'blur(6px)' }}
-                      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                      className="font-playfair font-normal italic text-purple-300 tracking-normal inline-block"
-                    >
-                      {words[wordIndex]}
-                    </motion.span>
-                  </AnimatePresence>
-                </span>
+                <div className="flex items-center justify-center flex-wrap">
+                  <motion.span
+                    initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
+                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                    transition={{ duration: 0.7, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                    className="font-playfair font-normal italic text-purple-300 tracking-normal mr-[0.22em]"
+                  >
+                    sin
+                  </motion.span>
+                  <span className="relative inline-flex overflow-hidden h-[1.25em] items-center pr-3">
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={wordIndex}
+                        initial={{ opacity: 0, y: 35, filter: 'blur(6px)' }}
+                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                        exit={{ opacity: 0, y: -35, filter: 'blur(6px)' }}
+                        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                        className="font-playfair font-normal italic text-purple-300 tracking-normal inline-block"
+                      >
+                        {words[wordIndex]}
+                      </motion.span>
+                    </AnimatePresence>
+                  </span>
+                </div>
               </h1>
 
               {/* Subheadline */}
