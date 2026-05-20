@@ -25,12 +25,19 @@ export default async function BookConfirmationPage({ params, searchParams }: Pro
   const guestEmail = String(sp.guestEmail ?? '');
 
   const appointmentDate = dateISO ? parseISO(dateISO) : new Date();
-  const formattedDate = format(appointmentDate, "EEEE d 'de' MMMM", { locale: es });
+  const validDate = isFinite(appointmentDate.getTime());
+  const formattedDate = validDate
+    ? format(appointmentDate, "EEEE d 'de' MMMM", { locale: es })
+    : '';
 
   const calendarUrl = (() => {
-    const [h, m] = time.split(':').map(Number);
+    const parts = time.split(':').map(Number);
+    const h = parts[0];
+    const m = parts[1] ?? 0;
+    if (!dateISO || !isFinite(h) || !isFinite(m)) return '#';
     const start = new Date(appointmentDate);
     start.setHours(h, m, 0, 0);
+    if (!isFinite(start.getTime())) return '#';
     const end = new Date(start.getTime() + 60 * 60000);
     const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     const title = encodeURIComponent(`Turno en ${salon.name}`);
