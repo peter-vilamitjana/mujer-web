@@ -236,27 +236,40 @@ export default function DolorSection() {
           />
         </div>
 
-        {/* Bridge to solution */}
-        <div className="mt-16 text-center px-6 flex flex-col items-center gap-3">
-          <motion.span
-            initial={shouldReduce ? {} : { opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="font-sans font-extrabold text-white text-[clamp(1.5rem,3.5vw,2.2rem)] tracking-tight leading-none"
-          >
-            Con Ouleeh,
-          </motion.span>
-          <motion.span
-            initial={shouldReduce ? {} : { opacity: 0, y: 22 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.65, delay: 0.13, ease: [0.22, 1, 0.36, 1] }}
-            className="font-playfair font-normal italic text-purple-300 text-[clamp(1.8rem,4.5vw,2.8rem)] leading-none"
-          >
-            todo eso queda atrás.
-          </motion.span>
-        </div>
+      </div>
+
+      {/*
+        ── Bridge: "Con Ouleeh, todo eso queda atrás." ──────────────────
+        Standalone block separated from the pain grid so it gets its own
+        breathing room (py-24) without stacking on top of the grid's padding.
+
+        Blur-to-focus: both lines start blurred (filter: blur 12px), at 95%
+        scale and fully transparent. As the block enters the viewport,
+        opacity→1, scale→1 and blur→0 in ~700ms. The second line is delayed
+        120ms so it appears to resolve just after the first — reinforcing the
+        "the solution becomes clear" mental model.
+      */}
+      <div className="w-full py-24 flex flex-col items-center gap-3 text-center px-6">
+        <motion.p
+          initial={shouldReduce ? {} : { opacity: 0, scale: 0.95, filter: 'blur(12px)' }}
+          whileInView={shouldReduce ? {} : { opacity: 1, scale: 1, filter: 'blur(0px)' }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="font-sans font-bold text-zinc-100 text-[clamp(1.5rem,3.5vw,2.2rem)] tracking-tight leading-none"
+        >
+          Con Ouleeh,
+        </motion.p>
+        <motion.p
+          initial={shouldReduce ? {} : { opacity: 0, scale: 0.95, filter: 'blur(12px)' }}
+          whileInView={shouldReduce ? {} : { opacity: 1, scale: 1, filter: 'blur(0px)' }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.75, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+          className="font-playfair font-normal italic text-transparent bg-clip-text
+            bg-gradient-to-r from-violet-400 to-fuchsia-500
+            text-[clamp(1.8rem,4.5vw,2.8rem)] leading-none"
+        >
+          todo eso queda atrás.
+        </motion.p>
       </div>
     </section>
   );
