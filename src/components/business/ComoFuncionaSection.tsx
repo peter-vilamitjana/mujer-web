@@ -363,7 +363,7 @@ export default function ComoFuncionaSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.65, ease: EASE }}
-          className="text-center pt-28 pb-16"
+          className="text-center pt-24 pb-4"
         >
           <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-4">
             Simple por diseño
@@ -404,18 +404,20 @@ export default function ComoFuncionaSection() {
           {/* LEFT — scrollable steps */}
           <div className="flex flex-col">
             {steps.map((step, index) => {
-              const Icon     = step.icon;
               const isActive = activeStep === index;
 
               return (
                 <div
                   key={step.number}
                   ref={el => { stepRefs.current[index] = el; }}
-                  // h-screen: fixed 100vh per step — identical for all three.
-                  // flex flex-col justify-center: content floats to vertical centre.
-                  className="h-screen flex flex-col justify-center py-20"
+                  // h-[75vh]: 25% shorter than h-screen — eliminates the 50vh dead zone
+                  // that justify-center creates. All three steps are still mathematically
+                  // identical in height, so the IObs trigger fires symmetrically.
+                  // items-stretch on the row: left rail grows to match text column height
+                  // so the connector's flex-1 has a real parent height to fill.
+                  className="h-[75vh] flex flex-col justify-center py-12"
                 >
-                  <div className="flex items-start gap-6">
+                  <div className="flex items-stretch gap-6">
                     {/* Left rail: number badge + connector */}
                     <div className="flex flex-col items-center shrink-0 pt-1">
                       <div
@@ -436,10 +438,12 @@ export default function ComoFuncionaSection() {
                       </div>
 
                       {index < steps.length - 1 && (
+                        // flex-1: fills all remaining height in the left rail after the
+                        // badge, bridging toward the next step's badge. Works because
+                        // items-stretch on the parent row gives the rail a defined height.
                         <div
-                          className="w-px mt-3 transition-all duration-700"
+                          className="w-px mt-3 flex-1 transition-all duration-700"
                           style={{
-                            height: '60px',
                             background: isActive
                               ? 'linear-gradient(to bottom, rgba(167,139,250,0.50), rgba(167,139,250,0.05))'
                               : 'rgba(255,255,255,0.06)',
@@ -449,26 +453,8 @@ export default function ComoFuncionaSection() {
                       )}
                     </div>
 
-                    {/* Step text */}
-                    <div className="flex-1 pb-2">
-                      <div
-                        className="w-10 h-10 rounded-xl border flex items-center justify-center mb-5
-                          transition-all duration-700"
-                        style={isActive ? {
-                          background: 'rgba(139,92,246,0.12)',
-                          borderColor: 'rgba(167,139,250,0.35)',
-                        } : {
-                          background: 'rgba(255,255,255,0.02)',
-                          borderColor: 'rgba(255,255,255,0.07)',
-                        }}
-                      >
-                        <Icon
-                          className="w-4 h-4 transition-colors duration-700"
-                          style={{ color: isActive ? '#c4b5fd' : '#3f3f46' }}
-                          aria-hidden="true"
-                        />
-                      </div>
-
+                    {/* Step text — single indicator (number badge in left rail only) */}
+                    <div className="flex-1 pb-2 flex flex-col justify-center">
                       <h3
                         className="font-playfair text-4xl font-semibold leading-tight mb-4
                           transition-colors duration-700"
@@ -483,15 +469,6 @@ export default function ComoFuncionaSection() {
                       >
                         {step.description}
                       </p>
-
-                      <motion.div
-                        animate={{ opacity: isActive ? 1 : 0, x: isActive ? 0 : -8 }}
-                        transition={{ duration: shouldReduce ? 0 : 0.35, ease: EASE }}
-                        className="flex items-center gap-2 mt-6"
-                      >
-                        <div className="w-1.5 h-1.5 rounded-full bg-violet-400" />
-                        <span className="text-xs text-violet-400 font-medium">Paso activo</span>
-                      </motion.div>
                     </div>
                   </div>
                 </div>
@@ -500,11 +477,12 @@ export default function ComoFuncionaSection() {
           </div>
 
           {/* RIGHT — sticky phone mockup
-              top-16 + h-[calc(100vh-8rem)]: the sticky box is 4rem from the viewport
-              top and has an equal 4rem gap at the bottom, so the phone is always
-              optically centred regardless of which step is active.
-              relative: needed so the absolute glow is contained within this box. */}
-          <div className="relative self-start sticky top-16 h-[calc(100vh-8rem)] flex items-center justify-center">
+              top-28 (112px): clears the business navbar which is ~7rem tall.
+              h-[calc(100vh-7rem)]: fills viewport minus nav height, so the geometric
+              centre of the sticky window = 112px + (100vh-112px)/2 = 50vh + 56px —
+              optically centred regardless of which step is active. The phone (470px)
+              fits comfortably inside this box on any viewport ≥ 640px tall. */}
+          <div className="relative self-start sticky top-28 h-[calc(100vh-7rem)] flex items-center justify-center">
 
             {/* Background ambient glow — opacity animates per step
                 The gradient itself is always violet→fuchsia; we animate how
