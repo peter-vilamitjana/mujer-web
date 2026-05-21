@@ -5,14 +5,17 @@ import { useScroll, useTransform, useSpring, useMotionValue, motion, AnimatePres
 import { useLenis } from 'lenis/react';
 import { Calendar, TrendingUp, LayoutDashboard, CheckCircle } from 'lucide-react';
 
+// ── Paleta violeta unificada ───────────────────────────────────────────────────
+const VIOLET_HEX = '#a78bfa'; // violet-400
+
 const solutions = [
   {
     id: 'reserva',
     title: 'Capa 1: Dashboard',
     subtitle: 'El centro de control de tu salón',
     icon: LayoutDashboard,
-    color: 'text-purple-400',
-    glow: 'rgba(168,85,247,0.15)',
+    color: 'text-violet-400',
+    glow: 'rgba(167,139,250,0.15)',
     image: '/landing/dashboard-preview.png',
     bullets: [
       'Visualiza tus ingresos diarios y turnos agendados al instante.',
@@ -25,8 +28,8 @@ const solutions = [
     title: 'Capa 2: Agenda inteligente',
     subtitle: 'Adiós a los olvidos y superposiciones',
     icon: Calendar,
-    color: 'text-amber-400',
-    glow: 'rgba(234,179,8,0.15)',
+    color: 'text-violet-400',
+    glow: 'rgba(167,139,250,0.15)',
     image: '/landing/calendar-preview.png',
     bullets: [
       'Organización de turnos por profesional, día y horario.',
@@ -39,8 +42,8 @@ const solutions = [
     title: 'Capa 3: Reportes & Crecimiento',
     subtitle: 'El control absoluto sobre tus números',
     icon: TrendingUp,
-    color: 'text-emerald-400',
-    glow: 'rgba(52,211,153,0.15)',
+    color: 'text-violet-400',
+    glow: 'rgba(167,139,250,0.15)',
     image: '/landing/dashboard-preview.png?v=2',
     bullets: [
       'Visualización clara de ingresos por día, semana y mes.',
@@ -50,7 +53,8 @@ const solutions = [
   },
 ];
 
-// ─── Mockups inline — reemplazar con screenshots reales cuando estén listos ───
+// ─── Mockups ─────────────────────────────────────────────────────────────────
+// Todos se renderizan al mismo tiempo (stacked) para que el crossfade sea instantáneo.
 
 function MockupReserva() {
   return (
@@ -87,13 +91,13 @@ function MockupMetricas() {
     <div className="w-full h-full bg-[#0d0d0f] flex flex-col overflow-hidden">
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.05] shrink-0">
         <span className="text-white text-[11px] font-semibold">Reportes · Mayo 2026</span>
-        <span className="text-[9px] text-emerald-400 font-semibold">↑ +18% vs abril</span>
+        <span className="text-[9px] text-violet-400 font-semibold">↑ +18% vs abril</span>
       </div>
       <div className="grid grid-cols-3 border-b border-white/[0.04] shrink-0">
         {[
-          { label: 'Ingresos', val: '$48.500', color: '#34d399' },
-          { label: 'Turnos', val: '23', color: '#a78bfa' },
-          { label: 'Valoración', val: '4.8 ★', color: '#fbbf24' },
+          { label: 'Ingresos',  val: '$48.500', color: '#c4b5fd' },
+          { label: 'Turnos',    val: '23',      color: '#a78bfa' },
+          { label: 'Valoración',val: '4.8 ★',  color: '#ddd6fe' },
         ].map((s, i) => (
           <div key={s.label} className={`px-3 py-2 ${i < 2 ? 'border-r border-white/[0.04]' : ''}`}>
             <p className="text-[8px] text-zinc-600 mb-0.5">{s.label}</p>
@@ -111,7 +115,9 @@ function MockupMetricas() {
                   className="w-full rounded-t-sm"
                   style={{
                     height: `${h}%`,
-                    background: i === 5 ? 'linear-gradient(to top, #059669, #34d399)' : 'rgba(52,211,153,0.18)',
+                    background: i === 5
+                      ? 'linear-gradient(to top, #6d28d9, #a78bfa)'
+                      : 'rgba(167,139,250,0.18)',
                   }}
                 />
               </div>
@@ -126,7 +132,7 @@ function MockupMetricas() {
           <div key={s.name} className="flex items-center gap-2 mb-1">
             <span className="text-[8px] text-zinc-500 w-16 shrink-0">{s.name}</span>
             <div className="flex-1 h-1 bg-white/[0.04] rounded-full overflow-hidden">
-              <div className="h-full bg-emerald-500/60 rounded-full" style={{ width: `${s.pct}%` }} />
+              <div className="h-full bg-violet-500/60 rounded-full" style={{ width: `${s.pct}%` }} />
             </div>
             <span className="text-[8px] text-zinc-600 w-6 text-right">{s.pct}%</span>
           </div>
@@ -149,7 +155,6 @@ export default function SolucionesSection() {
   const isCompleteRef = useRef(false);
   const prefersReducedMotion = useReducedMotion();
 
-  // MotionValue for raw progress — set directly in Lenis RAF, no re-renders
   const scrollProgress = useMotionValue(0);
 
   useEffect(() => {
@@ -159,37 +164,24 @@ export default function SolucionesSection() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // scrollYProgress drives 3D tilt + exit fade
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ['start start', 'end end'],
   });
 
-  // Soft spring — drives 3D tilt with a trailing, elastic feel
   const smoothProgress = useSpring(scrollYProgress, {
     stiffness: 42,
     damping: 14,
     restDelta: 0.001,
   });
 
-  // Separate spring for the progress bar so it eases in/out instead of jumping
-  const smoothBarProgress = useSpring(scrollProgress, {
-    stiffness: 55,
-    damping: 20,
-    restDelta: 0.001,
-  });
-  const progressBarScaleX = useTransform(smoothBarProgress, [0, 1], [0, 1]);
-
-  // 3D Tilt
   const rotateX = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [15, 5]);
   const rotateY = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [-12, -4]);
-  const scale = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [0.95, 1.02]);
+  const scale   = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [0.95, 1.02]);
 
-  // Exit: section gently fades + shrinks as scroll leaves it
   const exitOpacity = useTransform(scrollYProgress, [0.85, 1], [1, 0.82]);
-  const exitScale = useTransform(scrollYProgress, [0.85, 1], [1, 0.97]);
+  const exitScale   = useTransform(scrollYProgress, [0.85, 1], [1, 0.97]);
 
-  // Step tracking via Lenis RAF — more reliable than useScroll with Lenis active
   useLenis(({ scroll }) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
@@ -200,7 +192,6 @@ export default function SolucionesSection() {
 
     scrollProgress.set(p);
 
-    // Each step gets a generous share of the scroll budget
     const newStep = p < 0.30 ? 0 : p < 0.65 ? 1 : 2;
     if (newStep !== activeStepRef.current) {
       activeStepRef.current = newStep;
@@ -214,10 +205,7 @@ export default function SolucionesSection() {
     }
   });
 
-  const STEP_HEX = ['#c084fc', '#fbbf24', '#34d399'];
-
   return (
-    // 400vh gives each step ~100vh of scroll budget (scrollable = 300vh)
     <div
       ref={containerRef}
       className={`relative z-10 ${isMobile ? '' : 'h-[400vh]'}`}
@@ -230,16 +218,18 @@ export default function SolucionesSection() {
 
           {/* ── DESKTOP ─────────────────────────────────────────────────────── */}
           {!isMobile ? (
-            // Exit animation wraps the entire grid
             <motion.div
               style={{ opacity: exitOpacity, scale: exitScale }}
               className="grid grid-cols-12 gap-8 w-full items-center"
             >
 
-              {/* LEFT — Monitor: stays fixed while scroll budget drains */}
+              {/* LEFT — Monitor con crossfade entre mockups */}
               <div className="col-span-8 flex flex-col justify-center relative">
+                {/* Glow de fondo que sigue el step activo */}
                 <div
-                  className="pointer-events-none absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-30 transition-all duration-700 blur-[80px]"
+                  className="pointer-events-none absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2
+                    w-[600px] h-[600px] rounded-full opacity-30 blur-[80px]
+                    transition-all duration-700"
                   style={{ background: `radial-gradient(circle, ${solutions[activeStep].glow} 0%, transparent 70%)` }}
                 />
 
@@ -249,7 +239,7 @@ export default function SolucionesSection() {
                   </p>
                   <h2 className="font-playfair text-[clamp(2.2rem,4vw,3rem)] text-white italic leading-tight">
                     Tu salón bajo control,{' '}
-                    <span className="text-purple-400">capa por capa.</span>
+                    <span className="text-violet-400">capa por capa.</span>
                   </h2>
                 </div>
 
@@ -263,62 +253,46 @@ export default function SolucionesSection() {
                       rotateY,
                       scale,
                       boxShadow:
-                        "inset 0 1px 1px rgba(255,255,255,0.15), 0 24px 48px -12px rgba(0,0,0,0.5), 0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026",
+                        'inset 0 1px 1px rgba(255,255,255,0.15), 0 24px 48px -12px rgba(0,0,0,0.5), 0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026',
                     }}
                     className="w-full h-[360px] lg:h-[420px] border border-[#444] p-1.5 bg-[#222222] rounded-[28px] shadow-2xl relative overflow-hidden"
                   >
                     <div className="h-full w-full overflow-hidden rounded-[20px] bg-[#050504] relative z-10">
+                      {/* Barra de título del "navegador" */}
                       <div className="flex items-center gap-1.5 px-3 py-2 bg-black/40 border-b border-white/[0.04] absolute top-0 inset-x-0 z-30">
                         <div className="w-2 h-2 rounded-full bg-red-400/50" />
                         <div className="w-2 h-2 rounded-full bg-amber-400/50" />
                         <div className="w-2 h-2 rounded-full bg-emerald-400/50" />
                         <div className="h-3 w-28 rounded-full bg-white/[0.04] border border-white/[0.06] mx-auto" />
                       </div>
-                      {/* Mockup swaps with y-slide + blur */}
+
+                      {/*
+                        Crossfade: todos los mockups se renderizan siempre (stacked absolute).
+                        Solo cambia la opacidad → sin parpadeo, sin skeleton vacío.
+                        Las imágenes se pre-cargan en background al montar el componente.
+                      */}
                       <div className="w-full h-full pt-7 relative">
-                        <AnimatePresence mode="wait">
-                          {(() => {
-                            const MockupComponent = MOCKUPS[activeStep];
-                            return (
-                              <motion.div
-                                key={activeStep}
-                                initial={{ opacity: 0, y: 14, filter: prefersReducedMotion ? 'none' : 'blur(8px)' }}
-                                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                                exit={{ opacity: 0, y: -8, filter: prefersReducedMotion ? 'none' : 'blur(4px)' }}
-                                transition={{ duration: prefersReducedMotion ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] }}
-                                className="absolute inset-0"
-                              >
-                                <MockupComponent />
-                              </motion.div>
-                            );
-                          })()}
-                        </AnimatePresence>
+                        {MOCKUPS.map((MockupComponent, i) => (
+                          <motion.div
+                            key={i}
+                            className="absolute inset-0"
+                            animate={{ opacity: i === activeStep ? 1 : 0 }}
+                            transition={{
+                              duration: prefersReducedMotion ? 0 : 0.45,
+                              ease: [0.4, 0, 0.2, 1],
+                            }}
+                          >
+                            <MockupComponent />
+                          </motion.div>
+                        ))}
                       </div>
                     </div>
                   </motion.div>
                 </div>
               </div>
 
-              {/* RIGHT — Features */}
+              {/* RIGHT — Acordeón de capas */}
               <div className="col-span-4 flex flex-col justify-center gap-2">
-
-                {/* Step counter + animated progress bar */}
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-xs text-zinc-500 font-mono tabular-nums">
-                    <span className="text-white font-semibold">{activeStep + 1}</span>
-                    <span className="text-zinc-600"> / 3</span>
-                  </span>
-                  <div className="flex-1 h-[2px] bg-white/[0.06] rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full origin-left rounded-full"
-                      style={{
-                        scaleX: progressBarScaleX,
-                        backgroundColor: STEP_HEX[activeStep],
-                      }}
-                      transition={{ backgroundColor: { duration: 0.4 } }}
-                    />
-                  </div>
-                </div>
 
                 {solutions.map((sol, index) => {
                   const Icon = sol.icon;
@@ -327,22 +301,25 @@ export default function SolucionesSection() {
                   return (
                     <motion.div
                       key={sol.id}
-                      animate={{ opacity: isActive ? 1 : 0.2 }}
-                      transition={{ duration: prefersReducedMotion ? 0 : 0.65, ease: [0.4, 0, 0.2, 1] }}
-                      className={`rounded-2xl border transition-colors duration-500 overflow-hidden ${
-                        isActive
-                          ? 'border-white/[0.1] bg-white/[0.03]'
-                          : 'border-white/[0.04] bg-transparent'
-                      }`}
+                      animate={{ opacity: isActive ? 1 : 0.5 }}
+                      transition={{ duration: prefersReducedMotion ? 0 : 0.4, ease: [0.4, 0, 0.2, 1] }}
+                      onClick={() => setActiveStep(index)}
+                      className={`rounded-2xl border cursor-pointer overflow-hidden
+                        transition-colors duration-300
+                        ${isActive
+                          ? 'border-violet-400/20 bg-violet-400/[0.04]'
+                          : 'border-white/[0.04] bg-transparent hover:border-white/[0.08]'
+                        }`}
                     >
-                      {/* Header — always visible */}
+                      {/* Header — siempre visible */}
                       <div className="flex gap-4 items-center p-5">
-                        <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0 transition-all duration-500 ${
-                          isActive
-                            ? 'bg-white/[0.06] border-white/20 scale-105'
+                        <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0
+                          transition-all duration-400
+                          ${isActive
+                            ? 'bg-violet-400/[0.08] border-violet-400/30 scale-105'
                             : 'bg-white/[0.02] border-white/[0.06]'
-                        }`}>
-                          <Icon className={`w-5 h-5 ${sol.color}`} />
+                          }`}>
+                          <Icon className="w-5 h-5 text-violet-400" />
                         </div>
                         <div>
                           <h3 className="font-playfair text-xl font-medium text-white leading-tight">
@@ -354,7 +331,7 @@ export default function SolucionesSection() {
                         </div>
                       </div>
 
-                      {/* Bullets — staggered entrance when active */}
+                      {/* Bullets — se despliegan suavemente al activarse */}
                       <AnimatePresence initial={false}>
                         {isActive && (
                           <motion.ul
@@ -362,22 +339,26 @@ export default function SolucionesSection() {
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: prefersReducedMotion ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] }}
+                            transition={{
+                              duration: prefersReducedMotion ? 0 : 0.35,
+                              ease: [0.4, 0, 0.2, 1],
+                              opacity: { duration: prefersReducedMotion ? 0 : 0.25 },
+                            }}
                             className="space-y-3 px-5 pb-5 overflow-hidden"
                           >
                             {sol.bullets.map((bullet, bIdx) => (
                               <motion.li
                                 key={bIdx}
-                                initial={{ opacity: 0, x: -8 }}
+                                initial={{ opacity: 0, x: -6 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{
-                                  duration: prefersReducedMotion ? 0 : 0.45,
-                                  delay: prefersReducedMotion ? 0 : 0.12 + bIdx * 0.1,
-                                  ease: [0.22, 1, 0.36, 1],
+                                  duration: prefersReducedMotion ? 0 : 0.3,
+                                  delay: prefersReducedMotion ? 0 : 0.08 + bIdx * 0.07,
+                                  ease: [0.4, 0, 0.2, 1],
                                 }}
                                 className="flex gap-3 items-start text-sm text-zinc-400"
                               >
-                                <CheckCircle className={`w-4 h-4 shrink-0 mt-0.5 ${sol.color}`} />
+                                <CheckCircle className="w-4 h-4 shrink-0 mt-0.5 text-violet-400" />
                                 <span>{bullet}</span>
                               </motion.li>
                             ))}
@@ -388,22 +369,24 @@ export default function SolucionesSection() {
                   );
                 })}
 
-                {/* Progress dots */}
+                {/* Puntos de navegación — únicos controles de paginación */}
                 <div className="flex gap-2 justify-center pt-3">
                   {solutions.map((_, i) => (
-                    <div
+                    <button
                       key={i}
-                      className="rounded-full transition-all duration-500"
+                      onClick={() => setActiveStep(i)}
+                      aria-label={`Ir a capa ${i + 1}`}
+                      className="rounded-full transition-all duration-400 cursor-pointer"
                       style={{
-                        width: i === activeStep ? '16px' : '6px',
-                        height: '6px',
-                        backgroundColor: i === activeStep ? STEP_HEX[i] : 'rgba(255,255,255,0.15)',
+                        width:           i === activeStep ? '16px' : '6px',
+                        height:          '6px',
+                        backgroundColor: i === activeStep ? VIOLET_HEX : 'rgba(255,255,255,0.15)',
                       }}
                     />
                   ))}
                 </div>
 
-                {/* Completion nudge — appears when all steps are done */}
+                {/* Nudge al completar todas las capas */}
                 <AnimatePresence>
                   {isComplete && (
                     <motion.div
@@ -429,7 +412,6 @@ export default function SolucionesSection() {
                 </AnimatePresence>
 
               </div>
-
             </motion.div>
           ) : (
 
@@ -441,7 +423,7 @@ export default function SolucionesSection() {
                 </p>
                 <h2 className="font-playfair text-3xl text-white italic leading-tight">
                   Tu salón bajo control,<br />
-                  <span className="text-purple-400">capa por capa.</span>
+                  <span className="text-violet-400">capa por capa.</span>
                 </h2>
               </div>
 
@@ -467,8 +449,8 @@ export default function SolucionesSection() {
 
                       <div className="space-y-4 max-w-md mx-auto">
                         <div className="flex gap-3 items-center">
-                          <div className="w-10 h-10 rounded-xl border flex items-center justify-center bg-white/[0.03] border-white/[0.08]">
-                            <Icon className={`w-4 h-4 ${sol.color}`} />
+                          <div className="w-10 h-10 rounded-xl border flex items-center justify-center bg-violet-400/[0.06] border-violet-400/20">
+                            <Icon className="w-4 h-4 text-violet-400" />
                           </div>
                           <div>
                             <h3 className="font-playfair text-xl font-bold text-white">{sol.title}</h3>
@@ -478,7 +460,7 @@ export default function SolucionesSection() {
                         <ul className="space-y-2.5 pl-1">
                           {sol.bullets.map((bullet, bIdx) => (
                             <li key={bIdx} className="flex gap-2.5 items-start text-xs text-zinc-400">
-                              <CheckCircle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${sol.color}`} />
+                              <CheckCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-violet-400" />
                               <span>{bullet}</span>
                             </li>
                           ))}
