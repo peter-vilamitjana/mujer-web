@@ -319,7 +319,7 @@ export default function ComoFuncionaSection() {
   return (
     <section
       id="como-funciona"
-      className="relative z-10 bg-[#09090b] scroll-mt-20 overflow-hidden"
+      className="relative z-10 bg-[#09090b] scroll-mt-20"
     >
       {/* Top separator */}
       <div
@@ -371,7 +371,13 @@ export default function ComoFuncionaSection() {
         </motion.div>
 
         {/* ── DESKTOP: Sticky Scroll layout ───────────────────────────────── */}
-        <div className="hidden lg:grid lg:grid-cols-2 lg:gap-20 pb-32">
+        {/*
+          items-start is REQUIRED for sticky to work.
+          Default items-stretch makes the right column fill the full grid height →
+          the sticky child then fills its parent → it has no room to "stick" and
+          just scrolls with the page. items-start lets each column be its own height.
+        */}
+        <div className="hidden lg:grid lg:grid-cols-2 lg:gap-20 items-start pb-32">
 
           {/* LEFT — scrollable steps */}
           <div className="flex flex-col">
@@ -475,8 +481,15 @@ export default function ComoFuncionaSection() {
             })}
           </div>
 
-          {/* RIGHT — sticky phone mockup */}
-          <div className="self-start sticky top-[20vh]">
+          {/* RIGHT — sticky phone mockup
+              sticky + top-16: anchors the column 4rem from the viewport top.
+              h-[calc(100vh-8rem)]: the column height fills the viewport minus
+              the top offset (4rem) and an equal bottom gap (4rem), so the phone
+              is always optically centred on screen as the left column scrolls.
+              flex items-center justify-center: centres the phone inside that box.
+              relative: required so the absolute glow div uses THIS as its containing
+              block (position:sticky creates a containing block for abs children). */}
+          <div className="relative self-start sticky top-16 h-[calc(100vh-8rem)] flex items-center justify-center">
             {/* Outer glow behind phone */}
             <div
               className="absolute inset-0 pointer-events-none transition-all duration-700"
@@ -487,7 +500,7 @@ export default function ComoFuncionaSection() {
               aria-hidden="true"
             />
 
-            <div className="relative flex flex-col items-center gap-8 py-12">
+            <div className="relative flex flex-col items-center gap-8">
               <PhoneMockup
                 activeStep={activeStep}
                 prefersReducedMotion={shouldReduce}
