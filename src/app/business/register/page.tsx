@@ -430,7 +430,7 @@ export default function RegisterSalonPage() {
   }, [slugTimer]);
 
   const canAdvance = (): boolean => {
-    if (step === 1) return !!(data.salonName && data.address && data.phone && data.slug && slugStatus !== 'taken' && slugStatus !== 'checking');
+    if (step === 1) return !!(data.salonName && data.slug && slugStatus !== 'taken' && slugStatus !== 'checking');
     if (step === 2) return !!(data.serviceName && data.servicePrice > 0);
     if (step === 3) return Object.values(data.businessHours).some((h) => h.isOpen);
     return true;
@@ -441,6 +441,11 @@ export default function RegisterSalonPage() {
 
   const handleSubmit = () => {
     setError(null);
+    if (!session) {
+      setIsLoginLoading(true);
+      signIn('google', { callbackUrl: '/business/register' });
+      return;
+    }
     startTransition(async () => {
       const result = await createTenantWithAdmin({
         salonName: data.salonName,
@@ -463,48 +468,6 @@ export default function RegisterSalonPage() {
       }
     });
   };
-
-  // ── Google login gate ──────────────────────────────────────────
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30 py-12 px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center space-y-1">
-            <CardTitle className="text-2xl font-bold">Registrá tu salón</CardTitle>
-            <CardDescription>Primero iniciá sesión para continuar.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              variant="outline"
-              className="w-full py-6"
-              disabled={isLoginLoading}
-              onClick={async () => {
-                setIsLoginLoading(true);
-                await signIn('google', { callbackUrl: '/business/register' });
-              }}
-            >
-              {isLoginLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 488 512" fill="currentColor">
-                  <path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z" />
-                </svg>
-              )}
-              Continuar con Google
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   // ── Wizard ─────────────────────────────────────────────────────
   const progressPct = ((step - 1) / (STEPS.length - 1)) * 100;
@@ -587,8 +550,10 @@ export default function RegisterSalonPage() {
                   onClick={handleSubmit}
                   disabled={isPending}
                 >
-                  {isPending ? (
+                  {isPending || isLoginLoading ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Creando tu salón...</>
+                  ) : !session ? (
+                    <><Rocket className="mr-2 h-4 w-4" />Iniciar sesión y crear salón</>
                   ) : (
                     <><Rocket className="mr-2 h-4 w-4" />Crear mi salón</>
                   )}
@@ -599,9 +564,15 @@ export default function RegisterSalonPage() {
         </Card>
 
         {/* Session info */}
-        <p className="text-center text-xs text-muted-foreground">
-          Registrando como <span className="font-medium">{session.user?.email}</span>
-        </p>
+        {session ? (
+          <p className="text-center text-xs text-muted-foreground">
+            Registrando como <span className="font-medium">{session.user?.email}</span>
+          </p>
+        ) : (
+          <p className="text-center text-xs text-muted-foreground">
+            Al finalizar se te pedirá iniciar sesión con Google.
+          </p>
+        )}
       </div>
     </div>
   );
