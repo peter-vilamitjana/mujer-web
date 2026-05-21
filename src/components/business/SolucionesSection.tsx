@@ -1,12 +1,27 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
-import { useScroll, useTransform, useSpring, useMotionValue, motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import {
+  useScroll, useTransform, useSpring, useMotionValue,
+  motion, AnimatePresence, useReducedMotion,
+} from 'framer-motion';
 import { useLenis } from 'lenis/react';
 import { Calendar, TrendingUp, LayoutDashboard, CheckCircle } from 'lucide-react';
 
-// ── Paleta violeta unificada ───────────────────────────────────────────────────
-const VIOLET_HEX = '#a78bfa'; // violet-400
+// ── Tokens de color ────────────────────────────────────────────────────────────
+const VIOLET_HEX  = '#a78bfa';              // violet-400
+const VIOLET_GLOW = 'rgba(167,139,250,0.15)';
+
+// Traffic lights exactos de macOS  (tamaño 12 px, gap 8 px, igual a Safari nativo)
+const TRAFFIC = [
+  { bg: '#FF5F57', label: 'Cerrar' },
+  { bg: '#FFBD2E', label: 'Minimizar' },
+  { bg: '#28C840', label: 'Pantalla completa' },
+];
+
+// ── Bezier "Apple spring" para la coreografía de imágenes ─────────────────────
+// ease-out suave — replica la curva de los macOS spring animations
+const APPLE_EASE = [0.25, 0.46, 0.45, 0.94] as const;
 
 const solutions = [
   {
@@ -14,9 +29,7 @@ const solutions = [
     title: 'Capa 1: Dashboard',
     subtitle: 'El centro de control de tu salón',
     icon: LayoutDashboard,
-    color: 'text-violet-400',
-    glow: 'rgba(167,139,250,0.15)',
-    image: '/landing/dashboard-preview.png',
+    glow: VIOLET_GLOW,
     bullets: [
       'Visualiza tus ingresos diarios y turnos agendados al instante.',
       'Acceso rápido al expediente técnico de cada cliente.',
@@ -28,9 +41,7 @@ const solutions = [
     title: 'Capa 2: Agenda inteligente',
     subtitle: 'Adiós a los olvidos y superposiciones',
     icon: Calendar,
-    color: 'text-violet-400',
-    glow: 'rgba(167,139,250,0.15)',
-    image: '/landing/calendar-preview.png',
+    glow: VIOLET_GLOW,
     bullets: [
       'Organización de turnos por profesional, día y horario.',
       'Historial de visitas y notas especiales de clientes integradas.',
@@ -42,9 +53,7 @@ const solutions = [
     title: 'Capa 3: Reportes & Crecimiento',
     subtitle: 'El control absoluto sobre tus números',
     icon: TrendingUp,
-    color: 'text-violet-400',
-    glow: 'rgba(167,139,250,0.15)',
-    image: '/landing/dashboard-preview.png?v=2',
+    glow: VIOLET_GLOW,
     bullets: [
       'Visualización clara de ingresos por día, semana y mes.',
       'Historial técnico y preferencias detalladas de clientas.',
@@ -53,8 +62,7 @@ const solutions = [
   },
 ];
 
-// ─── Mockups ─────────────────────────────────────────────────────────────────
-// Todos se renderizan al mismo tiempo (stacked) para que el crossfade sea instantáneo.
+// ─── Mockups (todos siempre en DOM → las imágenes se pre-cargan) ──────────────
 
 function MockupReserva() {
   return (
@@ -62,7 +70,7 @@ function MockupReserva() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/landing/dashboard-preview.png"
-        alt="Vista previa del link de reservas"
+        alt="Vista previa del dashboard"
         className="w-full h-full object-cover object-top"
         draggable={false}
       />
@@ -76,7 +84,7 @@ function MockupAgenda() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/landing/calendar-preview.png"
-        alt="Vista previa de la agenda inteligente"
+        alt="Vista previa de la agenda"
         className="w-full h-full object-cover object-top"
         draggable={false}
       />
@@ -86,7 +94,7 @@ function MockupAgenda() {
 
 function MockupMetricas() {
   const bars = [45, 62, 38, 78, 55, 91, 67];
-  const days = ['L','M','X','J','V','S','D'];
+  const days = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
   return (
     <div className="w-full h-full bg-[#0d0d0f] flex flex-col overflow-hidden">
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.05] shrink-0">
@@ -95,9 +103,9 @@ function MockupMetricas() {
       </div>
       <div className="grid grid-cols-3 border-b border-white/[0.04] shrink-0">
         {[
-          { label: 'Ingresos',  val: '$48.500', color: '#c4b5fd' },
-          { label: 'Turnos',    val: '23',      color: '#a78bfa' },
-          { label: 'Valoración',val: '4.8 ★',  color: '#ddd6fe' },
+          { label: 'Ingresos',   val: '$48.500', color: '#c4b5fd' },
+          { label: 'Turnos',     val: '23',      color: '#a78bfa' },
+          { label: 'Valoración', val: '4.8 ★',  color: '#ddd6fe' },
         ].map((s, i) => (
           <div key={s.label} className={`px-3 py-2 ${i < 2 ? 'border-r border-white/[0.04]' : ''}`}>
             <p className="text-[8px] text-zinc-600 mb-0.5">{s.label}</p>
@@ -147,21 +155,21 @@ const MOCKUPS = [MockupReserva, MockupAgenda, MockupMetricas];
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function SolucionesSection() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [activeStep, setActiveStep] = useState<number>(0);
-  const [isComplete, setIsComplete] = useState<boolean>(false);
-  const [isMobile, setIsMobile] = useState<boolean>(false);
-  const activeStepRef = useRef(0);
-  const isCompleteRef = useRef(false);
+  const containerRef    = useRef<HTMLDivElement>(null);
+  const [activeStep, setActiveStep]   = useState(0);
+  const [isComplete, setIsComplete]   = useState(false);
+  const [isMobile, setIsMobile]       = useState(false);
+  const activeStepRef   = useRef(0);
+  const isCompleteRef   = useRef(false);
   const prefersReducedMotion = useReducedMotion();
 
   const scrollProgress = useMotionValue(0);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
   const { scrollYProgress } = useScroll({
@@ -169,15 +177,11 @@ export default function SolucionesSection() {
     offset: ['start start', 'end end'],
   });
 
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 42,
-    damping: 14,
-    restDelta: 0.001,
-  });
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 42, damping: 14, restDelta: 0.001 });
 
   const rotateX = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [15, 5]);
   const rotateY = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [-12, -4]);
-  const scale   = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [0.95, 1.02]);
+  const tiltScale = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [0.95, 1.02]);
 
   const exitOpacity = useTransform(scrollYProgress, [0.85, 1], [1, 0.82]);
   const exitScale   = useTransform(scrollYProgress, [0.85, 1], [1, 0.97]);
@@ -186,7 +190,7 @@ export default function SolucionesSection() {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const containerTop = rect.top + scroll;
-    const scrollable = containerRef.current.offsetHeight - window.innerHeight;
+    const scrollable   = containerRef.current.offsetHeight - window.innerHeight;
     if (scrollable <= 0) return;
     const p = Math.max(0, Math.min(1, (scroll - containerTop) / scrollable));
 
@@ -197,7 +201,6 @@ export default function SolucionesSection() {
       activeStepRef.current = newStep;
       setActiveStep(newStep);
     }
-
     const complete = p >= 0.90;
     if (complete !== isCompleteRef.current) {
       isCompleteRef.current = complete;
@@ -205,133 +208,187 @@ export default function SolucionesSection() {
     }
   });
 
+  // ── Sombra del monitor flotante — estilo Apple product page ────────────────
+  const monitorShadow = [
+    '0 0 0 1px rgba(255,255,255,0.08)',          // borde de vidrio exterior
+    '0 32px 80px -12px rgba(0,0,0,0.80)',        // sombra principal de profundidad
+    '0 72px 160px -24px rgba(0,0,0,0.55)',       // sombra difusa amplia
+    '0 0 120px rgba(167,139,250,0.07)',           // violet ambient glow
+  ].join(', ');
+
   return (
     <div
       ref={containerRef}
       className={`relative z-10 ${isMobile ? '' : 'h-[400vh]'}`}
     >
       <section
-        className={`bg-[#09090b] border-b border-white/[0.04]
+        className={`border-b border-white/[0.04]
           ${isMobile ? 'py-20' : 'sticky top-0 h-screen overflow-hidden'}`}
+        // ① Fondo con degradado radial sutil para volumen — reemplaza el negro plano
+        style={{
+          background: [
+            'radial-gradient(ellipse 90% 55% at 50% -8%, rgba(167,139,250,0.07) 0%, transparent 60%)',
+            '#09090b',
+          ].join(', '),
+        }}
       >
         <div className={`max-w-6xl mx-auto px-6 ${isMobile ? 'block' : 'h-full flex items-center pt-20'}`}>
 
-          {/* ── DESKTOP ─────────────────────────────────────────────────────── */}
+          {/* ── DESKTOP ───────────────────────────────────────────────────── */}
           {!isMobile ? (
             <motion.div
               style={{ opacity: exitOpacity, scale: exitScale }}
-              className="grid grid-cols-12 gap-8 w-full items-center"
+              className="grid grid-cols-12 gap-10 w-full items-center"
             >
 
-              {/* LEFT — Monitor con crossfade entre mockups */}
-              <div className="col-span-8 flex flex-col justify-center relative">
-                {/* Glow de fondo que sigue el step activo */}
+              {/* LEFT — Ventana macOS flotante */}
+              <div className="col-span-7 flex flex-col justify-center relative">
+
+                {/* Glow ambiental violeta detrás de la ventana */}
                 <div
                   className="pointer-events-none absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2
-                    w-[600px] h-[600px] rounded-full opacity-30 blur-[80px]
-                    transition-all duration-700"
+                    w-[560px] h-[560px] rounded-full opacity-25 blur-[90px] transition-all duration-700"
                   style={{ background: `radial-gradient(circle, ${solutions[activeStep].glow} 0%, transparent 70%)` }}
                 />
 
-                <div className="mb-8 max-w-md relative z-10">
+                {/* Heading de la sección */}
+                <div className="mb-8 max-w-lg relative z-10">
                   <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
                     Potencia y Simplicidad
                   </p>
-                  <h2 className="font-playfair text-[clamp(2.2rem,4vw,3rem)] text-white italic leading-tight">
+                  {/* ④ Título: más grande, peso fino (font-normal Playfair sin itálica) */}
+                  <h2 className="font-playfair text-[clamp(2.5rem,4.5vw,3.6rem)] font-normal text-white leading-[1.1] tracking-tight">
                     Tu salón bajo control,{' '}
                     <span className="text-violet-400">capa por capa.</span>
                   </h2>
                 </div>
 
+                {/* ② Ventana macOS Safari con fidelidad nativa */}
                 <div
-                  className="w-full flex justify-center relative z-10"
+                  className="w-full relative z-10"
                   style={{ perspective: '1200px', transformStyle: 'preserve-3d' }}
                 >
                   <motion.div
                     style={{
                       rotateX,
                       rotateY,
-                      scale,
-                      boxShadow:
-                        'inset 0 1px 1px rgba(255,255,255,0.15), 0 24px 48px -12px rgba(0,0,0,0.5), 0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026',
+                      scale: tiltScale,
+                      boxShadow: monitorShadow,
                     }}
-                    className="w-full h-[360px] lg:h-[420px] border border-[#444] p-1.5 bg-[#222222] rounded-[28px] shadow-2xl relative overflow-hidden"
+                    // ② Borde translúcido simula el reflejo de vidrio (border-white/10)
+                    className="w-full h-[360px] lg:h-[420px] rounded-[12px] overflow-hidden
+                      border border-white/[0.10] bg-[#1c1c1e] flex flex-col"
                   >
-                    <div className="h-full w-full overflow-hidden rounded-[20px] bg-[#050504] relative z-10">
-                      {/* Barra de título del "navegador" */}
-                      <div className="flex items-center gap-1.5 px-3 py-2 bg-black/40 border-b border-white/[0.04] absolute top-0 inset-x-0 z-30">
-                        <div className="w-2 h-2 rounded-full bg-red-400/50" />
-                        <div className="w-2 h-2 rounded-full bg-amber-400/50" />
-                        <div className="w-2 h-2 rounded-full bg-emerald-400/50" />
-                        <div className="h-3 w-28 rounded-full bg-white/[0.04] border border-white/[0.06] mx-auto" />
-                      </div>
-
-                      {/*
-                        Crossfade: todos los mockups se renderizan siempre (stacked absolute).
-                        Solo cambia la opacidad → sin parpadeo, sin skeleton vacío.
-                        Las imágenes se pre-cargan en background al montar el componente.
-                      */}
-                      <div className="w-full h-full pt-7 relative">
-                        {MOCKUPS.map((MockupComponent, i) => (
-                          <motion.div
-                            key={i}
-                            className="absolute inset-0"
-                            animate={{ opacity: i === activeStep ? 1 : 0 }}
-                            transition={{
-                              duration: prefersReducedMotion ? 0 : 0.45,
-                              ease: [0.4, 0, 0.2, 1],
-                            }}
-                          >
-                            <MockupComponent />
-                          </motion.div>
+                    {/* Barra de título macOS Safari */}
+                    <div className="h-9 shrink-0 bg-[#2a2a2d] border-b border-white/[0.06]
+                      flex items-center px-4 relative select-none">
+                      {/* Traffic lights — tamaño y espaciado nativos de macOS (12 px, gap 8 px) */}
+                      <div className="flex items-center gap-2">
+                        {TRAFFIC.map(({ bg, label }) => (
+                          <div
+                            key={label}
+                            aria-label={label}
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: bg }}
+                          />
                         ))}
                       </div>
+                      {/* URL bar centrada */}
+                      <div className="absolute left-1/2 -translate-x-1/2 flex items-center">
+                        <div className="flex items-center gap-1.5 h-5 px-3 rounded-md
+                          bg-white/[0.06] border border-white/[0.06]">
+                          <div className="w-1.5 h-1.5 rounded-full bg-white/20 shrink-0" />
+                          <span className="text-[9px] text-zinc-600 tracking-tight">
+                            mujerapp.com/dashboard
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Área de contenido — coreografía escala + opacidad (Apple style) */}
+                    <div className="flex-1 relative overflow-hidden bg-[#050504]">
+                      {/*
+                        ③ Coreografía de imágenes:
+                        — Todos los mockups están en el DOM (stacked) → imágenes pre-cargadas.
+                        — Activo: opacity 1, scale 1 (origen center-top).
+                        — Inactivo: opacity 0, scale 0.97 (leve zoom-out al salir).
+                        — scale usa spring stiffness/damping tipo Apple; opacity usa bezier APPLE_EASE.
+                        — Resultado: el contenido saliente se "encoger y desvanece",
+                          el entrante "aparece y crece" de forma suave, sin flash ni vacío.
+                      */}
+                      {MOCKUPS.map((MockupComponent, i) => (
+                        <motion.div
+                          key={i}
+                          className="absolute inset-0"
+                          animate={{
+                            opacity: i === activeStep ? 1 : 0,
+                            scale:   i === activeStep ? 1 : 0.97,
+                          }}
+                          transition={{
+                            opacity: {
+                              duration: prefersReducedMotion ? 0 : 0.38,
+                              ease: APPLE_EASE,
+                            },
+                            scale: prefersReducedMotion
+                              ? { duration: 0 }
+                              : { type: 'spring', stiffness: 300, damping: 26, mass: 0.8 },
+                          }}
+                          style={{ transformOrigin: 'center top' }}
+                        >
+                          <MockupComponent />
+                        </motion.div>
+                      ))}
                     </div>
                   </motion.div>
                 </div>
               </div>
 
               {/* RIGHT — Acordeón de capas */}
-              <div className="col-span-4 flex flex-col justify-center gap-2">
+              <div className="col-span-5 flex flex-col justify-center gap-2">
 
                 {solutions.map((sol, index) => {
-                  const Icon = sol.icon;
+                  const Icon     = sol.icon;
                   const isActive = activeStep === index;
 
                   return (
                     <motion.div
                       key={sol.id}
                       animate={{ opacity: isActive ? 1 : 0.5 }}
-                      transition={{ duration: prefersReducedMotion ? 0 : 0.4, ease: [0.4, 0, 0.2, 1] }}
+                      transition={{ duration: prefersReducedMotion ? 0 : 0.4, ease: APPLE_EASE }}
                       onClick={() => setActiveStep(index)}
+                      // ④ Glow violeta difuso en el ítem activo (box-shadow, sin fondo brusco)
+                      style={isActive ? {
+                        boxShadow: `0 0 0 1px rgba(167,139,250,0.20), 0 6px 40px rgba(167,139,250,0.07)`,
+                      } : {}}
                       className={`rounded-2xl border cursor-pointer overflow-hidden
                         transition-colors duration-300
                         ${isActive
-                          ? 'border-violet-400/20 bg-violet-400/[0.04]'
-                          : 'border-white/[0.04] bg-transparent hover:border-white/[0.08]'
+                          ? 'border-violet-400/[0.18] bg-violet-400/[0.03]'
+                          : 'border-white/[0.05] bg-transparent hover:border-white/[0.10]'
                         }`}
                     >
                       {/* Header — siempre visible */}
                       <div className="flex gap-4 items-center p-5">
                         <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0
-                          transition-all duration-400
+                          transition-all duration-300
                           ${isActive
-                            ? 'bg-violet-400/[0.08] border-violet-400/30 scale-105'
-                            : 'bg-white/[0.02] border-white/[0.06]'
+                            ? 'bg-violet-400/[0.10] border-violet-400/[0.30] scale-105'
+                            : 'bg-white/[0.02] border-white/[0.07]'
                           }`}>
                           <Icon className="w-5 h-5 text-violet-400" />
                         </div>
-                        <div>
-                          <h3 className="font-playfair text-xl font-medium text-white leading-tight">
+                        <div className="min-w-0">
+                          <h3 className="font-playfair text-[1.15rem] font-normal text-white leading-tight">
                             {sol.title}
                           </h3>
-                          <p className="text-zinc-500 text-xs font-semibold uppercase tracking-wider mt-0.5">
+                          {/* ④ Texto inactivo en text-zinc-500 para legibilidad */}
+                          <p className="text-zinc-500 text-[11px] font-semibold uppercase tracking-wider mt-0.5 truncate">
                             {sol.subtitle}
                           </p>
                         </div>
                       </div>
 
-                      {/* Bullets — se despliegan suavemente al activarse */}
+                      {/* Bullets — apertura suavizada con altura + opacidad independientes */}
                       <AnimatePresence initial={false}>
                         {isActive && (
                           <motion.ul
@@ -340,9 +397,8 @@ export default function SolucionesSection() {
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{
-                              duration: prefersReducedMotion ? 0 : 0.35,
-                              ease: [0.4, 0, 0.2, 1],
-                              opacity: { duration: prefersReducedMotion ? 0 : 0.25 },
+                              height:  { duration: prefersReducedMotion ? 0 : 0.38, ease: APPLE_EASE },
+                              opacity: { duration: prefersReducedMotion ? 0 : 0.28, ease: APPLE_EASE },
                             }}
                             className="space-y-3 px-5 pb-5 overflow-hidden"
                           >
@@ -353,8 +409,8 @@ export default function SolucionesSection() {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{
                                   duration: prefersReducedMotion ? 0 : 0.3,
-                                  delay: prefersReducedMotion ? 0 : 0.08 + bIdx * 0.07,
-                                  ease: [0.4, 0, 0.2, 1],
+                                  delay:    prefersReducedMotion ? 0 : 0.06 + bIdx * 0.07,
+                                  ease:     APPLE_EASE,
                                 }}
                                 className="flex gap-3 items-start text-sm text-zinc-400"
                               >
@@ -369,16 +425,16 @@ export default function SolucionesSection() {
                   );
                 })}
 
-                {/* Puntos de navegación — únicos controles de paginación */}
+                {/* Puntos de navegación — único control de paginación */}
                 <div className="flex gap-2 justify-center pt-3">
                   {solutions.map((_, i) => (
                     <button
                       key={i}
                       onClick={() => setActiveStep(i)}
                       aria-label={`Ir a capa ${i + 1}`}
-                      className="rounded-full transition-all duration-400 cursor-pointer"
+                      className="rounded-full cursor-pointer transition-all duration-500"
                       style={{
-                        width:           i === activeStep ? '16px' : '6px',
+                        width:           i === activeStep ? '18px' : '6px',
                         height:          '6px',
                         backgroundColor: i === activeStep ? VIOLET_HEX : 'rgba(255,255,255,0.15)',
                       }}
@@ -415,13 +471,13 @@ export default function SolucionesSection() {
             </motion.div>
           ) : (
 
-            /* ── MOBILE — stacked, sin efectos de scroll ─────────────────── */
+            /* ── MOBILE — stacked, sin efectos de scroll ──────────────────── */
             <div className="space-y-16">
               <div className="text-center">
                 <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
                   Potencia y Simplicidad
                 </p>
-                <h2 className="font-playfair text-3xl text-white italic leading-tight">
+                <h2 className="font-playfair text-[clamp(2.2rem,8vw,3rem)] font-normal text-white leading-[1.1] tracking-tight">
                   Tu salón bajo control,<br />
                   <span className="text-violet-400">capa por capa.</span>
                 </h2>
@@ -429,31 +485,34 @@ export default function SolucionesSection() {
 
               <div className="space-y-24">
                 {solutions.map((sol, index) => {
-                  const Icon = sol.icon;
+                  const Icon            = sol.icon;
                   const MockupComponent = MOCKUPS[index];
 
                   return (
                     <div key={sol.id} className="space-y-8">
-                      <div className="w-full max-w-sm mx-auto border border-[#444] p-1.5 bg-[#222222] rounded-[20px] shadow-xl overflow-hidden">
-                        <div className="overflow-hidden rounded-[14px] bg-[#050504]">
-                          <div className="flex items-center gap-1 px-3 py-1.5 bg-black/40 border-b border-white/[0.04]">
-                            <div className="w-1.5 h-1.5 rounded-full bg-red-400/50" />
-                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400/50" />
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400/50" />
-                          </div>
-                          <div className="h-48">
-                            <MockupComponent />
-                          </div>
+                      {/* Ventana macOS simplificada para mobile */}
+                      <div className="w-full max-w-sm mx-auto rounded-[10px] overflow-hidden
+                        border border-white/[0.10] bg-[#1c1c1e]"
+                        style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 60px rgba(167,139,250,0.05)' }}
+                      >
+                        <div className="h-7 bg-[#2a2a2d] border-b border-white/[0.06] flex items-center px-3 gap-1.5">
+                          {TRAFFIC.map(({ bg, label }) => (
+                            <div key={label} className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: bg }} />
+                          ))}
+                        </div>
+                        <div className="h-48 bg-[#050504]">
+                          <MockupComponent />
                         </div>
                       </div>
 
                       <div className="space-y-4 max-w-md mx-auto">
                         <div className="flex gap-3 items-center">
-                          <div className="w-10 h-10 rounded-xl border flex items-center justify-center bg-violet-400/[0.06] border-violet-400/20">
+                          <div className="w-10 h-10 rounded-xl border flex items-center justify-center
+                            bg-violet-400/[0.06] border-violet-400/20">
                             <Icon className="w-4 h-4 text-violet-400" />
                           </div>
                           <div>
-                            <h3 className="font-playfair text-xl font-bold text-white">{sol.title}</h3>
+                            <h3 className="font-playfair text-xl font-normal text-white">{sol.title}</h3>
                             <p className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">{sol.subtitle}</p>
                           </div>
                         </div>
