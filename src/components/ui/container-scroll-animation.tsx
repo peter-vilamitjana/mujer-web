@@ -89,10 +89,17 @@ export const Card = ({
       style={{
         rotateX: rotate,
         scale,
-        boxShadow:
-          "0 24px 48px -12px rgba(0,0,0,0.5), 0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026",
+        boxShadow: [
+          "0 24px 48px -12px rgba(0,0,0,0.5)",
+          "0 0 #0000004d",
+          "0 9px 20px #0000004a",
+          "0 37px 37px #00000042",
+          "0 84px 50px #00000026",
+          "0 0 80px rgba(139,92,246,0.22)",
+          "0 0 160px rgba(109,40,217,0.12)",
+        ].join(", "),
       }}
-      className="max-w-7xl mt-6 mx-auto h-[30rem] md:h-[46rem] w-full border border-[#444] p-2 md:p-6 bg-[#222222] rounded-[30px] shadow-2xl relative overflow-hidden"
+      className="max-w-7xl mt-6 mx-auto h-[30rem] md:h-[46rem] w-full border border-white/[0.10] p-2 md:p-6 bg-[#111113] rounded-[30px] shadow-2xl relative overflow-hidden"
     >
       <div className="h-full w-full overflow-hidden rounded-2xl bg-[#050504] md:rounded-2xl md:p-4 relative z-10">
         {children}

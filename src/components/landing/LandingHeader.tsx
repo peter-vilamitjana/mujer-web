@@ -90,7 +90,7 @@ export default function LandingHeader() {
               className="text-[11px] uppercase tracking-[0.22em] font-semibold font-inter px-7"
               onClick={() => router.push(status === 'authenticated' ? '/perfil' : '/login')}
             >
-              {status === 'authenticated' ? 'Mi Perfil' : 'Sign In'}
+              {status === 'authenticated' ? 'Mi Perfil' : 'Iniciar sesión'}
             </GlassButton>
           </div>
 
