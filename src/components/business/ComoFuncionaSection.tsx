@@ -338,7 +338,7 @@ export default function ComoFuncionaSection() {
   return (
     <section
       id="como-funciona"
-      className="relative z-10 bg-[#09090b] scroll-mt-20"
+      className="relative z-10 bg-[#09090b] scroll-mt-20 pb-24"
     >
       {/* Top separator */}
       <div
@@ -399,10 +399,24 @@ export default function ComoFuncionaSection() {
           min-h was wrong: it let content drive height, making the last step
           (which has no connector line below it) visually shorter.
         */}
-        <div className="hidden lg:grid lg:grid-cols-2 lg:gap-20 items-start pb-32">
+        {/*
+          Grid has no bottom padding — the section element adds pb-24 as the
+          intentional footer clearance. Keeping pb inside the grid caused the
+          "dead hang": the sticky phone floated over 8rem of empty grid space
+          after the last step finished, making it look disconnected.
+        */}
+        <div className="hidden lg:grid lg:grid-cols-2 lg:gap-20 items-start">
 
-          {/* LEFT — scrollable steps */}
-          <div className="flex flex-col">
+          {/* LEFT — scrollable steps
+              h-[225vh]: owns the total scroll height once (3 × 75vh).
+              This is the single source of truth — each step uses flex-1 to
+              claim exactly one third (75vh), guaranteed identical regardless of
+              content length or sub-pixel viewport rounding.
+              Contrast with the previous approach (h-[75vh] per step): three
+              independent viewport-relative units that could drift if the browser
+              recomputed vh between items (e.g. mobile toolbar appearing/hiding).
+          */}
+          <div className="flex flex-col h-[225vh]">
             {steps.map((step, index) => {
               const isActive = activeStep === index;
 
@@ -410,12 +424,10 @@ export default function ComoFuncionaSection() {
                 <div
                   key={step.number}
                   ref={el => { stepRefs.current[index] = el; }}
-                  // h-[75vh]: 25% shorter than h-screen — eliminates the 50vh dead zone
-                  // that justify-center creates. All three steps are still mathematically
-                  // identical in height, so the IObs trigger fires symmetrically.
-                  // items-stretch on the row: left rail grows to match text column height
-                  // so the connector's flex-1 has a real parent height to fill.
-                  className="h-[75vh] flex flex-col justify-center py-12"
+                  // flex-1: each step claims exactly 1/3 of the 225vh parent.
+                  // py-16 instead of py-12: more generous breathing room now that
+                  // we don't need compact padding to hide height differences.
+                  className="flex-1 flex flex-col justify-center py-16"
                 >
                   <div className="flex items-stretch gap-6">
                     {/* Left rail: number badge + connector */}
