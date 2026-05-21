@@ -34,7 +34,7 @@ export default function BusinessHero() {
 
   return (
     <section
-      className="relative bg-[#09090b]"
+      className="relative bg-[#09090b] overflow-x-hidden"
       aria-label="Hero — Ouleeh para negocios"
       suppressHydrationWarning
     >

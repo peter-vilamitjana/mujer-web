@@ -33,40 +33,49 @@ export const ContainerScroll = ({
     };
   }, []);
 
+  // Scale strategy:
+  // Desktop [1.05 → 0.80]: the +0.05 at start compensates for the perspective
+  // foreshortening that makes the tilted card appear narrower than its CSS width;
+  // 0.80 at the flat end guarantees a 20% visual margin on all sides, so the
+  // dark background always frames the card — no edge-touching at any viewport.
+  //
+  // Mobile [0.82 → 0.72]: always decreasing (never grows), so the card feels
+  // like it's "landing" into the frame, not expanding toward the edges.
   const scaleDimensions = () => {
-    return isMobile ? [0.8, 0.88] : [1.0, 0.85];
+    return isMobile ? [0.82, 0.72] : [1.05, 0.80];
   };
 
-  const rotate    = useTransform(smoothProgress, [0, 1],        [20, 0]);
-  const scale     = useTransform(smoothProgress, [0, 1],        scaleDimensions());
-  const translate = useTransform(smoothProgress, [0, 1],        [0, -50]);
+  const rotate    = useTransform(smoothProgress, [0, 1], [20, 0]);
+  const scale     = useTransform(smoothProgress, [0, 1], scaleDimensions());
+  const translate = useTransform(smoothProgress, [0, 1], [0, -50]);
 
   // Violet ambient glow — vivid when tilted, nearly gone when flat
   const glowA = useTransform(smoothProgress, [0, 1], [0.22, 0.08]);
   const glowB = useTransform(smoothProgress, [0, 1], [0.12, 0.04]);
 
-  // Glare light-sweep —————————————————————————————————————————————
-  // translateY: light band starts above the card top (-65 %) and sweeps
-  // downward to fully below the visible area (+100 %) as scroll completes.
+  // Glare light-sweep: band starts above card (-65%) and sweeps to below (+100%)
   const glareY = useTransform(smoothProgress, [0, 1], ["-65%", "100%"]);
-
-  // opacity: strong at the tilted start, decays through the sweep,
-  // fully gone when the card is flat (rotateX = 0).
   const glareOpacity = useTransform(
     smoothProgress,
     [0, 0.65, 1],
-    [0.80,  0.20, 0.0]
+    [0.80, 0.20, 0.0]
   );
-  // ————————————————————————————————————————————————————————————————
 
   return (
+    // overflow-x-hidden: belt-and-suspenders — clips any sub-pixel bleed from
+    // the scale transform before it can affect the page's horizontal scroll.
+    // pb-20 md:pb-28: constant bottom padding so the dark background is always
+    // visible below the card; py-2 at the top was suppressing that breathing room.
     <div
-      className="h-[50rem] md:h-[72rem] flex items-center justify-center relative px-4 md:px-10 py-2"
+      className="h-[52rem] md:h-[76rem] flex items-center justify-center relative
+        px-6 md:px-12 pt-2 pb-20 md:pb-28 overflow-x-hidden"
       ref={containerRef}
     >
+      {/* perspective: 1200px — subtler vanishing point so the tilt feels elegant,
+          not exaggerated. 1000px felt too aggressive on wide monitors. */}
       <div
         className="py-10 md:py-20 w-full relative"
-        style={{ perspective: "1000px" }}
+        style={{ perspective: "1200px" }}
       >
         <Header translate={translate} titleComponent={titleComponent} />
         <Card
@@ -117,9 +126,15 @@ export const Card = ({
   const boxShadow = useMotionTemplate`0 24px 48px -12px rgba(0,0,0,0.5), 0 9px 20px rgba(0,0,0,0.29), 0 37px 37px rgba(0,0,0,0.26), 0 84px 50px rgba(0,0,0,0.15), 0 0 72px rgba(139,92,246,${glowA}), 0 0 140px rgba(109,40,217,${glowB})`;
 
   return (
+    // max-w-5xl (64rem / 1024px) instead of max-w-6xl: tighter natural CSS width
+    // means the 3D transform operates on a smaller base. At final scale 0.80 on
+    // desktop, the visual width ≈ 820px — well inside any standard viewport, with
+    // the dark section background always visible on both sides as a frame.
+    // h-[38rem] md:h-[40rem]: slightly reduced from 42rem so the card never clips
+    // at the top/bottom even on shorter displays (1024px height laptops).
     <motion.div
       style={{ rotateX: rotate, scale, boxShadow }}
-      className="max-w-6xl mt-6 mx-auto h-[28rem] md:h-[42rem] w-full border border-white/[0.10] p-2 md:p-5 bg-[#111113] rounded-[30px] relative overflow-hidden"
+      className="max-w-5xl mt-6 mx-auto h-[26rem] md:h-[40rem] w-full border border-white/[0.10] p-2 md:p-5 bg-[#111113] rounded-[30px] relative overflow-hidden"
     >
       {/* Glass screen area — overflow-hidden clips the glare to rounded corners */}
       <div className="h-full w-full overflow-hidden rounded-2xl bg-[#050504] md:rounded-2xl md:p-4 relative">
