@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
   useScroll, useTransform, useSpring, useMotionValue,
   motion, AnimatePresence, useReducedMotion,
@@ -8,21 +8,22 @@ import {
 import { useLenis } from 'lenis/react';
 import { Calendar, TrendingUp, LayoutDashboard, CheckCircle } from 'lucide-react';
 
-// ── Tokens de color ────────────────────────────────────────────────────────────
-const VIOLET_HEX  = '#a78bfa';              // violet-400
+// ── Tokens ────────────────────────────────────────────────────────────────────
+const VIOLET_HEX  = '#a78bfa';
 const VIOLET_GLOW = 'rgba(167,139,250,0.15)';
 
-// Traffic lights exactos de macOS  (tamaño 12 px, gap 8 px, igual a Safari nativo)
 const TRAFFIC = [
   { bg: '#FF5F57', label: 'Cerrar' },
   { bg: '#FFBD2E', label: 'Minimizar' },
   { bg: '#28C840', label: 'Pantalla completa' },
 ];
 
-// ── Bezier "Apple spring" para la coreografía de imágenes ─────────────────────
-// ease-out suave — replica la curva de los macOS spring animations
-const APPLE_EASE = [0.25, 0.46, 0.45, 0.94] as const;
+// Apple ease — for crossfade and step transitions
+const APPLE_EASE  = [0.25, 0.46, 0.45, 0.94] as const;
+// Liquid ease — richer deceleration for accordion height (cubic-bezier WWDC-style)
+const LIQUID_EASE = [0.32, 0.72, 0, 1] as const;
 
+// ── Data ──────────────────────────────────────────────────────────────────────
 const solutions = [
   {
     id: 'reserva',
@@ -62,8 +63,7 @@ const solutions = [
   },
 ];
 
-// ─── Mockups (todos siempre en DOM → las imágenes se pre-cargan) ──────────────
-
+// ── Mockups (pre-cargados en DOM — sin flicker) ───────────────────────────────
 function MockupReserva() {
   return (
     <div className="w-full h-full bg-[#0d0d0f] overflow-hidden">
@@ -105,7 +105,7 @@ function MockupMetricas() {
         {[
           { label: 'Ingresos',   val: '$48.500', color: '#c4b5fd' },
           { label: 'Turnos',     val: '23',      color: '#a78bfa' },
-          { label: 'Valoración', val: '4.8 ★',  color: '#ddd6fe' },
+          { label: 'Valoración', val: '4.8 ★',   color: '#ddd6fe' },
         ].map((s, i) => (
           <div key={s.label} className={`px-3 py-2 ${i < 2 ? 'border-r border-white/[0.04]' : ''}`}>
             <p className="text-[8px] text-zinc-600 mb-0.5">{s.label}</p>
@@ -124,7 +124,7 @@ function MockupMetricas() {
                   style={{
                     height: `${h}%`,
                     background: i === 5
-                      ? 'linear-gradient(to top, #6d28d9, #a78bfa)'
+                      ? 'linear-gradient(to top, #4c1d95, #7c3aed, #c4b5fd)'
                       : 'rgba(167,139,250,0.18)',
                   }}
                 />
@@ -136,7 +136,11 @@ function MockupMetricas() {
       </div>
       <div className="px-3 pb-2.5 border-t border-white/[0.04] pt-2 shrink-0">
         <p className="text-[8px] text-zinc-600 mb-1.5">Servicios más pedidos</p>
-        {[{ name: 'Coloración', pct: 78 }, { name: 'Keratina', pct: 55 }, { name: 'Corte', pct: 42 }].map(s => (
+        {[
+          { name: 'Coloración', pct: 78 },
+          { name: 'Keratina',   pct: 55 },
+          { name: 'Corte',      pct: 42 },
+        ].map(s => (
           <div key={s.name} className="flex items-center gap-2 mb-1">
             <span className="text-[8px] text-zinc-500 w-16 shrink-0">{s.name}</span>
             <div className="flex-1 h-1 bg-white/[0.04] rounded-full overflow-hidden">
@@ -155,12 +159,15 @@ const MOCKUPS = [MockupReserva, MockupAgenda, MockupMetricas];
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function SolucionesSection() {
-  const containerRef    = useRef<HTMLDivElement>(null);
-  const [activeStep, setActiveStep]   = useState(0);
-  const [isComplete, setIsComplete]   = useState(false);
-  const [isMobile, setIsMobile]       = useState(false);
-  const activeStepRef   = useRef(0);
-  const isCompleteRef   = useRef(false);
+  const containerRef  = useRef<HTMLDivElement>(null);
+  const glareRef      = useRef<HTMLDivElement>(null);   // direct DOM — no re-renders
+
+  const [activeStep, setActiveStep] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
+  const [isMobile,   setIsMobile]   = useState(false);
+
+  const activeStepRef  = useRef(0);
+  const isCompleteRef  = useRef(false);
   const prefersReducedMotion = useReducedMotion();
 
   const scrollProgress = useMotionValue(0);
@@ -179,8 +186,8 @@ export default function SolucionesSection() {
 
   const smoothProgress = useSpring(scrollYProgress, { stiffness: 42, damping: 14, restDelta: 0.001 });
 
-  const rotateX = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [15, 5]);
-  const rotateY = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [-12, -4]);
+  const rotateX  = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [15, 5]);
+  const rotateY  = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [-12, -4]);
   const tiltScale = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [0.95, 1.02]);
 
   const exitOpacity = useTransform(scrollYProgress, [0.85, 1], [1, 0.82]);
@@ -208,13 +215,49 @@ export default function SolucionesSection() {
     }
   });
 
-  // ── Sombra del monitor flotante — estilo Apple product page ────────────────
+  // ── Glare: coordinate calculation ────────────────────────────────────────────
+  // We read mouse position relative to the window container, then map to
+  // percentage coords (0-100%). The gradient center follows the cursor with
+  // zero React re-renders — we mutate the overlay DOM element directly.
+  //
+  //   x% = (clientX - containerLeft) / containerWidth  × 100
+  //   y% = (clientY - containerTop)  / containerHeight × 100
+  //
+  // mix-blend-mode: screen means the glare only adds light — it can't darken,
+  // which is physically correct for light hitting glass.
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!glareRef.current || prefersReducedMotion) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left)  / rect.width)  * 100;
+    const y = ((e.clientY - rect.top)   / rect.height) * 100;
+    glareRef.current.style.background =
+      `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.05) 30%, transparent 62%)`;
+  }, [prefersReducedMotion]);
+
+  const handleMouseEnter = useCallback(() => {
+    if (glareRef.current) glareRef.current.style.opacity = '1';
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    if (glareRef.current) glareRef.current.style.opacity = '0';
+  }, []);
+
+  // ── Monitor shadow — Apple product-page fidelity ──────────────────────────
   const monitorShadow = [
-    'inset 0 1px 0 rgba(255,255,255,0.15)',      // ③ reflejo de cristal biselado (borde superior)
-    '0 0 0 1px rgba(255,255,255,0.08)',          // borde de vidrio exterior
-    '0 32px 80px -12px rgba(0,0,0,0.80)',        // sombra principal de profundidad
-    '0 72px 160px -24px rgba(0,0,0,0.55)',       // sombra difusa amplia
-    '0 0 120px rgba(167,139,250,0.07)',           // violet ambient glow
+    'inset 0 1px 0 rgba(255,255,255,0.18)',   // glass bevel top edge
+    'inset 0 0 0 1px rgba(255,255,255,0.06)', // inner rim glow
+    '0 0 0 1px rgba(255,255,255,0.08)',       // outer rim
+    '0 32px 80px -12px rgba(0,0,0,0.85)',     // depth shadow
+    '0 72px 160px -24px rgba(0,0,0,0.60)',    // wide ambient shadow
+    '0 0 140px rgba(167,139,250,0.12)',        // violet ambient glow
+  ].join(', ');
+
+  // ── Active accordion card shadow — inset violet on glass ─────────────────
+  const activeAccordionShadow = [
+    'inset 0 1px 0 rgba(255,255,255,0.07)',   // glass top bevel
+    'inset 0 0 20px rgba(139,92,246,0.06)',   // inner violet wash
+    '0 0 0 1px rgba(167,139,250,0.22)',       // outer violet ring
+    '0 8px 32px rgba(167,139,250,0.09)',      // depth glow
   ].join(', ');
 
   return (
@@ -225,65 +268,67 @@ export default function SolucionesSection() {
       <section
         className={`border-b border-white/[0.04]
           ${isMobile ? 'py-20' : 'sticky top-0 h-screen overflow-hidden'}`}
-        // ① Fondo con degradado radial sutil para volumen — reemplaza el negro plano
         style={{
           background: [
-            'radial-gradient(ellipse 90% 55% at 50% -8%, rgba(167,139,250,0.07) 0%, transparent 60%)',
+            'radial-gradient(ellipse 90% 55% at 50% -8%, rgba(167,139,250,0.08) 0%, transparent 60%)',
             '#09090b',
           ].join(', '),
         }}
       >
         <div className={`max-w-6xl mx-auto px-6 ${isMobile ? 'block' : 'h-full flex items-center pt-20'}`}>
 
-          {/* ── DESKTOP ───────────────────────────────────────────────────── */}
+          {/* ── DESKTOP ──────────────────────────────────────────────────── */}
           {!isMobile ? (
             <motion.div
               style={{ opacity: exitOpacity, scale: exitScale }}
               className="grid grid-cols-12 gap-10 w-full items-center"
             >
 
-              {/* LEFT — Ventana macOS flotante */}
+              {/* LEFT — Ventana macOS con Liquid Glass */}
               <div className="col-span-7 flex flex-col justify-center relative">
 
-                {/* Glow ambiental violeta detrás de la ventana */}
+                {/* Glow ambiental violeta */}
                 <div
                   className="pointer-events-none absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2
-                    w-[560px] h-[560px] rounded-full opacity-25 blur-[90px] transition-all duration-700"
+                    w-[560px] h-[560px] rounded-full opacity-30 blur-[90px] transition-all duration-700"
                   style={{ background: `radial-gradient(circle, ${solutions[activeStep].glow} 0%, transparent 70%)` }}
                 />
 
-                {/* Heading de la sección */}
+                {/* Heading */}
                 <div className="mb-8 max-w-lg relative z-10">
                   <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
                     Potencia y Simplicidad
                   </p>
-                  {/* ④ Título: más grande, peso fino (font-normal Playfair sin itálica) */}
                   <h2 className="font-playfair text-[clamp(2.5rem,4.5vw,3.6rem)] font-normal text-white leading-[1.1] tracking-tight">
                     Tu salón bajo control,{' '}
                     <span className="text-violet-400">capa por capa.</span>
                   </h2>
                 </div>
 
-                {/* ② Ventana macOS Safari con fidelidad nativa */}
+                {/* ── Ventana macOS — Liquid Glass ──────────────────────── */}
                 <div
                   className="w-full relative z-10"
                   style={{ perspective: '1200px', transformStyle: 'preserve-3d' }}
                 >
                   <motion.div
-                    style={{
-                      rotateX,
-                      rotateY,
-                      scale: tiltScale,
-                      boxShadow: monitorShadow,
-                    }}
-                    // ② Borde translúcido simula el reflejo de vidrio (border-white/10)
+                    style={{ rotateX, rotateY, scale: tiltScale, boxShadow: monitorShadow }}
                     className="w-full h-[360px] lg:h-[420px] rounded-[12px] overflow-hidden
-                      border border-white/[0.10] bg-[#1c1c1e] flex flex-col"
+                      flex flex-col
+                      border border-white/[0.12]
+                      bg-zinc-900/30 backdrop-blur-2xl"
+                    onMouseMove={handleMouseMove}
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
                   >
-                    {/* Barra de título macOS Safari */}
-                    <div className="h-9 shrink-0 bg-[#2a2a2d] border-b border-white/[0.06]
-                      flex items-center px-4 relative select-none">
-                      {/* Traffic lights — tamaño y espaciado nativos de macOS (12 px, gap 8 px) */}
+                    {/* Title bar — glass gradient, simula el grosor del cristal */}
+                    <div
+                      className="h-9 shrink-0 border-b border-white/[0.06]
+                        flex items-center px-4 relative select-none"
+                      style={{
+                        background: 'linear-gradient(to bottom, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)',
+                        backdropFilter: 'blur(8px)',
+                      }}
+                    >
                       <div className="flex items-center gap-2">
                         {TRAFFIC.map(({ bg, label }) => (
                           <div
@@ -294,7 +339,7 @@ export default function SolucionesSection() {
                           />
                         ))}
                       </div>
-                      {/* URL bar centrada */}
+                      {/* URL bar */}
                       <div className="absolute left-1/2 -translate-x-1/2 flex items-center">
                         <div className="flex items-center gap-1.5 h-5 px-3 rounded-md
                           bg-white/[0.06] border border-white/[0.06]">
@@ -306,17 +351,9 @@ export default function SolucionesSection() {
                       </div>
                     </div>
 
-                    {/* Área de contenido — coreografía escala + opacidad (Apple style) */}
+                    {/* Área de contenido — opaca para los mockups */}
                     <div className="flex-1 relative overflow-hidden bg-[#050504]">
-                      {/*
-                        ③ Coreografía de imágenes:
-                        — Todos los mockups están en el DOM (stacked) → imágenes pre-cargadas.
-                        — Activo: opacity 1, scale 1 (origen center-top).
-                        — Inactivo: opacity 0, scale 0.97 (leve zoom-out al salir).
-                        — scale usa spring stiffness/damping tipo Apple; opacity usa bezier APPLE_EASE.
-                        — Resultado: el contenido saliente se "encoger y desvanece",
-                          el entrante "aparece y crece" de forma suave, sin flash ni vacío.
-                      */}
+                      {/* Crossfade de mockups — todos en DOM → sin flicker */}
                       {MOCKUPS.map((MockupComponent, i) => (
                         <motion.div
                           key={i}
@@ -339,12 +376,35 @@ export default function SolucionesSection() {
                           <MockupComponent />
                         </motion.div>
                       ))}
+
+                      {/*
+                        ── Dynamic Glare overlay ────────────────────────────
+                        Tracks mouse position on the parent motion.div.
+                        Coordinates: x% = (clientX − left) / width × 100
+                                     y% = (clientY − top)  / height × 100
+                        We mutate style.background directly → zero re-renders.
+                        mix-blend-mode: screen ensures it only ADDS light
+                        (physically correct for glass reflection — can't darken).
+                        opacity transitions via CSS transition: 300ms.
+                      */}
+                      <div
+                        ref={glareRef}
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0 z-20"
+                        style={{
+                          opacity: 0,
+                          background:
+                            'radial-gradient(circle at 50% 30%, rgba(255,255,255,0.10) 0%, transparent 60%)',
+                          mixBlendMode: 'screen',
+                          transition: 'opacity 300ms ease',
+                        }}
+                      />
                     </div>
                   </motion.div>
                 </div>
               </div>
 
-              {/* RIGHT — Acordeón de capas */}
+              {/* RIGHT — Acordeón Liquid Glass ───────────────────────────── */}
               <div className="col-span-5 flex flex-col justify-center gap-2">
 
                 {solutions.map((sol, index) => {
@@ -354,43 +414,48 @@ export default function SolucionesSection() {
                   return (
                     <motion.div
                       key={sol.id}
-                      animate={{ opacity: isActive ? 1 : 0.5 }}
-                      transition={{ duration: prefersReducedMotion ? 0 : 0.4, ease: APPLE_EASE }}
+                      animate={{ opacity: isActive ? 1 : 0.45 }}
+                      transition={{ duration: prefersReducedMotion ? 0 : 0.45, ease: LIQUID_EASE }}
                       onClick={() => setActiveStep(index)}
-                      // ④ Glow violeta difuso en el ítem activo (box-shadow, sin fondo brusco)
-                      style={isActive ? {
-                        boxShadow: `0 0 0 1px rgba(167,139,250,0.20), 0 6px 40px rgba(167,139,250,0.07)`,
-                      } : {}}
+                      style={isActive ? { boxShadow: activeAccordionShadow } : {}}
                       className={`rounded-2xl border cursor-pointer overflow-hidden
-                        transition-colors duration-300
+                        transition-[background-color,border-color,backdrop-filter] duration-500
                         ${isActive
-                          // ④ Fondo violeta levísimo en capa activa — la saca del plano inactivo
-                          ? 'border-violet-400/[0.18] bg-violet-500/[0.05]'
-                          : 'border-white/[0.05] bg-transparent hover:border-white/[0.10]'
+                          // Liquid Glass activo: translúcido + blur + borde violeta iluminado
+                          ? 'border-violet-500/30 bg-zinc-800/40 backdrop-blur-md'
+                          : 'border-white/[0.04] bg-transparent hover:border-white/[0.09]'
                         }`}
                     >
                       {/* Header — siempre visible */}
                       <div className="flex gap-4 items-center p-5">
                         <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0
-                          transition-all duration-300
+                          transition-all duration-400
                           ${isActive
-                            ? 'bg-violet-400/[0.10] border-violet-400/[0.30] scale-105'
+                            ? 'bg-violet-400/[0.12] border-violet-400/[0.32] scale-105'
                             : 'bg-white/[0.02] border-white/[0.07]'
                           }`}>
                           <Icon className="w-5 h-5 text-violet-400" />
                         </div>
                         <div className="min-w-0">
-                          <h3 className="font-playfair text-[1.15rem] font-normal text-white leading-tight">
+                          <h3 className={`font-playfair text-[1.15rem] font-normal leading-tight
+                            transition-colors duration-300
+                            ${isActive ? 'text-white' : 'text-zinc-500'}`}>
                             {sol.title}
                           </h3>
-                          {/* ② Subtítulo más sutil — no compite con el título */}
-                          <p className="text-zinc-500 text-xs font-medium uppercase tracking-widest mt-0.5 truncate">
+                          <p className={`text-xs font-medium uppercase tracking-widest mt-0.5 truncate
+                            transition-colors duration-300
+                            ${isActive ? 'text-zinc-400' : 'text-zinc-600'}`}>
                             {sol.subtitle}
                           </p>
                         </div>
                       </div>
 
-                      {/* Bullets — apertura suavizada con altura + opacidad independientes */}
+                      {/*
+                        Bullets: height + opacity con LIQUID_EASE (0.32, 0.72, 0, 1).
+                        Height a 450ms → decelera rápido al inicio, llega suave al final.
+                        Opacity a 280ms → el texto aparece antes de que el acordeón
+                        termine de abrirse, creando profundidad temporal.
+                      */}
                       <AnimatePresence initial={false}>
                         {isActive && (
                           <motion.ul
@@ -399,10 +464,9 @@ export default function SolucionesSection() {
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{
-                              height:  { duration: prefersReducedMotion ? 0 : 0.38, ease: APPLE_EASE },
+                              height:  { duration: prefersReducedMotion ? 0 : 0.45, ease: LIQUID_EASE },
                               opacity: { duration: prefersReducedMotion ? 0 : 0.28, ease: APPLE_EASE },
                             }}
-                            // ① Más breathing room entre ítems
                             className="space-y-4 px-5 pb-5 overflow-hidden"
                           >
                             {sol.bullets.map((bullet, bIdx) => (
@@ -428,7 +492,7 @@ export default function SolucionesSection() {
                   );
                 })}
 
-                {/* Puntos de navegación — único control de paginación */}
+                {/* Puntos de navegación */}
                 <div className="flex gap-2 justify-center pt-3">
                   {solutions.map((_, i) => (
                     <button
@@ -445,7 +509,7 @@ export default function SolucionesSection() {
                   ))}
                 </div>
 
-                {/* Nudge al completar todas las capas */}
+                {/* Nudge al completar */}
                 <AnimatePresence>
                   {isComplete && (
                     <motion.div
@@ -474,7 +538,7 @@ export default function SolucionesSection() {
             </motion.div>
           ) : (
 
-            /* ── MOBILE — stacked, sin efectos de scroll ──────────────────── */
+            /* ── MOBILE — stacked, sin efectos de scroll ────────────────── */
             <div className="space-y-16">
               <div className="text-center">
                 <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
@@ -490,15 +554,15 @@ export default function SolucionesSection() {
                 {solutions.map((sol, index) => {
                   const Icon            = sol.icon;
                   const MockupComponent = MOCKUPS[index];
-
                   return (
                     <div key={sol.id} className="space-y-8">
-                      {/* Ventana macOS simplificada para mobile */}
-                      <div className="w-full max-w-sm mx-auto rounded-[10px] overflow-hidden
-                        border border-white/[0.10] bg-[#1c1c1e]"
-                        style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 60px rgba(167,139,250,0.05)' }}
+                      <div
+                        className="w-full max-w-sm mx-auto rounded-[10px] overflow-hidden
+                          border border-white/[0.10] bg-zinc-900/30 backdrop-blur-xl"
+                        style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 60px rgba(167,139,250,0.06)' }}
                       >
-                        <div className="h-7 bg-[#2a2a2d] border-b border-white/[0.06] flex items-center px-3 gap-1.5">
+                        <div className="h-7 border-b border-white/[0.06] flex items-center px-3 gap-1.5"
+                          style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)' }}>
                           {TRAFFIC.map(({ bg, label }) => (
                             <div key={label} className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: bg }} />
                           ))}
