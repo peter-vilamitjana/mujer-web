@@ -1,7 +1,7 @@
 'use client';
 
-import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
-import { Store, Share2, LayoutDashboard, ArrowRight } from 'lucide-react';
+import { motion, useReducedMotion, useMotionValue, useSpring, useMotionTemplate } from 'framer-motion';
+import { Store, Share2, LayoutDashboard } from 'lucide-react';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
 // ── Ease curves ───────────────────────────────────────────────────────────────
@@ -32,10 +32,21 @@ const steps = [
   },
 ];
 
+// ── Glow intensity table — outer radial, mid halo, inset screen wash, fuchsia bloom
+// Each step advances all four scalars; step 03 (the "wow" dashboard) peaks.
+const STEP_GLOW: { outer: number; mid: number; inset: number; fuchsia: number }[] = [
+  { outer: 0.18, mid: 0.10, inset: 0.05, fuchsia: 0.05 }, // 01 — setup
+  { outer: 0.28, mid: 0.18, inset: 0.09, fuchsia: 0.09 }, // 02 — share
+  { outer: 0.44, mid: 0.28, inset: 0.16, fuchsia: 0.16 }, // 03 — dashboard
+];
+
+// Slow, organic spring so the glow "breathes" in rather than snapping.
+const GLOW_SPRING = { stiffness: 50, damping: 18, mass: 1 } as const;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Phone screen content — one per step
-// All 3 are always mounted and stacked; only the active one is visible.
-// This pre-loads all screens → zero flash on transition.
+// All 3 always mounted and stacked; only the active one is visible.
+// Pre-loading all screens = zero flash on transition.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function PhoneScreen0() {
@@ -43,13 +54,11 @@ function PhoneScreen0() {
     <div className="flex flex-col h-full p-4 overflow-hidden">
       <p className="text-[10px] text-violet-400 font-semibold tracking-wide mb-3">Configurar salón</p>
 
-      {/* Salon name field */}
       <div className="bg-white/[0.05] border border-white/[0.08] rounded-xl px-3 py-2.5 mb-2.5">
         <p className="text-[8px] text-zinc-600 mb-0.5 uppercase tracking-wider">Nombre</p>
         <p className="text-[11px] text-zinc-200 font-medium">Melina Studio</p>
       </div>
 
-      {/* Services */}
       <p className="text-[8px] text-zinc-600 uppercase tracking-wider mb-1.5">Servicios (3)</p>
       {['Corte + color · $8.500', 'Keratina · $12.000', 'Peinado · $5.000'].map((s, i) => (
         <div key={i}
@@ -60,13 +69,11 @@ function PhoneScreen0() {
         </div>
       ))}
 
-      {/* Hours */}
       <div className="mt-2 flex items-center gap-2 text-[8px]">
         <span className="text-zinc-600">Horario</span>
         <span className="text-zinc-400">Lun–Sáb · 9:00–19:00</span>
       </div>
 
-      {/* CTA */}
       <div className="mt-auto pt-3">
         <div className="w-full py-2 rounded-xl text-center text-[9px] font-semibold text-white
           bg-gradient-to-r from-violet-600 to-fuchsia-500 shadow-[0_4px_16px_rgba(139,92,246,0.40)]">
@@ -82,13 +89,11 @@ function PhoneScreen1() {
     <div className="flex flex-col h-full p-4 overflow-hidden">
       <p className="text-[10px] text-violet-400 font-semibold tracking-wide mb-3">Tu página, lista</p>
 
-      {/* Link preview card */}
       <div className="bg-white/[0.05] border border-white/[0.08] rounded-xl p-3 mb-3">
         <p className="text-[8px] text-zinc-600 mb-1 uppercase tracking-wider">Tu link único</p>
         <p className="text-[10px] text-violet-300 font-mono">ouleeh.com/melina-studio</p>
       </div>
 
-      {/* Share options */}
       <p className="text-[8px] text-zinc-600 uppercase tracking-wider mb-2">Compartir en</p>
       <div className="flex gap-2 mb-4">
         {['WhatsApp', 'Instagram', 'Copiar'].map((s) => (
@@ -100,7 +105,6 @@ function PhoneScreen1() {
         ))}
       </div>
 
-      {/* QR code placeholder */}
       <div className="mx-auto w-20 h-20 rounded-2xl bg-white/[0.04] border border-white/[0.08]
         flex items-center justify-center">
         <div className="grid grid-cols-5 gap-0.5 w-12 h-12">
@@ -131,13 +135,11 @@ function PhoneScreen2() {
   ];
   return (
     <div className="flex flex-col h-full p-4 overflow-hidden">
-      {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <p className="text-[10px] text-zinc-200 font-semibold">Hoy, Lunes</p>
         <p className="text-[8px] text-violet-400 font-semibold">3 turnos</p>
       </div>
 
-      {/* Stat chips */}
       <div className="grid grid-cols-3 gap-1.5 mb-3">
         {[
           { l: 'Ingresos', v: '$12.400' },
@@ -152,7 +154,6 @@ function PhoneScreen2() {
         ))}
       </div>
 
-      {/* Agenda */}
       <p className="text-[8px] text-zinc-600 uppercase tracking-wider mb-1.5">Agenda</p>
       {agenda.map((a, i) => (
         <div key={i}
@@ -174,31 +175,60 @@ function PhoneScreen2() {
 const PHONE_SCREENS = [PhoneScreen0, PhoneScreen1, PhoneScreen2];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Phone mockup shell — Liquid Glass iPhone frame
+// PhoneMockup — Liquid Glass iPhone with spring-driven multi-layer glow
 // ─────────────────────────────────────────────────────────────────────────────
 
-function PhoneMockup({ activeStep, prefersReducedMotion }: { activeStep: number; prefersReducedMotion: boolean | null }) {
+function PhoneMockup({
+  activeStep,
+  prefersReducedMotion,
+}: {
+  activeStep: number;
+  prefersReducedMotion: boolean | null;
+}) {
+  // 4 independent MotionValues — each spring advances at its own natural pace,
+  // giving the multi-layer glow a slightly organic "breathing" quality rather
+  // than all layers popping in lockstep.
+  const glowOuter   = useMotionValue(STEP_GLOW[0].outer);
+  const glowMid     = useMotionValue(STEP_GLOW[0].mid);
+  const glowInset   = useMotionValue(STEP_GLOW[0].inset);
+  const glowFuchsia = useMotionValue(STEP_GLOW[0].fuchsia);
+
+  const smoothOuter   = useSpring(glowOuter,   GLOW_SPRING);
+  const smoothMid     = useSpring(glowMid,     GLOW_SPRING);
+  const smoothInset   = useSpring(glowInset,   GLOW_SPRING);
+  const smoothFuchsia = useSpring(glowFuchsia, GLOW_SPRING);
+
+  useEffect(() => {
+    const g = STEP_GLOW[activeStep];
+    glowOuter.set(g.outer);
+    glowMid.set(g.mid);
+    glowInset.set(g.inset);
+    glowFuchsia.set(g.fuchsia);
+  }, [activeStep, glowOuter, glowMid, glowInset, glowFuchsia]);
+
+  // 8-layer shadow composed by useMotionTemplate — Framer Motion writes directly
+  // to the DOM style attribute, never going through React reconciler. Zero re-renders.
+  //
+  // Layer 1: inset top highlight — Liquid Glass "bevel" (static)
+  // Layer 2: inset 1px ring — glass edge definition (static)
+  // Layer 3: inset violet screen wash — brightens as step index rises
+  // Layer 4: inset fuchsia bloom at bottom — warm chromatic gradient (step-linked)
+  // Layer 5: 1px hard outline — separates device from dark background
+  // Layer 6: deep contact shadow — grounds the phone, adds perceived weight
+  // Layer 7: mid violet halo ~80px — visible step-progression indicator
+  // Layer 8: wide ambient bloom ~160px — cinematic depth field, apple-style
+  const boxShadow = useMotionTemplate`inset 0 1px 0 rgba(255,255,255,0.16), inset 0 0 0 1px rgba(255,255,255,0.07), inset 0 0 40px rgba(139,92,246,${smoothInset}), inset 0 -24px 40px rgba(232,121,249,${smoothFuchsia}), 0 0 0 1px rgba(0,0,0,0.55), 0 40px 80px -8px rgba(0,0,0,0.88), 0 0 80px rgba(168,85,247,${smoothMid}), 0 0 160px rgba(139,92,246,${smoothOuter})`;
+
   return (
-    <div
-      className="relative mx-auto select-none"
-      style={{ width: 230, height: 470 }}
-    >
-      {/* Outer glass frame */}
-      <div
+    <div className="relative mx-auto select-none" style={{ width: 230, height: 470 }}>
+      {/* Outer glass frame — motion.div for spring-animated boxShadow */}
+      <motion.div
         className="absolute inset-0 rounded-[44px] border border-white/[0.12]
           bg-zinc-900/40 backdrop-blur-xl"
-        style={{
-          boxShadow: [
-            'inset 0 1px 0 rgba(255,255,255,0.14)',
-            'inset 0 0 0 1px rgba(255,255,255,0.06)',
-            '0 0 0 1px rgba(0,0,0,0.5)',
-            '0 32px 80px -8px rgba(0,0,0,0.8)',
-            '0 0 120px rgba(139,92,246,0.12)',
-          ].join(', '),
-        }}
+        style={{ boxShadow }}
       />
 
-      {/* Side buttons (decoration) */}
+      {/* Side buttons */}
       <div className="absolute -left-[3px] top-24 w-[3px] h-8 rounded-l-full bg-white/[0.08]" />
       <div className="absolute -left-[3px] top-36 w-[3px] h-12 rounded-l-full bg-white/[0.08]" />
       <div className="absolute -left-[3px] top-52 w-[3px] h-12 rounded-l-full bg-white/[0.08]" />
@@ -213,10 +243,7 @@ function PhoneMockup({ activeStep, prefersReducedMotion }: { activeStep: number;
           <div className="flex items-center gap-1">
             <div className="flex gap-px items-end h-2.5">
               {[3, 4, 5, 6].map((h, i) => (
-                <div key={i}
-                  className="w-[3px] rounded-sm bg-white"
-                  style={{ height: `${h * 15}%` }}
-                />
+                <div key={i} className="w-[3px] rounded-sm bg-white" style={{ height: `${h * 15}%` }} />
               ))}
             </div>
             <div className="w-5 h-2.5 rounded-[3px] border border-white/40 relative">
@@ -241,12 +268,8 @@ function PhoneMockup({ activeStep, prefersReducedMotion }: { activeStep: number;
           </div>
         </div>
 
-        {/*
-          Screen content — all 3 mounted, only active is visible.
-          Stacked absolute divs: no flash on transition.
-          scale: 0.96 → 1 on enter, 1 → 0.96 on exit.
-        */}
-        <div className="relative flex-1 overflow-hidden" style={{ height: 'calc(100% - 82px)' }}>
+        {/* Screen content — all 3 mounted, only active is visible */}
+        <div className="relative overflow-hidden" style={{ height: 'calc(100% - 82px)' }}>
           {PHONE_SCREENS.map((Screen, i) => (
             <motion.div
               key={i}
@@ -281,17 +304,14 @@ export default function ComoFuncionaSection() {
   const shouldReduce = useReducedMotion();
   const [activeStep, setActiveStep] = useState(0);
 
-  // Array of refs for the 3 step divs — used by IntersectionObserver
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   /*
     Scroll-spy with IntersectionObserver.
     rootMargin: '-30% 0px -50% 0px'
-      → a step activates when its top edge is ≥30% from the viewport top
-        AND its bottom hasn't yet crossed 50% from the viewport bottom.
-      → this creates a "center zone" trigger: step fires when it occupies
-        the middle ~20% band of the visible screen — exactly where the
-        user's eye is focused.
+      → trigger zone is the band between 30% and 50% from the viewport top.
+      → with each step at h-screen (100vh), only one step can occupy this
+        20%-band at a time — clean, non-overlapping activation.
   */
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
@@ -310,7 +330,6 @@ export default function ComoFuncionaSection() {
       rootMargin: '-30% 0px -50% 0px',
       threshold: 0,
     });
-
     const refs = stepRefs.current;
     refs.forEach(el => { if (el) observer.observe(el); });
     return () => refs.forEach(el => { if (el) observer.unobserve(el); });
@@ -349,7 +368,6 @@ export default function ComoFuncionaSection() {
           <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-4">
             Simple por diseño
           </p>
-          {/* Two-part heading — white + brand gradient */}
           <h2 className="font-playfair text-[clamp(2.4rem,5vw,3.8rem)] leading-[1.05] tracking-tight">
             <span className="text-white font-bold">De cero a online.</span>
             <br />
@@ -372,10 +390,14 @@ export default function ComoFuncionaSection() {
 
         {/* ── DESKTOP: Sticky Scroll layout ───────────────────────────────── */}
         {/*
-          items-start is REQUIRED for sticky to work.
-          Default items-stretch makes the right column fill the full grid height →
-          the sticky child then fills its parent → it has no room to "stick" and
-          just scrolls with the page. items-start lets each column be its own height.
+          items-start: required — prevents the grid from stretching the right
+          column to the full scroll height, which would break position:sticky.
+
+          Step heights: each step is exactly h-screen (100vh). This is the single
+          most important structural change — all three segments are mathematically
+          identical in height, so the phone stays uniformly anchored throughout.
+          min-h was wrong: it let content drive height, making the last step
+          (which has no connector line below it) visually shorter.
         */}
         <div className="hidden lg:grid lg:grid-cols-2 lg:gap-20 items-start pb-32">
 
@@ -389,16 +411,16 @@ export default function ComoFuncionaSection() {
                 <div
                   key={step.number}
                   ref={el => { stepRefs.current[index] = el; }}
-                  className="min-h-[70vh] flex flex-col justify-center py-16"
+                  // h-screen: fixed 100vh per step — identical for all three.
+                  // flex flex-col justify-center: content floats to vertical centre.
+                  className="h-screen flex flex-col justify-center py-20"
                 >
-                  {/* Step number + connector line */}
                   <div className="flex items-start gap-6">
-                    {/* Left rail: number + vertical line */}
+                    {/* Left rail: number badge + connector */}
                     <div className="flex flex-col items-center shrink-0 pt-1">
-                      {/* Number badge */}
                       <div
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center font-playfair font-light text-xl
-                          border transition-all duration-700"
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center
+                          font-playfair font-light text-xl border transition-all duration-700"
                         style={isActive ? {
                           background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(232,121,249,0.08) 100%)',
                           borderColor: 'rgba(167,139,250,0.45)',
@@ -412,7 +434,7 @@ export default function ComoFuncionaSection() {
                       >
                         {step.number}
                       </div>
-                      {/* Connector line (not shown after last step) */}
+
                       {index < steps.length - 1 && (
                         <div
                           className="w-px mt-3 transition-all duration-700"
@@ -427,9 +449,8 @@ export default function ComoFuncionaSection() {
                       )}
                     </div>
 
-                    {/* Step text content */}
+                    {/* Step text */}
                     <div className="flex-1 pb-2">
-                      {/* Icon badge */}
                       <div
                         className="w-10 h-10 rounded-xl border flex items-center justify-center mb-5
                           transition-all duration-700"
@@ -442,13 +463,12 @@ export default function ComoFuncionaSection() {
                         }}
                       >
                         <Icon
-                          className="w-4.5 h-4.5 transition-colors duration-700"
+                          className="w-4 h-4 transition-colors duration-700"
                           style={{ color: isActive ? '#c4b5fd' : '#3f3f46' }}
                           aria-hidden="true"
                         />
                       </div>
 
-                      {/* Title */}
                       <h3
                         className="font-playfair text-4xl font-semibold leading-tight mb-4
                           transition-colors duration-700"
@@ -457,7 +477,6 @@ export default function ComoFuncionaSection() {
                         {step.title}
                       </h3>
 
-                      {/* Description */}
                       <p
                         className="text-base leading-relaxed max-w-[380px] transition-colors duration-700"
                         style={{ color: isActive ? '#a1a1aa' : '#3f3f46' }}
@@ -465,7 +484,6 @@ export default function ComoFuncionaSection() {
                         {step.description}
                       </p>
 
-                      {/* Active indicator pill */}
                       <motion.div
                         animate={{ opacity: isActive ? 1 : 0, x: isActive ? 0 : -8 }}
                         transition={{ duration: shouldReduce ? 0 : 0.35, ease: EASE }}
@@ -482,20 +500,24 @@ export default function ComoFuncionaSection() {
           </div>
 
           {/* RIGHT — sticky phone mockup
-              sticky + top-16: anchors the column 4rem from the viewport top.
-              h-[calc(100vh-8rem)]: the column height fills the viewport minus
-              the top offset (4rem) and an equal bottom gap (4rem), so the phone
-              is always optically centred on screen as the left column scrolls.
-              flex items-center justify-center: centres the phone inside that box.
-              relative: required so the absolute glow div uses THIS as its containing
-              block (position:sticky creates a containing block for abs children). */}
+              top-16 + h-[calc(100vh-8rem)]: the sticky box is 4rem from the viewport
+              top and has an equal 4rem gap at the bottom, so the phone is always
+              optically centred regardless of which step is active.
+              relative: needed so the absolute glow is contained within this box. */}
           <div className="relative self-start sticky top-16 h-[calc(100vh-8rem)] flex items-center justify-center">
-            {/* Outer glow behind phone */}
-            <div
-              className="absolute inset-0 pointer-events-none transition-all duration-700"
+
+            {/* Background ambient glow — opacity animates per step
+                The gradient itself is always violet→fuchsia; we animate how
+                bright it is, not the colour, to avoid gradient interpolation bugs. */}
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              animate={{
+                opacity: activeStep === 0 ? 0.45 : activeStep === 1 ? 0.65 : 1.0,
+              }}
+              transition={{ duration: 0.8, ease: EASE }}
               style={{
-                background: `radial-gradient(ellipse 60% 50% at 50% 50%, rgba(139,92,246,${activeStep === 2 ? '0.18' : '0.12'}) 0%, transparent 70%)`,
-                filter: 'blur(40px)',
+                background: 'radial-gradient(ellipse 90% 80% at 50% 55%, rgba(139,92,246,0.55) 0%, rgba(232,121,249,0.18) 45%, transparent 70%)',
+                filter: 'blur(64px)',
               }}
               aria-hidden="true"
             />
@@ -542,7 +564,6 @@ export default function ComoFuncionaSection() {
                 transition={{ duration: 0.6, delay: index * 0.08, ease: EASE }}
                 className="flex flex-col gap-6"
               >
-                {/* Step header */}
                 <div className="flex items-center gap-3">
                   <div
                     className="w-10 h-10 rounded-xl border flex items-center justify-center
@@ -564,7 +585,7 @@ export default function ComoFuncionaSection() {
                   <p className="text-sm text-zinc-500 leading-relaxed">{step.description}</p>
                 </div>
 
-                {/* Mini phone preview (mobile) */}
+                {/* Mini phone preview */}
                 <div
                   className="w-full max-w-[240px] mx-auto rounded-[32px] border border-white/[0.10]
                     bg-zinc-900/40 backdrop-blur-xl overflow-hidden"
@@ -580,36 +601,6 @@ export default function ComoFuncionaSection() {
             );
           })}
         </div>
-
-        {/* ── CTA ─────────────────────────────────────────────────────────── */}
-        <motion.div
-          initial={shouldReduce ? {} : { opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.55, ease: EASE }}
-          className="flex justify-center pb-28"
-        >
-          <a
-            href="/business/register"
-            className="group inline-flex items-center gap-3 px-9 py-4 rounded-2xl
-              text-sm font-bold tracking-wide text-white cursor-pointer
-              transition-all duration-300 active:scale-[0.97]"
-            style={{
-              background: 'linear-gradient(135deg, #7c3aed 0%, #a21caf 100%)',
-              boxShadow: [
-                '0 0 0 1px rgba(139,92,246,0.40)',
-                '0 8px 32px rgba(139,92,246,0.35)',
-                'inset 0 1px 0 rgba(255,255,255,0.12)',
-              ].join(', '),
-            }}
-          >
-            Crear mi salón
-            <ArrowRight
-              className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200"
-              aria-hidden="true"
-            />
-          </a>
-        </motion.div>
 
       </div>
     </section>
