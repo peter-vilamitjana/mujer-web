@@ -7,140 +7,282 @@ import {
 } from 'lucide-react';
 import { useRef } from 'react';
 
-const bentoItems = [
+// ── Tags ── Apple-style pill design ───────────────────────────────────────────
+
+function FreeTag() {
+  return (
+    <span className="inline-flex items-center text-[9px] font-semibold px-2.5 py-[3px] rounded-full
+      uppercase tracking-wider border border-white/[0.09] bg-white/[0.04] text-zinc-500 shrink-0">
+      Gratis
+    </span>
+  );
+}
+
+function PremiumTag() {
+  return (
+    <span className="inline-flex items-center text-[9px] font-semibold px-2.5 py-[3px] rounded-full
+      uppercase tracking-wider border border-violet-400/[0.25] bg-violet-500/[0.14] text-violet-300 shrink-0">
+      Premium
+    </span>
+  );
+}
+
+// ── Bento data ────────────────────────────────────────────────────────────────
+/*
+  Arquitectura del grid (lg: 4 columnas):
+
+  ┌────────────────┬─────────────────────┐
+  │                │    WhatsApp (×2)     │
+  │  Agenda (×2)  ├──────────┬──────────┤
+  │  hero card    │  Perfil  │  MercPago │
+  ├────────────────┴──────────┼──────────┤
+  │       CRM (×2)            │ Reportes │
+  │                           │   (×2)   │
+  └───────────────────────────┴──────────┘
+
+  — col-span-2 en Agenda, WhatsApp, CRM, Reportes
+  — row-span-2 en Agenda (hero visual, foco de atención)
+*/
+
+type BentoItem = {
+  id: string;
+  gridClass: string;
+  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: string | boolean }>;
+  tier: 'free' | 'premium';
+  title: string;
+  description: string;
+  preview?: React.ReactNode;
+};
+
+const APPOINTMENTS = [
+  { time: '09:00', client: 'Valentina G.', service: 'Corte + color' },
+  { time: '11:30', client: 'Martina R.',   service: 'Keratina' },
+  { time: '14:00', client: 'Carolina S.',  service: 'Peinado' },
+];
+
+const BAR_HEIGHTS = [40, 55, 35, 72, 48, 88, 62];
+const BAR_DAYS    = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+
+const bentoItems: BentoItem[] = [
+  // ── Hero: ocupa 2 columnas × 2 filas ─────────────────────────────────────
   {
     id: 'agenda',
-    span: 'md:col-span-2 md:row-span-2',
+    gridClass: 'lg:col-span-2 lg:row-span-2',
     icon: Calendar,
-    tag: 'Gratis',
-    tagStyle: 'bg-white/[0.07] text-zinc-400',
+    tier: 'free',
     title: 'Agenda online 24/7',
-    description: 'Tus clientas reservan solas, cualquier día, a cualquier hora. Vos solo te enterás y aparecés.',
-    color: 'text-purple-400',
-    glow: 'rgba(168,85,247,0.12)',
-    border: 'border-purple-400/[0.12]',
+    description:
+      'Tus clientas reservan solas, cualquier día, a cualquier hora. Vos solo te enterás y aparecés.',
     preview: (
-      <div className="mt-5 space-y-2" aria-hidden="true">
-        {['09:00 · Valentina G. — Corte + color', '11:30 · Martina R. — Keratina', '14:00 · Carolina S. — Peinado'].map((item, i) => (
-          <div key={i} className="flex items-center gap-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] px-3 py-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0" />
-            <span className="text-[11px] text-zinc-400 truncate">{item}</span>
-            <span className="ml-auto text-[9px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full shrink-0">✓</span>
+      <div className="mt-5 flex flex-col gap-2.5" aria-hidden="true">
+        {/* Mini header estilo macOS Calendar */}
+        <div className="flex items-center justify-between mb-0.5">
+          <span className="text-[10px] text-zinc-600 uppercase tracking-wider font-medium">
+            Hoy · Mayo 2026
+          </span>
+          <span className="text-[10px] text-violet-400 font-semibold">3 turnos agendados</span>
+        </div>
+
+        {/* Appointment rows — native macOS list feel */}
+        {APPOINTMENTS.map((appt, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-3 rounded-xl bg-black/40 border border-white/[0.07]
+              px-3 py-2.5 backdrop-blur-sm"
+          >
+            <span className="text-[10px] text-violet-400 font-mono font-semibold w-10 shrink-0 tabular-nums">
+              {appt.time}
+            </span>
+            <div className="w-px h-4 bg-violet-400/20 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] text-zinc-200 font-medium leading-none truncate">{appt.client}</p>
+              <p className="text-[10px] text-zinc-600 mt-0.5 truncate">{appt.service}</p>
+            </div>
+            <div className="shrink-0 w-[18px] h-[18px] rounded-full bg-violet-400/10
+              border border-violet-400/20 flex items-center justify-center">
+              <span className="text-[8px] text-violet-400 leading-none">✓</span>
+            </div>
+          </div>
+        ))}
+
+        {/* Footer stat */}
+        <div className="pt-2.5 border-t border-white/[0.05] flex items-center justify-between">
+          <span className="text-[10px] text-zinc-600">Próximo disponible</span>
+          <span className="text-[10px] text-violet-400 font-semibold">15:30 hs</span>
+        </div>
+      </div>
+    ),
+  },
+
+  // ── WhatsApp: ancho ×2, fila 1 ───────────────────────────────────────────
+  {
+    id: 'whatsapp',
+    gridClass: 'lg:col-span-2',
+    icon: MessageSquare,
+    tier: 'free',
+    title: 'Notificaciones por WhatsApp',
+    description: 'Confirmaciones y recordatorios automáticos. Sin escribir un solo mensaje.',
+    preview: (
+      <div
+        className="mt-3 flex items-start gap-2.5 p-3 rounded-xl bg-black/40
+          border border-white/[0.06]"
+        aria-hidden="true"
+      >
+        <div className="w-6 h-6 rounded-full bg-violet-400/10 border border-violet-400/15
+          flex items-center justify-center shrink-0 mt-px">
+          <MessageSquare className="w-3 h-3 text-violet-400" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[9px] text-zinc-600 mb-1">MujerApp · hace 2 min</p>
+          <p className="text-[10px] text-zinc-300 leading-snug">
+            ✅ Valentina, tu turno del mar 14/05 a las 10:00h está confirmado.
+          </p>
+        </div>
+      </div>
+    ),
+  },
+
+  // ── Perfil: celda 1×1 ────────────────────────────────────────────────────
+  {
+    id: 'perfil',
+    gridClass: '',
+    icon: Globe,
+    tier: 'free',
+    title: 'Perfil público',
+    description: 'Tu página propia con servicios, fotos y equipo. Lista para compartir.',
+  },
+
+  // ── MercadoPago: celda 1×1 ───────────────────────────────────────────────
+  {
+    id: 'mercadopago',
+    gridClass: '',
+    icon: CreditCard,
+    tier: 'premium',
+    title: 'Cobro con MercadoPago',
+    description: 'Señas y pagos completos, directamente desde la app.',
+  },
+
+  // ── CRM: ancho ×2, fila 3 ────────────────────────────────────────────────
+  {
+    id: 'crm',
+    gridClass: 'lg:col-span-2',
+    icon: Users,
+    tier: 'premium',
+    title: 'CRM de clientas',
+    description: 'Historial técnico, preferencias y métricas por clienta.',
+    preview: (
+      <div className="mt-3 flex items-center gap-5" aria-hidden="true">
+        {[
+          { label: 'Clientas',   val: '124'    },
+          { label: 'Retención',  val: '91%'    },
+          { label: 'Valor prom.',val: '$2.800' },
+        ].map(s => (
+          <div key={s.label}>
+            <p className="text-[9px] text-zinc-600 mb-0.5">{s.label}</p>
+            <p className="text-sm font-semibold text-violet-300 tabular-nums">{s.val}</p>
           </div>
         ))}
       </div>
     ),
   },
-  {
-    id: 'whatsapp',
-    span: 'md:col-span-2',
-    icon: MessageSquare,
-    tag: 'Gratis',
-    tagStyle: 'bg-white/[0.07] text-zinc-400',
-    title: 'Notificaciones por WhatsApp',
-    description: 'Confirmaciones y recordatorios automáticos. Sin escribir un solo mensaje.',
-    color: 'text-emerald-400',
-    glow: 'rgba(52,211,153,0.10)',
-    border: 'border-emerald-400/[0.12]',
-    preview: null,
-  },
-  {
-    id: 'perfil',
-    span: '',
-    icon: Globe,
-    tag: 'Gratis',
-    tagStyle: 'bg-white/[0.07] text-zinc-400',
-    title: 'Perfil público',
-    description: 'Tu página propia con servicios, fotos y equipo.',
-    color: 'text-sky-400',
-    glow: 'rgba(56,189,248,0.10)',
-    border: 'border-sky-400/[0.12]',
-    preview: null,
-  },
-  {
-    id: 'mercadopago',
-    span: '',
-    icon: CreditCard,
-    tag: 'Premium',
-    tagStyle: 'bg-amber-400/[0.10] text-amber-400 border border-amber-400/[0.20]',
-    title: 'Cobro con MercadoPago',
-    description: 'Señas y pagos completos desde la app.',
-    color: 'text-amber-400',
-    glow: 'rgba(234,179,8,0.10)',
-    border: 'border-amber-400/[0.12]',
-    preview: null,
-  },
-  {
-    id: 'crm',
-    span: '',
-    icon: Users,
-    tag: 'Premium',
-    tagStyle: 'bg-emerald-400/[0.10] text-emerald-400 border border-emerald-400/[0.20]',
-    title: 'CRM de clientas',
-    description: 'Historial técnico, preferencias y métricas por clienta.',
-    color: 'text-emerald-400',
-    glow: 'rgba(52,211,153,0.10)',
-    border: 'border-emerald-400/[0.12]',
-    preview: null,
-  },
+
+  // ── Reportes: ancho ×2, fila 3 ───────────────────────────────────────────
   {
     id: 'reportes',
-    span: '',
+    gridClass: 'lg:col-span-2',
     icon: BarChart3,
-    tag: 'Premium',
-    tagStyle: 'bg-emerald-400/[0.10] text-emerald-400 border border-emerald-400/[0.20]',
+    tier: 'premium',
     title: 'Reportes y métricas',
-    description: 'Ingresos, servicios más pedidos, retención de clientas.',
-    color: 'text-rose-400',
-    glow: 'rgba(251,113,133,0.10)',
-    border: 'border-rose-400/[0.12]',
-    preview: null,
+    description: 'Ingresos, servicios más pedidos y retención de clientas.',
+    preview: (
+      <div className="mt-3" aria-hidden="true">
+        <p className="text-[9px] text-zinc-600 mb-2">Ingresos · última semana</p>
+        <div className="flex items-end gap-1 h-10">
+          {BAR_HEIGHTS.map((h, i) => (
+            <div key={i} className="flex flex-col items-center flex-1 gap-1 h-full">
+              <div className="w-full flex-1 flex items-end">
+                <div
+                  className="w-full rounded-t-sm"
+                  style={{
+                    height: `${h}%`,
+                    background: i === 5
+                      ? 'linear-gradient(to top, rgba(109,40,217,0.9), rgba(167,139,250,0.9))'
+                      : 'rgba(167,139,250,0.18)',
+                  }}
+                />
+              </div>
+              <span className="text-[7px] text-zinc-700 shrink-0">{BAR_DAYS[i]}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
   },
 ];
 
-function BentoCard({
-  item,
-  index,
-}: {
-  item: (typeof bentoItems)[0];
-  index: number;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-50px' });
+// ── Card component ─────────────────────────────────────────────────────────────
+
+function BentoCard({ item, index }: { item: BentoItem; index: number }) {
+  const ref        = useRef<HTMLDivElement>(null);
+  const inView     = useInView(ref, { once: true, margin: '-50px' });
   const shouldReduce = useReducedMotion();
 
   return (
     <motion.div
       ref={ref}
-      initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 32, scale: 0.97 }}
+      initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 24, scale: 0.98 }}
       animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
-      transition={{ duration: 0.6, delay: index * 0.04, ease: [0.22, 1, 0.36, 1] }}
-      className={`group relative rounded-3xl p-6 overflow-hidden cursor-default
-        backdrop-blur-xl bg-white/[0.03] border ${item.border}
-        hover:bg-white/[0.05] transition-all duration-300 ${item.span}`}
+      transition={{ duration: 0.55, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
+      className={[
+        // Base
+        'group relative rounded-3xl p-6 overflow-hidden cursor-default min-h-[180px]',
+        // Glassmorphism
+        'bg-zinc-900/50 backdrop-blur-xl border border-white/[0.07]',
+        // Hover: lift + inset glow + brighter border
+        'transition-all duration-300',
+        'hover:-translate-y-0.5',
+        'hover:border-violet-400/[0.18]',
+        'hover:shadow-[0_20px_60px_rgba(0,0,0,0.45),inset_0_0_60px_rgba(167,139,250,0.03)]',
+        // Grid placement
+        item.gridClass,
+      ].join(' ')}
     >
-      {/* Hover glow */}
+      {/* Inset radial glow — simula iluminación sobre el vidrio */}
       <div
         className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 pointer-events-none
           transition-opacity duration-500"
-        style={{ background: `radial-gradient(ellipse at 30% 0%, ${item.glow} 0%, transparent 60%)` }}
+        style={{
+          background:
+            'radial-gradient(ellipse at 35% -10%, rgba(167,139,250,0.10) 0%, transparent 65%)',
+        }}
+        aria-hidden="true"
+      />
+
+      {/* Violet edge shimmer — visible sólo en hover */}
+      <div
+        className="absolute top-0 inset-x-0 h-px rounded-full opacity-0 group-hover:opacity-100
+          transition-opacity duration-500"
+        style={{ background: 'linear-gradient(to right, transparent, rgba(167,139,250,0.4), transparent)' }}
         aria-hidden="true"
       />
 
       <div className="relative z-10 h-full flex flex-col">
-        {/* Header row */}
-        <div className="flex items-start justify-between gap-3 mb-4">
-          <div className={`w-10 h-10 rounded-2xl bg-white/[0.06] border border-white/[0.09]
-            flex items-center justify-center shrink-0 group-hover:border-white/[0.15] transition-colors duration-300`}>
-            <item.icon className={`w-5 h-5 ${item.color}`} aria-hidden="true" />
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div
+            className="w-10 h-10 rounded-2xl bg-violet-400/[0.08] border border-violet-400/[0.15]
+              flex items-center justify-center shrink-0 transition-all duration-300
+              group-hover:bg-violet-400/[0.13] group-hover:border-violet-400/[0.28]"
+          >
+            <item.icon className="w-5 h-5 text-violet-400" aria-hidden="true" />
           </div>
-          <span className={`text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0 ${item.tagStyle}`}>
-            {item.tag}
-          </span>
+          {item.tier === 'free' ? <FreeTag /> : <PremiumTag />}
         </div>
 
-        <h3 className="font-playfair text-[1.1rem] text-white leading-snug mb-2">{item.title}</h3>
-        <p className="text-sm text-zinc-500 leading-relaxed">{item.description}</p>
+        <h3 className="text-[1.05rem] text-zinc-100 font-semibold leading-snug mb-2">
+          {item.title}
+        </h3>
+        <p className="text-sm text-zinc-400 leading-relaxed">{item.description}</p>
 
         {item.preview && <div className="mt-auto">{item.preview}</div>}
       </div>
@@ -148,16 +290,34 @@ function BentoCard({
   );
 }
 
+// ── Section ────────────────────────────────────────────────────────────────────
+
 export default function FeaturesSection() {
-  const headingRef = useRef<HTMLDivElement>(null);
-  const inView = useInView(headingRef, { once: true, margin: '-80px' });
+  const headingRef   = useRef<HTMLDivElement>(null);
+  const inView       = useInView(headingRef, { once: true, margin: '-80px' });
   const shouldReduce = useReducedMotion();
 
   return (
-    <section className="relative z-10 bg-[#09090b] overflow-hidden">
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" aria-hidden="true" />
+    <section
+      className="relative z-10 overflow-hidden"
+      style={{
+        background: [
+          'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(167,139,250,0.05) 0%, transparent 55%)',
+          '#09090b',
+        ].join(', '),
+      }}
+    >
+      <div
+        className="absolute top-0 inset-x-0 h-px"
+        style={{
+          background:
+            'linear-gradient(to right, transparent, rgba(255,255,255,0.07), transparent)',
+        }}
+        aria-hidden="true"
+      />
 
-      <div className="py-28 px-6 max-w-5xl mx-auto">
+      <div className="py-28 px-6 max-w-6xl mx-auto">
+
         {/* Heading */}
         <motion.div
           ref={headingRef}
@@ -169,17 +329,21 @@ export default function FeaturesSection() {
           <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-4">
             Todo lo que incluye
           </p>
-          <h2 className="font-playfair text-[clamp(2.2rem,5vw,3.5rem)] text-white italic leading-tight">
+          <h2 className="font-playfair text-[clamp(2.2rem,5vw,3.5rem)] font-normal text-white leading-tight tracking-tight">
             Herramientas que tu salón{' '}
-            <span className="text-purple-400">necesita</span>
+            <span className="text-violet-400">necesita</span>
           </h2>
           <p className="text-zinc-500 text-[0.95rem] mt-4 max-w-md mx-auto leading-relaxed">
             El plan base cubre lo esencial. El premium lo lleva al siguiente nivel.
           </p>
         </motion.div>
 
-        {/* Bento grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[minmax(160px,auto)]">
+        {/*
+          Bento Grid — 4 columnas en desktop.
+          Agenda ocupa col-span-2 × row-span-2 → es el foco visual de la sección.
+          El resto de las cards se distribuyen como widgets alrededor.
+        */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {bentoItems.map((item, i) => (
             <BentoCard key={item.id} item={item} index={i} />
           ))}
@@ -193,9 +357,10 @@ export default function FeaturesSection() {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="mt-12 flex items-center justify-center gap-2 text-zinc-600 text-sm"
         >
-          <CheckCircle2 className="w-4 h-4 text-emerald-400/70 shrink-0" aria-hidden="true" />
+          <CheckCircle2 className="w-4 h-4 text-violet-400/60 shrink-0" aria-hidden="true" />
           <span>Plan base gratis para siempre · Sin tarjeta de crédito · Configurable en 5 minutos</span>
         </motion.div>
+
       </div>
     </section>
   );
