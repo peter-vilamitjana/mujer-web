@@ -46,30 +46,15 @@ function PainCard({
   quote: string;
   description: string;
 }) {
-  const shouldReduce = useReducedMotion();
-
   return (
-    <motion.div
-      whileHover={shouldReduce ? {} : { y: -4, scale: 1.02 }}
-      transition={{ type: 'spring', stiffness: 320, damping: 22 }}
-      className="group relative rounded-2xl p-6 overflow-hidden cursor-default shrink-0 w-full
-        bg-zinc-900/50 backdrop-blur-sm border border-white/[0.05]
-        hover:border-rose-400/[0.22] hover:bg-rose-500/[0.03]
-        transition-colors duration-300"
+    <div
+      className="relative rounded-2xl p-6 overflow-hidden cursor-default shrink-0 w-full
+        bg-zinc-900/50 backdrop-blur-sm border border-white/[0.05]"
     >
-      {/* Hover glow — rose tint, not harsh red */}
-      <div
-        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(251,113,133,0.09) 0%, transparent 70%)' }}
-        aria-hidden="true"
-      />
-
       <div className="relative z-10">
         {/* Icon badge */}
         <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-400/[0.20]
-          flex items-center justify-center mb-4
-          group-hover:border-rose-400/[0.35] group-hover:bg-rose-500/[0.15]
-          transition-all duration-300">
+          flex items-center justify-center mb-4">
           <Icon className="w-4 h-4 text-rose-400" aria-hidden="true" />
         </div>
 
@@ -81,7 +66,7 @@ function PainCard({
         {/* Supporting description — secondary hierarchy */}
         <p className="text-sm text-zinc-500 leading-relaxed">{description}</p>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
