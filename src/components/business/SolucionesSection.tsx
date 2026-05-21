@@ -210,6 +210,7 @@ export default function SolucionesSection() {
 
   // ── Sombra del monitor flotante — estilo Apple product page ────────────────
   const monitorShadow = [
+    'inset 0 1px 0 rgba(255,255,255,0.15)',      // ③ reflejo de cristal biselado (borde superior)
     '0 0 0 1px rgba(255,255,255,0.08)',          // borde de vidrio exterior
     '0 32px 80px -12px rgba(0,0,0,0.80)',        // sombra principal de profundidad
     '0 72px 160px -24px rgba(0,0,0,0.55)',       // sombra difusa amplia
@@ -363,7 +364,8 @@ export default function SolucionesSection() {
                       className={`rounded-2xl border cursor-pointer overflow-hidden
                         transition-colors duration-300
                         ${isActive
-                          ? 'border-violet-400/[0.18] bg-violet-400/[0.03]'
+                          // ④ Fondo violeta levísimo en capa activa — la saca del plano inactivo
+                          ? 'border-violet-400/[0.18] bg-violet-500/[0.05]'
                           : 'border-white/[0.05] bg-transparent hover:border-white/[0.10]'
                         }`}
                     >
@@ -381,8 +383,8 @@ export default function SolucionesSection() {
                           <h3 className="font-playfair text-[1.15rem] font-normal text-white leading-tight">
                             {sol.title}
                           </h3>
-                          {/* ④ Texto inactivo en text-zinc-500 para legibilidad */}
-                          <p className="text-zinc-500 text-[11px] font-semibold uppercase tracking-wider mt-0.5 truncate">
+                          {/* ② Subtítulo más sutil — no compite con el título */}
+                          <p className="text-zinc-500 text-xs font-medium uppercase tracking-widest mt-0.5 truncate">
                             {sol.subtitle}
                           </p>
                         </div>
@@ -400,7 +402,8 @@ export default function SolucionesSection() {
                               height:  { duration: prefersReducedMotion ? 0 : 0.38, ease: APPLE_EASE },
                               opacity: { duration: prefersReducedMotion ? 0 : 0.28, ease: APPLE_EASE },
                             }}
-                            className="space-y-3 px-5 pb-5 overflow-hidden"
+                            // ① Más breathing room entre ítems
+                            className="space-y-4 px-5 pb-5 overflow-hidden"
                           >
                             {sol.bullets.map((bullet, bIdx) => (
                               <motion.li
@@ -412,7 +415,7 @@ export default function SolucionesSection() {
                                   delay:    prefersReducedMotion ? 0 : 0.06 + bIdx * 0.07,
                                   ease:     APPLE_EASE,
                                 }}
-                                className="flex gap-3 items-start text-sm text-zinc-400"
+                                className="flex gap-3 items-start text-sm leading-relaxed text-zinc-400"
                               >
                                 <CheckCircle className="w-4 h-4 shrink-0 mt-0.5 text-violet-400" />
                                 <span>{bullet}</span>
