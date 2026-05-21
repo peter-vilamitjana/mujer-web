@@ -74,41 +74,41 @@ const bentoItems: BentoItem[] = [
     description:
       'Tus clientas reservan solas, cualquier día, a cualquier hora. Vos solo te enterás y aparecés.',
     preview: (
-      <div className="mt-5 flex flex-col gap-2.5" aria-hidden="true">
+      <div className="mt-3 flex flex-col gap-1.5" aria-hidden="true">
         {/* Mini header estilo macOS Calendar */}
         <div className="flex items-center justify-between mb-0.5">
-          <span className="text-[10px] text-zinc-600 uppercase tracking-wider font-medium">
+          <span className="text-[9px] text-zinc-600 uppercase tracking-wider font-medium">
             Hoy · Mayo 2026
           </span>
-          <span className="text-[10px] text-violet-400 font-semibold">3 turnos agendados</span>
+          <span className="text-[9px] text-violet-400 font-semibold">3 turnos</span>
         </div>
 
         {/* Appointment rows — native macOS list feel */}
         {APPOINTMENTS.map((appt, i) => (
           <div
             key={i}
-            className="flex items-center gap-3 rounded-xl bg-black/40 border border-white/[0.07]
-              px-3 py-2.5 backdrop-blur-sm"
+            className="flex items-center gap-2.5 rounded-lg bg-black/40 border border-white/[0.07]
+              px-2.5 py-1.5 backdrop-blur-sm"
           >
-            <span className="text-[10px] text-violet-400 font-mono font-semibold w-10 shrink-0 tabular-nums">
+            <span className="text-[9px] text-violet-400 font-mono font-semibold w-9 shrink-0 tabular-nums">
               {appt.time}
             </span>
-            <div className="w-px h-4 bg-violet-400/20 shrink-0" />
+            <div className="w-px h-3 bg-violet-400/20 shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-zinc-200 font-medium leading-none truncate">{appt.client}</p>
-              <p className="text-[10px] text-zinc-600 mt-0.5 truncate">{appt.service}</p>
+              <p className="text-[10px] text-zinc-200 font-medium leading-none truncate">{appt.client}</p>
+              <p className="text-[9px] text-zinc-600 mt-0.5 truncate">{appt.service}</p>
             </div>
-            <div className="shrink-0 w-[18px] h-[18px] rounded-full bg-violet-400/10
+            <div className="shrink-0 w-4 h-4 rounded-full bg-violet-400/10
               border border-violet-400/20 flex items-center justify-center">
-              <span className="text-[8px] text-violet-400 leading-none">✓</span>
+              <span className="text-[7px] text-violet-400 leading-none">✓</span>
             </div>
           </div>
         ))}
 
         {/* Footer stat */}
-        <div className="pt-2.5 border-t border-white/[0.05] flex items-center justify-between">
-          <span className="text-[10px] text-zinc-600">Próximo disponible</span>
-          <span className="text-[10px] text-violet-400 font-semibold">15:30 hs</span>
+        <div className="pt-1.5 border-t border-white/[0.05] flex items-center justify-between">
+          <span className="text-[9px] text-zinc-600">Próximo disponible</span>
+          <span className="text-[9px] text-violet-400 font-semibold">15:30 hs</span>
         </div>
       </div>
     ),
@@ -124,16 +124,16 @@ const bentoItems: BentoItem[] = [
     description: 'Confirmaciones y recordatorios automáticos. Sin escribir un solo mensaje.',
     preview: (
       <div
-        className="mt-3 flex items-start gap-2.5 p-3 rounded-xl bg-black/40
+        className="mt-2 flex items-start gap-2 p-2.5 rounded-lg bg-black/40
           border border-white/[0.06]"
         aria-hidden="true"
       >
-        <div className="w-6 h-6 rounded-full bg-violet-400/10 border border-violet-400/15
+        <div className="w-5 h-5 rounded-full bg-violet-400/10 border border-violet-400/15
           flex items-center justify-center shrink-0 mt-px">
-          <MessageSquare className="w-3 h-3 text-violet-400" />
+          <MessageSquare className="w-2.5 h-2.5 text-violet-400" />
         </div>
         <div className="min-w-0">
-          <p className="text-[9px] text-zinc-600 mb-1">MujerApp · hace 2 min</p>
+          <p className="text-[8px] text-zinc-600 mb-0.5">MujerApp · hace 2 min</p>
           <p className="text-[10px] text-zinc-300 leading-snug">
             ✅ Valentina, tu turno del mar 14/05 a las 10:00h está confirmado.
           </p>
@@ -171,15 +171,15 @@ const bentoItems: BentoItem[] = [
     title: 'CRM de clientas',
     description: 'Historial técnico, preferencias y métricas por clienta.',
     preview: (
-      <div className="mt-3 flex items-center gap-5" aria-hidden="true">
+      <div className="mt-2 flex items-center gap-4" aria-hidden="true">
         {[
           { label: 'Clientas',   val: '124'    },
           { label: 'Retención',  val: '91%'    },
           { label: 'Valor prom.',val: '$2.800' },
         ].map(s => (
           <div key={s.label}>
-            <p className="text-[9px] text-zinc-600 mb-0.5">{s.label}</p>
-            <p className="text-sm font-semibold text-violet-300 tabular-nums">{s.val}</p>
+            <p className="text-[8px] text-zinc-600 mb-0.5">{s.label}</p>
+            <p className="text-xs font-semibold text-violet-300 tabular-nums">{s.val}</p>
           </div>
         ))}
       </div>
@@ -195,9 +195,9 @@ const bentoItems: BentoItem[] = [
     title: 'Reportes y métricas',
     description: 'Ingresos, servicios más pedidos y retención de clientas.',
     preview: (
-      <div className="mt-3" aria-hidden="true">
-        <p className="text-[9px] text-zinc-600 mb-2">Ingresos · última semana</p>
-        <div className="flex items-end gap-1 h-10">
+      <div className="mt-2" aria-hidden="true">
+        <p className="text-[8px] text-zinc-600 mb-1.5">Ingresos · última semana</p>
+        <div className="flex items-end gap-1 h-7">
           {BAR_HEIGHTS.map((h, i) => (
             <div key={i} className="flex flex-col items-center flex-1 gap-1 h-full">
               <div className="w-full flex-1 flex items-end">
@@ -234,55 +234,55 @@ function BentoCard({ item, index }: { item: BentoItem; index: number }) {
       animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
       transition={{ duration: 0.55, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
       className={[
-        // Base
-        'group relative rounded-3xl p-6 overflow-hidden cursor-default min-h-[180px]',
-        // Glassmorphism
-        'bg-zinc-900/50 backdrop-blur-xl border border-white/[0.07]',
-        // Hover: lift + inset glow + brighter border
+        // Base — padding compacto para que quepa en viewport 16:9
+        'group relative rounded-2xl p-4 overflow-hidden cursor-default',
+        // ① Glassmorphism más sutil: /40 (was /50), blur-md (was xl), border /[0.06] (~white/5)
+        'bg-zinc-900/40 backdrop-blur-md border border-white/[0.06]',
+        // Hover: lift + inset glow + borde violeta
         'transition-all duration-300',
         'hover:-translate-y-0.5',
-        'hover:border-violet-400/[0.18]',
-        'hover:shadow-[0_20px_60px_rgba(0,0,0,0.45),inset_0_0_60px_rgba(167,139,250,0.03)]',
+        'hover:border-violet-400/[0.15]',
+        'hover:shadow-[0_16px_48px_rgba(0,0,0,0.4),inset_0_0_48px_rgba(167,139,250,0.025)]',
         // Grid placement
         item.gridClass,
       ].join(' ')}
     >
       {/* Inset radial glow — simula iluminación sobre el vidrio */}
       <div
-        className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 pointer-events-none
+        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 pointer-events-none
           transition-opacity duration-500"
         style={{
           background:
-            'radial-gradient(ellipse at 35% -10%, rgba(167,139,250,0.10) 0%, transparent 65%)',
+            'radial-gradient(ellipse at 35% -10%, rgba(167,139,250,0.08) 0%, transparent 65%)',
         }}
         aria-hidden="true"
       />
 
       {/* Violet edge shimmer — visible sólo en hover */}
       <div
-        className="absolute top-0 inset-x-0 h-px rounded-full opacity-0 group-hover:opacity-100
+        className="absolute top-0 inset-x-0 h-px opacity-0 group-hover:opacity-100
           transition-opacity duration-500"
-        style={{ background: 'linear-gradient(to right, transparent, rgba(167,139,250,0.4), transparent)' }}
+        style={{ background: 'linear-gradient(to right, transparent, rgba(167,139,250,0.35), transparent)' }}
         aria-hidden="true"
       />
 
       <div className="relative z-10 h-full flex flex-col">
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-start justify-between gap-2 mb-2.5">
           <div
-            className="w-10 h-10 rounded-2xl bg-violet-400/[0.08] border border-violet-400/[0.15]
+            className="w-8 h-8 rounded-xl bg-violet-400/[0.08] border border-violet-400/[0.14]
               flex items-center justify-center shrink-0 transition-all duration-300
-              group-hover:bg-violet-400/[0.13] group-hover:border-violet-400/[0.28]"
+              group-hover:bg-violet-400/[0.13] group-hover:border-violet-400/[0.26]"
           >
-            <item.icon className="w-5 h-5 text-violet-400" aria-hidden="true" />
+            <item.icon className="w-4 h-4 text-violet-400" aria-hidden="true" />
           </div>
           {item.tier === 'free' ? <FreeTag /> : <PremiumTag />}
         </div>
 
-        <h3 className="text-[1.05rem] text-zinc-100 font-semibold leading-snug mb-2">
+        <h3 className="text-[0.88rem] text-zinc-100 font-semibold leading-snug mb-1">
           {item.title}
         </h3>
-        <p className="text-sm text-zinc-400 leading-relaxed">{item.description}</p>
+        <p className="text-[0.78rem] text-zinc-400 leading-relaxed">{item.description}</p>
 
         {item.preview && <div className="mt-auto">{item.preview}</div>}
       </div>
@@ -316,34 +316,37 @@ export default function FeaturesSection() {
         aria-hidden="true"
       />
 
-      <div className="py-28 px-6 max-w-6xl mx-auto">
+      {/*
+        ② py-10 (was py-28) + max-w-5xl para que todo quepa en un viewport 16:9 estándar
+           sin scroll interno. Layout calculado para 1440×810 con navbar de ~64px.
+      */}
+      <div className="py-10 px-6 max-w-5xl mx-auto">
 
-        {/* Heading */}
+        {/* Heading — compactado para dejar espacio al grid */}
         <motion.div
           ref={headingRef}
-          initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 28 }}
+          initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center mb-14"
+          className="text-center mb-7"
         >
-          <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-4">
+          <p className="text-[9px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-2.5">
             Todo lo que incluye
           </p>
-          <h2 className="font-playfair text-[clamp(2.2rem,5vw,3.5rem)] font-normal text-white leading-tight tracking-tight">
+          <h2 className="font-playfair text-[clamp(1.7rem,3.2vw,2.6rem)] font-normal text-white leading-tight tracking-tight">
             Herramientas que tu salón{' '}
             <span className="text-violet-400">necesita</span>
           </h2>
-          <p className="text-zinc-500 text-[0.95rem] mt-4 max-w-md mx-auto leading-relaxed">
+          <p className="text-zinc-500 text-[0.82rem] mt-2.5 max-w-sm mx-auto leading-relaxed">
             El plan base cubre lo esencial. El premium lo lleva al siguiente nivel.
           </p>
         </motion.div>
 
         {/*
           Bento Grid — 4 columnas en desktop.
-          Agenda ocupa col-span-2 × row-span-2 → es el foco visual de la sección.
-          El resto de las cards se distribuyen como widgets alrededor.
+          gap-3 (was gap-4) para comprimir el grid y que entre en el viewport.
         */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {bentoItems.map((item, i) => (
             <BentoCard key={item.id} item={item} index={i} />
           ))}
@@ -355,9 +358,9 @@ export default function FeaturesSection() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="mt-12 flex items-center justify-center gap-2 text-zinc-600 text-sm"
+          className="mt-6 flex items-center justify-center gap-2 text-zinc-600 text-[0.78rem]"
         >
-          <CheckCircle2 className="w-4 h-4 text-violet-400/60 shrink-0" aria-hidden="true" />
+          <CheckCircle2 className="w-3.5 h-3.5 text-violet-400/60 shrink-0" aria-hidden="true" />
           <span>Plan base gratis para siempre · Sin tarjeta de crédito · Configurable en 5 minutos</span>
         </motion.div>
 
