@@ -114,6 +114,16 @@
   to   { transform: translateX(-50%); }
 }
 
+/* DolorSection — vertical marquee keyframes */
+@keyframes pain-scroll-down {
+  from { transform: translateY(0%); }
+  to   { transform: translateY(-33.333%); }
+}
+@keyframes pain-scroll-up {
+  from { transform: translateY(-33.333%); }
+  to   { transform: translateY(0%); }
+}
+
 .waveform-container {
   width: 100%;
   height: 100%;

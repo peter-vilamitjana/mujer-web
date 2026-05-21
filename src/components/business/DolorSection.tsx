@@ -50,31 +50,36 @@ function PainCard({
 
   return (
     <motion.div
-      whileHover={shouldReduce ? {} : { y: -6, scale: 1.025 }}
+      whileHover={shouldReduce ? {} : { y: -4, scale: 1.02 }}
       transition={{ type: 'spring', stiffness: 320, damping: 22 }}
-      className="group relative rounded-3xl p-6 overflow-hidden cursor-default
-        backdrop-blur-xl bg-white/[0.02] border border-white/[0.06]
-        hover:border-red-400/20 hover:bg-red-500/[0.03]
-        transition-colors duration-300 w-full shrink-0"
+      className="group relative rounded-2xl p-6 overflow-hidden cursor-default shrink-0 w-full
+        bg-zinc-900/50 backdrop-blur-sm border border-white/[0.05]
+        hover:border-rose-400/[0.22] hover:bg-rose-500/[0.03]
+        transition-colors duration-300"
     >
-      {/* Hover glow */}
+      {/* Hover glow — rose tint, not harsh red */}
       <div
-        className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(248,113,113,0.07) 0%, transparent 70%)' }}
+        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(251,113,133,0.09) 0%, transparent 70%)' }}
         aria-hidden="true"
       />
 
       <div className="relative z-10">
-        <div className="w-9 h-9 rounded-2xl bg-red-500/[0.06] border border-red-400/[0.12]
-          flex items-center justify-center mb-4 group-hover:border-red-400/[0.25]
-          group-hover:bg-red-500/[0.10] transition-all duration-300">
-          <Icon className="w-4.5 h-4.5 text-red-400" aria-hidden="true" />
+        {/* Icon badge */}
+        <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-400/[0.20]
+          flex items-center justify-center mb-4
+          group-hover:border-rose-400/[0.35] group-hover:bg-rose-500/[0.15]
+          transition-all duration-300">
+          <Icon className="w-4 h-4 text-rose-400" aria-hidden="true" />
         </div>
 
-        <p className="font-playfair text-[0.98rem] text-white italic leading-snug mb-2.5">
+        {/* Primary pain quote — centre of attention */}
+        <p className="font-playfair text-[0.98rem] text-zinc-200 italic font-medium leading-snug mb-2.5">
           &ldquo;{quote}&rdquo;
         </p>
-        <p className="text-xs text-zinc-500 leading-relaxed">{description}</p>
+
+        {/* Supporting description — secondary hierarchy */}
+        <p className="text-sm text-zinc-500 leading-relaxed">{description}</p>
       </div>
     </motion.div>
   );
@@ -99,9 +104,8 @@ const PainColumn = ({
   const inView = useInView(ref, { once: true, margin: '-80px' });
   const shouldReduce = useReducedMotion();
 
-  const yKeyframes = direction === 'up' ? ['-33.333%', '0%'] : ['0%', '-33.333%'];
-
   return (
+    // Outer div: Framer Motion entrance animation only — no continuous loop here
     <motion.div
       ref={ref}
       className={className}
@@ -109,16 +113,25 @@ const PainColumn = ({
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
     >
-      <motion.div
-        animate={shouldReduce ? {} : { y: yKeyframes }}
-        transition={{
-          duration,
-          repeat: Infinity,
-          ease: 'linear',
-          repeatType: 'loop',
+      {/*
+        Inner div: CSS animation drives the continuous marquee scroll.
+        Using CSS (not Framer Motion) so `animation-play-state` can be
+        toggled by the `group-hover:[animation-play-state:paused]` class —
+        Framer Motion's JS loop ignores that CSS property entirely.
+
+        The `group` context lives on the grid wrapper two levels up;
+        hovering anywhere inside the grid propagates the group-hover signal
+        here, freezing all three columns simultaneously.
+      */}
+      <div
+        className="flex flex-col gap-4 pb-4 will-change-transform group-hover:[animation-play-state:paused]"
+        style={{
+          animation: shouldReduce
+            ? 'none'
+            : `pain-scroll-${direction} ${duration}s linear infinite`,
         }}
-        className="flex flex-col gap-4 pb-4 will-change-transform"
       >
+        {/* Three full copies = seamless loop (only 1/3 visible at a time) */}
         {[0, 1, 2].map((idx) => (
           <React.Fragment key={idx}>
             {pains.map(({ icon, quote, description }: Pain, i: number) => (
@@ -131,7 +144,7 @@ const PainColumn = ({
             ))}
           </React.Fragment>
         ))}
-      </motion.div>
+      </div>
     </motion.div>
   );
 };
@@ -153,18 +166,18 @@ export default function DolorSection() {
         aria-hidden="true"
       />
 
-      {/* Atmospheric background — warm red vignette to reinforce the pain theme */}
+      {/* Atmospheric background — rose vignette, more sophisticated than pure red */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(239,68,68,0.055) 0%, transparent 70%)',
+            'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(244,63,94,0.045) 0%, transparent 70%)',
         }}
         aria-hidden="true"
       />
 
       <div className="py-24 w-full flex flex-col items-center">
-        {/* Staggered heading — each element animates independently */}
+        {/* Heading */}
         <div ref={headingRef} className="text-center mb-12 px-6 max-w-xl">
           <motion.p
             initial={shouldReduce ? {} : { opacity: 0, y: 12 }}
@@ -194,8 +207,27 @@ export default function DolorSection() {
           </motion.p>
         </div>
 
-        {/* Vertically scrolling columns — col2 goes opposite direction */}
-        <div className="w-full px-6 flex justify-center gap-6 mt-8 [mask-image:linear-gradient(to_bottom,transparent,black_18%,black_82%,transparent)] max-h-[520px] overflow-hidden">
+        {/*
+          Grid wrapper — two responsibilities:
+          1. `group`: provides the hover scope so group-hover in children fires
+             whenever the cursor enters anywhere inside this div.
+          2. `[mask-image:...]`: CSS mask that fades cards at top + bottom,
+             creating the cinematographic "cards emerging from darkness" effect.
+             Uses `-webkit-mask-image` for Safari + `mask-image` for modern browsers
+             (Tailwind's arbitrary `[mask-image:...]` only emits the unprefixed form,
+             so we apply both via the style prop for full cross-browser support).
+          3. `overflow-hidden`: required so the mask clips correctly and the
+             infinite scroll doesn't leak outside the container.
+        */}
+        <div
+          className="group w-full px-6 flex justify-center gap-6 mt-8 max-h-[520px] overflow-hidden"
+          style={{
+            WebkitMaskImage:
+              'linear-gradient(to bottom, transparent, black 12%, black 88%, transparent)',
+            maskImage:
+              'linear-gradient(to bottom, transparent, black 12%, black 88%, transparent)',
+          }}
+        >
           <PainColumn
             pains={col1}
             className="flex-1 max-w-[360px] w-full"
