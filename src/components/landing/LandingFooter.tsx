@@ -1,39 +1,97 @@
 import Link from 'next/link';
 
+const NAV_LINKS = [
+  { label: 'Journal',  href: '#' },
+  { label: 'Ateliers', href: '#' },
+  { label: 'Archive',  href: '#' },
+];
+
+const SOCIAL_LINKS = [
+  { label: 'Instagram', href: '#' },
+  { label: 'Pinterest',  href: '#' },
+];
+
+const LEGAL_LINKS = [
+  { label: 'Privacidad', href: '#' },
+  { label: 'Términos',   href: '#' },
+];
+
 export default function LandingFooter() {
   return (
-    <footer className="py-32 bg-brand-bg border-t border-glass-border theme-transition">
-      <div className="max-w-[1600px] mx-auto px-8 lg:px-24">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-20 mb-32">
-          <div className="md:col-span-2">
-            <h2 className="font-vogue text-5xl font-black tracking-tighter uppercase mb-10 text-brand-primary">Ouleeh</h2>
-            <p className="text-brand-primary/30 text-[10px] tracking-[0.4em] uppercase font-bold leading-loose max-w-sm font-inter">
-              La vanguardia de la belleza y el bienestar curado. Una publicación digital para la mujer contemporánea.
+    <footer className="bg-zinc-950 border-t border-white/[0.06]">
+      <div className="max-w-5xl mx-auto px-8 py-20">
+
+        {/* ── Main grid ─────────────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr] gap-12 mb-16">
+
+          {/* Brand column */}
+          <div>
+            <p className="font-playfair text-2xl font-semibold text-white tracking-tight mb-4">
+              Ouleeh
+            </p>
+            <p className="text-sm text-zinc-400 leading-relaxed max-w-[280px]">
+              La plataforma de gestión para salones de belleza en Argentina. Simple, rápida y diseñada para el día a día.
             </p>
           </div>
+
+          {/* Explorar column */}
           <div>
-            <h5 className="text-[10px] tracking-[0.5em] uppercase font-black mb-10 text-brand-primary font-inter">Explorar</h5>
-            <ul className="space-y-4">
-              <li><Link className="text-brand-primary/40 hover:text-brand-primary text-[10px] tracking-[0.2em] font-bold uppercase transition-colors font-inter" href="#">Journal</Link></li>
-              <li><Link className="text-brand-primary/40 hover:text-brand-primary text-[10px] tracking-[0.2em] font-bold uppercase transition-colors font-inter" href="#">Ateliers</Link></li>
-              <li><Link className="text-brand-primary/40 hover:text-brand-primary text-[10px] tracking-[0.2em] font-bold uppercase transition-colors font-inter" href="#">Archive</Link></li>
+            <h5 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-5">
+              Explorar
+            </h5>
+            <ul className="space-y-3">
+              {NAV_LINKS.map(({ label, href }) => (
+                <li key={label}>
+                  <Link
+                    href={href}
+                    className="text-sm text-zinc-400 hover:text-zinc-50 transition-colors duration-300"
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
+
+          {/* Social column */}
           <div>
-            <h5 className="text-[10px] tracking-[0.5em] uppercase font-black mb-10 text-brand-primary font-inter">Social</h5>
-            <ul className="space-y-4">
-              <li><Link className="text-brand-primary/40 hover:text-brand-primary text-[10px] tracking-[0.2em] font-bold uppercase transition-colors font-inter" href="#">Instagram</Link></li>
-              <li><Link className="text-brand-primary/40 hover:text-brand-primary text-[10px] tracking-[0.2em] font-bold uppercase transition-colors font-inter" href="#">Pinterest</Link></li>
+            <h5 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-5">
+              Social
+            </h5>
+            <ul className="space-y-3">
+              {SOCIAL_LINKS.map(({ label, href }) => (
+                <li key={label}>
+                  <Link
+                    href={href}
+                    className="text-sm text-zinc-400 hover:text-emerald-400 transition-colors duration-300"
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
+
         </div>
-        <div className="flex flex-col md:flex-row justify-between items-center pt-20 border-t border-glass-border gap-8 theme-transition">
-          <p className="text-[9px] tracking-[0.5em] uppercase text-brand-primary/20 font-bold font-inter">© {new Date().getFullYear()} Ouleeh. Excellence in Curation.</p>
-          <div className="flex gap-12">
-            <Link className="text-brand-primary/20 hover:text-brand-primary transition-colors text-[9px] tracking-[0.3em] font-bold uppercase font-inter" href="#">Privacy</Link>
-            <Link className="text-brand-primary/20 hover:text-brand-primary transition-colors text-[9px] tracking-[0.3em] font-bold uppercase font-inter" href="#">Terms</Link>
+
+        {/* ── Bottom bar ────────────────────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-8 border-t border-white/[0.06]">
+          <p className="text-xs text-zinc-600">
+            © {new Date().getFullYear()} Ouleeh. Todos los derechos reservados.
+          </p>
+          <div className="flex gap-6">
+            {LEGAL_LINKS.map(({ label, href }) => (
+              <Link
+                key={label}
+                href={href}
+                className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors duration-300"
+              >
+                {label}
+              </Link>
+            ))}
           </div>
         </div>
+
       </div>
     </footer>
   );

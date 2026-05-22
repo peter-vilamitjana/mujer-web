@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
-  useScroll, useTransform, useSpring, useMotionValue,
+  useScroll, useTransform, useSpring, useMotionValue, MotionValue,
   motion, AnimatePresence, useReducedMotion,
 } from 'framer-motion';
 import { useLenis } from 'lenis/react';
@@ -22,6 +22,8 @@ const TRAFFIC = [
 const APPLE_EASE  = [0.25, 0.46, 0.45, 0.94] as const;
 // Liquid ease — richer deceleration for accordion height (cubic-bezier WWDC-style)
 const LIQUID_EASE = [0.32, 0.72, 0, 1] as const;
+// Mouse-tilt spring — slightly stiffer than scroll spring for responsive tracking
+const MOUSE_SPRING = { stiffness: 90, damping: 22, mass: 1 } as const;
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 const solutions = [
@@ -172,6 +174,13 @@ export default function SolucionesSection() {
 
   const scrollProgress = useMotionValue(0);
 
+  // ── Mouse-driven tilt MotionValues ──────────────────────────────────────────
+  // Normalized to [-0.5, 0.5] where (0,0) = card center = no extra rotation.
+  // These ADD to the scroll-driven base rotation so the card feels alive on hover
+  // while still respecting its scroll-animated resting angle.
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1024);
     check();
@@ -189,6 +198,33 @@ export default function SolucionesSection() {
   const rotateX  = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [15, 5]);
   const rotateY  = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [-12, -4]);
   const tiltScale = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [0.95, 1.02]);
+
+  // ── Mouse micro-tilt — ±4° added on top of scroll-driven base ───────────────
+  // mouseY positive (cursor below center) → rotateX negative → top of card
+  //   tilts away (matches how a real surface reacts to a light source below).
+  // mouseX positive (cursor right of center) → rotateY positive → right side
+  //   tilts away — same direction as the glare reflection (physically correct).
+  const mouseRotateX = useSpring(
+    useTransform(mouseY, [-0.5, 0.5], prefersReducedMotion ? [0, 0] : [4, -4]),
+    MOUSE_SPRING
+  );
+  const mouseRotateY = useSpring(
+    useTransform(mouseX, [-0.5, 0.5], prefersReducedMotion ? [0, 0] : [-4, 4]),
+    MOUSE_SPRING
+  );
+
+  // Compose scroll + mouse into a single MotionValue — Framer Motion merges
+  // them in one rAF pass with no intermediate React renders.
+  // `as any` is needed because Framer Motion's TS overloads don't narrow
+  // the multi-value array form correctly; the runtime behaviour is correct.
+  const combinedRotateX = useTransform(
+    [rotateX, mouseRotateX] as any,
+    ([s, m]: number[]) => s + m
+  ) as MotionValue<number>;
+  const combinedRotateY = useTransform(
+    [rotateY, mouseRotateY] as any,
+    ([s, m]: number[]) => s + m
+  ) as MotionValue<number>;
 
   const exitOpacity = useTransform(scrollYProgress, [0.85, 1], [1, 0.82]);
   const exitScale   = useTransform(scrollYProgress, [0.85, 1], [1, 0.97]);
@@ -226,21 +262,34 @@ export default function SolucionesSection() {
   // mix-blend-mode: screen means the glare only adds light — it can't darken,
   // which is physically correct for light hitting glass.
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!glareRef.current || prefersReducedMotion) return;
+    if (prefersReducedMotion) return;
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left)  / rect.width)  * 100;
-    const y = ((e.clientY - rect.top)   / rect.height) * 100;
-    glareRef.current.style.background =
-      `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.05) 30%, transparent 62%)`;
-  }, [prefersReducedMotion]);
+
+    // Normalized [-0.5, 0.5] — drives the tilt springs
+    const nx = (e.clientX - rect.left) / rect.width  - 0.5;
+    const ny = (e.clientY - rect.top)  / rect.height - 0.5;
+    mouseX.set(nx);
+    mouseY.set(ny);
+
+    // Percentage [0, 100] — drives the glare overlay directly on the DOM node
+    if (glareRef.current) {
+      const gx = (nx + 0.5) * 100;
+      const gy = (ny + 0.5) * 100;
+      glareRef.current.style.background =
+        `radial-gradient(circle at ${gx}% ${gy}%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 30%, transparent 62%)`;
+    }
+  }, [mouseX, mouseY, prefersReducedMotion]);
 
   const handleMouseEnter = useCallback(() => {
     if (glareRef.current) glareRef.current.style.opacity = '1';
   }, []);
 
   const handleMouseLeave = useCallback(() => {
+    // Springs pull back to (0,0) — no abrupt snap
+    mouseX.set(0);
+    mouseY.set(0);
     if (glareRef.current) glareRef.current.style.opacity = '0';
-  }, []);
+  }, [mouseX, mouseY]);
 
   // ── Monitor shadow — Apple product-page fidelity ──────────────────────────
   const monitorShadow = [
@@ -311,7 +360,7 @@ export default function SolucionesSection() {
                   style={{ perspective: '1200px', transformStyle: 'preserve-3d' }}
                 >
                   <motion.div
-                    style={{ rotateX, rotateY, scale: tiltScale, boxShadow: monitorShadow }}
+                    style={{ rotateX: combinedRotateX, rotateY: combinedRotateY, scale: tiltScale, boxShadow: monitorShadow }}
                     className="w-full h-[360px] lg:h-[420px] rounded-[12px] overflow-hidden
                       flex flex-col
                       border border-white/[0.12]
@@ -394,7 +443,7 @@ export default function SolucionesSection() {
                         style={{
                           opacity: 0,
                           background:
-                            'radial-gradient(circle at 50% 30%, rgba(255,255,255,0.10) 0%, transparent 60%)',
+                            'radial-gradient(circle at 50% 30%, rgba(255,255,255,0.04) 0%, transparent 60%)',
                           mixBlendMode: 'screen',
                           transition: 'opacity 300ms ease',
                         }}
