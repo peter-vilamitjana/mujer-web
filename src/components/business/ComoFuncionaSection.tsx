@@ -6,11 +6,11 @@ import {
   useMotionValue,
   useSpring,
   useMotionTemplate,
+  useScroll,
 } from 'framer-motion';
 import { Store, Share2, LayoutDashboard } from 'lucide-react';
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
-// Apple's custom easing — quick start, smooth deceleration
 const APPLE_EASE = [0.32, 0.72, 0, 1] as const;
 const EASE       = [0.25, 0.46, 0.45, 0.94] as const;
 
@@ -38,15 +38,12 @@ const steps = [
   },
 ];
 
-// Four independent scalars for the phone's 8-layer boxShadow.
-// Each advances as step index rises — step 03 peaks for max visual drama.
 const STEP_GLOW: { outer: number; mid: number; inset: number; fuchsia: number }[] = [
   { outer: 0.18, mid: 0.10, inset: 0.05, fuchsia: 0.05 },
   { outer: 0.28, mid: 0.18, inset: 0.09, fuchsia: 0.09 },
   { outer: 0.44, mid: 0.28, inset: 0.16, fuchsia: 0.16 },
 ];
 
-// Slow organic spring — glow "breathes" into place rather than snapping
 const GLOW_SPRING = { stiffness: 50, damping: 18, mass: 1 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -156,8 +153,6 @@ const PHONE_SCREENS = [PhoneScreen0, PhoneScreen1, PhoneScreen2];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PhoneMockup — spring-driven 8-layer glow via useMotionTemplate
-// Framer Motion writes the boxShadow string directly to the DOM style attribute,
-// bypassing React reconciler entirely — zero re-renders during glow transitions.
 // ─────────────────────────────────────────────────────────────────────────────
 function PhoneMockup({
   activeStep,
@@ -176,7 +171,6 @@ function PhoneMockup({
   const smoothInset   = useSpring(glowInset,   GLOW_SPRING);
   const smoothFuchsia = useSpring(glowFuchsia, GLOW_SPRING);
 
-  // Drive all four scalars whenever the active step changes
   useEffect(() => {
     const g = STEP_GLOW[activeStep];
     glowOuter.set(g.outer);
@@ -185,33 +179,21 @@ function PhoneMockup({
     glowFuchsia.set(g.fuchsia);
   }, [activeStep, glowOuter, glowMid, glowInset, glowFuchsia]);
 
-  // 8-layer shadow reduced to 6 layers (removed outer glow parts)
-  const boxShadow = useMotionTemplate`inset 0 1px 0 rgba(255,255,255,0.16), inset 0 0 0 1px rgba(255,255,255,0.07), inset 0 0 40px rgba(139,92,246,${smoothInset}), inset 0 -24px 40px rgba(232,121,249,${smoothFuchsia}), 0 0 0 1px rgba(0,0,0,0.55), 0 40px 80px -8px rgba(0,0,0,0.88)`;
+  const boxShadow = useMotionTemplate`inset 0 1px 0 rgba(255,255,255,0.16), inset 0 0 0 1px rgba(255,255,255,0.07), inset 0 0 40px rgba(139,92,246,${smoothInset}), inset 0 -24px 40px rgba(232,121,249,${smoothFuchsia}), 0 0 0 1px rgba(0,0,0,0.55), 0 40px 80px -8px rgba(0,0,0,0.88), 0 0 80px rgba(168,85,247,${smoothMid}), 0 0 160px rgba(139,92,246,${smoothOuter})`;
 
   return (
     <div className="relative mx-auto select-none" style={{ width: 230, height: 470 }}>
-      {/* Resplandor (glow) del teléfono centrado de forma absoluta */}
-      <motion.div
-        className="absolute inset-0 z-[-1] rounded-[44px] blur-[80px]"
-        style={{
-          backgroundColor: useMotionTemplate`rgba(139,92,246,${smoothOuter})`,
-        }}
-      />
-      {/* Outer Liquid Glass frame */}
       <motion.div
         className="absolute inset-0 rounded-[44px] border border-white/[0.12] bg-zinc-900/40 backdrop-blur-xl"
         style={{ boxShadow }}
       />
 
-      {/* Physical side buttons */}
       <div className="absolute -left-[3px] top-24 w-[3px] h-8 rounded-l-full bg-white/[0.08]" />
       <div className="absolute -left-[3px] top-36 w-[3px] h-12 rounded-l-full bg-white/[0.08]" />
       <div className="absolute -left-[3px] top-52 w-[3px] h-12 rounded-l-full bg-white/[0.08]" />
       <div className="absolute -right-[3px] top-32 w-[3px] h-16 rounded-r-full bg-white/[0.08]" />
 
-      {/* Screen bezel */}
       <div className="absolute inset-[3px] rounded-[41px] bg-[#0a0a0c] overflow-hidden">
-        {/* Status bar */}
         <div className="flex items-center justify-between px-5 pt-3 pb-1 shrink-0">
           <span className="text-[9px] text-white font-semibold tabular-nums">9:41</span>
           <div className="flex items-center gap-1">
@@ -226,10 +208,8 @@ function PhoneMockup({
           </div>
         </div>
 
-        {/* Dynamic Island */}
         <div className="mx-auto w-20 h-6 bg-black rounded-full mb-1" />
 
-        {/* App header */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-white/[0.05]">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-500 flex items-center justify-center">
@@ -242,7 +222,6 @@ function PhoneMockup({
           </div>
         </div>
 
-        {/* Screen content — all 3 always mounted, only active visible */}
         <div className="relative overflow-hidden" style={{ height: 'calc(100% - 82px)' }}>
           {PHONE_SCREENS.map((Screen, i) => (
             <motion.div
@@ -263,7 +242,6 @@ function PhoneMockup({
           ))}
         </div>
 
-        {/* Home indicator */}
         <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-20 h-1 rounded-full bg-white/30" />
       </div>
     </div>
@@ -276,44 +254,32 @@ function PhoneMockup({
 export default function ComoFuncionaSection() {
   const shouldReduce = useReducedMotion();
   const [activeStep, setActiveStep] = useState(0);
-  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   /*
-    Scroll-spy: IntersectionObserver fires when a step enters a 20%-wide band
-    centered at ~45% from the top of the viewport — just above the visual
-    midpoint, which is where the eye naturally rests while reading.
+    containerRef wraps only the 300vh sticky scroll zone — NOT the heading.
+    useScroll offset ['start start', 'end end']:
+      progress 0 → container top aligns with viewport top (heading has scrolled off)
+      progress 1 → container bottom aligns with viewport bottom
 
-    rootMargin: '-35% 0px -45% 0px'
-      → Effective root = viewport shrunk 35% from top, 45% from bottom.
-      → Trigger band = 35%–55% from viewport top (20% window).
-      → With h-[80vh] per step, each step is 720px tall (at 900px viewport).
-        Only one step can occupy the 180px trigger band at a time.
-
-    Only isIntersecting:true entries update state — a step exiting the band
-    does NOT revert to the previous step, which prevents jitter during the
-    overlap window between consecutive steps.
+    Scroll range = 300vh − 100vh = 200vh total travel.
+    Each step gets ~66.7vh (200vh / 3):
+      0.00 – 0.33 → step 0
+      0.33 – 0.66 → step 1
+      0.66 – 1.00 → step 2
   */
-  const handleObserver = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const index = stepRefs.current.indexOf(entry.target as HTMLDivElement);
-          if (index !== -1) setActiveStep(index);
-        }
-      });
-    },
-    []
-  );
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start start', 'end end'],
+  });
 
   useEffect(() => {
-    const observer = new IntersectionObserver(handleObserver, {
-      rootMargin: '-45% 0px -45% 0px',
-      threshold: 0,
+    // Fires only when crossing thresholds — not on every scroll tick
+    return scrollYProgress.on('change', (v) => {
+      const next = v < 0.33 ? 0 : v < 0.66 ? 1 : 2;
+      setActiveStep(prev => (prev === next ? prev : next));
     });
-    const refs = stepRefs.current;
-    refs.forEach(el => { if (el) observer.observe(el); });
-    return () => refs.forEach(el => { if (el) observer.unobserve(el); });
-  }, [handleObserver]);
+  }, [scrollYProgress]);
 
   return (
     <section
@@ -330,24 +296,20 @@ export default function ComoFuncionaSection() {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(139,92,246,0.06) 0%, transparent 65%)',
+          background:
+            'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(139,92,246,0.06) 0%, transparent 65%)',
         }}
         aria-hidden="true"
       />
 
-      {/*
-        max-w-5xl (was max-w-6xl): tighter container makes text and phone read
-        as one cohesive unit rather than two isolated panels.
-      */}
+      {/* ── Section heading — scrolls normally, outside the sticky zone ───── */}
       <div className="max-w-5xl mx-auto px-8">
-
-        {/* ── Section heading ───────────────────────────────────────────── */}
         <motion.div
           initial={shouldReduce ? {} : { opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
           transition={{ duration: 0.65, ease: EASE }}
-          className="text-center pt-24 pb-6"
+          className="text-center pt-24 pb-16"
         >
           <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-4">
             Simple por diseño
@@ -371,167 +333,249 @@ export default function ComoFuncionaSection() {
             Sin soporte técnico. Sin configuraciones complicadas.
           </p>
         </motion.div>
+      </div>
 
-        {/* ── DESKTOP: Sticky Scroll ─────────────────────────────────────── */}
-        {/*
-          items-start: mandatory — default items-stretch would expand the right
-          column to the full scroll height, making sticky: impossible.
+      {/* ── DESKTOP: 300vh sticky scroll zone ─────────────────────────────── */}
+      {/*
+        containerRef sits here — NOT on the section — so useScroll progress
+        starts exactly when this block's top reaches the viewport top (after
+        the heading has scrolled off). The sticky inner fills 100vh and holds
+        both columns in place while the outer 300vh wrapper scrolls past.
+      */}
+      <div ref={containerRef} className="hidden lg:block h-[300vh]">
+        <div className="sticky top-0 h-screen overflow-hidden">
+          <div className="max-w-5xl mx-auto px-8 pt-20">
 
-          gap-12 (was gap-20): 48px gap vs 80px — the two columns now feel like
-          a single composition rather than two separated panels.
-        */}
-        <div className="hidden lg:grid lg:grid-cols-2 gap-12 items-start">
+            {/*
+              items-start: both columns begin at the SAME y-coordinate.
+              Left column text top-0 = Right column phone top edge.
+              This is the alignment guarantee the design requires.
+            */}
+            <div className="grid grid-cols-2 gap-12 items-start">
 
-          {/* LEFT — scrollable step column
-              h-[80vh] per step: explicit, self-contained, and identical for all
-              three steps. No parent-height derivation, no flex-1 division math.
-              Content is centred within each 80vh slot via justify-center. */}
-          <div className="flex flex-col">
-            {steps.map((step, index) => {
-              const isActive = activeStep === index;
-              const isPast   = index < activeStep;
+              {/* ── LEFT: in-place text crossfade ──────────────────────── */}
+              {/*
+                height: 470px matches the phone exactly.
+                All 3 steps are position:absolute at top:0 / left:0 / width:100%.
+                They share the same origin point — mechanical guarantee of identical
+                starting position. Only one is ever visible (opacity > 0) at a time.
 
-              return (
-                <div
-                  key={step.number}
-                  ref={el => { stepRefs.current[index] = el; }}
-                  className="h-screen w-full flex flex-col justify-center py-10"
-                >
-                  <div className="flex items-stretch gap-5">
+                Transition contract:
+                  • Departing (isPast):  opacity 0, y -14px  → drifts upward
+                  • Arriving  (isFuture): opacity 0, y +14px  → waits below
+                  • Active:              opacity 1, y 0       → in place
+              */}
+              <div className="relative" style={{ height: 470 }}>
 
-                    {/* Left rail: number badge + downward connector line */}
-                    <div className="flex flex-col items-center shrink-0 pt-1">
-                      <div
-                        className="w-11 h-11 rounded-2xl flex items-center justify-center
-                          font-playfair font-light text-lg border transition-all duration-700"
-                        style={isActive ? {
-                          background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(232,121,249,0.08) 100%)',
-                          borderColor: 'rgba(167,139,250,0.45)',
-                          boxShadow: '0 0 24px rgba(139,92,246,0.20)',
-                          color: '#c4b5fd',
-                        } : {
-                          background: 'rgba(255,255,255,0.02)',
-                          borderColor: isPast ? 'rgba(167,139,250,0.20)' : 'rgba(255,255,255,0.07)',
-                          color: isPast ? 'rgba(167,139,250,0.35)' : '#3f3f46',
-                        }}
-                      >
-                        {step.number}
-                      </div>
+                {steps.map((step, i) => {
+                  const isPast = i < activeStep;
 
-                      {/* Connector: bridges visually toward the next badge */}
-                      {index < steps.length - 1 && (
-                        <div
-                          className="w-px mt-3 flex-1 transition-all duration-700"
-                          style={{
-                            background: isActive
-                              ? 'linear-gradient(to bottom, rgba(167,139,250,0.50), rgba(167,139,250,0.05))'
-                              : isPast
-                              ? 'rgba(167,139,250,0.18)'
-                              : 'rgba(255,255,255,0.06)',
-                          }}
-                          aria-hidden="true"
-                        />
-                      )}
-                    </div>
-
-                    {/* Step text — Apple scroll-driven animation.
-                        Directional translateY: past steps drift upward (already seen),
-                        future steps wait below (not yet reached). Active lands at 0.
-                        Opacity 0.12 keeps inactive text legible as a ghost while the
-                        active step demands full attention. */}
+                  return (
                     <motion.div
-                      className="flex-1 pb-2 flex flex-col justify-center"
+                      key={step.number}
+                      className="absolute top-0 left-0 w-full"
+                      initial={false}
                       animate={{
-                        opacity: isActive ? 1 : 0.12,
-                        y:       isActive ? 0 : isPast ? -14 : 14,
+                        opacity: i === activeStep ? 1 : 0,
+                        y:       i === activeStep ? 0 : isPast ? -14 : 14,
                       }}
                       transition={{
-                        duration: shouldReduce ? 0 : 0.65,
+                        duration: shouldReduce ? 0 : 0.5,
                         ease: APPLE_EASE,
                       }}
                     >
-                      <h3 className="font-playfair text-[2.2rem] font-semibold leading-tight mb-4 text-white">
-                        {step.title}
-                      </h3>
-                      <p className="text-base leading-relaxed max-w-[380px] text-zinc-400">
-                        {step.description}
-                      </p>
+                      <div className="flex items-start gap-5">
+                        {/* Number badge — always rendered in active style since
+                            this step is only visible when it IS the active step */}
+                        <div
+                          className="w-11 h-11 rounded-2xl flex items-center justify-center
+                            font-playfair font-light text-lg border shrink-0 mt-1"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(232,121,249,0.08) 100%)',
+                            borderColor: 'rgba(167,139,250,0.45)',
+                            boxShadow: '0 0 24px rgba(139,92,246,0.20)',
+                            color: '#c4b5fd',
+                          }}
+                        >
+                          {step.number}
+                        </div>
+
+                        <div className="flex-1">
+                          <h3 className="font-playfair text-[2.2rem] font-semibold leading-tight mb-4 text-white">
+                            {step.title}
+                          </h3>
+                          <p className="text-base leading-relaxed max-w-[360px] text-zinc-400">
+                            {step.description}
+                          </p>
+                        </div>
+                      </div>
                     </motion.div>
+                  );
+                })}
 
+                {/* Progress indicator — absolute at bottom, always visible */}
+                <div className="absolute bottom-6 left-0 flex items-center gap-4">
+                  <motion.span
+                    key={activeStep}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3, ease: APPLE_EASE }}
+                    className="font-playfair text-xl text-violet-400/70 font-light tabular-nums select-none"
+                  >
+                    {String(activeStep + 1).padStart(2, '0')}
+                  </motion.span>
+
+                  {/* Animated progress track */}
+                  <div className="relative w-20 h-px bg-white/[0.08] overflow-hidden">
+                    <motion.div
+                      className="absolute inset-y-0 left-0 bg-violet-400/50"
+                      animate={{ width: `${((activeStep + 1) / steps.length) * 100}%` }}
+                      transition={{ duration: 0.5, ease: APPLE_EASE }}
+                    />
                   </div>
+
+                  <span className="text-xs text-zinc-700 font-mono tabular-nums select-none">
+                    {String(steps.length).padStart(2, '0')}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
 
-          {/* RIGHT — sticky phone column */}
-          <div className="sticky top-0 h-screen flex items-center justify-center">
+              </div>
 
-            {/* Phone + indicator dots */}
-            <div className="relative flex flex-col items-center gap-8">
-              <PhoneMockup activeStep={activeStep} prefersReducedMotion={shouldReduce} />
+              {/* ── RIGHT: phone + cinematic glow ──────────────────────── */}
+              {/*
+                The phone wrapper shares the same top-0 as the left column
+                (both columns use items-start). No centering — phone sits flush
+                at the same baseline as the first word of the active step title.
+              */}
+              <div className="flex flex-col items-center">
 
-              {/* Step indicator dots — clickable for quick navigation */}
-              <div className="flex gap-2">
-                {steps.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveStep(i)}
-                    aria-label={`Paso ${i + 1}`}
-                    className="rounded-full transition-all duration-500 cursor-pointer"
+                {/* Phone-sized relative container — glow layers overflow it
+                    but are contained visually and are pointer-events-none */}
+                <div className="relative" style={{ width: 230, height: 470 }}>
+
+                  {/* Layer 1: Wide ambient violet bloom */}
+                  <motion.div
+                    aria-hidden="true"
+                    className="absolute pointer-events-none"
                     style={{
-                      width:           i === activeStep ? '20px' : '6px',
-                      height:          '6px',
-                      backgroundColor: i === activeStep ? '#a78bfa' : 'rgba(255,255,255,0.15)',
+                      width: 480, height: 560,
+                      top: '50%', left: '50%',
+                      translateX: '-50%',
+                      translateY: '-50%',
+                      borderRadius: '50%',
+                      background: 'radial-gradient(ellipse, rgba(139,92,246,0.55) 0%, rgba(109,40,217,0.20) 40%, transparent 70%)',
+                      filter: 'blur(72px)',
                     }}
+                    animate={{
+                      opacity: activeStep === 0 ? 0.38 : activeStep === 1 ? 0.55 : 0.82,
+                    }}
+                    transition={{ duration: 1.0, ease: EASE }}
                   />
-                ))}
+
+                  {/* Layer 2: Fuchsia warmth — chromatic aberration depth */}
+                  <motion.div
+                    aria-hidden="true"
+                    className="absolute pointer-events-none"
+                    style={{
+                      width: 280, height: 280,
+                      top: '62%', left: '50%',
+                      translateX: '-50%',
+                      translateY: '-50%',
+                      borderRadius: '50%',
+                      background: 'radial-gradient(circle, rgba(232,121,249,0.60) 0%, transparent 70%)',
+                      filter: 'blur(42px)',
+                    }}
+                    animate={{
+                      opacity: activeStep === 0 ? 0.18 : activeStep === 1 ? 0.32 : 0.52,
+                    }}
+                    transition={{ duration: 0.9, ease: EASE }}
+                  />
+
+                  {/* Layer 3: Tight violet halo — defines device edge */}
+                  <motion.div
+                    aria-hidden="true"
+                    className="absolute pointer-events-none"
+                    style={{
+                      width: 210, height: 400,
+                      top: '50%', left: '50%',
+                      translateX: '-50%',
+                      translateY: '-50%',
+                      borderRadius: '50%',
+                      background: 'radial-gradient(ellipse, rgba(139,92,246,0.75) 0%, transparent 70%)',
+                      filter: 'blur(22px)',
+                    }}
+                    animate={{
+                      opacity: activeStep === 0 ? 0.10 : activeStep === 1 ? 0.20 : 0.36,
+                    }}
+                    transition={{ duration: 0.7, ease: EASE }}
+                  />
+
+                  {/* Phone — rendered above glow layers via DOM order */}
+                  <PhoneMockup activeStep={activeStep} prefersReducedMotion={shouldReduce} />
+
+                </div>
+
+                {/* Step dots — visual only (scroll drives state, not clicks) */}
+                <div className="flex gap-2 mt-6">
+                  {steps.map((_, i) => (
+                    <div
+                      key={i}
+                      aria-hidden="true"
+                      className="rounded-full transition-all duration-500"
+                      style={{
+                        width:           i === activeStep ? '20px' : '6px',
+                        height:          '6px',
+                        backgroundColor: i === activeStep ? '#a78bfa' : 'rgba(255,255,255,0.15)',
+                      }}
+                    />
+                  ))}
+                </div>
+
               </div>
             </div>
-
           </div>
         </div>
-
-        {/* ── MOBILE: Stacked cards ─────────────────────────────────────── */}
-        <div className="lg:hidden space-y-12 pb-24">
-          {steps.map((step, index) => {
-            const Icon   = step.icon;
-            const Screen = PHONE_SCREENS[index];
-            return (
-              <motion.div
-                key={step.number}
-                initial={shouldReduce ? {} : { opacity: 0, y: 32 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-60px' }}
-                transition={{ duration: 0.6, delay: index * 0.08, ease: EASE }}
-                className="flex flex-col gap-6"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-xl border flex items-center justify-center font-playfair text-sm text-violet-400"
-                    style={{ background: 'rgba(139,92,246,0.10)', borderColor: 'rgba(167,139,250,0.30)' }}
-                  >
-                    {step.number}
-                  </div>
-                  <Icon className="w-4 h-4 text-violet-400" aria-hidden="true" />
-                </div>
-                <div>
-                  <h3 className="font-playfair text-2xl font-semibold text-zinc-100 mb-2">{step.title}</h3>
-                  <p className="text-sm text-zinc-500 leading-relaxed">{step.description}</p>
-                </div>
-                <div
-                  className="w-full max-w-[240px] mx-auto rounded-[32px] border border-white/[0.10] bg-zinc-900/40 backdrop-blur-xl overflow-hidden"
-                  style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 60px rgba(139,92,246,0.08)', height: 220 }}
-                >
-                  <div className="w-16 h-4 bg-black rounded-full mx-auto mt-2 mb-1" />
-                  <Screen />
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-
       </div>
+
+      {/* ── MOBILE: stacked cards ─────────────────────────────────────────── */}
+      <div className="lg:hidden space-y-12 px-8 pb-8">
+        {steps.map((step, index) => {
+          const Icon   = step.icon;
+          const Screen = PHONE_SCREENS[index];
+          return (
+            <motion.div
+              key={step.number}
+              initial={shouldReduce ? {} : { opacity: 0, y: 32 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.6, delay: index * 0.08, ease: EASE }}
+              className="flex flex-col gap-6"
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-xl border flex items-center justify-center font-playfair text-sm text-violet-400"
+                  style={{ background: 'rgba(139,92,246,0.10)', borderColor: 'rgba(167,139,250,0.30)' }}
+                >
+                  {step.number}
+                </div>
+                <Icon className="w-4 h-4 text-violet-400" aria-hidden="true" />
+              </div>
+              <div>
+                <h3 className="font-playfair text-2xl font-semibold text-zinc-100 mb-2">{step.title}</h3>
+                <p className="text-sm text-zinc-500 leading-relaxed">{step.description}</p>
+              </div>
+              <div
+                className="w-full max-w-[240px] mx-auto rounded-[32px] border border-white/[0.10] bg-zinc-900/40 backdrop-blur-xl overflow-hidden"
+                style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 60px rgba(139,92,246,0.08)', height: 220 }}
+              >
+                <div className="w-16 h-4 bg-black rounded-full mx-auto mt-2 mb-1" />
+                <Screen />
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
     </section>
   );
 }
