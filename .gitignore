@@ -76,3 +76,6 @@ prompts/marketing/*
 # Frames extraídos del video — son pesados, no subir al repo
 public/frames/
 public/videos/
+
+# Superpowers temporary files
+.superpowers/
