@@ -8,6 +8,7 @@ import {
   useMotionTemplate,
   useScroll,
   useTransform,
+  cubicBezier,
 } from 'framer-motion';
 import type { MotionValue } from 'framer-motion';
 import { Store, Share2, LayoutDashboard } from 'lucide-react';
@@ -15,6 +16,9 @@ import { useRef, useState, useEffect } from 'react';
 
 // Transition curve used for discrete state changes (phone screen, glow)
 const EASE = [0.25, 0.46, 0.45, 0.94] as const;
+
+// Premium Apple ease-out cubic-bezier easing for cinematic motion
+const appleEase = cubicBezier(0.25, 0.1, 0.25, 1.0);
 
 const steps = [
   {
@@ -58,10 +62,32 @@ const steps = [
   enter[0] → enter[1] : opacity 0→1, scale 0.88→1, y 28→0   (lifts into focus)
   exit[0]  → exit[1]  : opacity 1→0, scale 1→0.94, y 0→-16  (drifts above)
 */
-const STEP_RANGES = [
-  { enter: [0.15, 0.22] as const, exit: [0.43, 0.50] as const },
-  { enter: [0.50, 0.57] as const, exit: [0.72, 0.79] as const },
-  { enter: [0.79, 0.86] as const, exit: [0.98, 1.00] as const },
+interface StepRange {
+  input: number[];
+  opacityOutput: number[];
+  yOutput: string[];
+  scaleOutput: number[];
+}
+
+const STEP_RANGES: StepRange[] = [
+  {
+    input: [0.15, 0.2, 0.35, 0.4],
+    opacityOutput: [0, 1, 1, 0],
+    yOutput: ["10%", "0%", "0%", "-10%"],
+    scaleOutput: [0.95, 1, 1, 0.98],
+  },
+  {
+    input: [0.4, 0.45, 0.65, 0.7],
+    opacityOutput: [0, 1, 1, 0],
+    yOutput: ["10%", "0%", "0%", "-10%"],
+    scaleOutput: [0.95, 1, 1, 0.98],
+  },
+  {
+    input: [0.7, 0.75, 0.9, 1.0],
+    opacityOutput: [0, 1, 1, 1],
+    yOutput: ["10%", "0%", "0%", "0%"],
+    scaleOutput: [0.95, 1, 1, 1],
+  },
 ];
 
 // Glow intensity ramps dramatically with each step — builds cinematic depth
@@ -200,7 +226,8 @@ function PhoneMockup({
 
   // Drive glow intensity from discrete activeStep — spring smooths each change
   useEffect(() => {
-    const g = STEP_GLOW[activeStep];
+    const activeIndex = activeStep === -1 ? 0 : activeStep;
+    const g = STEP_GLOW[activeIndex];
     glowOuter.set(g.outer);
     glowMid.set(g.mid);
     glowInset.set(g.inset);
@@ -262,12 +289,12 @@ function PhoneMockup({
               key={i}
               className="absolute inset-0"
               animate={{
-                opacity: i === activeStep ? 1 : 0,
-                scale:   i === activeStep ? 1 : 0.96,
+                opacity: i === (activeStep === -1 ? 0 : activeStep) ? 1 : 0,
+                scale:   i === (activeStep === -1 ? 0 : activeStep) ? 1 : 0.96,
               }}
               transition={{
-                opacity: { duration: prefersReducedMotion ? 0 : 0.35, ease: EASE },
-                scale:   { duration: prefersReducedMotion ? 0 : 0.40, ease: EASE },
+                opacity: { duration: prefersReducedMotion ? 0 : 0.35, ease: appleEase },
+                scale:   { duration: prefersReducedMotion ? 0 : 0.40, ease: appleEase },
               }}
               style={{ transformOrigin: 'center top' }}
             >
@@ -295,15 +322,19 @@ function SectionHeader({
 }) {
   // Header exits over [0 → 0.15] — exactly the Phase 1 window.
   // Must be fully gone (opacity 0) before any step begins at 0.15.
-  const opacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
-  const scrollY = useTransform(scrollYProgress, [0, 0.15], [0, -40]);
-  const y       = shouldReduce ? 0 : scrollY;
+  const opacity = useTransform(scrollYProgress, [0, 0.1, 0.15], [1, 1, 0]) as MotionValue<number>;
+  const scrollY = useTransform(scrollYProgress, [0, 0.15], ["0%", "-20%"]) as MotionValue<string>;
+  const y       = shouldReduce ? "0%" : scrollY;
+
+  // Hide completely when scroll >= 0.15 or opacity is 0 to prevent any UI overlap or background interference
+  const display = useTransform(opacity, (o: number) => (o <= 0.01 ? 'none' : 'flex'));
+  const pointerEvents = useTransform(opacity, (o: number) => (o <= 0.01 ? 'none' : 'auto'));
 
   return (
     <motion.div
       className="absolute inset-0 flex flex-col justify-center"
-      // zIndex 5 — BELOW steps (zIndex 10). Steps always paint over the header.
-      style={{ opacity, y, zIndex: 5, pointerEvents: 'none' }}
+      // zIndex 1 — BELOW steps (zIndex 10). Steps always paint over the header.
+      style={{ opacity, y, display, pointerEvents, zIndex: 1 }}
     >
       <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-4">
         Simple por diseño
@@ -353,22 +384,26 @@ function StepBlock({
   index:          number;
   totalSteps:     number;
   scrollYProgress: MotionValue<number>;
-  range:          (typeof STEP_RANGES)[number];
+  range:          StepRange;
   isActive:       boolean;
   shouldReduce:   boolean | null;
 }) {
-  // Four-keypoint map: invisible → fade in → visible → fade out
-  const [ea, eb] = range.enter;
-  const [xa, xb] = range.exit;
-
-  const scrollOpacity = useTransform(scrollYProgress, [ea, eb, xa, xb], [0, 1, 1, 0]);
-  const scrollScale   = useTransform(scrollYProgress, [ea, eb, xa, xb], [0.88, 1, 1, 0.94]);
-  const scrollYVal    = useTransform(scrollYProgress, [ea, eb, xa, xb], [28, 0, 0, -16]);
+  const scrollOpacity = useTransform(scrollYProgress, range.input, range.opacityOutput, { ease: [appleEase, appleEase, appleEase] }) as MotionValue<number>;
+  const scrollYVal    = useTransform(scrollYProgress, range.input, range.yOutput, { ease: [appleEase, appleEase, appleEase] }) as MotionValue<string>;
+  const scrollScale   = useTransform(scrollYProgress, range.input, range.scaleOutput, { ease: [appleEase, appleEase, appleEase] }) as MotionValue<number>;
 
   // For reduced-motion users: use discrete opacity (on/off with isActive) and no transforms
   const opacity = shouldReduce ? (isActive ? 1 : 0) : scrollOpacity;
   const scale   = shouldReduce ? 1 : scrollScale;
-  const y       = shouldReduce ? 0 : scrollYVal;
+  const y       = shouldReduce ? "0%" : scrollYVal;
+
+  const pointerEvents = shouldReduce
+    ? (isActive ? 'auto' : 'none')
+    : useTransform(scrollOpacity, (o: number) => (o <= 0.01 ? 'none' : 'auto'));
+
+  const display = shouldReduce
+    ? (isActive ? 'flex' : 'none')
+    : useTransform(scrollOpacity, (o: number) => (o <= 0.01 ? 'none' : 'flex'));
 
   return (
     <motion.div
@@ -377,8 +412,9 @@ function StepBlock({
         opacity,
         scale,
         y,
+        display,
+        pointerEvents,
         zIndex:        isActive ? 10 : 1,
-        pointerEvents: isActive ? 'auto' : 'none',
       }}
     >
       {/* ── Number badge + title + description ── */}
@@ -433,7 +469,8 @@ function StepBlock({
 // ─────────────────────────────────────────────────────────────────────────────
 export default function ComoFuncionaSection() {
   const shouldReduce = useReducedMotion();
-  const [activeStep, setActiveStep] = useState(0);
+  // Start with -1 so no step is considered active during the header fade-out phase (v < 0.15)
+  const [activeStep, setActiveStep] = useState(-1);
 
   /*
     containerRef wraps the entire 300vh scroll track.
@@ -453,16 +490,18 @@ export default function ComoFuncionaSection() {
 
   useEffect(() => {
     return scrollYProgress.on('change', (v) => {
-      // Midpoints between step enter/exit ranges → phone switches exactly when
-      // the outgoing step's text is half-faded and the incoming is half-visible
-      // Thresholds align with step relay points (where exit ends = enter begins)
-      const next = v < 0.50 ? 0 : v < 0.79 ? 1 : 2;
+      // If scroll is in the header phase (v < 0.15), no step is active.
+      // Otherwise, select step based on our new non-overlapping range thresholds:
+      // Step 1: 0.15 to 0.40
+      // Step 2: 0.40 to 0.70
+      // Step 3: 0.70 to 1.00
+      const next = v < 0.15 ? -1 : v < 0.40 ? 0 : v < 0.70 ? 1 : 2;
       setActiveStep((prev) => (prev === next ? prev : next));
     });
   }, [scrollYProgress]);
 
   // Dots appear as step 0 fades in — start at 0.15 (after header is fully gone)
-  const dotsOpacity = useTransform(scrollYProgress, [0.15, 0.22], [0, 1]);
+  const dotsOpacity = useTransform(scrollYProgress, [0.15, 0.2], [0, 1]);
 
   return (
     <section
@@ -485,8 +524,8 @@ export default function ComoFuncionaSection() {
         aria-hidden="true"
       />
 
-      {/* ── DESKTOP: 300vh scroll track ────────────────────────────────────── */}
-      <div ref={containerRef} className="hidden lg:block h-[300vh]">
+      {/* ── DESKTOP: 400vh scroll track ────────────────────────────────────── */}
+      <div ref={containerRef} className="hidden lg:block h-[400vh]">
 
         {/*
           Sticky stage: pinned to the viewport for the full 300vh scroll.
@@ -517,19 +556,21 @@ export default function ComoFuncionaSection() {
                   shouldReduce={shouldReduce}
                 />
 
-                {/* Steps — each with its own scroll-linked crossfade window */}
-                {steps.map((step, i) => (
-                  <StepBlock
-                    key={step.number}
-                    step={step}
-                    index={i}
-                    totalSteps={steps.length}
-                    scrollYProgress={scrollYProgress}
-                    range={STEP_RANGES[i]}
-                    isActive={i === activeStep}
-                    shouldReduce={shouldReduce}
-                  />
-                ))}
+                {/* Steps container — higher z-index than the header */}
+                <div className="absolute inset-0 z-10 pointer-events-none">
+                  {steps.map((step, i) => (
+                    <StepBlock
+                      key={step.number}
+                      step={step}
+                      index={i}
+                      totalSteps={steps.length}
+                      scrollYProgress={scrollYProgress}
+                      range={STEP_RANGES[i]}
+                      isActive={i === activeStep}
+                      shouldReduce={shouldReduce}
+                    />
+                  ))}
+                </div>
               </div>
 
               {/* ── RIGHT: cinematic phone + 4-layer aura ──────────────── */}
@@ -542,7 +583,7 @@ export default function ComoFuncionaSection() {
                 */}
                 <div className="relative" style={{ width: 230, height: 470 }}>
 
-                  {/* Layer 0: Always-on base plate — establishes depth context */}
+                  {/* Layer 0: Always-on Indigo/Violet deep base plate */}
                   <div
                     aria-hidden="true"
                     className="absolute pointer-events-none"
@@ -552,12 +593,12 @@ export default function ComoFuncionaSection() {
                       transform: 'translate(-50%, -50%)',
                       borderRadius: '50%',
                       background:
-                        'radial-gradient(ellipse, rgba(109,40,217,0.22) 0%, transparent 70%)',
-                      filter: 'blur(56px)',
+                        'radial-gradient(ellipse, rgba(99,102,241,0.25) 0%, rgba(139,92,246,0.15) 50%, transparent 80%)',
+                      filter: 'blur(60px)',
                     }}
                   />
 
-                  {/* Layer 1: Wide violet bloom — expands dramatically per step */}
+                  {/* Layer 1: Wide premium fuchsia and violet bloom — scales per active step */}
                   <motion.div
                     aria-hidden="true"
                     className="absolute pointer-events-none"
@@ -568,51 +609,54 @@ export default function ComoFuncionaSection() {
                       translateY: '-50%',
                       borderRadius: '50%',
                       background:
-                        'radial-gradient(ellipse, rgba(139,92,246,0.55) 0%, rgba(109,40,217,0.20) 40%, transparent 70%)',
-                      filter: 'blur(72px)',
+                        'radial-gradient(ellipse, rgba(167,139,250,0.60) 0%, rgba(139,92,246,0.35) 40%, rgba(219,39,119,0.12) 70%, transparent 100%)',
+                      filter: 'blur(80px)',
                     }}
                     animate={{
-                      opacity: [0.38, 0.55, 0.82][activeStep],
+                      opacity: [0.42, 0.60, 0.88][activeStep === -1 ? 0 : activeStep],
+                      scale: [1, 1.05, 1.12][activeStep === -1 ? 0 : activeStep],
                     }}
                     transition={{ duration: 1.0, ease: EASE }}
                   />
 
-                  {/* Layer 2: Fuchsia warmth — creates chromatic aberration depth */}
+                  {/* Layer 2: Fuchsia and pink core warmth — adds chromatic aberration depth */}
                   <motion.div
                     aria-hidden="true"
                     className="absolute pointer-events-none"
                     style={{
-                      width: 300, height: 300,
-                      top: '64%', left: '50%',
+                      width: 320, height: 320,
+                      top: '60%', left: '50%',
                       translateX: '-50%',
                       translateY: '-50%',
                       borderRadius: '50%',
                       background:
-                        'radial-gradient(circle, rgba(232,121,249,0.65) 0%, transparent 70%)',
-                      filter: 'blur(40px)',
+                        'radial-gradient(circle, rgba(232,121,249,0.70) 0%, rgba(192,132,252,0.30) 50%, transparent 90%)',
+                      filter: 'blur(45px)',
                     }}
                     animate={{
-                      opacity: [0.18, 0.32, 0.52][activeStep],
+                      opacity: [0.22, 0.38, 0.58][activeStep === -1 ? 0 : activeStep],
+                      scale: [1, 1.08, 1.15][activeStep === -1 ? 0 : activeStep],
                     }}
                     transition={{ duration: 0.9, ease: EASE }}
                   />
 
-                  {/* Layer 3: Tight violet halo — outlines the device silhouette */}
+                  {/* Layer 3: Neon violet edge halo — highlights device silhouette */}
                   <motion.div
                     aria-hidden="true"
                     className="absolute pointer-events-none"
                     style={{
-                      width: 220, height: 420,
+                      width: 240, height: 440,
                       top: '50%', left: '50%',
                       translateX: '-50%',
                       translateY: '-50%',
                       borderRadius: '50%',
                       background:
-                        'radial-gradient(ellipse, rgba(139,92,246,0.80) 0%, transparent 70%)',
-                      filter: 'blur(20px)',
+                        'radial-gradient(ellipse, rgba(139,92,246,0.90) 0%, rgba(168,85,247,0.40) 50%, transparent 100%)',
+                      filter: 'blur(24px)',
                     }}
                     animate={{
-                      opacity: [0.10, 0.20, 0.38][activeStep],
+                      opacity: [0.12, 0.24, 0.44][activeStep === -1 ? 0 : activeStep],
+                      scale: [0.98, 1, 1.03][activeStep === -1 ? 0 : activeStep],
                     }}
                     transition={{ duration: 0.7, ease: EASE }}
                   />
@@ -635,9 +679,9 @@ export default function ComoFuncionaSection() {
                       aria-hidden="true"
                       className="rounded-full transition-all duration-500"
                       style={{
-                        width:           i === activeStep ? '20px' : '6px',
+                        width:           i === (activeStep === -1 ? 0 : activeStep) ? '20px' : '6px',
                         height:          '6px',
-                        backgroundColor: i === activeStep
+                        backgroundColor: i === (activeStep === -1 ? 0 : activeStep)
                           ? '#a78bfa'
                           : 'rgba(255,255,255,0.15)',
                       }}
