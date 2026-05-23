@@ -41,18 +41,27 @@ const steps = [
 ];
 
 /*
-  Scroll-progress windows for each step.
+  STRICT ISOLATION — scroll-progress windows for each step.
   The 300vh track yields 200vh of travel (progress 0→1).
-  Each step occupies roughly one third, with soft overlapping cross-dissolves.
 
-  enter[0] → enter[1] : opacity 0→1, scale 0.88→1, y 28→0  (step lifts into focus)
-  exit[0]  → exit[1]  : opacity 1→0, scale 1→0.94, y 0→-16 (step drifts above)
+  Phase 1 — Header exits  : [0.00 → 0.15]  opacity 1→0, y 0→-40
+  Phase 2 — Steps (0.15→1.0 split equally into thirds ≈ 0.2833 each):
+
+    Step 0: enter [0.15, 0.22]  exit [0.43, 0.50]
+    Step 1: enter [0.50, 0.57]  exit [0.72, 0.79]
+    Step 2: enter [0.79, 0.86]  exit [0.98, 1.00]
+
+  Rule: step N's exit ENDS exactly where step N+1's enter BEGINS (0.50 / 0.79).
+  At any scroll position only one element (header OR one step) has opacity > 0.
+  No visual overlap is possible.
+
+  enter[0] → enter[1] : opacity 0→1, scale 0.88→1, y 28→0   (lifts into focus)
+  exit[0]  → exit[1]  : opacity 1→0, scale 1→0.94, y 0→-16  (drifts above)
 */
 const STEP_RANGES = [
-  { enter: [0.06, 0.20] as const, exit: [0.30, 0.42] as const },
-  { enter: [0.36, 0.50] as const, exit: [0.60, 0.72] as const },
-  // Step 3 intentionally does not fully exit — stays visible until the section ends
-  { enter: [0.66, 0.80] as const, exit: [0.97, 1.00] as const },
+  { enter: [0.15, 0.22] as const, exit: [0.43, 0.50] as const },
+  { enter: [0.50, 0.57] as const, exit: [0.72, 0.79] as const },
+  { enter: [0.79, 0.86] as const, exit: [0.98, 1.00] as const },
 ];
 
 // Glow intensity ramps dramatically with each step — builds cinematic depth
@@ -284,16 +293,17 @@ function SectionHeader({
   scrollYProgress: MotionValue<number>;
   shouldReduce: boolean | null;
 }) {
-  // Map scroll [0 → 0.14] to opacity [1 → 0] and upward drift
-  const opacity = useTransform(scrollYProgress, [0, 0.14], [1, 0]);
-  // Always call useTransform — conditionally apply the result to avoid y drift on reduced motion
-  const scrollY = useTransform(scrollYProgress, [0, 0.14], [0, -32]);
+  // Header exits over [0 → 0.15] — exactly the Phase 1 window.
+  // Must be fully gone (opacity 0) before any step begins at 0.15.
+  const opacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
+  const scrollY = useTransform(scrollYProgress, [0, 0.15], [0, -40]);
   const y       = shouldReduce ? 0 : scrollY;
 
   return (
     <motion.div
       className="absolute inset-0 flex flex-col justify-center"
-      style={{ opacity, y, zIndex: 20, pointerEvents: 'none' }}
+      // zIndex 5 — BELOW steps (zIndex 10). Steps always paint over the header.
+      style={{ opacity, y, zIndex: 5, pointerEvents: 'none' }}
     >
       <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-4">
         Simple por diseño
@@ -445,13 +455,14 @@ export default function ComoFuncionaSection() {
     return scrollYProgress.on('change', (v) => {
       // Midpoints between step enter/exit ranges → phone switches exactly when
       // the outgoing step's text is half-faded and the incoming is half-visible
-      const next = v < 0.36 ? 0 : v < 0.66 ? 1 : 2;
+      // Thresholds align with step relay points (where exit ends = enter begins)
+      const next = v < 0.50 ? 0 : v < 0.79 ? 1 : 2;
       setActiveStep((prev) => (prev === next ? prev : next));
     });
   }, [scrollYProgress]);
 
-  // Progress dots fade in together with the first step (absent during header phase)
-  const dotsOpacity = useTransform(scrollYProgress, [0.06, 0.22], [0, 1]);
+  // Dots appear as step 0 fades in — start at 0.15 (after header is fully gone)
+  const dotsOpacity = useTransform(scrollYProgress, [0.15, 0.22], [0, 1]);
 
   return (
     <section
