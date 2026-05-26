@@ -24,25 +24,30 @@ export const ContainerScroll = ({
   children: React.ReactNode;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // No offset — same as the original that produced the correct tilt on load.
-  const { scrollYProgress } = useScroll({ target: containerRef });
+  // 1. Volvemos al useScroll original (borrá el offset que puso Antigravity)
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+  });
 
   const [isMobile, setIsMobile] = React.useState(false);
 
   React.useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth <= 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => {
+      window.removeEventListener("resize", checkMobile);
+    };
   }, []);
 
-  const scaleDimensions = () => (isMobile ? [0.7, 0.9] : [1.05, 1]);
+  const scaleDimensions = () => (isMobile ? [0.7, 0.7, 0.9] : [1.05, 1.05, 1]);
 
-  // Direct transforms — no spring wrapper, same as the reference that worked.
-  const rotate    = useTransform(scrollYProgress, [0, 1], [20, 0]);
-  const scale     = useTransform(scrollYProgress, [0, 1], scaleDimensions());
-  const translate = useTransform(scrollYProgress, [0, 1], [0, -100]);
+  // Three keyframes: card stays locked at 20° until 40% scroll, then rotates flat.
+  const rotate    = useTransform(scrollYProgress, [0, 0.4, 1], [20, 20, 0]);
+  const scale     = useTransform(scrollYProgress, [0, 0.4, 1], scaleDimensions());
+  const translate = useTransform(scrollYProgress, [0, 0.4, 1], [0, 0, -100]);
 
   // Ambient glow — vivid at max tilt, nearly gone when flat
   const glowA = useTransform(scrollYProgress, [0, 1], [0.30, 0.08]);
