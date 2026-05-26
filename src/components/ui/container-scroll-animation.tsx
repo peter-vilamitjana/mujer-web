@@ -146,14 +146,9 @@ export const Card = ({
   const boxShadow = useMotionTemplate`inset 0 1px 0 rgba(255,255,255,0.10), 0 0 0 1px rgba(255,255,255,0.07), 0 1px 1px rgba(0,0,0,0.35), 0 8px 16px rgba(0,0,0,0.40), 0 24px 48px -8px rgba(0,0,0,0.60), 0 56px 80px -16px rgba(0,0,0,0.40), 0 96px 120px -24px rgba(0,0,0,0.22), 0 0 80px rgba(139,92,246,${glowA}), 0 0 180px rgba(109,40,217,${glowB})`;
 
   return (
-    // Entrance wrapper — card sharpens into focus on mount while already tilted.
-    // No opacity/y offset: the tilt is visible from frame 1, just initially soft.
-    <motion.div
-      initial={{ filter: "blur(18px)" }}
-      animate={{ filter: "blur(0px)" }}
-      transition={{ duration: 1.1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      className="relative max-w-5xl mt-6 mx-auto"
-    >
+    // Plain wrapper — no filter/opacity, so CSS perspective from the parent
+    // propagates correctly and rotateX is visible from frame 1.
+    <div className="relative max-w-5xl mt-6 mx-auto">
       {/* ── Floor glow ──────────────────────────────────────────────────────── */}
       {/* Simulates the product casting violet light on the surface below it.   */}
       {/* Apple product pages always have this under-card ambient reflection.   */}
@@ -264,6 +259,6 @@ export const Card = ({
           </div>
         </div>
       </motion.div>
-    </motion.div>
+    </div>
   );
 };
