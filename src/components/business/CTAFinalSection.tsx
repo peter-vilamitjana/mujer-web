@@ -106,16 +106,19 @@ export default function CTAFinalSection() {
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
               aria-label="Registrá tu salón gratis en Ouleeh"
             >
-              {/* Shimmer sweep */}
-              <motion.span
-                className="pointer-events-none absolute inset-0 rounded-full"
-                style={{
-                  background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.55) 50%, transparent 60%)',
-                  backgroundSize: '200% 100%',
-                }}
-                animate={shouldReduce ? {} : { backgroundPosition: ['-100% 0', '200% 0'] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
-              />
+              {/* Shimmer sweep — uses translateX (native transform, no backgroundPosition issue) */}
+              {!shouldReduce && (
+                <motion.span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-y-0 w-1/3 rounded-full"
+                  style={{
+                    background: 'linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.60) 50%, transparent 100%)',
+                  }}
+                  initial={{ x: '-100%' }}
+                  animate={{ x: '350%' }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: 'linear', repeatDelay: 2 }}
+                />
+              )}
               Registrá tu salón gratis
               <ArrowRight
                 className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0"
