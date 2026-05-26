@@ -188,7 +188,7 @@ export default function PricingSection6() {
       </TimelineContent>
 
       <article className="text-center mb-6 pt-32 max-w-3xl mx-auto space-y-2 relative z-50">
-        <h2 className="text-4xl font-medium text-white">
+        <h2 className="text-[clamp(2.5rem,5vw,4rem)] font-medium text-white leading-[1.1] tracking-[-0.02em]">
           <VerticalCutReveal
             splitBy="words"
             staggerDuration={0.15}

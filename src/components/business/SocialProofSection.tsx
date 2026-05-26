@@ -79,7 +79,7 @@ export default function SocialProofSection() {
         aria-hidden="true"
       />
 
-      <div className="relative py-28 px-6 max-w-5xl mx-auto">
+      <div className="relative py-36 px-6 max-w-5xl mx-auto">
 
         {/* ── Heading ─────────────────────────────────────────────────────── */}
         <motion.div
@@ -92,7 +92,7 @@ export default function SocialProofSection() {
           <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-4">
             Lo que dicen
           </p>
-          <h2 className="font-playfair text-[clamp(2.2rem,5vw,3.5rem)] text-white font-bold leading-tight">
+          <h2 className="font-playfair text-[clamp(3rem,6vw,5rem)] text-white font-bold leading-[1.05] tracking-[-0.02em]">
             Salones que{' '}
             <span className="text-emerald-400 font-normal italic">ya lo usan</span>
           </h2>
@@ -134,10 +134,10 @@ export default function SocialProofSection() {
           {testimonials.map(({ quote, name, salon, initials }, i) => (
             <motion.div
               key={name}
-              initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 32, scale: 0.97 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 36, scale: 0.97, filter: 'blur(8px)' }}
+              whileInView={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
               viewport={{ once: true, margin: '-50px' }}
-              transition={{ duration: 0.6, delay: i * 0.06, ease: EASE }}
+              transition={{ duration: 0.7, delay: i * 0.10, ease: EASE }}
               className="group relative rounded-3xl p-8 overflow-hidden cursor-default
                 backdrop-blur-xl bg-zinc-900/40 border border-white/[0.05]
                 hover:-translate-y-1 hover:bg-zinc-800/50 hover:border-white/[0.10]
@@ -166,8 +166,8 @@ export default function SocialProofSection() {
               {/* Author */}
               <div className="flex items-center gap-3 pt-5 border-t border-white/[0.06]">
                 <div
-                  className="w-9 h-9 rounded-full border border-white/[0.10] flex items-center justify-center shrink-0"
-                  style={{ background: 'rgba(255,255,255,0.06)' }}
+                  className="w-9 h-9 rounded-full border border-violet-400/[0.22] flex items-center justify-center shrink-0"
+                  style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.22) 0%, rgba(168,85,247,0.10) 100%)' }}
                 >
                   <span className="font-playfair text-sm font-semibold text-white">{initials}</span>
                 </div>

@@ -84,21 +84,45 @@ export default function CTAFinalSection() {
           transition={{ duration: 0.75, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
           className="flex flex-col items-center gap-5"
         >
-          <Link
-            href="/business/register"
-            className="group inline-flex items-center gap-3.5 px-12 py-5 rounded-full
-              bg-white text-zinc-950 font-bold text-sm tracking-wide min-h-[52px]
-              shadow-[0_0_50px_rgba(255,255,255,0.20)] hover:shadow-[0_0_70px_rgba(255,255,255,0.32)]
-              hover:bg-zinc-100 active:scale-[0.97] transition-all duration-200 cursor-pointer
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
-            aria-label="Registrá tu salón gratis en Ouleeh"
-          >
-            Registrá tu salón gratis
-            <ArrowRight
-              className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200"
-              aria-hidden="true"
+          <div className="relative group">
+            {/* Animated outer glow ring */}
+            <motion.div
+              className="absolute -inset-[3px] rounded-full pointer-events-none"
+              animate={shouldReduce ? {} : {
+                boxShadow: [
+                  '0 0 20px rgba(255,255,255,0.10)',
+                  '0 0 45px rgba(255,255,255,0.22)',
+                  '0 0 20px rgba(255,255,255,0.10)',
+                ],
+              }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
             />
-          </Link>
+            <Link
+              href="/business/register"
+              className="relative overflow-hidden inline-flex items-center gap-3.5 px-12 py-5 rounded-full
+                bg-white text-zinc-950 font-bold text-sm tracking-wide min-h-[52px]
+                shadow-[0_0_50px_rgba(255,255,255,0.20)] hover:shadow-[0_0_80px_rgba(255,255,255,0.35)]
+                hover:bg-zinc-50 active:scale-[0.97] transition-all duration-200 cursor-pointer
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+              aria-label="Registrá tu salón gratis en Ouleeh"
+            >
+              {/* Shimmer sweep */}
+              <motion.span
+                className="pointer-events-none absolute inset-0 rounded-full"
+                style={{
+                  background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.55) 50%, transparent 60%)',
+                  backgroundSize: '200% 100%',
+                }}
+                animate={shouldReduce ? {} : { backgroundPosition: ['-100% 0', '200% 0'] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
+              />
+              Registrá tu salón gratis
+              <ArrowRight
+                className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200 shrink-0"
+                aria-hidden="true"
+              />
+            </Link>
+          </div>
 
           <p className="text-zinc-600 text-xs tracking-wide">
             Sin tarjeta de crédito · Configuración en 5 minutos
@@ -107,19 +131,26 @@ export default function CTAFinalSection() {
 
         {/* Decorative floating badges */}
         <motion.div
-          initial={shouldReduce ? { opacity: 1 } : { opacity: 0 }}
-          animate={inView ? { opacity: 1 } : {}}
+          initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 12 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.9 }}
-          className="mt-16 flex flex-wrap items-center justify-center gap-3"
+          className="mt-16 flex flex-wrap items-center justify-center gap-2.5"
           aria-hidden="true"
         >
-          {['🇦🇷 Hecho para Argentina', 'MercadoPago nativo', 'WhatsApp nativo', 'Dark mode premium'].map((badge) => (
+          {[
+            { text: 'Hecho para Argentina', prefix: '🇦🇷' },
+            { text: 'MercadoPago nativo', prefix: null },
+            { text: 'WhatsApp nativo', prefix: null },
+            { text: 'Dark mode premium', prefix: null },
+          ].map(({ text, prefix }) => (
             <span
-              key={badge}
-              className="text-[11px] text-zinc-600 px-3.5 py-1.5 rounded-full
-                backdrop-blur-xl bg-white/[0.03] border border-white/[0.07]"
+              key={text}
+              className="inline-flex items-center gap-1.5 text-[11px] text-zinc-500 px-4 py-1.5 rounded-full
+                backdrop-blur-xl bg-white/[0.04] border border-white/[0.08]
+                hover:border-white/[0.14] hover:text-zinc-400 transition-colors duration-200"
             >
-              {badge}
+              {prefix && <span className="text-sm leading-none">{prefix}</span>}
+              {text}
             </span>
           ))}
         </motion.div>

@@ -6,7 +6,7 @@ import {
 } from 'framer-motion';
 import {
   Calendar, MessageSquare, CreditCard, Users,
-  BarChart3, Globe, CheckCircle2, Sparkles,
+  BarChart3, Globe, CheckCircle2, Sparkles, Check,
 } from 'lucide-react';
 import { useRef, useCallback } from 'react';
 
@@ -15,7 +15,7 @@ import { useRef, useCallback } from 'react';
 function FreeTag() {
   return (
     <span className="inline-flex items-center text-[9px] font-medium px-2.5 py-[3px] rounded-full
-      uppercase tracking-wider border border-white/[0.05] text-zinc-600 shrink-0 select-none">
+      uppercase tracking-wider border border-white/[0.10] text-zinc-400 shrink-0 select-none">
       Gratis
     </span>
   );
@@ -82,7 +82,7 @@ const bentoItems: BentoItem[] = [
             </div>
             <div className="shrink-0 w-4 h-4 rounded-full bg-violet-400/10 border border-violet-400/20
               flex items-center justify-center">
-              <span className="text-[7px] text-violet-400 leading-none">✓</span>
+              <Check className="w-2.5 h-2.5 text-violet-400" aria-hidden="true" />
             </div>
           </div>
         ))}
@@ -429,7 +429,7 @@ export default function FeaturesSection() {
         aria-hidden="true"
       />
 
-      <div className="py-10 px-6 max-w-5xl mx-auto">
+      <div className="py-24 px-6 max-w-5xl mx-auto">
 
         {/* Heading */}
         <motion.div
@@ -437,16 +437,16 @@ export default function FeaturesSection() {
           initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center mb-7"
+          className="text-center mb-14"
         >
-          <p className="text-[9px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-2.5">
+          <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-4">
             Todo lo que incluye
           </p>
-          <h2 className="font-playfair text-[clamp(1.7rem,3.2vw,2.6rem)] font-normal text-white leading-tight tracking-tight">
+          <h2 className="font-playfair text-[clamp(2.8rem,5vw,4.5rem)] font-normal text-white leading-[1.05] tracking-[-0.02em]">
             Herramientas que tu salón{' '}
             <span className="text-violet-400">necesita</span>
           </h2>
-          <p className="text-zinc-500 text-[0.82rem] mt-2.5 max-w-sm mx-auto leading-relaxed">
+          <p className="text-zinc-500 text-[0.9rem] mt-4 max-w-md mx-auto leading-relaxed">
             El plan base cubre lo esencial. El premium lo lleva al siguiente nivel.
           </p>
         </motion.div>

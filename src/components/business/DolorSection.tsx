@@ -249,24 +249,24 @@ export default function DolorSection() {
         120ms so it appears to resolve just after the first — reinforcing the
         "the solution becomes clear" mental model.
       */}
-      <div className="w-full py-24 flex flex-col items-center gap-3 text-center px-6">
+      <div className="w-full py-40 flex flex-col items-center gap-4 text-center px-6">
         <motion.p
-          initial={shouldReduce ? {} : { opacity: 0, scale: 0.95, filter: 'blur(12px)' }}
+          initial={shouldReduce ? {} : { opacity: 0, scale: 0.96, filter: 'blur(16px)' }}
           whileInView={shouldReduce ? {} : { opacity: 1, scale: 1, filter: 'blur(0px)' }}
           viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="font-sans font-bold text-zinc-100 text-[clamp(1.5rem,3.5vw,2.2rem)] tracking-tight leading-none"
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          className="font-sans font-bold text-zinc-100 text-[clamp(3rem,7vw,5.5rem)] tracking-[-0.03em] leading-none"
         >
           Con Ouleeh,
         </motion.p>
         <motion.p
-          initial={shouldReduce ? {} : { opacity: 0, scale: 0.95, filter: 'blur(12px)' }}
+          initial={shouldReduce ? {} : { opacity: 0, scale: 0.96, filter: 'blur(16px)' }}
           whileInView={shouldReduce ? {} : { opacity: 1, scale: 1, filter: 'blur(0px)' }}
           viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.75, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.95, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
           className="font-playfair font-normal italic text-transparent bg-clip-text
-            bg-gradient-to-r from-violet-400 to-fuchsia-500
-            text-[clamp(1.8rem,4.5vw,2.8rem)] leading-none"
+            bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400
+            text-[clamp(3.4rem,8vw,7rem)] leading-none pb-2"
         >
           todo eso queda atrás.
         </motion.p>

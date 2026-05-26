@@ -11,7 +11,7 @@ import {
   cubicBezier,
 } from 'framer-motion';
 import type { MotionValue } from 'framer-motion';
-import { Store, Share2, LayoutDashboard } from 'lucide-react';
+import { Store, Share2, LayoutDashboard, Settings, Check } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
 
 // Transition curve used for discrete state changes (phone screen, glow)
@@ -115,7 +115,7 @@ function PhoneScreen0() {
       {['Corte + color · $8.500', 'Keratina · $12.000', 'Peinado · $5.000'].map((s, i) => (
         <div key={i} className="flex items-center justify-between rounded-xl px-3 py-1.5 mb-1 bg-white/[0.03] border border-white/[0.05]">
           <span className="text-[9px] text-zinc-300">{s}</span>
-          <span className="text-violet-400 text-[9px]">✓</span>
+          <Check className="w-2.5 h-2.5 text-violet-400 shrink-0" aria-hidden="true" />
         </div>
       ))}
       <div className="mt-2 flex items-center gap-2 text-[8px]">
@@ -278,7 +278,7 @@ function PhoneMockup({
             <span className="text-[10px] text-zinc-200 font-semibold">Ouleeh</span>
           </div>
           <div className="w-5 h-5 rounded-full bg-white/[0.06] border border-white/[0.08] flex items-center justify-center">
-            <span className="text-[8px] text-zinc-400">⚙</span>
+            <Settings className="w-2.5 h-2.5 text-zinc-500" aria-hidden="true" />
           </div>
         </div>
 
