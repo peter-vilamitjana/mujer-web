@@ -41,9 +41,9 @@ export const ContainerScroll = ({
     };
   }, []);
 
-  const rotate    = useTransform(scrollYProgress, [0, 0.4, 1], [20, 20, 0]);
-  const scale     = useTransform(scrollYProgress, [0, 0.4, 1], isMobile ? [0.7, 0.7, 0.9] : [1.05, 1.05, 1]);
-  const translate = useTransform(scrollYProgress, [0, 0.4, 1], [0, 0, -100]);
+  const rotate    = useTransform(scrollYProgress, [0, 0.3, 1], [20, 20, 0]);
+  const scale     = useTransform(scrollYProgress, [0, 0.3, 1], isMobile ? [0.7, 0.7, 0.9] : [1.05, 1.05, 1]);
+  const translate = useTransform(scrollYProgress, [0, 0.3, 1], [0, 0, -100]);
 
   // Ambient glow — vivid at max tilt, nearly gone when flat
   const glowA = useTransform(scrollYProgress, [0, 1], [0.30, 0.08]);
