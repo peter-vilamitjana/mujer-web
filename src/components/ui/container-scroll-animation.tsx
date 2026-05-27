@@ -2,7 +2,7 @@
 import React, { useRef } from "react";
 import {
   useScroll, useTransform, motion,
-  MotionValue, useMotionTemplate,
+  MotionValue, useMotionTemplate, useMotionValue,
 } from "framer-motion";
 
 // macOS traffic-light buttons
@@ -42,12 +42,39 @@ export const ContainerScroll = ({
     };
   }, []);
 
-  const scaleDimensions = () => (isMobile ? [0.7, 0.7, 0.9] : [1.05, 1.05, 1]);
+  const scaleDimensions = () => (isMobile ? [0.7, 0.9] : [1.05, 1]);
 
-  // Three keyframes: card stays locked at 20° until 40% scroll, then rotates flat.
-  const rotate    = useTransform(scrollYProgress, [0, 0.4, 1], [20, 20, 0]);
-  const scale     = useTransform(scrollYProgress, [0, 0.4, 1], scaleDimensions());
-  const translate = useTransform(scrollYProgress, [0, 0.4, 1], [0, 0, -100]);
+  // Initialize MotionValues at their correct "tilted" defaults so the card
+  // is always at 20° on the very first render, regardless of scrollYProgress
+  // initial state (framer-motion doesn't guarantee it's 0 before mount).
+  const rotate    = useMotionValue(-20);
+  const scale     = useMotionValue(1.05);
+  const translate = useMotionValue(0);
+
+  // Drive rotate/scale/translate imperatively from scroll.
+  // [0, 0.4] → card stays locked at 20°; [0.4, 1] → rotates to flat.
+  React.useEffect(() => {
+    const dims = scaleDimensions();
+    const scaleStart = dims[0];
+    const scaleEnd   = dims[dims.length - 1];
+
+    const update = (v: number) => {
+      if (v <= 0.4) {
+        rotate.set(-20);
+        scale.set(scaleStart);
+        translate.set(0);
+      } else {
+        const t = (v - 0.4) / 0.6;
+        rotate.set(-20 * (1 - t));
+        scale.set(scaleStart + (scaleEnd - scaleStart) * t);
+        translate.set(-100 * t);
+      }
+    };
+
+    // Apply immediately with the current scroll value (handles page-reload-at-offset)
+    update(scrollYProgress.get());
+    return scrollYProgress.on("change", update);
+  }, [scrollYProgress, isMobile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Ambient glow — vivid at max tilt, nearly gone when flat
   const glowA = useTransform(scrollYProgress, [0, 1], [0.30, 0.08]);
