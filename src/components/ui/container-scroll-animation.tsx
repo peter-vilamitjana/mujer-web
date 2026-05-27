@@ -24,9 +24,7 @@ export const ContainerScroll = ({
   children: React.ReactNode;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-  });
+  const { scrollY } = useScroll();
 
   const [isMobile, setIsMobile] = React.useState(false);
 
@@ -41,23 +39,23 @@ export const ContainerScroll = ({
     };
   }, []);
 
-  const rotate    = useTransform(scrollYProgress, [0, 0.3, 1], [20, 20, 0]);
-  const scale     = useTransform(scrollYProgress, [0, 0.3, 1], isMobile ? [0.7, 0.7, 0.9] : [1.05, 1.05, 1]);
-  const translate = useTransform(scrollYProgress, [0, 0.3, 1], [0, 0, -100]);
+  const rotate    = useTransform(scrollY, [0, 600], [20, 0]);
+  const scale     = useTransform(scrollY, [0, 600], isMobile ? [0.7, 0.9] : [1.05, 1]);
+  const translate = useTransform(scrollY, [0, 600], [0, -100]);
 
   // Ambient glow — vivid at max tilt, nearly gone when flat
-  const glowA = useTransform(scrollYProgress, [0, 1], [0.30, 0.08]);
-  const glowB = useTransform(scrollYProgress, [0, 1], [0.18, 0.04]);
+  const glowA = useTransform(scrollY, [0, 600], [0.30, 0.08]);
+  const glowB = useTransform(scrollY, [0, 600], [0.18, 0.04]);
 
   // Floor glow — card projects violet light on the surface below
-  const floorGlow = useTransform(scrollYProgress, [0, 0.5, 1], [0.26, 0.12, 0.04]);
+  const floorGlow = useTransform(scrollY, [0, 300, 600], [0.26, 0.12, 0.04]);
 
   // Top-edge specular — bright bevel when tilted, fades when flat
-  const topEdge = useTransform(scrollYProgress, [0, 0.5, 1], [0.85, 0.42, 0.12]);
+  const topEdge = useTransform(scrollY, [0, 300, 600], [0.85, 0.42, 0.12]);
 
   // Glare light-sweep
-  const glareY       = useTransform(scrollYProgress, [0, 1], ["-65%", "100%"]);
-  const glareOpacity = useTransform(scrollYProgress, [0, 0.65, 1], [0.85, 0.20, 0.0]);
+  const glareY       = useTransform(scrollY, [0, 600], ["-65%", "100%"]);
+  const glareOpacity = useTransform(scrollY, [0, 390, 600], [0.85, 0.20, 0.0]);
 
   return (
     <div
