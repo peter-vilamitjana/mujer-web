@@ -324,17 +324,17 @@ export default function SolucionesSection() {
           ].join(', '),
         }}
       >
-        <div className={`max-w-6xl mx-auto px-2 md:px-4 ${isMobile ? 'block' : 'h-full flex items-center pt-20'}`}>
+        <div className={`max-w-7xl mx-auto px-2 md:px-4 ${isMobile ? 'block' : 'h-full flex items-center pt-20'}`}>
 
           {/* ── DESKTOP ──────────────────────────────────────────────────── */}
           {!isMobile ? (
             <motion.div
               style={{ opacity: exitOpacity, scale: exitScale }}
-              className="grid grid-cols-12 gap-10 w-full items-center"
+              className="grid grid-cols-12 gap-6 w-full items-center"
             >
 
               {/* LEFT — Ventana macOS con Liquid Glass */}
-              <div className="col-span-7 flex flex-col justify-center relative">
+              <div className="col-span-8 flex flex-col justify-center relative">
 
                 {/* Glow ambiental violeta */}
                 <div
@@ -361,7 +361,7 @@ export default function SolucionesSection() {
                 >
                   <motion.div
                     style={{ rotateX: combinedRotateX, rotateY: combinedRotateY, scale: tiltScale, boxShadow: monitorShadow }}
-                    className="w-full h-[360px] lg:h-[420px] rounded-[12px] overflow-hidden
+                    className="w-full h-[420px] lg:h-[520px] rounded-[12px] overflow-hidden
                       flex flex-col
                       border border-white/[0.12]
                       bg-zinc-900/30 backdrop-blur-2xl"
@@ -454,7 +454,7 @@ export default function SolucionesSection() {
               </div>
 
               {/* RIGHT — Acordeón Liquid Glass ───────────────────────────── */}
-              <div className="col-span-5 flex flex-col justify-center gap-2">
+              <div className="col-span-4 flex flex-col justify-center gap-2">
 
                 {solutions.map((sol, index) => {
                   const Icon     = sol.icon;
@@ -606,7 +606,7 @@ export default function SolucionesSection() {
                   return (
                     <div key={sol.id} className="space-y-8">
                       <div
-                        className="w-full max-w-lg mx-auto rounded-[10px] overflow-hidden
+                        className="w-full max-w-2xl mx-auto rounded-[10px] overflow-hidden
                           border border-white/[0.10] bg-zinc-900/30 backdrop-blur-xl"
                         style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 60px rgba(167,139,250,0.06)' }}
                       >
@@ -616,7 +616,7 @@ export default function SolucionesSection() {
                             <div key={label} className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: bg }} />
                           ))}
                         </div>
-                        <div className="h-60 bg-[#050504]">
+                        <div className="h-72 bg-[#050504]">
                           <MockupComponent />
                         </div>
                       </div>
