@@ -324,7 +324,7 @@ export default function SolucionesSection() {
           ].join(', '),
         }}
       >
-        <div className={`max-w-6xl mx-auto px-6 ${isMobile ? 'block' : 'h-full flex items-center pt-20'}`}>
+        <div className={`max-w-6xl mx-auto px-2 md:px-4 ${isMobile ? 'block' : 'h-full flex items-center pt-20'}`}>
 
           {/* ── DESKTOP ──────────────────────────────────────────────────── */}
           {!isMobile ? (
@@ -606,7 +606,7 @@ export default function SolucionesSection() {
                   return (
                     <div key={sol.id} className="space-y-8">
                       <div
-                        className="w-full max-w-sm mx-auto rounded-[10px] overflow-hidden
+                        className="w-full max-w-lg mx-auto rounded-[10px] overflow-hidden
                           border border-white/[0.10] bg-zinc-900/30 backdrop-blur-xl"
                         style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 60px rgba(167,139,250,0.06)' }}
                       >
@@ -616,7 +616,7 @@ export default function SolucionesSection() {
                             <div key={label} className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: bg }} />
                           ))}
                         </div>
-                        <div className="h-48 bg-[#050504]">
+                        <div className="h-60 bg-[#050504]">
                           <MockupComponent />
                         </div>
                       </div>
