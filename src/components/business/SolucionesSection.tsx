@@ -2,28 +2,22 @@
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
-  useScroll, useTransform, useSpring, useMotionValue, MotionValue,
-  motion, AnimatePresence, useReducedMotion,
+  useSpring, useMotionValue, MotionValue,
+  motion, useReducedMotion, useTransform,
 } from 'framer-motion';
 import { useLenis } from 'lenis/react';
 import { Calendar, TrendingUp, LayoutDashboard, CheckCircle } from 'lucide-react';
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 const VIOLET_HEX  = '#a78bfa';
-const VIOLET_GLOW = 'rgba(167,139,250,0.15)';
+const APPLE_EASE  = [0.25, 0.46, 0.45, 0.94] as const;
+const MOUSE_SPRING = { stiffness: 90, damping: 22, mass: 1 } as const;
 
 const TRAFFIC = [
   { bg: '#FF5F57', label: 'Cerrar' },
   { bg: '#FFBD2E', label: 'Minimizar' },
   { bg: '#28C840', label: 'Pantalla completa' },
 ];
-
-// Apple ease — for crossfade and step transitions
-const APPLE_EASE  = [0.25, 0.46, 0.45, 0.94] as const;
-// Liquid ease — richer deceleration for accordion height (cubic-bezier WWDC-style)
-const LIQUID_EASE = [0.32, 0.72, 0, 1] as const;
-// Mouse-tilt spring — slightly stiffer than scroll spring for responsive tracking
-const MOUSE_SPRING = { stiffness: 90, damping: 22, mass: 1 } as const;
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 const solutions = [
@@ -32,7 +26,6 @@ const solutions = [
     title: 'Capa 1: Dashboard',
     subtitle: 'El centro de control de tu salón',
     icon: LayoutDashboard,
-    glow: VIOLET_GLOW,
     bullets: [
       'Visualiza tus ingresos diarios y turnos agendados al instante.',
       'Acceso rápido al expediente técnico de cada cliente.',
@@ -44,7 +37,6 @@ const solutions = [
     title: 'Capa 2: Agenda inteligente',
     subtitle: 'Adiós a los olvidos y superposiciones',
     icon: Calendar,
-    glow: VIOLET_GLOW,
     bullets: [
       'Organización de turnos por profesional, día y horario.',
       'Historial de visitas y notas especiales de clientes integradas.',
@@ -56,7 +48,6 @@ const solutions = [
     title: 'Capa 3: Reportes & Crecimiento',
     subtitle: 'El control absoluto sobre tus números',
     icon: TrendingUp,
-    glow: VIOLET_GLOW,
     bullets: [
       'Visualización clara de ingresos por día, semana y mes.',
       'Historial técnico y preferencias detalladas de clientas.',
@@ -65,7 +56,7 @@ const solutions = [
   },
 ];
 
-// ── Mockups (pre-cargados en DOM — sin flicker) ───────────────────────────────
+// ── Mockup components ─────────────────────────────────────────────────────────
 function MockupReserva() {
   return (
     <div className="w-full h-full bg-[#0d0d0f] overflow-hidden">
@@ -159,25 +150,20 @@ function MockupMetricas() {
 const MOCKUPS = [MockupReserva, MockupAgenda, MockupMetricas];
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SolucionesSection
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function SolucionesSection() {
-  const containerRef  = useRef<HTMLDivElement>(null);
-  const glareRef      = useRef<HTMLDivElement>(null);   // direct DOM — no re-renders
+  const [activeStep, setActiveStep]   = useState(0);
+  const [isMobile,   setIsMobile]     = useState(false);
 
-  const [activeStep, setActiveStep] = useState(0);
-  const [isComplete, setIsComplete] = useState(false);
-  const [isMobile,   setIsMobile]   = useState(false);
+  const layerRefs    = useRef<(HTMLDivElement | null)[]>([null, null, null]);
+  const glareRef     = useRef<HTMLDivElement>(null);
+  const activeStepRef = useRef(0);
 
-  const activeStepRef  = useRef(0);
-  const isCompleteRef  = useRef(false);
   const prefersReducedMotion = useReducedMotion();
 
-  const scrollProgress = useMotionValue(0);
-
-  // ── Mouse-driven tilt MotionValues ──────────────────────────────────────────
-  // Normalized to [-0.5, 0.5] where (0,0) = card center = no extra rotation.
-  // These ADD to the scroll-driven base rotation so the card feels alive on hover
-  // while still respecting its scroll-animated resting angle.
+  // Mouse-tilt MotionValues — normalized [-0.5, 0.5]
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -188,95 +174,72 @@ export default function SolucionesSection() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end end'],
+  // ── Lenis scroll → layer detection ────────────────────────────────────────
+  // getBoundingClientRect() is correct with Lenis because Lenis scrolls via
+  // native scrollTop (not CSS transforms), so positions are viewport-relative.
+  useLenis(() => {
+    if (isMobile) return;
+    const vhCenter = window.innerHeight / 2;
+    let closestIdx  = 0;
+    let closestDist = Infinity;
+
+    layerRefs.current.forEach((ref, i) => {
+      if (!ref) return;
+      const rect    = ref.getBoundingClientRect();
+      const elCenter = rect.top + rect.height / 2;
+      const dist    = Math.abs(elCenter - vhCenter);
+      if (dist < closestDist) { closestDist = dist; closestIdx = i; }
+    });
+
+    if (closestIdx !== activeStepRef.current) {
+      activeStepRef.current = closestIdx;
+      setActiveStep(closestIdx);
+    }
   });
 
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 42, damping: 14, restDelta: 0.001 });
-
-  const rotateX  = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [15, 5]);
-  const rotateY  = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [0, 0] : [-12, -4]);
-  const tiltScale = useTransform(smoothProgress, [0, 1], prefersReducedMotion ? [1, 1] : [0.95, 1.02]);
-
-  // ── Mouse micro-tilt — ±4° added on top of scroll-driven base ───────────────
-  // mouseY positive (cursor below center) → rotateX negative → top of card
-  //   tilts away (matches how a real surface reacts to a light source below).
-  // mouseX positive (cursor right of center) → rotateY positive → right side
-  //   tilts away — same direction as the glare reflection (physically correct).
+  // ── Mouse micro-tilt springs (+4° max, both axes) ─────────────────────────
   const mouseRotateX = useSpring(
     useTransform(mouseY, [-0.5, 0.5], prefersReducedMotion ? [0, 0] : [4, -4]),
-    MOUSE_SPRING
+    MOUSE_SPRING,
   );
   const mouseRotateY = useSpring(
     useTransform(mouseX, [-0.5, 0.5], prefersReducedMotion ? [0, 0] : [-4, 4]),
-    MOUSE_SPRING
+    MOUSE_SPRING,
   );
 
-  // Compose scroll + mouse into a single MotionValue — Framer Motion merges
-  // them in one rAF pass with no intermediate React renders.
-  // `as any` is needed because Framer Motion's TS overloads don't narrow
-  // the multi-value array form correctly; the runtime behaviour is correct.
+  // Static base tilt (8° rotateX, -6° rotateY) + mouse offset
   const combinedRotateX = useTransform(
-    [rotateX, mouseRotateX] as any,
-    ([s, m]: number[]) => s + m
+    [mouseRotateX] as any,
+    ([m]: number[]) => (prefersReducedMotion ? 0 : 8) + m,
   ) as MotionValue<number>;
   const combinedRotateY = useTransform(
-    [rotateY, mouseRotateY] as any,
-    ([s, m]: number[]) => s + m
+    [mouseRotateY] as any,
+    ([m]: number[]) => (prefersReducedMotion ? 0 : -6) + m,
   ) as MotionValue<number>;
 
-  const exitOpacity = useTransform(scrollYProgress, [0.85, 1], [1, 0.82]);
-  const exitScale   = useTransform(scrollYProgress, [0.85, 1], [1, 0.97]);
+  // ── Apple-grade multi-layer shadow ────────────────────────────────────────
+  const monitorShadow = [
+    'inset 0 1px 0 rgba(255,255,255,0.18)',
+    'inset 0 0 0 1px rgba(255,255,255,0.06)',
+    '0 0 0 1px rgba(255,255,255,0.08)',
+    '0 32px 80px -12px rgba(0,0,0,0.85)',
+    '0 72px 160px -24px rgba(0,0,0,0.60)',
+    '0 0 140px rgba(167,139,250,0.14)',
+  ].join(', ');
 
-  useLenis(({ scroll }) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const containerTop = rect.top + scroll;
-    const scrollable   = containerRef.current.offsetHeight - window.innerHeight;
-    if (scrollable <= 0) return;
-    const p = Math.max(0, Math.min(1, (scroll - containerTop) / scrollable));
-
-    scrollProgress.set(p);
-
-    const newStep = p < 0.30 ? 0 : p < 0.65 ? 1 : 2;
-    if (newStep !== activeStepRef.current) {
-      activeStepRef.current = newStep;
-      setActiveStep(newStep);
-    }
-    const complete = p >= 0.90;
-    if (complete !== isCompleteRef.current) {
-      isCompleteRef.current = complete;
-      setIsComplete(complete);
-    }
-  });
-
-  // ── Glare: coordinate calculation ────────────────────────────────────────────
-  // We read mouse position relative to the window container, then map to
-  // percentage coords (0-100%). The gradient center follows the cursor with
-  // zero React re-renders — we mutate the overlay DOM element directly.
-  //
-  //   x% = (clientX - containerLeft) / containerWidth  × 100
-  //   y% = (clientY - containerTop)  / containerHeight × 100
-  //
-  // mix-blend-mode: screen means the glare only adds light — it can't darken,
-  // which is physically correct for light hitting glass.
+  // ── Glare — direct DOM mutation, zero re-renders ──────────────────────────
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (prefersReducedMotion) return;
     const rect = e.currentTarget.getBoundingClientRect();
-
-    // Normalized [-0.5, 0.5] — drives the tilt springs
     const nx = (e.clientX - rect.left) / rect.width  - 0.5;
     const ny = (e.clientY - rect.top)  / rect.height - 0.5;
     mouseX.set(nx);
     mouseY.set(ny);
-
-    // Percentage [0, 100] — drives the glare overlay directly on the DOM node
     if (glareRef.current) {
       const gx = (nx + 0.5) * 100;
       const gy = (ny + 0.5) * 100;
       glareRef.current.style.background =
-        `radial-gradient(circle at ${gx}% ${gy}%, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 30%, transparent 62%)`;
+        `radial-gradient(circle at ${gx}% ${gy}%, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 30%, transparent 62%)`;
     }
   }, [mouseX, mouseY, prefersReducedMotion]);
 
@@ -285,371 +248,264 @@ export default function SolucionesSection() {
   }, []);
 
   const handleMouseLeave = useCallback(() => {
-    // Springs pull back to (0,0) — no abrupt snap
     mouseX.set(0);
     mouseY.set(0);
     if (glareRef.current) glareRef.current.style.opacity = '0';
   }, [mouseX, mouseY]);
 
-  // ── Monitor shadow — Apple product-page fidelity ──────────────────────────
-  const monitorShadow = [
-    'inset 0 1px 0 rgba(255,255,255,0.18)',   // glass bevel top edge
-    'inset 0 0 0 1px rgba(255,255,255,0.06)', // inner rim glow
-    '0 0 0 1px rgba(255,255,255,0.08)',       // outer rim
-    '0 32px 80px -12px rgba(0,0,0,0.85)',     // depth shadow
-    '0 72px 160px -24px rgba(0,0,0,0.60)',    // wide ambient shadow
-    '0 0 140px rgba(167,139,250,0.12)',        // violet ambient glow
-  ].join(', ');
-
-  // ── Active accordion card shadow — inset violet on glass ─────────────────
-  const activeAccordionShadow = [
-    'inset 0 1px 0 rgba(255,255,255,0.07)',   // glass top bevel
-    'inset 0 0 20px rgba(139,92,246,0.06)',   // inner violet wash
-    '0 0 0 1px rgba(167,139,250,0.22)',       // outer violet ring
-    '0 8px 32px rgba(167,139,250,0.09)',      // depth glow
-  ].join(', ');
-
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div
-      ref={containerRef}
-      className={`relative z-10 ${isMobile ? '' : 'h-[400vh]'}`}
+    <section
+      className="relative bg-[#09090b] border-b border-white/[0.04]"
+      style={{
+        background: [
+          'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(167,139,250,0.09) 0%, transparent 55%)',
+          '#09090b',
+        ].join(', '),
+      }}
     >
-      <section
-        className={`border-b border-white/[0.04]
-          ${isMobile ? 'py-20' : 'sticky top-0 h-screen overflow-hidden'}`}
-        style={{
-          background: [
-            'radial-gradient(ellipse 90% 55% at 50% -8%, rgba(167,139,250,0.08) 0%, transparent 60%)',
-            '#09090b',
-          ].join(', '),
-        }}
-      >
-        <div className={`max-w-7xl mx-auto px-2 md:px-4 ${isMobile ? 'block' : 'h-full flex items-center pt-20'}`}>
 
-          {/* ── DESKTOP ──────────────────────────────────────────────────── */}
-          {!isMobile ? (
-            <motion.div
-              style={{ opacity: exitOpacity, scale: exitScale }}
-              className="grid grid-cols-12 gap-6 w-full items-center"
-            >
+      {/* ── Desvinculado Title — centrado, respira antes del split ────────── */}
+      <div className="max-w-3xl mx-auto text-center px-6 pt-32 pb-20 md:pb-28">
+        <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-4">
+          Potencia y Simplicidad
+        </p>
+        <h2 className="font-playfair text-[clamp(2.8rem,5vw,4.2rem)] font-normal
+          text-white leading-[1.08] tracking-tight">
+          Tu salón bajo control,{' '}
+          <span className="text-violet-400 italic">capa por capa.</span>
+        </h2>
+      </div>
 
-              {/* LEFT — Ventana macOS con Liquid Glass */}
-              <div className="col-span-8 flex flex-col justify-center relative">
-
-                {/* Glow ambiental violeta */}
+      {/* ── Mobile — stacked ──────────────────────────────────────────────── */}
+      {isMobile ? (
+        <div className="px-6 pb-24 space-y-24">
+          {solutions.map((sol, index) => {
+            const Icon            = sol.icon;
+            const MockupComponent = MOCKUPS[index];
+            return (
+              <div key={sol.id} className="space-y-8">
                 <div
-                  className="pointer-events-none absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2
-                    w-[560px] h-[560px] rounded-full opacity-30 blur-[90px] transition-all duration-700"
-                  style={{ background: `radial-gradient(circle, ${solutions[activeStep].glow} 0%, transparent 70%)` }}
-                />
-
-                {/* Heading */}
-                <div className="mb-8 max-w-lg relative z-10">
-                  <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
-                    Potencia y Simplicidad
-                  </p>
-                  <h2 className="font-playfair text-[clamp(2.5rem,4.5vw,3.6rem)] font-normal text-white leading-[1.1] tracking-tight">
-                    Tu salón bajo control,{' '}
-                    <span className="text-violet-400">capa por capa.</span>
-                  </h2>
+                  className="w-full rounded-[10px] overflow-hidden border border-white/[0.10] bg-zinc-900/30"
+                  style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 60px rgba(167,139,250,0.06)' }}
+                >
+                  <div
+                    className="h-7 border-b border-white/[0.06] flex items-center px-3 gap-1.5"
+                    style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)' }}
+                  >
+                    {TRAFFIC.map(({ bg, label }) => (
+                      <div key={label} className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: bg }} />
+                    ))}
+                  </div>
+                  <div className="h-64 bg-[#050504]"><MockupComponent /></div>
                 </div>
 
-                {/* ── Ventana macOS — Liquid Glass ──────────────────────── */}
+                <div className="space-y-5">
+                  <div className="flex gap-3 items-center">
+                    <div className="w-10 h-10 rounded-xl border flex items-center justify-center
+                      bg-violet-400/[0.06] border-violet-400/20">
+                      <Icon className="w-4 h-4 text-violet-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-playfair text-xl font-normal text-white">{sol.title}</h3>
+                      <p className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">{sol.subtitle}</p>
+                    </div>
+                  </div>
+                  <ul className="space-y-3">
+                    {sol.bullets.map((bullet, bIdx) => (
+                      <li key={bIdx} className="flex gap-2.5 items-start text-sm text-zinc-400">
+                        <CheckCircle className="w-4 h-4 shrink-0 mt-0.5 text-violet-400" />
+                        <span>{bullet}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+
+        /* ── Desktop — Sticky Split-View ──────────────────────────────────── */
+        <div className="grid grid-cols-2 max-w-7xl mx-auto">
+
+          {/* LEFT — Scrollable text layers, each h-screen */}
+          <div>
+            {solutions.map((sol, i) => {
+              const Icon     = sol.icon;
+              const isActive = activeStep === i;
+              return (
                 <div
-                  className="w-full relative z-10"
-                  style={{ perspective: '1200px', transformStyle: 'preserve-3d' }}
+                  key={sol.id}
+                  ref={(el) => { layerRefs.current[i] = el; }}
+                  className="h-screen flex flex-col justify-center px-12 xl:px-20"
                 >
                   <motion.div
-                    style={{ rotateX: combinedRotateX, rotateY: combinedRotateY, scale: tiltScale, boxShadow: monitorShadow }}
-                    className="w-full h-[420px] lg:h-[520px] rounded-[12px] overflow-hidden
-                      flex flex-col
-                      border border-white/[0.12]
-                      bg-zinc-900/30 backdrop-blur-2xl"
-                    onMouseMove={handleMouseMove}
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
+                    animate={{
+                      opacity: isActive ? 1 : 0.2,
+                      y:       isActive ? 0 : 10,
+                    }}
+                    transition={{ duration: 0.55, ease: APPLE_EASE }}
                   >
-                    {/* Title bar — glass gradient, simula el grosor del cristal */}
-                    <div
-                      className="h-9 shrink-0 border-b border-white/[0.06]
-                        flex items-center px-4 relative select-none"
-                      style={{
-                        background: 'linear-gradient(to bottom, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)',
-                        backdropFilter: 'blur(8px)',
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        {TRAFFIC.map(({ bg, label }) => (
-                          <div
-                            key={label}
-                            aria-label={label}
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: bg }}
-                          />
-                        ))}
+                    {/* Icon + subtitle label */}
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border
+                        transition-all duration-500
+                        ${isActive
+                          ? 'bg-violet-400/[0.12] border-violet-400/[0.32]'
+                          : 'bg-white/[0.02] border-white/[0.06]'}`}>
+                        <Icon className="w-5 h-5 text-violet-400" />
                       </div>
-                      {/* URL bar */}
-                      <div className="absolute left-1/2 -translate-x-1/2 flex items-center">
-                        <div className="flex items-center gap-1.5 h-5 px-3 rounded-md
-                          bg-white/[0.06] border border-white/[0.06]">
-                          <div className="w-1.5 h-1.5 rounded-full bg-white/20 shrink-0" />
-                          <span className="text-[9px] text-zinc-600 tracking-tight">
-                            mujerapp.com/dashboard
-                          </span>
-                        </div>
-                      </div>
+                      <span className={`text-[10px] font-bold uppercase tracking-[0.35em]
+                        transition-colors duration-500
+                        ${isActive ? 'text-violet-400' : 'text-zinc-700'}`}>
+                        {sol.subtitle}
+                      </span>
                     </div>
 
-                    {/* Área de contenido — opaca para los mockups */}
-                    <div className="flex-1 relative overflow-hidden bg-[#050504]">
-                      {/* Crossfade de mockups — todos en DOM → sin flicker */}
-                      {MOCKUPS.map((MockupComponent, i) => (
-                        <motion.div
-                          key={i}
-                          className="absolute inset-0"
-                          animate={{
-                            opacity: i === activeStep ? 1 : 0,
-                            scale:   i === activeStep ? 1 : 0.97,
-                          }}
-                          transition={{
-                            opacity: {
-                              duration: prefersReducedMotion ? 0 : 0.38,
-                              ease: APPLE_EASE,
-                            },
-                            scale: prefersReducedMotion
-                              ? { duration: 0 }
-                              : { type: 'spring', stiffness: 300, damping: 26, mass: 0.8 },
-                          }}
-                          style={{ transformOrigin: 'center top' }}
+                    {/* Title */}
+                    <h3 className={`font-playfair text-[clamp(1.9rem,3vw,2.8rem)] font-normal
+                      leading-tight tracking-tight mb-5
+                      transition-colors duration-500
+                      ${isActive ? 'text-white' : 'text-zinc-700'}`}>
+                      {sol.title}
+                    </h3>
+
+                    {/* Bullets */}
+                    <ul className="space-y-3.5 max-w-sm">
+                      {sol.bullets.map((bullet, bIdx) => (
+                        <li
+                          key={bIdx}
+                          className={`flex gap-3 items-start text-[0.95rem] leading-relaxed
+                            transition-colors duration-500
+                            ${isActive ? 'text-zinc-300' : 'text-zinc-700'}`}
                         >
-                          <MockupComponent />
-                        </motion.div>
+                          <CheckCircle className={`w-4 h-4 shrink-0 mt-0.5 transition-colors duration-500
+                            ${isActive ? 'text-violet-400' : 'text-zinc-700'}`} />
+                          <span>{bullet}</span>
+                        </li>
                       ))}
-
-                      {/*
-                        ── Dynamic Glare overlay ────────────────────────────
-                        Tracks mouse position on the parent motion.div.
-                        Coordinates: x% = (clientX − left) / width × 100
-                                     y% = (clientY − top)  / height × 100
-                        We mutate style.background directly → zero re-renders.
-                        mix-blend-mode: screen ensures it only ADDS light
-                        (physically correct for glass reflection — can't darken).
-                        opacity transitions via CSS transition: 300ms.
-                      */}
-                      <div
-                        ref={glareRef}
-                        aria-hidden="true"
-                        className="pointer-events-none absolute inset-0 z-20"
-                        style={{
-                          opacity: 0,
-                          background:
-                            'radial-gradient(circle at 50% 30%, rgba(255,255,255,0.04) 0%, transparent 60%)',
-                          mixBlendMode: 'screen',
-                          transition: 'opacity 300ms ease',
-                        }}
-                      />
-                    </div>
+                    </ul>
                   </motion.div>
                 </div>
-              </div>
+              );
+            })}
+          </div>
 
-              {/* RIGHT — Acordeón Liquid Glass ───────────────────────────── */}
-              <div className="col-span-4 flex flex-col justify-center gap-2">
+          {/* RIGHT — Sticky 3D macOS window */}
+          <div className="sticky top-0 h-screen flex items-center justify-center">
+            <div
+              className="relative flex flex-col items-center"
+              style={{ perspective: '1200px', transformStyle: 'preserve-3d' }}
+            >
 
-                {solutions.map((sol, index) => {
-                  const Icon     = sol.icon;
-                  const isActive = activeStep === index;
-
-                  return (
-                    <motion.div
-                      key={sol.id}
-                      animate={{ opacity: isActive ? 1 : 0.45 }}
-                      transition={{ duration: prefersReducedMotion ? 0 : 0.45, ease: LIQUID_EASE }}
-                      onClick={() => setActiveStep(index)}
-                      style={isActive ? { boxShadow: activeAccordionShadow } : {}}
-                      className={`rounded-2xl border cursor-pointer overflow-hidden
-                        transition-[background-color,border-color,backdrop-filter] duration-500
-                        ${isActive
-                          // Liquid Glass activo: translúcido + blur + borde violeta iluminado
-                          ? 'border-violet-500/30 bg-zinc-800/40 backdrop-blur-md'
-                          : 'border-white/[0.04] bg-transparent hover:border-white/[0.09]'
-                        }`}
-                    >
-                      {/* Header — siempre visible */}
-                      <div className="flex gap-4 items-center p-5">
-                        <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0
-                          transition-all duration-400
-                          ${isActive
-                            ? 'bg-violet-400/[0.12] border-violet-400/[0.32] scale-105'
-                            : 'bg-white/[0.02] border-white/[0.07]'
-                          }`}>
-                          <Icon className="w-5 h-5 text-violet-400" />
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className={`font-playfair text-[1.15rem] font-normal leading-tight
-                            transition-colors duration-300
-                            ${isActive ? 'text-white' : 'text-zinc-500'}`}>
-                            {sol.title}
-                          </h3>
-                          <p className={`text-xs font-medium uppercase tracking-widest mt-0.5 truncate
-                            transition-colors duration-300
-                            ${isActive ? 'text-zinc-400' : 'text-zinc-600'}`}>
-                            {sol.subtitle}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/*
-                        Bullets: height + opacity con LIQUID_EASE (0.32, 0.72, 0, 1).
-                        Height a 450ms → decelera rápido al inicio, llega suave al final.
-                        Opacity a 280ms → el texto aparece antes de que el acordeón
-                        termine de abrirse, creando profundidad temporal.
-                      */}
-                      <AnimatePresence initial={false}>
-                        {isActive && (
-                          <motion.ul
-                            key="bullets"
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{
-                              height:  { duration: prefersReducedMotion ? 0 : 0.45, ease: LIQUID_EASE },
-                              opacity: { duration: prefersReducedMotion ? 0 : 0.28, ease: APPLE_EASE },
-                            }}
-                            className="space-y-4 px-5 pb-5 overflow-hidden"
-                          >
-                            {sol.bullets.map((bullet, bIdx) => (
-                              <motion.li
-                                key={bIdx}
-                                initial={{ opacity: 0, x: -6 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{
-                                  duration: prefersReducedMotion ? 0 : 0.3,
-                                  delay:    prefersReducedMotion ? 0 : 0.06 + bIdx * 0.07,
-                                  ease:     APPLE_EASE,
-                                }}
-                                className="flex gap-3 items-start text-sm leading-relaxed text-zinc-400"
-                              >
-                                <CheckCircle className="w-4 h-4 shrink-0 mt-0.5 text-violet-400" />
-                                <span>{bullet}</span>
-                              </motion.li>
-                            ))}
-                          </motion.ul>
-                        )}
-                      </AnimatePresence>
-                    </motion.div>
-                  );
-                })}
-
-                {/* Puntos de navegación */}
-                <div className="flex gap-2 justify-center pt-3">
-                  {solutions.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setActiveStep(i)}
-                      aria-label={`Ir a capa ${i + 1}`}
-                      className="rounded-full cursor-pointer transition-all duration-500"
-                      style={{
-                        width:           i === activeStep ? '18px' : '6px',
-                        height:          '6px',
-                        backgroundColor: i === activeStep ? VIOLET_HEX : 'rgba(255,255,255,0.15)',
-                      }}
-                    />
-                  ))}
+              {/* macOS window — Liquid Glass */}
+              <motion.div
+                style={{
+                  rotateX:   combinedRotateX,
+                  rotateY:   combinedRotateY,
+                  boxShadow: monitorShadow,
+                }}
+                className="w-[min(48vw,680px)] h-[min(56vh,520px)]
+                  rounded-[12px] overflow-hidden flex flex-col
+                  border border-white/[0.12]
+                  bg-zinc-900/30 backdrop-blur-2xl"
+                onMouseMove={handleMouseMove}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+              >
+                {/* Title bar */}
+                <div
+                  className="h-9 shrink-0 border-b border-white/[0.06]
+                    flex items-center px-4 relative select-none"
+                  style={{
+                    background:    'linear-gradient(to bottom, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)',
+                    backdropFilter: 'blur(8px)',
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    {TRAFFIC.map(({ bg, label }) => (
+                      <div
+                        key={label}
+                        aria-label={label}
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: bg }}
+                      />
+                    ))}
+                  </div>
+                  <div className="absolute left-1/2 -translate-x-1/2">
+                    <div className="flex items-center gap-1.5 h-5 px-3 rounded-md bg-white/[0.06] border border-white/[0.06]">
+                      <div className="w-1.5 h-1.5 rounded-full bg-white/20 shrink-0" />
+                      <span className="text-[9px] text-zinc-600 tracking-tight">
+                        mujerapp.com/dashboard
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Nudge al completar */}
-                <AnimatePresence>
-                  {isComplete && (
+                {/* Crossfade content — todos en DOM, sin flicker */}
+                <div className="flex-1 relative overflow-hidden bg-[#050504]">
+                  {MOCKUPS.map((MockupComponent, mi) => (
                     <motion.div
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 6 }}
-                      transition={{ duration: 0.5, ease: 'easeOut' }}
-                      className="flex items-center justify-center gap-3 pt-1"
+                      key={mi}
+                      className="absolute inset-0"
+                      animate={{
+                        opacity: mi === activeStep ? 1 : 0,
+                        scale:   mi === activeStep ? 1 : 0.97,
+                      }}
+                      transition={{
+                        opacity: {
+                          duration: prefersReducedMotion ? 0 : 0.38,
+                          ease:     APPLE_EASE,
+                        },
+                        scale: prefersReducedMotion
+                          ? { duration: 0 }
+                          : { type: 'spring', stiffness: 300, damping: 26, mass: 0.8 },
+                      }}
+                      style={{ transformOrigin: 'center top' }}
                     >
-                      <div className="h-px flex-1 bg-white/[0.06]" />
-                      <span className="text-[11px] text-zinc-600 flex items-center gap-1.5 select-none">
-                        <motion.span
-                          animate={{ y: [0, 3, 0] }}
-                          transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-                        >
-                          ↓
-                        </motion.span>
-                        Seguí explorando
-                      </span>
-                      <div className="h-px flex-1 bg-white/[0.06]" />
+                      <MockupComponent />
                     </motion.div>
-                  )}
-                </AnimatePresence>
+                  ))}
 
+                  {/* Glare — mutación directa al DOM, cero re-renders */}
+                  <div
+                    ref={glareRef}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 z-20"
+                    style={{
+                      opacity:       0,
+                      background:    'radial-gradient(circle at 50% 30%, rgba(255,255,255,0.04) 0%, transparent 60%)',
+                      mixBlendMode:  'screen',
+                      transition:    'opacity 300ms ease',
+                    }}
+                  />
+                </div>
+              </motion.div>
+
+              {/* Step dots — clickables with focus ring */}
+              <div className="flex gap-2 justify-center mt-8">
+                {solutions.map((_, di) => (
+                  <button
+                    key={di}
+                    onClick={() => setActiveStep(di)}
+                    aria-label={`Ir a capa ${di + 1}`}
+                    className="rounded-full cursor-pointer transition-all duration-500
+                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60"
+                    style={{
+                      width:           di === activeStep ? '18px' : '6px',
+                      height:          '6px',
+                      backgroundColor: di === activeStep ? VIOLET_HEX : 'rgba(255,255,255,0.15)',
+                    }}
+                  />
+                ))}
               </div>
-            </motion.div>
-          ) : (
 
-            /* ── MOBILE — stacked, sin efectos de scroll ────────────────── */
-            <div className="space-y-16">
-              <div className="text-center">
-                <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-3">
-                  Potencia y Simplicidad
-                </p>
-                <h2 className="font-playfair text-[clamp(2.2rem,8vw,3rem)] font-normal text-white leading-[1.1] tracking-tight">
-                  Tu salón bajo control,<br />
-                  <span className="text-violet-400">capa por capa.</span>
-                </h2>
-              </div>
-
-              <div className="space-y-24">
-                {solutions.map((sol, index) => {
-                  const Icon            = sol.icon;
-                  const MockupComponent = MOCKUPS[index];
-                  return (
-                    <div key={sol.id} className="space-y-8">
-                      <div
-                        className="w-full max-w-2xl mx-auto rounded-[10px] overflow-hidden
-                          border border-white/[0.10] bg-zinc-900/30 backdrop-blur-xl"
-                        style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 60px rgba(167,139,250,0.06)' }}
-                      >
-                        <div className="h-7 border-b border-white/[0.06] flex items-center px-3 gap-1.5"
-                          style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)' }}>
-                          {TRAFFIC.map(({ bg, label }) => (
-                            <div key={label} className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: bg }} />
-                          ))}
-                        </div>
-                        <div className="h-72 bg-[#050504]">
-                          <MockupComponent />
-                        </div>
-                      </div>
-
-                      <div className="space-y-4 max-w-md mx-auto">
-                        <div className="flex gap-3 items-center">
-                          <div className="w-10 h-10 rounded-xl border flex items-center justify-center
-                            bg-violet-400/[0.06] border-violet-400/20">
-                            <Icon className="w-4 h-4 text-violet-400" />
-                          </div>
-                          <div>
-                            <h3 className="font-playfair text-xl font-normal text-white">{sol.title}</h3>
-                            <p className="text-zinc-500 text-[10px] font-semibold uppercase tracking-wider">{sol.subtitle}</p>
-                          </div>
-                        </div>
-                        <ul className="space-y-2.5 pl-1">
-                          {sol.bullets.map((bullet, bIdx) => (
-                            <li key={bIdx} className="flex gap-2.5 items-start text-xs text-zinc-400">
-                              <CheckCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-violet-400" />
-                              <span>{bullet}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
-          )}
+          </div>
 
         </div>
-      </section>
-    </div>
+      )}
+    </section>
   );
 }
