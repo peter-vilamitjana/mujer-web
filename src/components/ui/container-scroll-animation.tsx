@@ -2,7 +2,7 @@
 import React, { useRef } from "react";
 import {
   useScroll, useTransform, motion,
-  MotionValue, useMotionTemplate, useMotionValue,
+  MotionValue, useMotionTemplate,
 } from "framer-motion";
 
 // macOS traffic-light buttons
@@ -24,7 +24,6 @@ export const ContainerScroll = ({
   children: React.ReactNode;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  // 1. Volvemos al useScroll original (borrá el offset que puso Antigravity)
   const { scrollYProgress } = useScroll({
     target: containerRef,
   });
@@ -42,39 +41,9 @@ export const ContainerScroll = ({
     };
   }, []);
 
-  const scaleDimensions = () => (isMobile ? [0.7, 0.9] : [1.05, 1]);
-
-  // Initialize MotionValues at their correct "tilted" defaults so the card
-  // is always at 20° on the very first render, regardless of scrollYProgress
-  // initial state (framer-motion doesn't guarantee it's 0 before mount).
-  const rotate    = useMotionValue(-20);
-  const scale     = useMotionValue(1.05);
-  const translate = useMotionValue(0);
-
-  // Drive rotate/scale/translate imperatively from scroll.
-  // [0, 0.4] → card stays locked at 20°; [0.4, 1] → rotates to flat.
-  React.useEffect(() => {
-    const dims = scaleDimensions();
-    const scaleStart = dims[0];
-    const scaleEnd   = dims[dims.length - 1];
-
-    const update = (v: number) => {
-      if (v <= 0.4) {
-        rotate.set(-20);
-        scale.set(scaleStart);
-        translate.set(0);
-      } else {
-        const t = (v - 0.4) / 0.6;
-        rotate.set(-20 * (1 - t));
-        scale.set(scaleStart + (scaleEnd - scaleStart) * t);
-        translate.set(-100 * t);
-      }
-    };
-
-    // Apply immediately with the current scroll value (handles page-reload-at-offset)
-    update(scrollYProgress.get());
-    return scrollYProgress.on("change", update);
-  }, [scrollYProgress, isMobile]); // eslint-disable-line react-hooks/exhaustive-deps
+  const rotate    = useTransform(scrollYProgress, [0, 0.4, 1], [20, 20, 0]);
+  const scale     = useTransform(scrollYProgress, [0, 0.4, 1], isMobile ? [0.7, 0.7, 0.9] : [1.05, 1.05, 1]);
+  const translate = useTransform(scrollYProgress, [0, 0.4, 1], [0, 0, -100]);
 
   // Ambient glow — vivid at max tilt, nearly gone when flat
   const glowA = useTransform(scrollYProgress, [0, 1], [0.30, 0.08]);
@@ -162,7 +131,7 @@ export const Card = ({
   const boxShadow = useMotionTemplate`0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026, 0 149px 60px #0000000a, 0 233px 65px #00000003, 0 0 80px rgba(139,92,246,${glowA}), 0 0 160px rgba(109,40,217,${glowB})`;
 
   return (
-    <div className="relative max-w-5xl -mt-12 mx-auto">
+    <div className="relative max-w-5xl mt-8 mx-auto">
 
       {/* Floor glow — card projects violet light on the surface below */}
       <motion.div
