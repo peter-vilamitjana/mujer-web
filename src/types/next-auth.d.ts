@@ -14,7 +14,7 @@ declare module 'next-auth' {
       salonId?: string | null
       salonSlug?: string | null
       tenantIds: string[]
-      role: 'customer' | 'staff' | 'admin'
+      role: 'superadmin' | 'customer' | 'staff' | 'admin'
       phone?: string
     }
   }
@@ -30,7 +30,7 @@ declare module 'next-auth/jwt' {
     uid?: string
     tenantIds?: string[]
     salonSlug?: string | null
-    role?: 'customer' | 'staff' | 'admin'
+    role?: 'superadmin' | 'customer' | 'staff' | 'admin'
     phone?: string
   }
 }

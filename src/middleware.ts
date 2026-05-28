@@ -38,6 +38,20 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const ip = (req.headers.get('x-forwarded-for') ?? '127.0.0.1').split(',')[0].trim();
 
+  // Superadmin panel — requiere role superadmin, sin excepciones
+  if (pathname.startsWith('/superadmin')) {
+    if (!allow(`sa:${ip}`, 30, 60_000)) {
+      return new NextResponse('Too many requests', { status: 429 });
+    }
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || token.role !== 'superadmin') {
+      const url = req.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+  }
+
   // Webhooks — rate limit only, no auth (external services)
   if (WEBHOOK_PATHS.some(p => p.test(pathname))) {
     if (!allow(`wh:${ip}`, 120, 60_000)) {
@@ -76,6 +90,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    '/superadmin/:path*',
     '/:slug/dashboard/:path*',
     '/admin/:path*',
     '/perfil/:path*',

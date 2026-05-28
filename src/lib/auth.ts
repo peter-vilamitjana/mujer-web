@@ -87,11 +87,22 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     secret: process.env.NEXTAUTH_SECRET,
+    session: {
+        strategy: 'jwt',
+        maxAge: 8 * 60 * 60, // 8 horas — ventana corta para cuenta de alto privilegio
+    },
     callbacks: {
         async jwt({ token, user, account, trigger }) {
             // session.update() — re-fetch memberships from Firestore (Admin SDK)
             if (trigger === 'update' && token.uid) {
                 try {
+                    const userDoc = await adminDb.collection('users').doc(token.uid as string).get();
+                    if (userDoc.data()?.role === 'superadmin') {
+                        token.role = 'superadmin';
+                        token.tenantIds = [];
+                        return token;
+                    }
+
                     const snap = await adminDb
                         .collection('users').doc(token.uid as string)
                         .collection('memberships').get();
@@ -118,6 +129,14 @@ export const authOptions: NextAuthOptions = {
 
                 // Leer memberships + phone UNA SOLA VEZ, al momento del login (Admin SDK)
                 try {
+                    // Superadmin: detectar antes de leer memberships
+                    const userDoc = await adminDb.collection('users').doc(user.id).get();
+                    if (userDoc.data()?.role === 'superadmin') {
+                        token.role = 'superadmin';
+                        token.tenantIds = [];
+                        return token;
+                    }
+
                     const snap = await adminDb
                         .collection('users').doc(user.id)
                         .collection('memberships').get();

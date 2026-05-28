@@ -28,7 +28,7 @@ export interface FavoriteSalon {
     savedAt: Timestamp;
 }
 
-export type UserRole = 'admin' | 'employee' | 'client' | 'customer';
+export type UserRole = 'superadmin' | 'admin' | 'employee' | 'client' | 'customer';
 
 export interface Membership {
     tenantId: string;

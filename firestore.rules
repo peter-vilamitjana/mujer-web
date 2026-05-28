@@ -15,8 +15,20 @@ service cloud.firestore {
 
     // --- 1. Global User Data (New Source of Truth) ---
     match /users/{userId} {
-      // User can read/write their own profile
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Lectura del propio perfil
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Creación del propio perfil (registro): el campo role no puede estar presente.
+      // auth.service.ts nunca lo incluye — esta regla cierra la escalada de privilegios.
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && !('role' in request.resource.data);
+
+      // Actualización del propio perfil: permitida, pero el campo role no puede cambiar.
+      // Bloquea el vector de autoescalada a superadmin vía Firebase client SDK.
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']);
       
       // Memberships: User can read their own.
       match /memberships/{tenantId} {
@@ -105,48 +117,36 @@ service cloud.firestore {
     }
 
     // --- 3. LEGACY Compatibility (Phase 4: READ-ONLY ARCHIVE) ---
-    // [LEGACY LOCKDOWN] - STRICTLY NO WRITES ALLOWED
-    
-    // Legacy Users (usuarios)
-    // Allow READ for self-healing (own) OR Admin (migration). DENY write.
+    // Migración completada. Todas las colecciones legacy son inaccesibles vía cliente.
+    // Acceso solo posible via Firebase Admin SDK (Server Actions / scripts de migración).
+
     match /usuarios/{userId} {
-      allow read: if (request.auth != null && request.auth.uid == userId) || request.auth.token.email == 'admin@mujer.com';; 
-      allow write: if false; 
+      allow read, write: if false;
     }
-    
-    // Legacy Calendar Tokens (root)
+
     match /calendarTokens/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if false; 
-    }
-    
-    // Legacy Turnos (root) - Archive
-    match /turnos/{document=**} { 
-      allow read: if request.auth.token.email == 'admin@mujer.com'; 
-      allow write: if false;
-    } 
-    
-    // Legacy Clientes (root) - Archive
-    match /clientes/{document=**} { 
-      allow read: if request.auth.token.email == 'admin@mujer.com'; 
       allow write: if false;
     }
 
-    // Legacy Servicios (root) - Archive
-    match /servicios/{document=**} { 
-      allow read: if true; // Public catalog (cached/legacy)
-      allow write: if false;
+    match /turnos/{document=**} {
+      allow read, write: if false;
     }
-    
-    // Legacy Orgs & Salons (root) - Archive
-    // Allow Admin Read for Migration
-    match /orgs/{document=**} { 
-      allow read: if request.auth.token.email == 'admin@mujer.com'; 
-      allow write: if false; 
+
+    match /clientes/{document=**} {
+      allow read, write: if false;
     }
-    match /salons/{document=**} { 
-      allow read: if request.auth.token.email == 'admin@mujer.com'; 
-      allow write: if false; 
+
+    match /servicios/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /orgs/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /salons/{document=**} {
+      allow read, write: if false;
     }
     
     // --- 4. Collection Group: appointments (para vista B2C cross-tenant) ---
