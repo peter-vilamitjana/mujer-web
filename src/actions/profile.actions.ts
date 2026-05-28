@@ -1,7 +1,6 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAuthSession } from '@/lib/auth-guards';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import type {
@@ -12,43 +11,40 @@ import type {
 
 export type { ProfileData, HistorialEntry, HistorialGroup, HairProfile, SerializedPreferences, FavoriteSalonData };
 
-export async function getMyProfile(): Promise<ProfileData | null> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return null;
+const PHONE_RE = /^\+?[\d\s\-().]{6,20}$/;
 
-  const uid = (session.user as any).uid as string | undefined;
-  if (!uid) return null;
+export async function getMyProfile(): Promise<ProfileData | null> {
+  let auth: Awaited<ReturnType<typeof requireAuthSession>>;
+  try { auth = await requireAuthSession(); } catch { return null; }
+
+  const { uid, name: sessionName, email: sessionEmail, image: sessionPhoto } = auth;
 
   const profileRef = adminDb.collection('users').doc(uid);
   const snap = await profileRef.get();
 
-  const sessionName = session.user.name ?? '';
-  const sessionEmail = session.user.email ?? '';
-  const sessionPhoto = session.user.image ?? null;
-
   if (!snap.exists) {
     await profileRef.set({
       id: uid,
-      displayName: sessionName,
-      email: sessionEmail,
-      photoURL: sessionPhoto,
+      displayName: sessionName ?? '',
+      email: sessionEmail ?? '',
+      photoURL: sessionPhoto ?? null,
       createdAt: FieldValue.serverTimestamp(),
     });
     return {
-      displayName: sessionName,
-      email: sessionEmail,
+      displayName: sessionName ?? '',
+      email: sessionEmail ?? '',
       phone: '',
-      photoURL: sessionPhoto,
+      photoURL: sessionPhoto ?? null,
       createdAt: null,
     };
   }
 
   const data = snap.data()!;
   return {
-    displayName: data.displayName ?? sessionName,
-    email: data.email ?? sessionEmail,
+    displayName: data.displayName ?? sessionName ?? '',
+    email: data.email ?? sessionEmail ?? '',
     phone: data.phone ?? '',
-    photoURL: data.photoURL ?? sessionPhoto,
+    photoURL: data.photoURL ?? sessionPhoto ?? null,
     createdAt: (data.createdAt as Timestamp | undefined)?.toDate?.()?.toLocaleDateString('es-AR', {
       month: 'long',
       year: 'numeric',
@@ -59,20 +55,21 @@ export async function getMyProfile(): Promise<ProfileData | null> {
 export async function updateMyProfile(
   updates: { displayName?: string; phone?: string }
 ): Promise<{ success: boolean; error?: string }> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return { success: false, error: 'No autenticado.' };
+  let uid: string;
+  try { ({ uid } = await requireAuthSession()); } catch { return { success: false, error: 'No autenticado.' }; }
 
-  const uid = (session.user as any).uid as string | undefined;
-  if (!uid) return { success: false, error: 'Sesión inválida.' };
+  const displayName = updates.displayName?.trim() ?? '';
+  const phone       = updates.phone?.trim() ?? '';
 
-  if (!updates.displayName?.trim() && !updates.phone?.trim()) {
-    return { success: false, error: 'No hay cambios para guardar.' };
-  }
+  if (!displayName && !phone) return { success: false, error: 'No hay cambios para guardar.' };
+  if (displayName && displayName.length < 2)  return { success: false, error: 'El nombre debe tener al menos 2 caracteres.' };
+  if (displayName && displayName.length > 100) return { success: false, error: 'El nombre es demasiado largo.' };
+  if (phone && !PHONE_RE.test(phone))          return { success: false, error: 'El teléfono no tiene un formato válido.' };
 
   try {
     const payload: Record<string, any> = { updatedAt: FieldValue.serverTimestamp() };
-    if (updates.displayName?.trim()) payload.displayName = updates.displayName.trim();
-    if (updates.phone !== undefined) payload.phone = updates.phone.trim();
+    if (displayName) payload.displayName = displayName;
+    if (phone !== undefined) payload.phone = phone;
 
     await adminDb.collection('users').doc(uid).set(payload, { merge: true });
     return { success: true };
@@ -85,13 +82,8 @@ export async function updateMyProfile(
 // ── Historial cross-tenant ────────────────────────────────────────────────────
 
 export async function getMyHistorial(): Promise<HistorialGroup[]> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return [];
-
-  const uid = (session.user as any).uid as string | undefined;
-  if (!uid) return [];
-
-  const tenantIds: string[] = (session.user as any).tenantIds ?? [];
+  let uid: string; let tenantIds: string[];
+  try { ({ uid, tenantIds } = await requireAuthSession()); } catch { return []; }
   if (tenantIds.length === 0) return [];
 
   const entries: HistorialEntry[] = [];
@@ -153,13 +145,8 @@ export async function getMyHistorial(): Promise<HistorialGroup[]> {
 }
 
 export async function getMyUpcomingAppointments(): Promise<HistorialEntry[]> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return [];
-
-  const uid = (session.user as any).uid as string | undefined;
-  if (!uid) return [];
-
-  const tenantIds: string[] = (session.user as any).tenantIds ?? [];
+  let uid: string; let tenantIds: string[];
+  try { ({ uid, tenantIds } = await requireAuthSession()); } catch { return []; }
   if (tenantIds.length === 0) return [];
 
   const nowMs = Date.now();
@@ -212,17 +199,11 @@ export async function getMyUpcomingAppointments(): Promise<HistorialEntry[]> {
 
 // ── Hair Profile ──────────────────────────────────────────────────────────────
 
-/**
- * Reads the client's hairProfile from their customer record in the primary tenant.
- */
 export async function getMyHairProfile(): Promise<HairProfile | null> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return null;
-  const uid = (session.user as any).uid as string | undefined;
-  const tenantIds: string[] = (session.user as any).tenantIds ?? [];
-  if (!uid || tenantIds.length === 0) return null;
+  let uid: string; let tenantIds: string[];
+  try { ({ uid, tenantIds } = await requireAuthSession()); } catch { return null; }
+  if (tenantIds.length === 0) return null;
 
-  // Use the first (primary) tenant
   const customerSnap = await adminDb
     .collection('tenants').doc(tenantIds[0])
     .collection('customers').doc(uid)
@@ -232,18 +213,12 @@ export async function getMyHairProfile(): Promise<HairProfile | null> {
   return (customerSnap.data()?.hairProfile as HairProfile) ?? null;
 }
 
-/**
- * Writes hairProfile fields to the client's customer record in the primary tenant.
- * Uses Admin SDK because Firestore rules only allow `create` (not `update`) by the client themselves.
- */
 export async function updateMyHairProfile(
   updates: Partial<HairProfile>,
 ): Promise<{ success: boolean; error?: string }> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return { success: false, error: 'No autenticado.' };
-  const uid = (session.user as any).uid as string | undefined;
-  const tenantIds: string[] = (session.user as any).tenantIds ?? [];
-  if (!uid) return { success: false, error: 'Sesión inválida.' };
+  let uid: string; let tenantIds: string[];
+  try { ({ uid, tenantIds } = await requireAuthSession()); } catch { return { success: false, error: 'No autenticado.' }; }
+  if (!uid)                  return { success: false, error: 'Sesión inválida.' };
   if (tenantIds.length === 0) return { success: false, error: 'No tenés un salón asociado.' };
 
   try {
@@ -266,14 +241,9 @@ export async function updateMyHairProfile(
 
 // ── Preferences ───────────────────────────────────────────────────────────────
 
-/**
- * Reads the client's preferences from users/{uid}/preferences/default.
- */
 export async function getMyPreferences(): Promise<SerializedPreferences | null> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return null;
-  const uid = (session.user as any).uid as string | undefined;
-  if (!uid) return null;
+  let uid: string;
+  try { ({ uid } = await requireAuthSession()); } catch { return null; }
 
   const snap = await adminDb
     .collection('users').doc(uid)
@@ -290,16 +260,11 @@ export async function getMyPreferences(): Promise<SerializedPreferences | null> 
   };
 }
 
-/**
- * Writes (merges) preferences to users/{uid}/preferences/default.
- */
 export async function updateMyPreferences(
   updates: Partial<Omit<UserPreferences, 'updatedAt'>>,
 ): Promise<{ success: boolean; error?: string }> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return { success: false, error: 'No autenticado.' };
-  const uid = (session.user as any).uid as string | undefined;
-  if (!uid) return { success: false, error: 'Sesión inválida.' };
+  let uid: string;
+  try { ({ uid } = await requireAuthSession()); } catch { return { success: false, error: 'No autenticado.' }; }
 
   try {
     await adminDb
@@ -316,14 +281,9 @@ export async function updateMyPreferences(
 
 // ── Favorites ─────────────────────────────────────────────────────────────────
 
-/**
- * Returns the list of favorite salons, enriched with basic tenant data (name, address).
- */
 export async function getMyFavorites(): Promise<FavoriteSalonData[]> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return [];
-  const uid = (session.user as any).uid as string | undefined;
-  if (!uid) return [];
+  let uid: string;
+  try { ({ uid } = await requireAuthSession()); } catch { return []; }
 
   const favSnap = await adminDb
     .collection('users').doc(uid)
@@ -358,17 +318,11 @@ export async function getMyFavorites(): Promise<FavoriteSalonData[]> {
   return results.filter((r): r is FavoriteSalonData => r !== null);
 }
 
-/**
- * Adds or removes a salon from the user's favorites.
- * Returns the new favorite state.
- */
 export async function toggleFavorite(
   tenantId: string,
 ): Promise<{ isFavorite: boolean; error?: string }> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return { isFavorite: false, error: 'No autenticado.' };
-  const uid = (session.user as any).uid as string | undefined;
-  if (!uid) return { isFavorite: false, error: 'Sesión inválida.' };
+  let uid: string;
+  try { ({ uid } = await requireAuthSession()); } catch { return { isFavorite: false, error: 'No autenticado.' }; }
   if (!tenantId) return { isFavorite: false, error: 'ID de salón requerido.' };
 
   const favRef = adminDb
@@ -398,18 +352,12 @@ export async function toggleFavorite(
 
 // ── Cancel Appointment ────────────────────────────────────────────────────────
 
-/**
- * Cancels an appointment owned by the authenticated client.
- * Verifies ownership before writing to prevent horizontal privilege escalation.
- */
 export async function cancelMyAppointment(
   appointmentId: string,
   tenantId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return { success: false, error: 'No autenticado.' };
-  const uid = (session.user as any).uid as string | undefined;
-  if (!uid) return { success: false, error: 'Sesión inválida.' };
+  let uid: string;
+  try { ({ uid } = await requireAuthSession()); } catch { return { success: false, error: 'No autenticado.' }; }
 
   const apptRef = adminDb
     .collection('tenants').doc(tenantId)

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getPaymentStatus } from '@/lib/mercadopago';
 import { rateLimit } from '@/lib/rate-limit';
 import crypto from 'crypto';
@@ -78,23 +78,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    const appointmentRef = doc(db, 'tenants', tenantId, 'appointments', appointmentId);
+    const appointmentRef = adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('appointments').doc(appointmentId);
 
     if (payment.status === 'approved') {
-      await updateDoc(appointmentRef, {
-        status: 'confirmed',
-        paymentStatus: 'paid_partially',
-        depositPaid: payment.amount,
+      await appointmentRef.update({
+        status:           'confirmed',
+        paymentStatus:    'paid_partially',
+        depositPaid:      payment.amount,
         depositPaymentId: paymentId,
-        depositPaidAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        depositPaidAt:    FieldValue.serverTimestamp(),
+        updatedAt:        FieldValue.serverTimestamp(),
       });
       console.log(`[MP Webhook] Pago aprobado — appt ${appointmentId}, $${payment.amount}`);
     } else if (payment.status === 'rejected') {
-      await updateDoc(appointmentRef, {
-        status: 'pending',
+      await appointmentRef.update({
+        status:        'pending',
         paymentStatus: 'unpaid',
-        updatedAt: serverTimestamp(),
+        updatedAt:     FieldValue.serverTimestamp(),
       });
       console.log(`[MP Webhook] Pago rechazado — appt ${appointmentId}`);
     }

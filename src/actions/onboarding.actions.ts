@@ -2,8 +2,7 @@
 
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAuthSession } from '@/lib/auth-guards';
 
 export interface OnboardingData {
   salonName: string;
@@ -20,36 +19,77 @@ export interface OnboardingData {
   staffEmail?: string;
 }
 
+// ─── Validators ───────────────────────────────────────────────────────────────
+
+const PHONE_RE = /^\+?[\d\s\-().]{6,20}$/;
+// Slug: solo letras minúsculas, dígitos y guiones. Sin "." ni "/" (Firestore los rechaza en doc IDs).
+const SLUG_RE  = /^[a-z0-9][a-z0-9-]{2,62}[a-z0-9]$/;
+
+function validateOnboardingData(data: OnboardingData): string | null {
+  if (!data.salonName?.trim() || data.salonName.trim().length < 2) return 'El nombre del salón es obligatorio.';
+  if (data.salonName.trim().length > 100) return 'El nombre del salón es demasiado largo.';
+
+  if (!data.slug?.trim())        return 'El slug es obligatorio.';
+  if (!SLUG_RE.test(data.slug))  return 'El slug solo puede contener letras minúsculas, números y guiones (mín 4, máx 64 chars).';
+
+  if (!data.address?.trim() || data.address.trim().length < 5) return 'La dirección es obligatoria.';
+  if (data.address.trim().length > 200) return 'La dirección es demasiado larga.';
+
+  if (!data.phone?.trim())       return 'El teléfono es obligatorio.';
+  if (!PHONE_RE.test(data.phone.trim())) return 'El teléfono no tiene un formato válido.';
+
+  if (data.serviceName?.trim()) {
+    if (!Number.isFinite(data.servicePrice) || data.servicePrice < 0 || data.servicePrice > 10_000_000) {
+      return 'El precio del servicio es inválido.';
+    }
+    if (!Number.isInteger(data.serviceDuration) || data.serviceDuration < 5 || data.serviceDuration > 480) {
+      return 'La duración del servicio es inválida.';
+    }
+  }
+
+  return null;
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+
 export async function createTenantWithAdmin(data: OnboardingData): Promise<{ success: boolean; tenantId?: string; error?: string }> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return { success: false, error: 'No autenticado.' };
+  let uid: string; let userName: string | null | undefined; let userEmail: string | null | undefined;
+  try {
+    const auth = await requireAuthSession();
+    uid       = auth.uid;
+    userName  = auth.name;
+    userEmail = auth.email;
+  } catch {
+    return { success: false, error: 'No autenticado.' };
+  }
 
-  const userId = (session.user as { uid?: string; id?: string }).uid ||
-    (session.user as { uid?: string; id?: string }).id || '';
-  const userEmail = session.user.email ?? '';
-  const userName = session.user.name ?? 'Admin';
+  const validationError = validateOnboardingData(data);
+  if (validationError) return { success: false, error: validationError };
 
-  if (!userId) return { success: false, error: 'No se pudo identificar al usuario.' };
+  const salonName = data.salonName.trim();
+  const address   = data.address.trim();
+  const phone     = data.phone.trim();
+  const slug      = data.slug.trim();
 
   try {
-    const slugSnap = await adminDb.collection('tenants').where('slug', '==', data.slug).limit(1).get();
+    const slugSnap = await adminDb.collection('tenants').where('slug', '==', slug).limit(1).get();
     if (!slugSnap.empty) {
       return { success: false, error: 'El slug ya está en uso. Elegí otro nombre de URL.' };
     }
 
-    const tenantId = data.slug;
+    const tenantId = slug;
     const batch = adminDb.batch();
 
     const tenantRef = adminDb.collection('tenants').doc(tenantId);
     batch.set(tenantRef, {
       id: tenantId,
-      name: data.salonName,
-      slug: data.slug,
-      address: data.address,
-      phone: data.phone,
+      name: salonName,
+      slug,
+      address,
+      phone,
       description: '',
-      category: data.category,
-      ownerId: userId,
+      category: data.category?.trim().slice(0, 50) ?? '',
+      ownerId: uid,
       isActivePublicly: true,
       businessHours: data.businessHours,
       createdAt: FieldValue.serverTimestamp(),
@@ -63,8 +103,8 @@ export async function createTenantWithAdmin(data: OnboardingData): Promise<{ suc
     const branchRef = adminDb.collection('tenants').doc(tenantId).collection('branches').doc();
     batch.set(branchRef, {
       name: 'Sede principal',
-      address: data.address,
-      phone: data.phone,
+      address,
+      phone,
       active: true,
       schedule: Object.fromEntries(
         Object.entries(data.businessHours).map(([day, h]) => [
@@ -75,10 +115,10 @@ export async function createTenantWithAdmin(data: OnboardingData): Promise<{ suc
       createdAt: FieldValue.serverTimestamp(),
     });
 
-    if (data.serviceName) {
+    if (data.serviceName?.trim()) {
       const serviceRef = adminDb.collection('tenants').doc(tenantId).collection('services').doc();
       batch.set(serviceRef, {
-        name: data.serviceName,
+        name: data.serviceName.trim().slice(0, 100),
         price: data.servicePrice,
         durationMinutes: data.serviceDuration,
         active: true,
@@ -88,15 +128,15 @@ export async function createTenantWithAdmin(data: OnboardingData): Promise<{ suc
       });
     }
 
-    const userRef = adminDb.collection('users').doc(userId);
+    const userRef = adminDb.collection('users').doc(uid);
     batch.set(userRef, {
-      displayName: userName,
-      email: userEmail,
+      displayName: (userName ?? 'Admin').slice(0, 100),
+      email: userEmail ?? '',
       salonId: tenantId,
       updatedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
 
-    const membershipRef = adminDb.collection('users').doc(userId).collection('memberships').doc(tenantId);
+    const membershipRef = adminDb.collection('users').doc(uid).collection('memberships').doc(tenantId);
     batch.set(membershipRef, {
       role: 'admin',
       tenantId,

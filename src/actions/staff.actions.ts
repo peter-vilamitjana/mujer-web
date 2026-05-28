@@ -2,24 +2,17 @@
 
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireTenantAccess } from '@/lib/auth-guards';
 import type { Staff, StaffCommissions } from '@/lib/schema';
 
 type ActionResult = { success: true; id?: string } | { success: false; error: string };
-
-async function requireAdminSession() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) throw new Error('No autenticado.');
-  return session;
-}
 
 export async function createStaffMember(
   tenantId: string,
   data: Omit<Staff, 'id'>
 ): Promise<ActionResult> {
   try {
-    await requireAdminSession();
+    await requireTenantAccess(tenantId);
     const ref = await adminDb
       .collection('tenants').doc(tenantId)
       .collection('staff')
@@ -37,7 +30,7 @@ export async function updateStaffMember(
   data: Partial<Omit<Staff, 'id'>>
 ): Promise<ActionResult> {
   try {
-    await requireAdminSession();
+    await requireTenantAccess(tenantId);
     await adminDb
       .collection('tenants').doc(tenantId)
       .collection('staff').doc(staffId)
@@ -55,7 +48,7 @@ export async function toggleStaffActive(
   active: boolean
 ): Promise<ActionResult> {
   try {
-    await requireAdminSession();
+    await requireTenantAccess(tenantId);
     await adminDb
       .collection('tenants').doc(tenantId)
       .collection('staff').doc(staffId)
@@ -73,7 +66,7 @@ export async function updateStaffCommissions(
   commissions: StaffCommissions
 ): Promise<ActionResult> {
   try {
-    await requireAdminSession();
+    await requireTenantAccess(tenantId);
     await adminDb
       .collection('tenants').doc(tenantId)
       .collection('staff').doc(staffId)

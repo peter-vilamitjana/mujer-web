@@ -1,7 +1,6 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAuthSession } from '@/lib/auth-guards';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { getSalonBySlug } from '@/lib/services/marketplace.service';
@@ -76,10 +75,16 @@ export async function submitReview(
   const salon = await getSalonBySlug(tenantSlug);
   if (!salon) return { success: false, error: 'Salón no encontrado.' };
 
-  const session = await getServerSession(authOptions);
-  const uid = (session?.user as any)?.uid as string | undefined;
-  const sessionName = session?.user?.name ?? undefined;
-  const clientName = data.clientName?.trim() || sessionName || 'Clienta anónima';
+  // auth es opcional — se permite reseña anónima
+  let uid: string | undefined;
+  let sessionName: string | undefined;
+  try {
+    const auth = await requireAuthSession();
+    uid         = auth.uid;
+    sessionName = auth.name ?? undefined;
+  } catch { /* anónimo */ }
+
+  const clientName = data.clientName?.trim().slice(0, 100) || sessionName || 'Clienta anónima';
 
   if (uid) {
     const existing = await adminDb
@@ -98,13 +103,13 @@ export async function submitReview(
       .collection('tenants').doc(salon.id)
       .collection('reviews')
       .add({
-        clientId: uid ?? null,
+        clientId:    uid ?? null,
         clientName,
-        rating: data.rating,
-        comment: data.comment?.trim() || null,
-        serviceName: data.serviceName?.trim() || null,
-        createdAt: FieldValue.serverTimestamp(),
-        verified: false,
+        rating:      data.rating,
+        comment:     data.comment?.trim().slice(0, 1000) || null,
+        serviceName: data.serviceName?.trim().slice(0, 200) || null,
+        createdAt:   FieldValue.serverTimestamp(),
+        verified:    false,
       });
     return { success: true };
   } catch (err) {

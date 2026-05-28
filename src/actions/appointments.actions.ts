@@ -2,22 +2,11 @@
 
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { syncAppointmentToCalendar, cancelCalendarEvent } from './calendar.actions';
+import { requireTenantAccess, requireAuthSession } from '@/lib/auth-guards';
 import type { Appointment, PaymentSplit, Staff } from '@/lib/schema';
 
 type ActionResult = { success: true; id?: string } | { success: false; error: string };
-
-// ─── Auth helper ──────────────────────────────────────────────────────────────
-
-async function requireAdminSession() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) throw new Error('No autenticado.');
-  const uid = (session.user as { uid?: string }).uid;
-  if (!uid) throw new Error('Sesión inválida.');
-  return { session, uid };
-}
 
 // ─── Reads ────────────────────────────────────────────────────────────────────
 
@@ -88,51 +77,42 @@ export interface ClientAppointment {
   durationMinutes: number;
 }
 
-export async function getMyAppointments(clientId: string): Promise<ClientAppointment[]> {
-  const url = `${FIRESTORE_BASE}:runQuery`;
-  const structuredQuery = {
-    from: [{ collectionId: 'appointments', allDescendants: true }],
-    where: {
-      fieldFilter: {
-        field: { fieldPath: 'clientId' },
-        op: 'EQUAL',
-        value: { stringValue: clientId },
-      },
-    },
-    orderBy: [{ field: { fieldPath: 'date' }, direction: 'DESCENDING' }],
-    limit: 100,
-  };
+// El clientId se obtiene de la sesión server-side para que el cliente
+// no pueda inyectar un UID ajeno. Usa Admin SDK + collectionGroup en lugar
+// del REST anónimo que antes cruzaba todos los tenants sin autenticación.
+export async function getMyAppointments(): Promise<ClientAppointment[]> {
+  let uid: string;
+  try {
+    ({ uid } = await requireAuthSession());
+  } catch {
+    return [];
+  }
 
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ structuredQuery }),
-      cache: 'no-store',
+    const snap = await adminDb
+      .collectionGroup('appointments')
+      .where('clientId', '==', uid)
+      .orderBy('date', 'desc')
+      .limit(100)
+      .get();
+
+    return snap.docs.map(doc => {
+      const d = doc.data();
+      const nameSegments = doc.ref.path.split('/');
+      const tenantId = nameSegments[1] ?? '';
+      const dateRaw: Date =
+        d.date?.toDate?.() ?? (d.date instanceof Date ? d.date : new Date(d.date ?? 0));
+      return {
+        id: doc.id,
+        tenantId,
+        serviceNames: (d.serviceNames as string) || '',
+        staffName: (d.staffName as string) || '',
+        date: dateRaw.toISOString(),
+        status: (d.status as string) || 'pending',
+        priceEstimated: (d.priceEstimated as number) || 0,
+        durationMinutes: (d.durationMinutes as number) || 0,
+      } satisfies ClientAppointment;
     });
-
-    if (!res.ok) {
-      console.warn('[getMyAppointments] Firestore REST error:', await res.text());
-      return [];
-    }
-
-    const results = await res.json();
-    return results
-      .filter((r: any) => r.document)
-      .map((r: any) => {
-        const d = parseFirestoreDoc(r.document);
-        const dateRaw = d.date instanceof Date ? d.date : new Date(d.date ?? 0);
-        return {
-          id: d._id as string,
-          tenantId: d._tenantId as string,
-          serviceNames: (d.serviceNames as string) || '',
-          staffName: (d.staffName as string) || '',
-          date: dateRaw.toISOString(),
-          status: (d.status as string) || 'pending',
-          priceEstimated: (d.priceEstimated as number) || 0,
-          durationMinutes: (d.durationMinutes as number) || 0,
-        } satisfies ClientAppointment;
-      });
   } catch (err) {
     console.warn('[getMyAppointments] error:', (err as Error).message);
     return [];
@@ -459,7 +439,7 @@ export async function createAppointment(
   payload: CreateAppointmentPayload,
 ): Promise<ActionResult> {
   try {
-    const { uid } = await requireAdminSession();
+    const { uid } = await requireTenantAccess(tenantId);
 
     const staffSnap = await adminDb
       .collection('tenants').doc(tenantId)
@@ -488,10 +468,12 @@ export async function createAppointment(
       }
     }
 
-    const slotStart  = Timestamp.fromDate(payload.date);
-    const slotEnd    = Timestamp.fromDate(new Date(payload.date.getTime() + payload.durationMinutes * 60_000));
+    const slotStart   = Timestamp.fromDate(payload.date);
+    const slotEnd     = Timestamp.fromDate(new Date(payload.date.getTime() + payload.durationMinutes * 60_000));
     const windowStart = new Date(payload.date.getTime() - 8 * 60 * 60_000);
 
+    // Optimistic pre-check (non-atomic) — evita el round-trip de la transacción
+    // en la mayoría de los casos. La transacción de abajo es la barrera definitiva.
     const potentialConflicts = await adminDb
       .collection('tenants').doc(tenantId)
       .collection('appointments')
@@ -514,10 +496,34 @@ export async function createAppointment(
       return { success: false, error: 'El profesional ya tiene un turno en ese horario.' };
     }
 
-    const ref = await adminDb
+    // Pre-generamos la referencia para tener el ID antes de la transacción.
+    const appointmentRef = adminDb
       .collection('tenants').doc(tenantId)
-      .collection('appointments')
-      .add({
+      .collection('appointments').doc();
+
+    // Slot-lock: documento determinístico que previene el double-booking
+    // atómico entre requests concurrentes que pasaron el pre-check.
+    const slotLockId  = `${payload.staffId}_${slotStartMs}`;
+    const slotLockRef = adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('slotLocks').doc(slotLockId);
+
+    await adminDb.runTransaction(async (txn) => {
+      const lockSnap = await txn.get(slotLockRef);
+      if (lockSnap.exists) {
+        throw Object.assign(new Error('SLOT_TAKEN'), { code: 'SLOT_TAKEN' });
+      }
+
+      // Lock expira en 24h para que no acumule basura si el turno se cancela.
+      const lockExpiry = Timestamp.fromDate(new Date(Date.now() + 24 * 60 * 60_000));
+      txn.set(slotLockRef, {
+        staffId:       payload.staffId,
+        date:          slotStart,
+        appointmentId: appointmentRef.id,
+        expiresAt:     lockExpiry,
+      });
+
+      txn.set(appointmentRef, {
         tenantId,
         branchId:        payload.branchId,
         clientId:        payload.clientId,
@@ -537,13 +543,17 @@ export async function createAppointment(
         createdAt:       FieldValue.serverTimestamp(),
         createdBy:       uid,
       });
+    });
 
-    syncAppointmentToCalendar(tenantId, ref.id).catch(err =>
+    syncAppointmentToCalendar(tenantId, appointmentRef.id).catch(err =>
       console.error('[createAppointment] GCal sync failed:', err),
     );
 
-    return { success: true, id: ref.id };
-  } catch (err) {
+    return { success: true, id: appointmentRef.id };
+  } catch (err: any) {
+    if (err?.code === 'SLOT_TAKEN') {
+      return { success: false, error: 'El profesional ya tiene un turno en ese horario.' };
+    }
     console.error('[createAppointment]', err);
     return { success: false, error: 'No se pudo crear el turno.' };
   }
@@ -555,7 +565,7 @@ export async function cancelAppointmentAdmin(
   reason?: string,
 ): Promise<ActionResult> {
   try {
-    const { uid } = await requireAdminSession();
+    const { uid } = await requireTenantAccess(tenantId);
 
     const ref = adminDb
       .collection('tenants').doc(tenantId)

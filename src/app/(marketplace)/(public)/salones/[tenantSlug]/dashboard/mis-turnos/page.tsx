@@ -142,7 +142,7 @@ export default function MisTurnosPage() {
     }
 
     setLoading(true);
-    getMyAppointments(user.id).then((data) => {
+    getMyAppointments().then((data) => {
       const mapped: (Turno & { tenantId: string })[] = data.map(d => {
         let estado: Turno['estado'] = 'pendiente';
         if (d.status === 'completed') estado = 'realizado';

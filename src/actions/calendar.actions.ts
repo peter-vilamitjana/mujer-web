@@ -2,8 +2,7 @@
 
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireTenantAccess } from '@/lib/auth-guards';
 import { createCalendarEvent, deleteCalendarEvent } from '@/lib/google-calendar.server';
 import type { Appointment } from '@/lib/schema';
 
@@ -14,8 +13,7 @@ export async function syncAppointmentToCalendar(
   appointmentId: string
 ): Promise<ActionResult> {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) return { success: false, error: 'No autenticado.' };
+    await requireTenantAccess(tenantId);
 
     const apptSnap = await adminDb
       .collection('tenants').doc(tenantId)
@@ -63,6 +61,8 @@ export async function cancelCalendarEvent(
   appointmentId: string
 ): Promise<ActionResult> {
   try {
+    await requireTenantAccess(tenantId);
+
     const apptSnap = await adminDb
       .collection('tenants').doc(tenantId)
       .collection('appointments').doc(appointmentId)

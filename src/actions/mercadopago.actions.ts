@@ -1,7 +1,6 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAuthSession } from '@/lib/auth-guards';
 import { createCheckoutPreference } from '@/lib/mercadopago';
 
 interface CreateDepositPreferenceArgs {
@@ -23,22 +22,34 @@ export async function createDepositPreference(
     return { error: 'MP_NOT_CONFIGURED' };
   }
 
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return { error: 'No autenticado.' };
+  let payerEmail: string;
+  let payerName: string;
+  try {
+    const auth = await requireAuthSession();
+    payerEmail = auth.email ?? 'cliente@mujerapp.com';
+    payerName  = auth.name  ?? 'Clienta';
+  } catch {
+    return { error: 'No autenticado.' };
+  }
 
-  const payerEmail = session.user.email ?? 'cliente@mujerapp.com';
-  const payerName = session.user.name ?? 'Clienta';
+  // Validar el monto antes de llamar a MP
+  if (!Number.isFinite(args.depositAmount) || args.depositAmount <= 0 || args.depositAmount > 1_000_000) {
+    return { error: 'Monto de seña inválido.' };
+  }
+  if (!args.appointmentId?.trim() || !args.tenantId?.trim()) {
+    return { error: 'Datos de turno inválidos.' };
+  }
 
   try {
     const preference = await createCheckoutPreference({
       appointmentId: args.appointmentId,
-      tenantId: args.tenantId,
-      tenantSlug: args.tenantSlug,
+      tenantId:      args.tenantId,
+      tenantSlug:    args.tenantSlug,
       items: [
         {
-          id: `deposit-${args.appointmentId}`,
-          title: `Seña — ${args.serviceNames}`,
-          quantity: 1,
+          id:         `deposit-${args.appointmentId}`,
+          title:      `Seña — ${args.serviceNames.trim().slice(0, 200)}`,
+          quantity:   1,
           unit_price: args.depositAmount,
           currency_id: 'ARS',
         },

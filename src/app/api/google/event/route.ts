@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { google } from 'googleapis';
-import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
 import { authOptions } from '@/lib/auth';
 
 export interface CreateEventBody {
@@ -15,20 +14,20 @@ export interface CreateEventBody {
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const userId = (session?.user as any)?.uid as string | undefined;
+
+  if (!session || !userId) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
 
   const body: CreateEventBody = await req.json();
-  const userId = session.user.id;
 
-  // Fetch token
-  let tokenData: Record<string, any> | null = null;
-  const snap = await getDoc(doc(db, 'users', userId, 'integrations', 'google'));
-  if (snap.exists()) tokenData = snap.data();
-  else {
-    const legacySnap = await getDoc(doc(db, 'calendarTokens', userId));
-    if (legacySnap.exists()) tokenData = legacySnap.data();
+  // Fetch token via Admin SDK
+  const snap = await adminDb.doc(`users/${userId}/integrations/google`).get();
+  let tokenData: Record<string, any> | null = snap.exists ? snap.data()! : null;
+  if (!tokenData) {
+    const legacySnap = await adminDb.doc(`calendarTokens/${userId}`).get();
+    if (legacySnap.exists) tokenData = legacySnap.data()!;
   }
 
   if (!tokenData?.accessToken) {
@@ -52,7 +51,7 @@ export async function POST(req: NextRequest) {
       requestBody: {
         summary:     body.summary,
         description: body.description,
-        colorId:     body.colorId ?? '3', // grape/purple
+        colorId:     body.colorId ?? '3',
         start: { dateTime: body.startIso, timeZone: 'America/Argentina/Buenos_Aires' },
         end:   { dateTime: body.endIso,   timeZone: 'America/Argentina/Buenos_Aires' },
       },

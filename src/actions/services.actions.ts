@@ -2,17 +2,10 @@
 
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireTenantAccess } from '@/lib/auth-guards';
 import type { Service } from '@/lib/schema';
 
 type ActionResult = { success: true; id?: string } | { success: false; error: string };
-
-async function requireAdminSession() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) throw new Error('No autenticado.');
-  return session;
-}
 
 export async function getServices(
   tenantId: string,
@@ -29,7 +22,7 @@ export async function createService(
   data: Omit<Service, 'id'>
 ): Promise<ActionResult> {
   try {
-    await requireAdminSession();
+    await requireTenantAccess(tenantId);
     const ref = await adminDb
       .collection('tenants').doc(tenantId)
       .collection('services')
@@ -47,7 +40,7 @@ export async function updateService(
   data: Partial<Omit<Service, 'id'>>
 ): Promise<ActionResult> {
   try {
-    await requireAdminSession();
+    await requireTenantAccess(tenantId);
     await adminDb
       .collection('tenants').doc(tenantId)
       .collection('services').doc(serviceId)
@@ -65,7 +58,7 @@ export async function toggleServiceActive(
   active: boolean
 ): Promise<ActionResult> {
   try {
-    await requireAdminSession();
+    await requireTenantAccess(tenantId);
     await adminDb
       .collection('tenants').doc(tenantId)
       .collection('services').doc(serviceId)

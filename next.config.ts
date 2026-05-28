@@ -3,6 +3,21 @@ import './src/lib/shim-storage';
 import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
 
+const securityHeaders = [
+  // Previene clickjacking — nadie puede embeder esta app en un iframe
+  { key: 'X-Frame-Options', value: 'DENY' },
+  // Previene MIME-type sniffing
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  // Controla cuánta info de referrer se comparte con terceros
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  // Desactiva permisos de hardware que no usa la app
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  // Fuerza HTTPS por 2 años (solo activo en prod)
+  ...(process.env.NODE_ENV === 'production'
+    ? [{ key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' }]
+    : []),
+];
+
 const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
@@ -24,11 +39,20 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Solo NEXT_PUBLIC_* deben ir aquí. Los secretos del servidor
+  // (GOOGLE_CLIENT_SECRET, NEXTAUTH_SECRET) los lee Next.js directamente
+  // del entorno — no necesitan declararse en este bloque.
   env: {
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+  },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: securityHeaders,
+      },
+    ];
   },
 };
 

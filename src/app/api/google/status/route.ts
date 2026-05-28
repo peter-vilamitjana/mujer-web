@@ -1,25 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
 import { authOptions } from '@/lib/auth';
 
 export async function GET(_req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const userId = (session?.user as any)?.uid as string | undefined;
+
+  if (!session || !userId) {
     return NextResponse.json({ connected: false }, { status: 401 });
   }
 
-  const snap = await getDoc(
-    doc(db, 'users', session.user.id, 'integrations', 'google'),
-  );
-
-  if (snap.exists() && snap.data()?.accessToken) {
+  const snap = await adminDb.doc(`users/${userId}/integrations/google`).get();
+  if (snap.exists && snap.data()?.accessToken) {
     return NextResponse.json({ connected: true });
   }
 
   // Fallback: legacy path
-  const legacySnap = await getDoc(doc(db, 'calendarTokens', session.user.id));
-  const connected = legacySnap.exists() && !!legacySnap.data()?.accessToken;
+  const legacySnap = await adminDb.doc(`calendarTokens/${userId}`).get();
+  const connected = legacySnap.exists && !!legacySnap.data()?.accessToken;
   return NextResponse.json({ connected });
 }

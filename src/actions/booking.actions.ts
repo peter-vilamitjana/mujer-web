@@ -2,8 +2,7 @@
 
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireAuthSession } from '@/lib/auth-guards';
 import { syncAppointmentToCalendar } from './calendar.actions';
 import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import { buildConfirmationMessage } from '@/lib/whatsapp-templates';
@@ -66,6 +65,44 @@ export interface BookingPayload {
   clientPhone: string;
 }
 
+// ─── Validators ───────────────────────────────────────────────────────────────
+
+const PHONE_RE = /^\+?[\d\s\-().]{6,20}$/;
+const DATE_RE  = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_RE  = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+function validateBookingPayload(p: BookingPayload): string | null {
+  if (!DATE_RE.test(p.date))       return 'Fecha inválida.';
+  if (!TIME_RE.test(p.time))       return 'Hora inválida.';
+
+  const bookingDate = new Date(p.date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (bookingDate < today)         return 'No se puede reservar en una fecha pasada.';
+
+  if (!Number.isInteger(p.durationMinutes) || p.durationMinutes < 5 || p.durationMinutes > 480) {
+    return 'Duración inválida.';
+  }
+  if (!Number.isFinite(p.totalFrom) || p.totalFrom < 0 || p.totalFrom > 1_000_000) {
+    return 'Precio inválido.';
+  }
+  if (!Number.isFinite(p.depositAmount) || p.depositAmount < 0 || p.depositAmount > p.totalFrom) {
+    return 'Seña inválida.';
+  }
+  if (p.clientPhone && !PHONE_RE.test(p.clientPhone.trim())) {
+    return 'El teléfono no tiene un formato válido.';
+  }
+  if (!p.tenantId?.trim())         return 'Salón inválido.';
+  if (!p.staffId?.trim())          return 'Profesional inválido.';
+  if (!Array.isArray(p.serviceIds) || p.serviceIds.length === 0) {
+    return 'Debe seleccionar al menos un servicio.';
+  }
+
+  return null;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 async function getDefaultBranchId(tenantId: string): Promise<string> {
   const snap = await adminDb
     .collection('tenants').doc(tenantId)
@@ -82,17 +119,27 @@ async function getDefaultBranchId(tenantId: string): Promise<string> {
   return allSnap.empty ? 'default' : allSnap.docs[0].id;
 }
 
+// ─── Action ───────────────────────────────────────────────────────────────────
+
 export async function createBooking(
   payload: BookingPayload
 ): Promise<{ success: boolean; appointmentId?: string; error?: string }> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
+  let uid: string;
+  let userName: string | null | undefined;
+  let userEmail: string | null | undefined;
+  try {
+    const auth = await requireAuthSession();
+    uid      = auth.uid;
+    userName  = auth.name;
+    userEmail = null; // email se lee de la sesión directamente abajo
+  } catch {
     return { success: false, error: 'No autenticado. Por favor iniciá sesión.' };
   }
 
-  const uid = (session.user as { uid?: string }).uid || '';
-  const userEmail = session.user.email ?? '';
-  const userName = session.user.name ?? 'Cliente';
+  const validationError = validateBookingPayload(payload);
+  if (validationError) return { success: false, error: validationError };
+
+  const clientPhone = payload.clientPhone?.trim() || null;
 
   try {
     const tenantSnap = await adminDb.collection('tenants').doc(payload.tenantId).get();
@@ -106,7 +153,7 @@ export async function createBooking(
       payload.staffId,
       payload.date,
       payload.time,
-      payload.durationMinutes
+      payload.durationMinutes,
     );
     if (conflict) {
       return { success: false, error: 'El horario ya no está disponible. Por favor elegí otro.' };
@@ -121,25 +168,25 @@ export async function createBooking(
       .collection('appointments').doc();
 
     await appointmentRef.set({
-      id: appointmentRef.id,
-      tenantId: payload.tenantId,
-      branchId: await getDefaultBranchId(payload.tenantId),
-      clientId: uid,
-      clientName: userName,
-      staffId: payload.staffId,
-      staffName: payload.staffName,
-      serviceIds: payload.serviceIds,
-      serviceNames: payload.serviceNames,
-      date: Timestamp.fromDate(appointmentDateTime),
+      id:              appointmentRef.id,
+      tenantId:        payload.tenantId,
+      branchId:        await getDefaultBranchId(payload.tenantId),
+      clientId:        uid,
+      clientName:      (userName ?? 'Cliente').slice(0, 100),
+      staffId:         payload.staffId,
+      staffName:       payload.staffName.trim().slice(0, 100),
+      serviceIds:      payload.serviceIds,
+      serviceNames:    payload.serviceNames.trim().slice(0, 500),
+      date:            Timestamp.fromDate(appointmentDateTime),
       durationMinutes: payload.durationMinutes,
-      status: 'pending_payment',
-      priceEstimated: payload.totalFrom,
-      depositAmount: payload.depositAmount,
-      depositPaid: false,
-      createdAt: FieldValue.serverTimestamp(),
-      createdBy: uid,
-      source: 'marketplace',
-      notes: '',
+      status:          'pending_payment',
+      priceEstimated:  payload.totalFrom,
+      depositAmount:   payload.depositAmount,
+      depositPaid:     false,
+      createdAt:       FieldValue.serverTimestamp(),
+      createdBy:       uid,
+      source:          'marketplace',
+      notes:           '',
     });
 
     const customerRef = adminDb
@@ -147,13 +194,12 @@ export async function createBooking(
       .collection('customers').doc(uid);
 
     const customerData: Record<string, unknown> = {
-      userId: uid,
-      fullName: userName,
-      email: userEmail,
+      userId:    uid,
+      fullName:  (userName ?? 'Cliente').slice(0, 100),
       createdAt: FieldValue.serverTimestamp(),
     };
-    if (payload.clientPhone && uid) {
-      customerData.phone = payload.clientPhone;
+    if (clientPhone) {
+      customerData.phone     = clientPhone;
       customerData.updatedAt = FieldValue.serverTimestamp();
     }
     await customerRef.set(customerData, { merge: true });
@@ -170,30 +216,29 @@ export async function createBooking(
           totalVisits: 0,
           totalSpent: 0,
           firstVisit: FieldValue.serverTimestamp(),
-          lastVisit: FieldValue.serverTimestamp(),
+          lastVisit:  FieldValue.serverTimestamp(),
         },
       }, { merge: true });
     }
 
-    const clientPhone = payload.clientPhone || null;
     if (clientPhone) {
       sendWhatsAppMessage(
         buildConfirmationMessage({
-          clientName: userName,
-          salonName: tenantName,
+          clientName:  (userName ?? 'Cliente').slice(0, 100),
+          salonName:   tenantName,
           date: appointmentDateTime.toLocaleDateString('es-AR', {
             weekday: 'long', day: 'numeric', month: 'long',
           }),
-          time: payload.time,
-          serviceName: payload.serviceNames,
-          staffName: payload.staffName,
+          time:        payload.time,
+          serviceName: payload.serviceNames.trim().slice(0, 500),
+          staffName:   payload.staffName.trim().slice(0, 100),
           clientPhone,
         })
       ).catch((err) => console.error('[createBooking] WhatsApp notification failed:', err));
     }
 
     syncAppointmentToCalendar(payload.tenantId, appointmentRef.id).catch((err) =>
-      console.error('[createBooking] GCal sync error:', err)
+      console.error('[createBooking] GCal sync error:', err),
     );
 
     return { success: true, appointmentId: appointmentRef.id };

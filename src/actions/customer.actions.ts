@@ -1,7 +1,6 @@
 'use server';
 
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireTenantAccess, requireAuthSession } from '@/lib/auth-guards';
 import {
   getAppointmentsByClientId,
   getAppointmentsByPhone,
@@ -131,6 +130,57 @@ export async function getCustomerAppointments(
   }
 }
 
+// ─── Sanitización ─────────────────────────────────────────────────────────────
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Acepta dígitos, espacios, guiones y el "+" inicial de código de país
+const PHONE_RE = /^\+?[\d\s\-().]{6,20}$/;
+
+type CustomerMutableFields = Partial<Pick<Customer,
+  'fullName' | 'email' | 'phone' | 'notes' | 'userId' | 'hairProfile' | 'metrics'
+>>;
+
+function sanitizeCustomerData(raw: Record<string, any>): CustomerMutableFields {
+  const out: CustomerMutableFields = {};
+
+  if (typeof raw.fullName === 'string') {
+    const name = raw.fullName.trim().slice(0, 100);
+    if (name.length > 0) out.fullName = name;
+  }
+
+  if (typeof raw.email === 'string') {
+    const email = raw.email.trim().toLowerCase().slice(0, 254);
+    if (email && !EMAIL_RE.test(email)) throw new Error('Email inválido.');
+    if (email) out.email = email;
+  }
+
+  if (typeof raw.phone === 'string') {
+    const phone = raw.phone.trim().slice(0, 20);
+    if (phone && !PHONE_RE.test(phone)) throw new Error('Teléfono inválido.');
+    if (phone) out.phone = phone;
+  }
+
+  if (typeof raw.notes === 'string') {
+    out.notes = raw.notes.trim().slice(0, 1000);
+  }
+
+  // userId es un UID interno — solo se permite si es string sin espacios
+  if (typeof raw.userId === 'string' && raw.userId.trim().length > 0) {
+    out.userId = raw.userId.trim().slice(0, 128);
+  }
+
+  // hairProfile y metrics pasan tal cual — son estructuras internas
+  // cuya validación detallada corresponde al schema de Firestore.
+  if (raw.hairProfile && typeof raw.hairProfile === 'object') {
+    out.hairProfile = raw.hairProfile as Customer['hairProfile'];
+  }
+  if (raw.metrics && typeof raw.metrics === 'object') {
+    out.metrics = raw.metrics as Customer['metrics'];
+  }
+
+  return out;
+}
+
 // ─── Admin mutations ──────────────────────────────────────────────────────────
 
 /**
@@ -141,19 +191,24 @@ export async function createCustomer(
   data: Omit<Customer, 'id' | 'createdAt'>,
 ): Promise<ActionResult> {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) return { success: false, error: 'No autenticado.' };
+    await requireTenantAccess(tenantId);
+
+    const clean = sanitizeCustomerData(data as Record<string, any>);
+    if (!clean.fullName) return { success: false, error: 'El nombre del cliente es obligatorio.' };
 
     const ref = await adminDb
       .collection('tenants').doc(tenantId)
       .collection('customers')
       .add({
-        ...data,
-        metrics: data.metrics ?? { totalVisits: 0, totalSpent: 0 },
+        ...clean,
+        metrics: clean.metrics ?? { totalVisits: 0, totalSpent: 0 },
         createdAt: FieldValue.serverTimestamp(),
       });
     return { success: true, id: ref.id };
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.message === 'Email inválido.' || err?.message === 'Teléfono inválido.') {
+      return { success: false, error: err.message };
+    }
     console.error('[createCustomer]', err);
     return { success: false, error: 'No se pudo crear el cliente.' };
   }
@@ -169,15 +224,19 @@ export async function updateCustomer(
   data: Partial<Omit<Customer, 'id' | 'createdAt'>>,
 ): Promise<ActionResult> {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) return { success: false, error: 'No autenticado.' };
+    await requireTenantAccess(tenantId);
+
+    const clean = sanitizeCustomerData(data as Record<string, any>);
 
     await adminDb
       .collection('tenants').doc(tenantId)
       .collection('customers').doc(customerId)
-      .update({ ...data, updatedAt: FieldValue.serverTimestamp() });
+      .update({ ...clean, updatedAt: FieldValue.serverTimestamp() });
     return { success: true };
-  } catch (err) {
+  } catch (err: any) {
+    if (err?.message === 'Email inválido.' || err?.message === 'Teléfono inválido.') {
+      return { success: false, error: err.message };
+    }
     console.error('[updateCustomer]', err);
     return { success: false, error: 'No se pudo actualizar el cliente.' };
   }
@@ -192,10 +251,12 @@ import { buildCancellationMessage } from '@/lib/whatsapp-templates';
 export async function getMyAppointments(
   tenantSlug: string
 ): Promise<DashboardAppointment[]> {
-  const session = await getServerSession(authOptions);
-  if (!session || !(session.user as any)?.uid) return [];
-
-  const uid = (session.user as any).uid as string;
+  let uid: string;
+  try {
+    ({ uid } = await requireAuthSession());
+  } catch {
+    return [];
+  }
 
   const tenant = await getSalonBySlug(tenantSlug);
   if (!tenant) return [];
@@ -225,14 +286,13 @@ export async function cancelAppointment(
   tenantSlug: string,
   reason?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
+  let uid: string;
+  let authSession: Awaited<ReturnType<typeof requireAuthSession>>;
+  try {
+    authSession = await requireAuthSession();
+    uid = authSession.uid;
+  } catch {
     return { success: false, error: 'No autenticado.' };
-  }
-
-  const uid = (session.user as any).uid as string | undefined;
-  if (!uid) {
-    return { success: false, error: 'Sesión inválida.' };
   }
 
   try {
@@ -274,7 +334,7 @@ export async function cancelAppointment(
     });
 
     // WhatsApp cancellation — fire and forget
-    const clientPhone = (session.user as any).phone ?? null;
+    const clientPhone = authSession.phone ?? null;
     if (clientPhone) {
       const dateStr = (data.date as Timestamp | undefined)?.toDate?.()?.toLocaleDateString('es-AR', {
         weekday: 'long',
@@ -283,7 +343,7 @@ export async function cancelAppointment(
       }) ?? '';
       sendWhatsAppMessage(
         buildCancellationMessage({
-          clientName: session.user.name ?? 'clienta',
+          clientName: authSession.name ?? 'clienta',
           salonName: tenantName,
           date: dateStr,
           serviceName: data.serviceNames ?? '',

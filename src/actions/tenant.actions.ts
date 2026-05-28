@@ -2,8 +2,7 @@
 
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireTenantAccess } from '@/lib/auth-guards';
 import type { Tenant } from '@/lib/schema';
 
 function toSerializable<T>(val: T): T {
@@ -20,18 +19,12 @@ function toSerializable<T>(val: T): T {
 
 type ActionResult = { success: true } | { success: false; error: string };
 
-async function requireAdminSession() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) throw new Error('No autenticado.');
-  return session;
-}
-
 export async function updateTenantSettings(
   tenantId: string,
   data: Partial<Omit<Tenant, 'id' | 'createdAt'>>
 ): Promise<ActionResult> {
   try {
-    await requireAdminSession();
+    await requireTenantAccess(tenantId);
     await adminDb.collection('tenants').doc(tenantId).update({
       ...data,
       updatedAt: FieldValue.serverTimestamp(),

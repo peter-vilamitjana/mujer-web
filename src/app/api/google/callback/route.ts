@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
-import { db } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -34,17 +34,13 @@ export async function GET(req: NextRequest) {
       expiryDate:   tokens.expiry_date,
       scope:        tokens.scope,
       tokenType:    tokens.token_type,
-      updatedAt:    Date.now(),
+      updatedAt:    FieldValue.serverTimestamp(),
     };
 
-    await setDoc(
-      doc(db, 'users', userId, 'integrations', 'google'),
-      tokenData,
-      { merge: true },
-    );
-
-    // Also write legacy path so bootstrap route can find it
-    await setDoc(doc(db, 'calendarTokens', userId), tokenData, { merge: true });
+    await Promise.all([
+      adminDb.doc(`users/${userId}/integrations/google`).set(tokenData, { merge: true }),
+      adminDb.doc(`calendarTokens/${userId}`).set(tokenData, { merge: true }),
+    ]);
 
     // Bootstrap webhook (best-effort — don't block redirect on failure)
     try {

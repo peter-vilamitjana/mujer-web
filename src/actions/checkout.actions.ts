@@ -2,8 +2,7 @@
 
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { requireTenantAccess } from '@/lib/auth-guards';
 import type { PaymentMethod, PaymentSplit, AppointmentStatus } from '@/lib/schema';
 
 export interface CheckoutPayload {
@@ -18,11 +17,12 @@ export async function closeAppointment(
     appointmentId: string,
     payload: CheckoutPayload
 ): Promise<{ success: boolean; error?: string }> {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) return { success: false, error: 'No autorizado' };
-
-    const uid = (session.user as { uid?: string }).uid;
-    if (!uid) return { success: false, error: 'Sesión inválida.' };
+    let uid: string;
+    try {
+        ({ uid } = await requireTenantAccess(tenantId));
+    } catch {
+        return { success: false, error: 'No autorizado.' };
+    }
 
     if (!Number.isFinite(payload.amountPaid) || payload.amountPaid < 0) {
         return { success: false, error: 'Monto inválido.' };
