@@ -1,12 +1,7 @@
 'use server';
 
-// TECH DEBT P1: Uses Firebase Client SDK instead of Firestore REST API.
-// Works in development but may fail in production due to Firestore security rules.
-// Fix: Migrate to REST API with service account token before production deploy.
-// Tracked: https://github.com/[repo]/issues/[n]
-
-import { collection, doc, addDoc, getDocs, updateDoc, query, where, orderBy, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import type { Service } from '@/lib/schema';
@@ -19,17 +14,13 @@ async function requireAdminSession() {
   return session;
 }
 
-/**
- * Devuelve todos los servicios activos de un tenant, ordenados por nombre.
- */
 export async function getServices(
   tenantId: string,
   onlyActive = true,
 ): Promise<Service[]> {
-  const q = onlyActive
-    ? query(collection(db, 'tenants', tenantId, 'services'), where('active', '==', true), orderBy('name', 'asc'))
-    : query(collection(db, 'tenants', tenantId, 'services'), orderBy('name', 'asc'));
-  const snap = await getDocs(q);
+  let ref = adminDb.collection('tenants').doc(tenantId).collection('services').orderBy('name', 'asc');
+  if (onlyActive) ref = ref.where('active', '==', true) as typeof ref;
+  const snap = await ref.get();
   return snap.docs.map(d => ({ id: d.id, ...d.data() }) as Service);
 }
 
@@ -39,10 +30,10 @@ export async function createService(
 ): Promise<ActionResult> {
   try {
     await requireAdminSession();
-    const ref = await addDoc(collection(db, 'tenants', tenantId, 'services'), {
-      ...data,
-      createdAt: serverTimestamp(),
-    });
+    const ref = await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('services')
+      .add({ ...data, createdAt: FieldValue.serverTimestamp() });
     return { success: true, id: ref.id };
   } catch (err) {
     console.error('[createService]', err);
@@ -57,10 +48,10 @@ export async function updateService(
 ): Promise<ActionResult> {
   try {
     await requireAdminSession();
-    await updateDoc(doc(db, 'tenants', tenantId, 'services', serviceId), {
-      ...data,
-      updatedAt: serverTimestamp(),
-    });
+    await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('services').doc(serviceId)
+      .update({ ...data, updatedAt: FieldValue.serverTimestamp() });
     return { success: true };
   } catch (err) {
     console.error('[updateService]', err);
@@ -75,10 +66,10 @@ export async function toggleServiceActive(
 ): Promise<ActionResult> {
   try {
     await requireAdminSession();
-    await updateDoc(doc(db, 'tenants', tenantId, 'services', serviceId), {
-      active,
-      updatedAt: serverTimestamp(),
-    });
+    await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('services').doc(serviceId)
+      .update({ active, updatedAt: FieldValue.serverTimestamp() });
     return { success: true };
   } catch (err) {
     console.error('[toggleServiceActive]', err);

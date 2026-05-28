@@ -1,7 +1,7 @@
 'use server';
 
-import { doc, updateDoc, serverTimestamp, getDoc, increment } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import type { PaymentMethod, PaymentSplit, AppointmentStatus } from '@/lib/schema';
@@ -10,7 +10,7 @@ export interface CheckoutPayload {
     amountPaid: number;
     paymentMethod: PaymentMethod;
     paymentMethods?: PaymentSplit;
-    commissionCalculated?: number;  // percentage 0–100
+    commissionCalculated?: number;
 }
 
 export async function closeAppointment(
@@ -19,14 +19,10 @@ export async function closeAppointment(
     payload: CheckoutPayload
 ): Promise<{ success: boolean; error?: string }> {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-        return { success: false, error: 'No autorizado' };
-    }
+    if (!session?.user) return { success: false, error: 'No autorizado' };
 
     const uid = (session.user as { uid?: string }).uid;
-    if (!uid) {
-        return { success: false, error: 'Sesión inválida.' };
-    }
+    if (!uid) return { success: false, error: 'Sesión inválida.' };
 
     if (!Number.isFinite(payload.amountPaid) || payload.amountPaid < 0) {
         return { success: false, error: 'Monto inválido.' };
@@ -39,34 +35,35 @@ export async function closeAppointment(
     const status: AppointmentStatus = 'cobrado';
 
     try {
-        const appointmentRef = doc(db, 'tenants', tenantId, 'appointments', appointmentId);
-        const snap = await getDoc(appointmentRef);
-        if (!snap.exists()) {
-            return { success: false, error: 'Turno no encontrado.' };
-        }
-        if (snap.data()?.status === 'cobrado') {
-            return { success: false, error: 'Este turno ya fue cobrado.' };
-        }
-        const appointmentData = snap.data();
-        await updateDoc(appointmentRef, {
+        const appointmentRef = adminDb
+            .collection('tenants').doc(tenantId)
+            .collection('appointments').doc(appointmentId);
+        const snap = await appointmentRef.get();
+        if (!snap.exists) return { success: false, error: 'Turno no encontrado.' };
+        if (snap.data()?.status === 'cobrado') return { success: false, error: 'Este turno ya fue cobrado.' };
+
+        const appointmentData = snap.data()!;
+        await appointmentRef.update({
             status,
             amountPaid: payload.amountPaid,
             paymentMethod: payload.paymentMethod,
             ...(payload.paymentMethods ? { paymentMethods: payload.paymentMethods } : {}),
             commissionCalculated: payload.commissionCalculated ?? null,
             ...(staffCommissionAmount != null ? { staffCommissionAmount } : {}),
-            checkoutAt: serverTimestamp(),
+            checkoutAt: FieldValue.serverTimestamp(),
             checkoutBy: uid,
         });
 
         if (appointmentData.clientId) {
-            const customerRef = doc(db, 'tenants', tenantId, 'customers', appointmentData.clientId);
-            await updateDoc(customerRef, {
-                'metrics.totalVisits': increment(1),
-                'metrics.totalSpent': increment(payload.amountPaid),
-                'metrics.lastVisit': serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            });
+            await adminDb
+                .collection('tenants').doc(tenantId)
+                .collection('customers').doc(appointmentData.clientId)
+                .update({
+                    'metrics.totalVisits': FieldValue.increment(1),
+                    'metrics.totalSpent': FieldValue.increment(payload.amountPaid),
+                    'metrics.lastVisit': FieldValue.serverTimestamp(),
+                    updatedAt: FieldValue.serverTimestamp(),
+                });
         }
 
         return { success: true };

@@ -1,9 +1,7 @@
 'use server';
 
-import {
-  collection, doc, setDoc, getDoc, serverTimestamp, Timestamp, query, where, limit, getDocs,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import { buildConfirmationMessage } from '@/lib/whatsapp-templates';
 import { hasSlotConflict } from '@/lib/booking-utils';
@@ -15,8 +13,8 @@ export interface GuestBookingPayload {
   staffName: string;
   serviceIds: string[];
   serviceNames: string;
-  date: string;        // ISO string
-  time: string;        // 'HH:MM'
+  date: string;
+  time: string;
   totalFrom: number;
   durationMinutes: number;
   guestName: string;
@@ -25,11 +23,18 @@ export interface GuestBookingPayload {
 }
 
 async function getDefaultBranchId(tenantId: string): Promise<string> {
-  const branchesRef = collection(db, 'tenants', tenantId, 'branches');
-  const q = query(branchesRef, where('active', '==', true), limit(1));
-  const snap = await getDocs(q);
+  const snap = await adminDb
+    .collection('tenants').doc(tenantId)
+    .collection('branches')
+    .where('active', '==', true)
+    .limit(1)
+    .get();
   if (!snap.empty) return snap.docs[0].id;
-  const allSnap = await getDocs(query(branchesRef, limit(1)));
+  const allSnap = await adminDb
+    .collection('tenants').doc(tenantId)
+    .collection('branches')
+    .limit(1)
+    .get();
   return allSnap.empty ? 'default' : allSnap.docs[0].id;
 }
 
@@ -37,13 +42,12 @@ export async function createGuestBooking(
   payload: GuestBookingPayload
 ): Promise<{ success: boolean; appointmentId?: string; error?: string }> {
   try {
-    const tenantSnap = await getDoc(doc(db, 'tenants', payload.tenantId));
-    if (!tenantSnap.exists() || tenantSnap.data().isActivePublicly !== true) {
+    const tenantSnap = await adminDb.collection('tenants').doc(payload.tenantId).get();
+    if (!tenantSnap.exists || tenantSnap.data()!.isActivePublicly !== true) {
       return { success: false, error: 'Este salón no está disponible para reservas.' };
     }
-    const tenantName: string = tenantSnap.data().name ?? 'tu salón';
+    const tenantName: string = tenantSnap.data()!.name ?? 'tu salón';
 
-    // Verificar que el slot sigue disponible antes de escribir (previene race conditions)
     const conflict = await hasSlotConflict(
       payload.tenantId,
       payload.staffId,
@@ -59,8 +63,11 @@ export async function createGuestBooking(
     const appointmentDateTime = new Date(payload.date);
     appointmentDateTime.setHours(hour, minute, 0, 0);
 
-    const appointmentRef = doc(collection(db, 'tenants', payload.tenantId, 'appointments'));
-    await setDoc(appointmentRef, {
+    const appointmentRef = adminDb
+      .collection('tenants').doc(payload.tenantId)
+      .collection('appointments').doc();
+
+    await appointmentRef.set({
       id: appointmentRef.id,
       tenantId: payload.tenantId,
       branchId: await getDefaultBranchId(payload.tenantId),
@@ -76,7 +83,7 @@ export async function createGuestBooking(
       priceEstimated: payload.totalFrom,
       depositAmount: 0,
       depositPaid: false,
-      createdAt: serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
       createdBy: 'guest',
       source: 'marketplace',
       isGuestBooking: true,
@@ -85,7 +92,6 @@ export async function createGuestBooking(
       notes: '',
     });
 
-    // WhatsApp confirmation — non-blocking
     sendWhatsAppMessage(
       buildConfirmationMessage({
         clientName: payload.guestName,

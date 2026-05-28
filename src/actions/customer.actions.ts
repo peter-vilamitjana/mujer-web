@@ -5,15 +5,11 @@ import { authOptions } from '@/lib/auth';
 import {
   getAppointmentsByClientId,
   getAppointmentsByPhone,
-  DashboardAppointment,
 } from '@/lib/services/customer.service';
 import { getSalonBySlug } from '@/lib/services/marketplace.service';
-import {
-  collection, doc, addDoc, getDoc, getDocs, updateDoc,
-  query, where, orderBy, limit, serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import type { Customer, Appointment } from '@/lib/schema';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import type { Customer, Appointment, DashboardAppointment } from '@/lib/schema';
 
 type ActionResult = { success: true; id?: string } | { success: false; error: string };
 
@@ -42,12 +38,12 @@ export async function getCustomers(
 ): Promise<Customer[]> {
   try {
     const lim = opts.lim ?? 50;
-    const q = query(
-      collection(db, 'tenants', tenantId, 'customers'),
-      orderBy('fullName', 'asc'),
-      limit(lim),
-    );
-    const snap = await getDocs(q);
+    const snap = await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('customers')
+      .orderBy('fullName', 'asc')
+      .limit(lim)
+      .get();
     return snap.docs.map(d => toSerializable({ id: d.id, ...d.data() }) as Customer);
   } catch (err) {
     console.error('[getCustomers]', err);
@@ -68,24 +64,19 @@ export async function searchCustomers(
     const normalized = searchQuery.trim();
     const end = normalized.slice(0, -1) + String.fromCharCode(normalized.charCodeAt(normalized.length - 1) + 1);
 
+    const customersRef = adminDb.collection('tenants').doc(tenantId).collection('customers');
     const [byName, byPhone] = await Promise.all([
-      getDocs(
-        query(
-          collection(db, 'tenants', tenantId, 'customers'),
-          orderBy('fullName'),
-          where('fullName', '>=', normalized),
-          where('fullName', '<',  end),
-          limit(20),
-        ),
-      ),
-      getDocs(
-        query(
-          collection(db, 'tenants', tenantId, 'customers'),
-          where('phone', '>=', normalized),
-          where('phone', '<',  end),
-          limit(10),
-        ),
-      ),
+      customersRef
+        .orderBy('fullName')
+        .where('fullName', '>=', normalized)
+        .where('fullName', '<', end)
+        .limit(20)
+        .get(),
+      customersRef
+        .where('phone', '>=', normalized)
+        .where('phone', '<', end)
+        .limit(10)
+        .get(),
     ]);
 
     const seen = new Set<string>();
@@ -109,8 +100,11 @@ export async function getCustomer(
   tenantId: string,
   customerId: string,
 ): Promise<Customer | null> {
-  const snap = await getDoc(doc(db, 'tenants', tenantId, 'customers', customerId));
-  if (!snap.exists()) return null;
+  const snap = await adminDb
+    .collection('tenants').doc(tenantId)
+    .collection('customers').doc(customerId)
+    .get();
+  if (!snap.exists) return null;
   return { id: snap.id, ...snap.data() } as Customer;
 }
 
@@ -123,14 +117,13 @@ export async function getCustomerAppointments(
   lim = 20,
 ): Promise<Appointment[]> {
   try {
-    const snap = await getDocs(
-      query(
-        collection(db, 'tenants', tenantId, 'appointments'),
-        where('clientId', '==', customerId),
-        orderBy('date', 'desc'),
-        limit(lim),
-      ),
-    );
+    const snap = await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('appointments')
+      .where('clientId', '==', customerId)
+      .orderBy('date', 'desc')
+      .limit(lim)
+      .get();
     return snap.docs.map(d => toSerializable({ id: d.id, ...d.data() }) as Appointment);
   } catch (err) {
     console.error('[getCustomerAppointments]', err);
@@ -151,11 +144,14 @@ export async function createCustomer(
     const session = await getServerSession(authOptions);
     if (!session?.user) return { success: false, error: 'No autenticado.' };
 
-    const ref = await addDoc(collection(db, 'tenants', tenantId, 'customers'), {
-      ...data,
-      metrics: data.metrics ?? { totalVisits: 0, totalSpent: 0 },
-      createdAt: serverTimestamp(),
-    });
+    const ref = await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('customers')
+      .add({
+        ...data,
+        metrics: data.metrics ?? { totalVisits: 0, totalSpent: 0 },
+        createdAt: FieldValue.serverTimestamp(),
+      });
     return { success: true, id: ref.id };
   } catch (err) {
     console.error('[createCustomer]', err);
@@ -176,16 +172,17 @@ export async function updateCustomer(
     const session = await getServerSession(authOptions);
     if (!session?.user) return { success: false, error: 'No autenticado.' };
 
-    await updateDoc(doc(db, 'tenants', tenantId, 'customers', customerId), {
-      ...data,
-      updatedAt: serverTimestamp(),
-    });
+    await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('customers').doc(customerId)
+      .update({ ...data, updatedAt: FieldValue.serverTimestamp() });
     return { success: true };
   } catch (err) {
     console.error('[updateCustomer]', err);
     return { success: false, error: 'No se pudo actualizar el cliente.' };
   }
 }
+
 import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import { buildCancellationMessage } from '@/lib/whatsapp-templates';
 
@@ -239,11 +236,10 @@ export async function cancelAppointment(
   }
 
   try {
-    // Resolver tenantId desde slug (sin filtro isActivePublicly — se puede cancelar aunque esté inactivo)
-    const tenantsRef = collection(db, 'tenants');
-    const tenantSnap = await getDocs(
-      query(tenantsRef, where('slug', '==', tenantSlug), limit(1))
-    );
+    const tenantSnap = await adminDb.collection('tenants')
+      .where('slug', '==', tenantSlug)
+      .limit(1)
+      .get();
     if (tenantSnap.empty) {
       return { success: false, error: 'Salón no encontrado.' };
     }
@@ -251,38 +247,36 @@ export async function cancelAppointment(
     const tenantId = tenantDoc.id;
     const tenantName: string = tenantDoc.data().name ?? tenantSlug;
 
-    // Obtener el appointment y verificar propiedad
-    const appointmentRef = doc(db, 'tenants', tenantId, 'appointments', appointmentId);
-    const appointmentSnap = await getDoc(appointmentRef);
-    if (!appointmentSnap.exists()) {
+    const appointmentRef = adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('appointments').doc(appointmentId);
+    const appointmentSnap = await appointmentRef.get();
+    if (!appointmentSnap.exists) {
       return { success: false, error: 'Turno no encontrado.' };
     }
 
-    const data = appointmentSnap.data();
+    const data = appointmentSnap.data()!;
 
-    // Validar ownership
     if (data.clientId !== uid) {
       return { success: false, error: 'No tenés permiso para cancelar este turno.' };
     }
 
-    // Validar que el status permite cancelación
     const cancellableStatuses = ['pending', 'confirmed', 'pending_payment'];
     if (!cancellableStatuses.includes(data.status)) {
       return { success: false, error: 'Este turno no puede cancelarse.' };
     }
 
-    // Actualizar status
-    await updateDoc(appointmentRef, {
+    await appointmentRef.update({
       status: 'cancelled',
       cancellationReason: reason ?? '',
-      cancelledAt: serverTimestamp(),
+      cancelledAt: FieldValue.serverTimestamp(),
       cancelledBy: uid,
     });
 
     // WhatsApp cancellation — fire and forget
     const clientPhone = (session.user as any).phone ?? null;
     if (clientPhone) {
-      const dateStr = data.date?.toDate?.()?.toLocaleDateString('es-AR', {
+      const dateStr = (data.date as Timestamp | undefined)?.toDate?.()?.toLocaleDateString('es-AR', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',

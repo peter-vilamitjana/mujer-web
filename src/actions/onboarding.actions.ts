@@ -1,39 +1,22 @@
 'use server';
 
-// TECH DEBT P1: Uses Firebase Client SDK instead of Firestore REST API.
-// Works in development but may fail in production due to Firestore security rules.
-// Fix: Migrate to REST API with service account token before production deploy.
-// Tracked: https://github.com/[repo]/issues/[n]
-
-import {
-  doc,
-  writeBatch,
-  collection,
-  serverTimestamp,
-  query,
-  where,
-  getDocs,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
 export interface OnboardingData {
-  // Step 1
   salonName: string;
   address: string;
   phone: string;
   slug: string;
   category: string;
-  // Step 2 - initial service
   serviceName: string;
   servicePrice: number;
   serviceDuration: number;
-  // Step 3 - business hours
   businessHours: {
     [day: string]: { open: string; close: string; isOpen: boolean };
   };
-  // Step 4 - staff invite (optional)
   staffEmail?: string;
 }
 
@@ -49,18 +32,15 @@ export async function createTenantWithAdmin(data: OnboardingData): Promise<{ suc
   if (!userId) return { success: false, error: 'No se pudo identificar al usuario.' };
 
   try {
-    // Check slug uniqueness before writing
-    const slugQuery = query(collection(db, 'tenants'), where('slug', '==', data.slug));
-    const slugSnap = await getDocs(slugQuery);
+    const slugSnap = await adminDb.collection('tenants').where('slug', '==', data.slug).limit(1).get();
     if (!slugSnap.empty) {
       return { success: false, error: 'El slug ya está en uso. Elegí otro nombre de URL.' };
     }
 
     const tenantId = data.slug;
-    const batch = writeBatch(db);
+    const batch = adminDb.batch();
 
-    // 1. Create Tenant document
-    const tenantRef = doc(db, 'tenants', tenantId);
+    const tenantRef = adminDb.collection('tenants').doc(tenantId);
     batch.set(tenantRef, {
       id: tenantId,
       name: data.salonName,
@@ -72,16 +52,15 @@ export async function createTenantWithAdmin(data: OnboardingData): Promise<{ suc
       ownerId: userId,
       isActivePublicly: true,
       businessHours: data.businessHours,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
       settings: {
         currency: 'ARS',
         timezone: 'America/Argentina/Buenos_Aires',
       },
     });
 
-    // 2. Create default branch (same address/hours as salon)
-    const branchRef = doc(collection(db, 'tenants', tenantId, 'branches'));
+    const branchRef = adminDb.collection('tenants').doc(tenantId).collection('branches').doc();
     batch.set(branchRef, {
       name: 'Sede principal',
       address: data.address,
@@ -93,12 +72,11 @@ export async function createTenantWithAdmin(data: OnboardingData): Promise<{ suc
           { open: h.open, close: h.close, isOpen: h.isOpen },
         ])
       ),
-      createdAt: serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
     });
 
-    // 3. Create initial service
     if (data.serviceName) {
-      const serviceRef = doc(collection(db, 'tenants', tenantId, 'services'));
+      const serviceRef = adminDb.collection('tenants').doc(tenantId).collection('services').doc();
       batch.set(serviceRef, {
         name: data.serviceName,
         price: data.servicePrice,
@@ -106,28 +84,23 @@ export async function createTenantWithAdmin(data: OnboardingData): Promise<{ suc
         active: true,
         requiresLengthSelection: false,
         variablePrice: false,
-        createdAt: serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
       });
     }
 
-    // 4. Create User profile + admin membership
-    const userRef = doc(db, 'users', userId);
-    batch.set(
-      userRef,
-      {
-        displayName: userName,
-        email: userEmail,
-        salonId: tenantId,
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
+    const userRef = adminDb.collection('users').doc(userId);
+    batch.set(userRef, {
+      displayName: userName,
+      email: userEmail,
+      salonId: tenantId,
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
 
-    const membershipRef = doc(db, 'users', userId, 'memberships', tenantId);
+    const membershipRef = adminDb.collection('users').doc(userId).collection('memberships').doc(tenantId);
     batch.set(membershipRef, {
       role: 'admin',
       tenantId,
-      joinedAt: serverTimestamp(),
+      joinedAt: FieldValue.serverTimestamp(),
     });
 
     await batch.commit();
@@ -141,8 +114,7 @@ export async function createTenantWithAdmin(data: OnboardingData): Promise<{ suc
 export async function checkSlugAvailableOnboarding(slug: string): Promise<boolean> {
   if (!slug || slug.length < 3) return false;
   try {
-    const q = query(collection(db, 'tenants'), where('slug', '==', slug));
-    const snap = await getDocs(q);
+    const snap = await adminDb.collection('tenants').where('slug', '==', slug).limit(1).get();
     return snap.empty;
   } catch {
     return false;

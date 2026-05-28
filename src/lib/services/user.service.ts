@@ -1,6 +1,8 @@
 import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import type { Usuario } from '@/lib/_types_archive';
+
+// Legacy Firestore shape — only used for one-time migration reads from 'usuarios' collection
+interface LegacyUsuario { nombre?: string; email?: string; photoURL?: string; }
 
 /**
  * Obtiene el perfil del usuario desde Firestore.
@@ -23,7 +25,7 @@ export async function getUserProfile(uid: string, email: string | null): Promise
 
     if (legacySnap.exists()) {
       console.log('[LEGACY] Migrando perfil a users...');
-      const legacyData = legacySnap.data() as Usuario;
+      const legacyData = legacySnap.data() as LegacyUsuario;
       const newProfileData = {
         id: uid,
         displayName: legacyData.nombre || 'Usuario',

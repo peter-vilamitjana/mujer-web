@@ -1,9 +1,10 @@
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import { db, auth } from '@/lib/firebase';
-import { doc, setDoc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { auth } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { FieldValue } from 'firebase-admin/firestore';
 
 async function refreshAccessToken(token: any) {
     try {
@@ -88,16 +89,17 @@ export const authOptions: NextAuthOptions = {
     secret: process.env.NEXTAUTH_SECRET,
     callbacks: {
         async jwt({ token, user, account, trigger }) {
-            // session.update() — re-fetch memberships from Firestore
+            // session.update() — re-fetch memberships from Firestore (Admin SDK)
             if (trigger === 'update' && token.uid) {
                 try {
-                    const membershipsRef = collection(db, 'users', token.uid as string, 'memberships');
-                    const snap = await getDocs(membershipsRef);
+                    const snap = await adminDb
+                        .collection('users').doc(token.uid as string)
+                        .collection('memberships').get();
                     token.tenantIds = snap.docs.map(d => d.id);
                     token.role = snap.docs.length === 0 ? 'customer' : 'staff';
                     if (snap.docs.length > 0) {
-                        const tenantSnap = await getDoc(doc(db, 'tenants', snap.docs[0].id));
-                        if (tenantSnap.exists()) token.salonSlug = tenantSnap.data().slug;
+                        const tenantSnap = await adminDb.collection('tenants').doc(snap.docs[0].id).get();
+                        if (tenantSnap.exists) token.salonSlug = tenantSnap.data()!.slug;
                     }
                 } catch (err) {
                     console.error('[auth] session.update memberships refresh failed:', err);
@@ -114,21 +116,21 @@ export const authOptions: NextAuthOptions = {
                 token.user = user;
                 token.uid = user.id; // UID explícito en el token
 
-                // Leer memberships UNA SOLA VEZ, al momento del login
+                // Leer memberships + phone UNA SOLA VEZ, al momento del login (Admin SDK)
                 try {
-                    const membershipsRef = collection(db, 'users', user.id, 'memberships');
-                    const snap = await getDocs(membershipsRef);
+                    const snap = await adminDb
+                        .collection('users').doc(user.id)
+                        .collection('memberships').get();
                     token.tenantIds = snap.docs.map(d => d.id);
 
-                    // Rol según memberships: sin salón → clienta B2C, con salón → staff
+                    // Rol según memberships: sin salón → customer B2C, con salón → staff
                     token.role = snap.docs.length === 0 ? 'customer' : 'staff';
 
-                    // NEW: Store the slug of the first tenant for redirection
                     if (snap.docs.length > 0) {
                         const firstTenantId = snap.docs[0].id;
-                        const tenantSnap = await getDoc(doc(db, 'tenants', firstTenantId));
-                        if (tenantSnap.exists()) {
-                            token.salonSlug = tenantSnap.data().slug;
+                        const tenantSnap = await adminDb.collection('tenants').doc(firstTenantId).get();
+                        if (tenantSnap.exists) {
+                            token.salonSlug = tenantSnap.data()!.slug;
                         }
                     }
                 } catch (err) {
@@ -137,10 +139,8 @@ export const authOptions: NextAuthOptions = {
                     token.role = 'customer';
                 }
 
-                // Leer phone del documento de usuario
                 try {
-                    const userRef = doc(db, 'users', user.id);
-                    const userSnap = await getDoc(userRef);
+                    const userSnap = await adminDb.collection('users').doc(user.id).get();
                     const phone = userSnap.data()?.phone;
                     if (phone) token.phone = phone;
                 } catch {
@@ -175,24 +175,23 @@ export const authOptions: NextAuthOptions = {
             session.accessToken = token.accessToken as string;
             session.error = token.error as string;
 
-            // Persistir tokens de Google Calendar (best-effort — nunca bloquear la sesión si falla)
+            // Persistir tokens de Google Calendar (best-effort — Admin SDK, nunca bloquear la sesión)
             if (token.refreshToken && (session.user as any).uid) {
+                const uid = (session.user as any).uid as string;
                 try {
                     const tokenData = {
-                        accessToken: token.accessToken,
+                        accessToken: token.accessToken ?? null,
                         refreshToken: token.refreshToken,
-                        expiryDate: token.accessTokenExpires,
-                        scope: token.scope,
-                        tokenType: token.token_type,
-                        updatedAt: Date.now()
+                        expiryDate: token.accessTokenExpires ?? null,
+                        updatedAt: FieldValue.serverTimestamp(),
                     };
-                    const legacyRef = doc(db, 'calendarTokens', (session.user as any).uid);
-                    await setDoc(legacyRef, tokenData, { merge: true });
-                    const newRef = doc(db, 'users', (session.user as any).uid, 'integrations', 'google');
-                    await setDoc(newRef, tokenData, { merge: true });
+                    await Promise.all([
+                        adminDb.collection('calendarTokens').doc(uid).set(tokenData, { merge: true }),
+                        adminDb.collection('users').doc(uid)
+                            .collection('integrations').doc('google').set(tokenData, { merge: true }),
+                    ]);
                 } catch (e) {
-                    // El Client SDK no tiene auth en server-side — ignorar, no bloquear la sesión
-                    console.warn('[auth] Google token persist failed (expected in SSR):', (e as Error)?.message);
+                    console.warn('[auth] Google token persist failed:', (e as Error)?.message);
                 }
             }
 

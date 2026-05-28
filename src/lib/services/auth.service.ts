@@ -1,9 +1,7 @@
 import { auth, db, storage } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, updateProfile, User } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Usuario, Cliente } from '@/lib/_types_archive';
-import { notificationService } from './notification.service';
 
 interface RegisterData {
     email: string;
@@ -23,19 +21,7 @@ export const authService = {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // 2. PRE-CREATE User Profile (Legacy & New)
-        const userProfile: Usuario = {
-            id: user.uid,
-            nombre: fullName,
-            email: email,
-            rol: 'clienta',
-            salonId: tenantId
-        };
-
-        // A. WRITE TO LEGACY (Compatibility) - REMOVED
-        // await setDoc(doc(db, 'usuarios', user.uid), userProfile);
-
-        // B. WRITE TO NEW SOURCE OF TRUTH (users/{uid})
+        // 2. WRITE TO SOURCE OF TRUTH (users/{uid})
         // Mapping schema: displayName, email, phone, photoURL
         await setDoc(doc(db, 'users', user.uid), {
             id: user.uid,
@@ -48,7 +34,7 @@ export const authService = {
 
         // Write Membership
         await setDoc(doc(db, 'users', user.uid, 'memberships', tenantId), {
-            role: 'clienta',
+            role: 'customer',
             tenantId: tenantId,
             joinedAt: serverTimestamp()
         });
@@ -89,26 +75,13 @@ export const authService = {
         }
 
         // 5. Create Customer Record (tenants/{tenantId}/customers)
-        const newCustomer: Omit<Cliente, 'id'> = {
-            nombre: fullName.split(' ')[0],
-            apellido: fullName.split(' ').slice(1).join(' ') || '',
-            email: email,
-            telefono: phone || '',
-            fechaRegistro: serverTimestamp() as any,
-        };
-
         await setDoc(doc(db, 'tenants', tenantId, 'customers', user.uid), {
-            ...newCustomer,
-            userId: user.uid // Link back to auth user
+            userId: user.uid,
+            fullName,
+            email,
+            phone: phone || null,
+            createdAt: serverTimestamp(),
         });
-
-        // 6. Send Welcome Notification (Non-blocking)
-        notificationService.sendEmail({
-            to: email,
-            subject: '¡Bienvenida a Ouleeh!',
-            type: 'welcome',
-            data: { name: fullName }
-        }).catch(err => console.error("Background email error:", err));
 
         return user;
     }

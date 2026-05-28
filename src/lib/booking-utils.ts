@@ -1,13 +1,6 @@
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
-import { db } from './firebase';
+import { adminDb } from '@/lib/firebase-admin';
+import { Timestamp } from 'firebase-admin/firestore';
 
-/**
- * Returns true if the proposed slot overlaps with any existing appointment
- * for the same staff member on the same day.
- *
- * Uses half-open interval comparison: [requestedStart, requestedEnd) overlaps
- * [existingStart, existingEnd) when requestedStart < existingEnd AND requestedEnd > existingStart.
- */
 export async function hasSlotConflict(
   tenantId: string,
   staffId: string,
@@ -25,20 +18,18 @@ export async function hasSlotConflict(
   const endOfDay = new Date(date);
   endOfDay.setHours(23, 59, 59, 999);
 
-  const appointmentsRef = collection(db, 'tenants', tenantId, 'appointments');
-  const q = query(
-    appointmentsRef,
-    where('staffId', '==', staffId),
-    where('date', '>=', Timestamp.fromDate(startOfDay)),
-    where('date', '<=', Timestamp.fromDate(endOfDay)),
-    where('status', 'in', ['pending', 'confirmed', 'pending_payment'])
-  );
-
-  const snap = await getDocs(q);
+  const snap = await adminDb
+    .collection('tenants').doc(tenantId)
+    .collection('appointments')
+    .where('staffId', '==', staffId)
+    .where('date', '>=', Timestamp.fromDate(startOfDay))
+    .where('date', '<=', Timestamp.fromDate(endOfDay))
+    .where('status', 'in', ['pending', 'confirmed', 'pending_payment'])
+    .get();
 
   for (const docSnap of snap.docs) {
     const data = docSnap.data();
-    const existingStart: Date = data.date.toDate();
+    const existingStart: Date = (data.date as Timestamp).toDate();
     const existingDuration: number = data.durationMinutes ?? 30;
     const existingEnd = new Date(existingStart.getTime() + existingDuration * 60_000);
 
@@ -50,12 +41,6 @@ export async function hasSlotConflict(
   return false;
 }
 
-/**
- * Returns all 30-minute time slots (as 'HH:MM' strings) occupied by a set
- * of appointments, accounting for each appointment's full duration.
- *
- * Example: an appointment at 10:00 for 90 min occupies ['10:00', '10:30', '11:00'].
- */
 export function buildOccupiedSlots(
   appointments: Array<{ startDate: Date; durationMinutes: number }>
 ): string[] {

@@ -2,20 +2,15 @@
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import {
-  doc, getDoc, setDoc, serverTimestamp,
-  collection, query, where, orderBy, limit, getDocs,
-} from 'firebase/firestore';
-import type { AppointmentStatus } from '@/lib/schema';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import type {
+  UserPreferences,
+  ProfileData, HistorialEntry, HistorialGroup,
+  HairProfile, SerializedPreferences, FavoriteSalonData,
+} from '@/lib/schema';
 
-export interface ProfileData {
-  displayName: string;
-  email: string;
-  phone: string;
-  photoURL: string | null;
-  createdAt: string | null;
-}
+export type { ProfileData, HistorialEntry, HistorialGroup, HairProfile, SerializedPreferences, FavoriteSalonData };
 
 export async function getMyProfile(): Promise<ProfileData | null> {
   const session = await getServerSession(authOptions);
@@ -24,20 +19,20 @@ export async function getMyProfile(): Promise<ProfileData | null> {
   const uid = (session.user as any).uid as string | undefined;
   if (!uid) return null;
 
-  const profileRef = doc(db, 'users', uid);
-  const snap = await getDoc(profileRef);
+  const profileRef = adminDb.collection('users').doc(uid);
+  const snap = await profileRef.get();
 
   const sessionName = session.user.name ?? '';
   const sessionEmail = session.user.email ?? '';
   const sessionPhoto = session.user.image ?? null;
 
-  if (!snap.exists()) {
-    await setDoc(profileRef, {
+  if (!snap.exists) {
+    await profileRef.set({
       id: uid,
       displayName: sessionName,
       email: sessionEmail,
       photoURL: sessionPhoto,
-      createdAt: serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
     });
     return {
       displayName: sessionName,
@@ -48,13 +43,13 @@ export async function getMyProfile(): Promise<ProfileData | null> {
     };
   }
 
-  const data = snap.data();
+  const data = snap.data()!;
   return {
     displayName: data.displayName ?? sessionName,
     email: data.email ?? sessionEmail,
     phone: data.phone ?? '',
     photoURL: data.photoURL ?? sessionPhoto,
-    createdAt: data.createdAt?.toDate?.()?.toLocaleDateString('es-AR', {
+    createdAt: (data.createdAt as Timestamp | undefined)?.toDate?.()?.toLocaleDateString('es-AR', {
       month: 'long',
       year: 'numeric',
     }) ?? null,
@@ -75,12 +70,11 @@ export async function updateMyProfile(
   }
 
   try {
-    const profileRef = doc(db, 'users', uid);
-    const payload: Record<string, any> = { updatedAt: serverTimestamp() };
+    const payload: Record<string, any> = { updatedAt: FieldValue.serverTimestamp() };
     if (updates.displayName?.trim()) payload.displayName = updates.displayName.trim();
     if (updates.phone !== undefined) payload.phone = updates.phone.trim();
 
-    await setDoc(profileRef, payload, { merge: true });
+    await adminDb.collection('users').doc(uid).set(payload, { merge: true });
     return { success: true };
   } catch (err) {
     console.error('[updateMyProfile] Error:', err);
@@ -90,26 +84,6 @@ export async function updateMyProfile(
 
 // ── Historial cross-tenant ────────────────────────────────────────────────────
 
-export interface HistorialEntry {
-  id: string;
-  salonName: string;
-  salonSlug: string;
-  service: string;
-  staffName: string;
-  dateMs: number;        // ms timestamp — serializable across RSC boundary
-  status: AppointmentStatus;
-  price: number;
-}
-
-export interface HistorialGroup {
-  monthLabel: string;    // "JULIO 2026"
-  entries: HistorialEntry[];
-}
-
-/**
- * Devuelve las citas pasadas del usuario autenticado agrupadas por mes.
- * Consulta los tenants donde el usuario tiene membresía (JWT.tenantIds).
- */
 export async function getMyHistorial(): Promise<HistorialGroup[]> {
   const session = await getServerSession(authOptions);
   if (!session?.user) return [];
@@ -125,30 +99,29 @@ export async function getMyHistorial(): Promise<HistorialGroup[]> {
   await Promise.all(
     tenantIds.map(async (tenantId) => {
       try {
-        // Obtener nombre y slug del tenant
-        const tenantSnap = await getDoc(doc(db, 'tenants', tenantId));
-        if (!tenantSnap.exists()) return;
-        const tenantData = tenantSnap.data();
+        const tenantSnap = await adminDb.collection('tenants').doc(tenantId).get();
+        if (!tenantSnap.exists) return;
+        const tenantData = tenantSnap.data()!;
         const salonName: string = tenantData.name ?? 'Salón';
         const salonSlug: string = tenantData.slug ?? tenantId;
 
-        // Obtener appointments del usuario en este tenant
-        const q = query(
-          collection(db, 'tenants', tenantId, 'appointments'),
-          where('clientId', '==', uid),
-          orderBy('date', 'desc'),
-          limit(100),
-        );
-        const snap = await getDocs(q);
+        const snap = await adminDb
+          .collection('tenants').doc(tenantId)
+          .collection('appointments')
+          .where('clientId', '==', uid)
+          .orderBy('date', 'desc')
+          .limit(100)
+          .get();
 
         for (const d of snap.docs) {
           const data = d.data();
-          const ts = data.date;
+          const ts = data.date as Timestamp | undefined;
           const dateMs: number = ts?.toMillis?.() ?? (ts?.seconds ? ts.seconds * 1000 : 0);
           if (!dateMs) continue;
 
           entries.push({
             id: d.id,
+            tenantId,
             salonName,
             salonSlug,
             service: data.serviceNames ?? '',
@@ -164,10 +137,8 @@ export async function getMyHistorial(): Promise<HistorialGroup[]> {
     }),
   );
 
-  // Ordenar por fecha descendente
   entries.sort((a, b) => b.dateMs - a.dateMs);
 
-  // Agrupar por mes
   const groups = new Map<string, HistorialEntry[]>();
   for (const entry of entries) {
     const d = new Date(entry.dateMs);
@@ -181,10 +152,6 @@ export async function getMyHistorial(): Promise<HistorialGroup[]> {
   return Array.from(groups.entries()).map(([monthLabel, es]) => ({ monthLabel, entries: es }));
 }
 
-/**
- * Devuelve los próximos turnos del usuario (fecha futura) ordenados ascendente.
- * Cross-tenant, igual que getMyHistorial.
- */
 export async function getMyUpcomingAppointments(): Promise<HistorialEntry[]> {
   const session = await getServerSession(authOptions);
   if (!session?.user) return [];
@@ -201,28 +168,29 @@ export async function getMyUpcomingAppointments(): Promise<HistorialEntry[]> {
   await Promise.all(
     tenantIds.map(async (tenantId) => {
       try {
-        const tenantSnap = await getDoc(doc(db, 'tenants', tenantId));
-        if (!tenantSnap.exists()) return;
-        const tenantData = tenantSnap.data();
+        const tenantSnap = await adminDb.collection('tenants').doc(tenantId).get();
+        if (!tenantSnap.exists) return;
+        const tenantData = tenantSnap.data()!;
         const salonName: string = tenantData.name ?? 'Salón';
         const salonSlug: string = tenantData.slug ?? tenantId;
 
-        const q = query(
-          collection(db, 'tenants', tenantId, 'appointments'),
-          where('clientId', '==', uid),
-          orderBy('date', 'asc'),
-          limit(20),
-        );
-        const snap = await getDocs(q);
+        const snap = await adminDb
+          .collection('tenants').doc(tenantId)
+          .collection('appointments')
+          .where('clientId', '==', uid)
+          .orderBy('date', 'asc')
+          .limit(20)
+          .get();
 
         for (const d of snap.docs) {
           const data = d.data();
-          const ts = data.date;
+          const ts = data.date as Timestamp | undefined;
           const dateMs: number = ts?.toMillis?.() ?? (ts?.seconds ? ts.seconds * 1000 : 0);
           if (!dateMs || dateMs < nowMs) continue;
 
           entries.push({
             id: d.id,
+            tenantId,
             salonName,
             salonSlug,
             service: data.serviceNames ?? '',
@@ -240,4 +208,229 @@ export async function getMyUpcomingAppointments(): Promise<HistorialEntry[]> {
 
   entries.sort((a, b) => a.dateMs - b.dateMs);
   return entries;
+}
+
+// ── Hair Profile ──────────────────────────────────────────────────────────────
+
+/**
+ * Reads the client's hairProfile from their customer record in the primary tenant.
+ */
+export async function getMyHairProfile(): Promise<HairProfile | null> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return null;
+  const uid = (session.user as any).uid as string | undefined;
+  const tenantIds: string[] = (session.user as any).tenantIds ?? [];
+  if (!uid || tenantIds.length === 0) return null;
+
+  // Use the first (primary) tenant
+  const customerSnap = await adminDb
+    .collection('tenants').doc(tenantIds[0])
+    .collection('customers').doc(uid)
+    .get();
+
+  if (!customerSnap.exists) return null;
+  return (customerSnap.data()?.hairProfile as HairProfile) ?? null;
+}
+
+/**
+ * Writes hairProfile fields to the client's customer record in the primary tenant.
+ * Uses Admin SDK because Firestore rules only allow `create` (not `update`) by the client themselves.
+ */
+export async function updateMyHairProfile(
+  updates: Partial<HairProfile>,
+): Promise<{ success: boolean; error?: string }> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return { success: false, error: 'No autenticado.' };
+  const uid = (session.user as any).uid as string | undefined;
+  const tenantIds: string[] = (session.user as any).tenantIds ?? [];
+  if (!uid) return { success: false, error: 'Sesión inválida.' };
+  if (tenantIds.length === 0) return { success: false, error: 'No tenés un salón asociado.' };
+
+  try {
+    const payload: Record<string, any> = {};
+    for (const [key, val] of Object.entries(updates)) {
+      payload[`hairProfile.${key}`] = val;
+    }
+
+    await adminDb
+      .collection('tenants').doc(tenantIds[0])
+      .collection('customers').doc(uid)
+      .set(payload, { merge: true });
+
+    return { success: true };
+  } catch (err) {
+    console.error('[updateMyHairProfile] Error:', err);
+    return { success: false, error: 'No se pudo guardar el perfil capilar.' };
+  }
+}
+
+// ── Preferences ───────────────────────────────────────────────────────────────
+
+/**
+ * Reads the client's preferences from users/{uid}/preferences/default.
+ */
+export async function getMyPreferences(): Promise<SerializedPreferences | null> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return null;
+  const uid = (session.user as any).uid as string | undefined;
+  if (!uid) return null;
+
+  const snap = await adminDb
+    .collection('users').doc(uid)
+    .collection('preferences').doc('default')
+    .get();
+
+  if (!snap.exists) return null;
+  const data = snap.data()!;
+  return {
+    preferredZone: data.preferredZone ?? undefined,
+    preferredTimeSlot: data.preferredTimeSlot ?? undefined,
+    notifications: data.notifications ?? { whatsappReminder: true, reminderHoursBefore: 24, favoriteSalonUpdates: true },
+    updatedAtMs: data.updatedAt?.toMillis?.() ?? null,
+  };
+}
+
+/**
+ * Writes (merges) preferences to users/{uid}/preferences/default.
+ */
+export async function updateMyPreferences(
+  updates: Partial<Omit<UserPreferences, 'updatedAt'>>,
+): Promise<{ success: boolean; error?: string }> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return { success: false, error: 'No autenticado.' };
+  const uid = (session.user as any).uid as string | undefined;
+  if (!uid) return { success: false, error: 'Sesión inválida.' };
+
+  try {
+    await adminDb
+      .collection('users').doc(uid)
+      .collection('preferences').doc('default')
+      .set({ ...updates, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+
+    return { success: true };
+  } catch (err) {
+    console.error('[updateMyPreferences] Error:', err);
+    return { success: false, error: 'No se pudo guardar las preferencias.' };
+  }
+}
+
+// ── Favorites ─────────────────────────────────────────────────────────────────
+
+/**
+ * Returns the list of favorite salons, enriched with basic tenant data (name, address).
+ */
+export async function getMyFavorites(): Promise<FavoriteSalonData[]> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return [];
+  const uid = (session.user as any).uid as string | undefined;
+  if (!uid) return [];
+
+  const favSnap = await adminDb
+    .collection('users').doc(uid)
+    .collection('favorites')
+    .orderBy('savedAt', 'desc')
+    .get();
+
+  if (favSnap.empty) return [];
+
+  const results = await Promise.all(
+    favSnap.docs.map(async (favDoc) => {
+      const tenantId = favDoc.id;
+      const savedAtMs: number = favDoc.data().savedAt?.toMillis?.() ?? 0;
+
+      try {
+        const tenantSnap = await adminDb.collection('tenants').doc(tenantId).get();
+        if (!tenantSnap.exists) return null;
+        const t = tenantSnap.data()!;
+        return {
+          tenantId,
+          slug: t.slug ?? tenantId,
+          name: t.name ?? 'Salón',
+          address: t.address ?? null,
+          savedAtMs,
+        };
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  return results.filter((r): r is FavoriteSalonData => r !== null);
+}
+
+/**
+ * Adds or removes a salon from the user's favorites.
+ * Returns the new favorite state.
+ */
+export async function toggleFavorite(
+  tenantId: string,
+): Promise<{ isFavorite: boolean; error?: string }> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return { isFavorite: false, error: 'No autenticado.' };
+  const uid = (session.user as any).uid as string | undefined;
+  if (!uid) return { isFavorite: false, error: 'Sesión inválida.' };
+  if (!tenantId) return { isFavorite: false, error: 'ID de salón requerido.' };
+
+  const favRef = adminDb
+    .collection('users').doc(uid)
+    .collection('favorites').doc(tenantId);
+
+  try {
+    const existing = await favRef.get();
+    if (existing.exists) {
+      await favRef.delete();
+      return { isFavorite: false };
+    }
+
+    const tenantSnap = await adminDb.collection('tenants').doc(tenantId).get();
+    if (!tenantSnap.exists) return { isFavorite: false, error: 'Salón no encontrado.' };
+
+    await favRef.set({
+      slug: tenantSnap.data()!.slug ?? tenantId,
+      savedAt: FieldValue.serverTimestamp(),
+    });
+    return { isFavorite: true };
+  } catch (err) {
+    console.error('[toggleFavorite] Error:', err);
+    return { isFavorite: false, error: 'No se pudo actualizar favoritos.' };
+  }
+}
+
+// ── Cancel Appointment ────────────────────────────────────────────────────────
+
+/**
+ * Cancels an appointment owned by the authenticated client.
+ * Verifies ownership before writing to prevent horizontal privilege escalation.
+ */
+export async function cancelMyAppointment(
+  appointmentId: string,
+  tenantId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return { success: false, error: 'No autenticado.' };
+  const uid = (session.user as any).uid as string | undefined;
+  if (!uid) return { success: false, error: 'Sesión inválida.' };
+
+  const apptRef = adminDb
+    .collection('tenants').doc(tenantId)
+    .collection('appointments').doc(appointmentId);
+
+  try {
+    const snap = await apptRef.get();
+    if (!snap.exists) return { success: false, error: 'Turno no encontrado.' };
+
+    const data = snap.data()!;
+    if (data.clientId !== uid) return { success: false, error: 'No tenés permiso para cancelar este turno.' };
+
+    const terminalStatuses = ['cancelled', 'completed', 'cobrado', 'no_show'];
+    if (terminalStatuses.includes(data.status)) {
+      return { success: false, error: 'El turno ya está en un estado final y no puede cancelarse.' };
+    }
+
+    await apptRef.update({ status: 'cancelled' });
+    return { success: true };
+  } catch (err) {
+    console.error('[cancelMyAppointment] Error:', err);
+    return { success: false, error: 'No se pudo cancelar el turno.' };
+  }
 }

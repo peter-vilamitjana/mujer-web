@@ -1,12 +1,7 @@
 'use server';
 
-// TECH DEBT P1: Uses Firebase Client SDK instead of Firestore REST API.
-// Works in development but may fail in production due to Firestore security rules.
-// Fix: Migrate to REST API with service account token before production deploy.
-// Tracked: https://github.com/[repo]/issues/[n]
-
-import { collection, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import type { Branch } from '@/lib/schema';
@@ -25,10 +20,10 @@ export async function createBranch(
 ): Promise<ActionResult> {
   try {
     await requireAdminSession();
-    const ref = await addDoc(collection(db, 'tenants', tenantId, 'branches'), {
-      ...data,
-      createdAt: serverTimestamp(),
-    });
+    const ref = await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('branches')
+      .add({ ...data, createdAt: FieldValue.serverTimestamp() });
     return { success: true, id: ref.id };
   } catch (err) {
     console.error('[createBranch]', err);
@@ -43,10 +38,10 @@ export async function updateBranch(
 ): Promise<ActionResult> {
   try {
     await requireAdminSession();
-    await updateDoc(doc(db, 'tenants', tenantId, 'branches', branchId), {
-      ...data,
-      updatedAt: serverTimestamp(),
-    });
+    await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('branches').doc(branchId)
+      .update({ ...data, updatedAt: FieldValue.serverTimestamp() });
     return { success: true };
   } catch (err) {
     console.error('[updateBranch]', err);
@@ -61,10 +56,10 @@ export async function toggleBranchActive(
 ): Promise<ActionResult> {
   try {
     await requireAdminSession();
-    await updateDoc(doc(db, 'tenants', tenantId, 'branches', branchId), {
-      active,
-      updatedAt: serverTimestamp(),
-    });
+    await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('branches').doc(branchId)
+      .update({ active, updatedAt: FieldValue.serverTimestamp() });
     return { success: true };
   } catch (err) {
     console.error('[toggleBranchActive]', err);

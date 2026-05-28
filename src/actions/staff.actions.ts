@@ -1,12 +1,7 @@
 'use server';
 
-// TECH DEBT P1: Uses Firebase Client SDK instead of Firestore REST API.
-// Works in development but may fail in production due to Firestore security rules.
-// Fix: Migrate to REST API with service account token before production deploy.
-// Tracked: https://github.com/[repo]/issues/[n]
-
-import { collection, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import type { Staff, StaffCommissions } from '@/lib/schema';
@@ -25,10 +20,10 @@ export async function createStaffMember(
 ): Promise<ActionResult> {
   try {
     await requireAdminSession();
-    const ref = await addDoc(collection(db, 'tenants', tenantId, 'staff'), {
-      ...data,
-      createdAt: serverTimestamp(),
-    });
+    const ref = await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('staff')
+      .add({ ...data, createdAt: FieldValue.serverTimestamp() });
     return { success: true, id: ref.id };
   } catch (err) {
     console.error('[createStaffMember]', err);
@@ -43,10 +38,10 @@ export async function updateStaffMember(
 ): Promise<ActionResult> {
   try {
     await requireAdminSession();
-    await updateDoc(doc(db, 'tenants', tenantId, 'staff', staffId), {
-      ...data,
-      updatedAt: serverTimestamp(),
-    });
+    await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('staff').doc(staffId)
+      .update({ ...data, updatedAt: FieldValue.serverTimestamp() });
     return { success: true };
   } catch (err) {
     console.error('[updateStaffMember]', err);
@@ -61,10 +56,10 @@ export async function toggleStaffActive(
 ): Promise<ActionResult> {
   try {
     await requireAdminSession();
-    await updateDoc(doc(db, 'tenants', tenantId, 'staff', staffId), {
-      active,
-      updatedAt: serverTimestamp(),
-    });
+    await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('staff').doc(staffId)
+      .update({ active, updatedAt: FieldValue.serverTimestamp() });
     return { success: true };
   } catch (err) {
     console.error('[toggleStaffActive]', err);
@@ -79,10 +74,10 @@ export async function updateStaffCommissions(
 ): Promise<ActionResult> {
   try {
     await requireAdminSession();
-    await updateDoc(doc(db, 'tenants', tenantId, 'staff', staffId), {
-      commissions,
-      updatedAt: serverTimestamp(),
-    });
+    await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('staff').doc(staffId)
+      .update({ commissions, updatedAt: FieldValue.serverTimestamp() });
     return { success: true };
   } catch (err) {
     console.error('[updateStaffCommissions]', err);

@@ -6,8 +6,26 @@ export interface UserProfile {
     id: string; // Auth UID
     email: string;
     displayName: string;
+    phone?: string;
     photoURL?: string;
     createdAt: Timestamp;
+}
+
+export interface UserPreferences {
+    preferredZone?: string;
+    preferredTimeSlot?: 'morning' | 'afternoon' | 'evening';
+    notifications: {
+        whatsappReminder: boolean;
+        reminderHoursBefore: number;
+        favoriteSalonUpdates: boolean;
+    };
+    updatedAt?: Timestamp;
+}
+
+export interface FavoriteSalon {
+    tenantId: string;
+    slug: string;
+    savedAt: Timestamp;
 }
 
 export type UserRole = 'admin' | 'employee' | 'client' | 'customer';
@@ -190,12 +208,21 @@ export interface Customer {
         lastVisit?: Timestamp;
     };
     notes?: string;          // Notas del profesional (fórmulas, preferencias)
-    hairProfile?: {          // Ficha técnica capilar
-        type?: string;       // liso | ondulado | rizado | afro
-        thickness?: string;  // fino | normal | grueso
-        condition?: string;  // sano | dañado | procesado | muy-dañado
+    hairProfile?: {
+        type?: string;           // liso | ondulado | rizado | afro
+        thickness?: string;      // fino | normal | grueso
+        condition?: string;      // sano | dañado | procesado | muy-dañado
         allergies?: string[];
         goal?: string;
+        healthScore?: number;    // 0–100
+        lastTreatment?: string;  // nombre del último tratamiento realizado
+        stylistName?: string;    // estilista asignada
+        evolution?: Array<{
+            date: Timestamp;
+            note: string;
+            score?: number;
+        }>;
+        updatedAt?: Timestamp;
     };
 }
 
@@ -218,4 +245,54 @@ export interface Review {
     createdAt: Timestamp;
     verified: boolean;         // true when tied to a real confirmed appointment
     appointmentId?: string;
+}
+
+// ── Serializable UI types (safe to cross RSC/Client boundary) ─────────────────
+
+export interface ProfileData {
+    displayName: string;
+    email: string;
+    phone: string;
+    photoURL: string | null;
+    createdAt: string | null;
+}
+
+export interface HistorialEntry {
+    id: string;
+    tenantId: string;
+    salonName: string;
+    salonSlug: string;
+    service: string;
+    staffName: string;
+    dateMs: number;
+    status: AppointmentStatus;
+    price: number;
+}
+
+export interface HistorialGroup {
+    monthLabel: string;
+    entries: HistorialEntry[];
+}
+
+export type HairProfile = NonNullable<Customer['hairProfile']>;
+
+export type SerializedPreferences = Omit<UserPreferences, 'updatedAt'> & { updatedAtMs: number | null };
+
+export interface FavoriteSalonData {
+    tenantId: string;
+    slug: string;
+    name: string;
+    address: string | null;
+    savedAtMs: number;
+}
+
+export interface DashboardAppointment {
+    id: string;
+    serviceName: string;
+    staffName: string;
+    salonName: string;
+    date: string;          // pre-formateado: "viernes 14 feb, 15:00"
+    dateRaw: Date;
+    status: AppointmentStatus;
+    price: number;
 }

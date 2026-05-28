@@ -5,21 +5,12 @@
  * Diseñado para uso en Server Components y Server Actions.
  */
 
-import type { AppointmentStatus } from '@/lib/schema';
+import type { AppointmentStatus, DashboardAppointment } from '@/lib/schema';
+
+export type { DashboardAppointment };
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'mujer-app';
 const FIRESTORE_BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
-
-export interface DashboardAppointment {
-  id: string;
-  serviceName: string;   // viene de Appointment.serviceNames
-  staffName: string;
-  salonName: string;     // viene del parámetro salonName (se pasa desde afuera)
-  date: string;          // pre-formateado: "Viernes 14 Feb, 15:00"
-  dateRaw: Date;         // para sorting
-  status: AppointmentStatus;
-  price: number;         // priceEstimated
-}
 
 /**
  * Convierte un valor de Firestore REST API al tipo JS correspondiente.

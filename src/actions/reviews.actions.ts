@@ -2,11 +2,8 @@
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import {
-  collection, addDoc, getDocs, query, orderBy,
-  limit, serverTimestamp, where, doc, getDoc,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { getSalonBySlug } from '@/lib/services/marketplace.service';
 
 export interface ReviewData {
@@ -20,7 +17,7 @@ export interface ReviewData {
 }
 
 export interface SalonRatingStats {
-  average: number;       // 0–5, rounded to 1 decimal
+  average: number;
   count: number;
 }
 
@@ -29,15 +26,15 @@ export async function getSalonReviews(
   maxCount = 20,
 ): Promise<ReviewData[]> {
   try {
-    const q = query(
-      collection(db, 'tenants', tenantId, 'reviews'),
-      orderBy('createdAt', 'desc'),
-      limit(maxCount),
-    );
-    const snap = await getDocs(q);
+    const snap = await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('reviews')
+      .orderBy('createdAt', 'desc')
+      .limit(maxCount)
+      .get();
     return snap.docs.map((d) => {
       const data = d.data();
-      const ts = data.createdAt;
+      const ts = data.createdAt as Timestamp | undefined;
       return {
         id: d.id,
         clientName: data.clientName ?? 'Clienta',
@@ -82,33 +79,33 @@ export async function submitReview(
   const session = await getServerSession(authOptions);
   const uid = (session?.user as any)?.uid as string | undefined;
   const sessionName = session?.user?.name ?? undefined;
+  const clientName = data.clientName?.trim() || sessionName || 'Clienta anónima';
 
-  const clientName = (data.clientName?.trim() || sessionName || 'Clienta anónima');
-
-  // Check for existing review from this user in the last 30 days (rate-limit)
   if (uid) {
-    const existing = await getDocs(
-      query(
-        collection(db, 'tenants', salon.id, 'reviews'),
-        where('clientId', '==', uid),
-        limit(1),
-      ),
-    );
+    const existing = await adminDb
+      .collection('tenants').doc(salon.id)
+      .collection('reviews')
+      .where('clientId', '==', uid)
+      .limit(1)
+      .get();
     if (!existing.empty) {
       return { success: false, error: 'Ya dejaste una reseña para este salón.' };
     }
   }
 
   try {
-    await addDoc(collection(db, 'tenants', salon.id, 'reviews'), {
-      clientId: uid ?? null,
-      clientName,
-      rating: data.rating,
-      comment: data.comment?.trim() || null,
-      serviceName: data.serviceName?.trim() || null,
-      createdAt: serverTimestamp(),
-      verified: false,
-    });
+    await adminDb
+      .collection('tenants').doc(salon.id)
+      .collection('reviews')
+      .add({
+        clientId: uid ?? null,
+        clientName,
+        rating: data.rating,
+        comment: data.comment?.trim() || null,
+        serviceName: data.serviceName?.trim() || null,
+        createdAt: FieldValue.serverTimestamp(),
+        verified: false,
+      });
     return { success: true };
   } catch (err) {
     console.error('[submitReview]', err);
