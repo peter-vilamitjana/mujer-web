@@ -3,14 +3,20 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useTenant } from '@/contexts/TenantContext';
-import type { Usuario, UserRole } from '@/lib/_types_archive';
+import type { UserProfile, UserRole } from '@/lib/schema';
 
-const UserContext = createContext<Usuario | null>(null);
+export interface ContextUser extends Omit<UserProfile, 'createdAt' | 'displayName'> {
+  rol: UserRole;
+  salonId: string;
+  nombre: string;
+}
+
+const UserContext = createContext<ContextUser | null>(null);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const { tenantId } = useTenant();
-  const [user, setUser] = useState<Usuario | null>(null);
+  const [user, setUser] = useState<ContextUser | null>(null);
 
   useEffect(() => {
     if (status !== 'authenticated' || !session?.user || !tenantId) {
@@ -20,7 +26,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     const uid = (session.user as any).uid as string;
     const sessionRole = (session.user as any).role as string;
-    const rol: UserRole = sessionRole === 'staff' ? 'empleada' : 'clienta';
+    const rol: UserRole = sessionRole === 'staff' ? 'employee' : 'client';
 
     setUser({
       id: uid,

@@ -9,7 +9,7 @@ import {
   Timestamp,
   type Firestore,
 } from "firebase/firestore";
-import type { Turno } from "@/lib/_types_archive";
+import type { Appointment } from "@/lib/schema";
 import { safeFormatDate } from "@/lib/utils";
 
 const INTERVAL_MS = 3000; // 3 seconds
@@ -18,30 +18,30 @@ const MAX_SERIES_POINTS = (WINDOW_MIN * 60 * 1000) / INTERVAL_MS;
 
 type SeriePoint = { t: number; v: number };
 
-const isTurnoActive = (turno: Turno, now: number): boolean => {
-  const estadoValido = ["confirmado", "check-in", "en_progreso"].includes(turno.estado);
+const isTurnoActive = (turno: Appointment, now: number): boolean => {
+  const estadoValido = ["confirmed", "completed", "pending"].includes(turno.status);
   if (!estadoValido) return false;
 
-  const inicio = new Date(turno.fecha).getTime();
-  const fin = inicio + (turno.duracion || 30) * 60 * 1000;
+  const inicio = new Date(turno.date as any).getTime();
+  const fin = inicio + (turno.durationMinutes || 30) * 60 * 1000;
 
   return inicio <= now && now < fin;
 };
 
-const didTurnoOverlapLastHour = (turno: Turno, now: number): boolean => {
-  const estadoValido = ["confirmado", "check-in", "en_progreso", "realizado"].includes(turno.estado);
+const didTurnoOverlapLastHour = (turno: Appointment, now: number): boolean => {
+  const estadoValido = ["confirmed", "completed", "pending", "cobrado"].includes(turno.status);
   if (!estadoValido) return false;
 
   const oneHourAgo = now - 60 * 60 * 1000;
-  const inicio = new Date(turno.fecha).getTime();
-  const fin = inicio + (turno.duracion || 30) * 60 * 1000;
+  const inicio = new Date(turno.date as any).getTime();
+  const fin = inicio + (turno.durationMinutes || 30) * 60 * 1000;
 
   return inicio < now && fin > oneHourAgo;
 };
 
 
 export function useOcupacionEnVivo(db: Firestore, sucursalId: string) {
-  const [turnosDelDia, setTurnosDelDia] = useState<Turno[]>([]);
+  const [turnosDelDia, setTurnosDelDia] = useState<Appointment[]>([]);
   const [ocupacionActual, setOcupacionActual] = useState(0);
   const [ocupacionUltimaHora, setOcupacionUltimaHora] = useState(0);
   const [serie, setSerie] = useState<SeriePoint[]>([]);
@@ -70,19 +70,23 @@ export function useOcupacionEnVivo(db: Firestore, sucursalId: string) {
     // In a real scenario, you'd rely solely on Firestore
     const createMockTurno = () => {
       const now = new Date();
-      const mock: Turno = {
+      const mock: Appointment = {
         id: 'mock-1',
-        // sucursalId: 'main', // Removed as it is not in Turno type
-        clienteId: 'mock-client',
-        clienteNombre: 'Clienta de Prueba',
-        servicio: 'Corte',
-        servicioIds: ['corte'],
-        fecha: now.toISOString(),
-        empleadaAsignadaId: 'mock-prof',
-        empleadaNombre: 'Profesional de Prueba',
-        estado: 'realizado', // Changed from 'en_progreso' to match Turno type
-        duracion: 60,
-        precio: 5000,
+        tenantId: sucursalId,
+        branchId: 'main',
+        clientId: 'mock-client',
+        clientName: 'Clienta de Prueba',
+        serviceIds: ['corte'],
+        serviceNames: 'Corte',
+        date: now.toISOString() as any,
+        staffId: 'mock-prof',
+        staffName: 'Profesional de Prueba',
+        status: 'completed',
+        durationMinutes: 60,
+        priceEstimated: 5000,
+        depositPaid: false,
+        createdAt: Timestamp.now(),
+        createdBy: 'system'
       };
       setTurnosDelDia([mock]);
       setIsLoading(false);
@@ -95,10 +99,10 @@ export function useOcupacionEnVivo(db: Firestore, sucursalId: string) {
           return {
             id: doc.id,
             ...data,
-            fecha: safeFormatDate(data.fecha),
-          } as Turno;
+            date: safeFormatDate(data.date),
+          } as unknown as Appointment;
         }).filter(turno => {
-          const fechaTurno = new Date(turno.fecha);
+          const fechaTurno = new Date(turno.date as any);
           return fechaTurno >= todayStart && fechaTurno <= todayEnd;
         });
 

@@ -49,6 +49,18 @@ export default function ConfigTabView() {
   const [currency, setCurrency]     = useState('ARS');
   const [whatsappNotif, setWhatsappNotif] = useState(true);
 
+  const [isActivePublicly, setIsActivePublicly] = useState(true);
+  const [vitrineSettings, setVitrineSettings] = useState({
+    showServices:      true,
+    showStaff:         true,
+    showPrices:        true,
+    showReviews:       false,
+    allowGuestBooking: true,
+    showGiftCards:     false,
+  });
+  const [slotDuration, setSlotDuration] = useState(30);
+  const [cancellationHours, setCancellationHours] = useState(24);
+
   // ── Comisiones del equipo (editables inline) ──────────────────────────────
   const [commEdits, setCommEdits]   = useState<Record<string, string>>({});
   const [savingComm, setSavingComm] = useState<string | null>(null);
@@ -86,6 +98,17 @@ export default function ConfigTabView() {
       if (t.businessHours && Object.keys(t.businessHours).length > 0) {
         setHours(t.businessHours as HoursMap);
       }
+      setIsActivePublicly(t.isActivePublicly ?? true);
+      setSlotDuration(t.slotDurationMinutes ?? 30);
+      setCancellationHours(t.cancellationPolicy?.hoursInAdvance ?? 24);
+      setVitrineSettings({
+        showServices:      t.settings?.showServices      ?? true,
+        showStaff:         t.settings?.showStaff         ?? true,
+        showPrices:        t.settings?.showPrices        ?? true,
+        showReviews:       t.settings?.showReviews       ?? false,
+        allowGuestBooking: t.isGuestBookingEnabled       ?? true,
+        showGiftCards:     t.settings?.showGiftCards     ?? false,
+      });
     });
   }, [tenantId]);
 
@@ -107,17 +130,25 @@ export default function ConfigTabView() {
       name, phone, address,
       logoUrl: logoUrl || undefined,
       coverImageUrl: coverUrl || undefined,
-      isActivePublicly: isOpenToday,
       businessHours: hours,
       socialLinks: {
         instagram: instagram || undefined,
         whatsapp: whatsappLink || undefined,
       },
+      isActivePublicly,
+      slotDurationMinutes: slotDuration,
+      cancellationPolicy:  { hoursInAdvance: cancellationHours },
+      isGuestBookingEnabled: vitrineSettings.allowGuestBooking,
       settings: {
         currency,
         timezone: 'America/Argentina/Buenos_Aires',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ...(({ whatsappNotifications: whatsappNotif } as any)),
+        showServices:  vitrineSettings.showServices,
+        showStaff:     vitrineSettings.showStaff,
+        showPrices:    vitrineSettings.showPrices,
+        showReviews:   vitrineSettings.showReviews,
+        showGiftCards: vitrineSettings.showGiftCards,
       },
     });
     setSaving(false);
@@ -325,6 +356,85 @@ export default function ConfigTabView() {
           </button>
         </section>
 
+        {/* ── Control de Vitrina ── */}
+        <section className="md:col-span-12 relative isolate rounded-[24px] border border-white/[0.08] p-6 bg-[#0d0d0d]/40 overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-violet-400" style={{ fontSize: '24px' }}>storefront</span>
+              <div>
+                <h3 className="font-playfair text-xl font-bold italic text-violet-300">Tu Vitrina</h3>
+                <p className="text-[11px] text-[#7a766e]">Controlá qué ven tus clientas cuando visitan tu perfil público</p>
+              </div>
+            </div>
+            {/* Toggle publicar/despublicar */}
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] text-[#7a766e]">
+                {isActivePublicly ? 'Visible al público' : 'Oculto al público'}
+              </span>
+              <button
+                onClick={() => setIsActivePublicly(v => !v)}
+                className={`w-11 h-6 rounded-full relative transition-all cursor-pointer ${
+                  isActivePublicly ? 'bg-violet-500' : 'bg-white/[0.1]'
+                }`}
+              >
+                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${
+                  isActivePublicly ? 'right-1' : 'left-1'
+                }`} />
+              </button>
+            </div>
+          </div>
+
+          {/* Grid de toggles */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {([
+              { key: 'showServices',      icon: 'content_cut',    label: 'Mostrar servicios',      desc: 'Tu catálogo visible en la vitrina' },
+              { key: 'showStaff',         icon: 'people',         label: 'Mostrar equipo',         desc: 'Las clientas eligen profesional' },
+              { key: 'showPrices',        icon: 'payments',       label: 'Mostrar precios',        desc: 'Precios visibles en el catálogo' },
+              { key: 'showReviews',       icon: 'star',           label: 'Mostrar reseñas',        desc: 'Opiniones de clientas anteriores' },
+              { key: 'allowGuestBooking', icon: 'person_add',     label: 'Reservas sin cuenta',    desc: 'Clientas sin registro pueden reservar' },
+              { key: 'showGiftCards',     icon: 'card_giftcard',  label: 'Vitrina gift cards',     desc: 'Vendé gift cards desde tu perfil' },
+            ] as { key: keyof typeof vitrineSettings; icon: string; label: string; desc: string }[]).map(({ key, icon, label, desc }) => {
+              const enabled = vitrineSettings[key];
+              return (
+                <div
+                  key={key}
+                  onClick={() => setVitrineSettings(prev => ({ ...prev, [key]: !prev[key] }))}
+                  className={`p-4 rounded-2xl border cursor-pointer transition-all duration-200 ${
+                    enabled
+                      ? 'bg-violet-500/[0.08] border-violet-400/[0.25]'
+                      : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.10]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span
+                      className={`material-symbols-outlined ${enabled ? 'text-violet-400' : 'text-[#7a766e]'}`}
+                      style={{ fontSize: '20px', fontVariationSettings: "'FILL' 1" }}
+                    >
+                      {icon}
+                    </span>
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                      enabled ? 'bg-violet-400 border-violet-400' : 'border-white/[0.20]'
+                    }`}>
+                      {enabled && (
+                        <span className="material-symbols-outlined text-[#09090b]" style={{ fontSize: '10px', fontVariationSettings: "'FILL' 1" }}>
+                          check
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <p className={`text-[12px] font-bold mb-0.5 transition-colors ${
+                    enabled ? 'text-[#f5f0e8]' : 'text-[#a09a8e]'
+                  }`}>
+                    {label}
+                  </p>
+                  <p className="text-[10px] text-[#7a766e] leading-tight">{desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
         {/* ── Equipo ── */}
         <section className="md:col-span-12 relative isolate rounded-[24px] border border-white/[0.08] p-6 bg-[#0d0d0d]/40 overflow-hidden">
           <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
@@ -528,6 +638,41 @@ export default function ConfigTabView() {
               >
                 <div className={`absolute top-1 w-3 h-3 rounded-full transition-all ${whatsappNotif ? 'right-1 bg-white' : 'left-1 bg-[#7a766e]'}`} />
               </button>
+            </div>
+
+            {/* Política de turnos */}
+            <div className="col-span-2 grid grid-cols-2 gap-3 mt-2">
+              <div className="space-y-2">
+                <label className="text-[9px] font-bold uppercase tracking-widest text-[#7a766e] ml-1">
+                  Duración de turnos
+                </label>
+                <select
+                  value={slotDuration}
+                  onChange={e => setSlotDuration(Number(e.target.value))}
+                  className="w-full bg-[#0d0d0d]/60 border border-white/[0.08] rounded-xl px-3 py-2.5 text-[12px] text-[#f5f0e8] focus:ring-1 focus:ring-violet-500/40 outline-none transition-all appearance-none cursor-pointer"
+                >
+                  <option value={15}>15 minutos</option>
+                  <option value={30}>30 minutos</option>
+                  <option value={45}>45 minutos</option>
+                  <option value={60}>1 hora</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[9px] font-bold uppercase tracking-widest text-[#7a766e] ml-1">
+                  Cancelación con anticipación
+                </label>
+                <select
+                  value={cancellationHours}
+                  onChange={e => setCancellationHours(Number(e.target.value))}
+                  className="w-full bg-[#0d0d0d]/60 border border-white/[0.08] rounded-xl px-3 py-2.5 text-[12px] text-[#f5f0e8] focus:ring-1 focus:ring-violet-500/40 outline-none transition-all appearance-none cursor-pointer"
+                >
+                  <option value={1}>1 hora</option>
+                  <option value={2}>2 horas</option>
+                  <option value={24}>24 horas</option>
+                  <option value={48}>48 horas</option>
+                  <option value={72}>72 horas</option>
+                </select>
+              </div>
             </div>
           </div>
 

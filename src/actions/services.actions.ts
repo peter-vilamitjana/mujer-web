@@ -69,3 +69,28 @@ export async function toggleServiceActive(
     return { success: false, error: 'No se pudo cambiar el estado del servicio.' };
   }
 }
+
+export async function getGlobalFeaturedServices(): Promise<Service[]> {
+  try {
+    const snap = await adminDb
+      .collection('servicios')
+      .where('destacado', '==', true)
+      .limit(6)
+      .get();
+      
+    return snap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.nombre || '',
+        price: data.precio || 0,
+        image: data.imagen || '',
+        durationMinutes: data.duracion || 60,
+        active: true,
+      } as Service;
+    });
+  } catch (error) {
+    console.error('Error fetching global featured services:', error);
+    return [];
+  }
+}

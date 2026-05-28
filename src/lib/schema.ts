@@ -61,12 +61,18 @@ export interface Tenant {
         primaryColor?: string;
         currency: string;
         timezone: string;
+        showServices?: boolean;
+        showStaff?: boolean;
+        showPrices?: boolean;
+        showReviews?: boolean;
+        showGiftCards?: boolean;
     };
     plan?: 'free' | 'pro' | 'enterprise';
     slotDurationMinutes?: number;
     cancellationPolicy?: {
         hoursInAdvance: number;
     };
+    isGuestBookingEnabled?: boolean;
 }
 
 export interface Branch {

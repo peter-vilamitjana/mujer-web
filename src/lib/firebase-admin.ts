@@ -6,11 +6,11 @@ function getAdminApp() {
 
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (!raw) {
-    throw new Error(
+    console.warn(
       '[firebase-admin] FIREBASE_SERVICE_ACCOUNT env var is not set. ' +
-      'Download a service account key from Firebase Console → Project Settings → Service Accounts ' +
-      'and paste the JSON as a single-line string in .env.local.'
+      'Initializing with a dummy project. Database calls will fail.'
     );
+    return initializeApp({ projectId: 'dummy-project' });
   }
 
   const serviceAccount = JSON.parse(raw);

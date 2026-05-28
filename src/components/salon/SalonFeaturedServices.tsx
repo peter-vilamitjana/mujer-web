@@ -3,22 +3,28 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { Servicio } from '@/lib/_types_archive';
-import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { getServices } from '@/actions/services.actions';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { ScrollReveal } from './ScrollReveal';
 
+interface FeaturedServiceUI {
+  id: string;
+  name: string;
+  price: number;
+  image?: string;
+  badge?: string;
+}
+
 // Mock data — fallback idéntico al original
-const mockServices: Omit<Servicio, 'id' | 'duracion' | 'descripcion'>[] = [
-  { nombre: 'ALISADO FOTÓNICO LASER', precio: 34999, imagen: '/images/services/alisado.png', badge: 'NOVEDAD', destacado: true, requiereLargo: true, variable: true },
-  { nombre: 'PERMANENTE', precio: 34999, imagen: '/images/services/permanente.png', badge: 'TENDENCIA', destacado: true, requiereLargo: true, variable: false },
-  { nombre: 'BALAYAGE', precio: 29999, imagen: '/images/services/balayage.png', badge: 'MÁS BUSCADOS', destacado: true, requiereLargo: true, variable: true },
-  { nombre: 'CORTE & ESTILO', precio: 15999, imagen: '/images/services/corte.png', badge: 'CLÁSICO', destacado: true, requiereLargo: false, variable: false },
-  { nombre: 'COLORACIÓN PROFESIONAL', precio: 24999, imagen: '/images/services/coloracion.png', badge: 'PREMIUM', destacado: true, requiereLargo: true, variable: true },
-  { nombre: 'KERATINA PROFESIONAL', precio: 39999, imagen: '/images/services/keratina.png', badge: 'TRATAMIENTO', destacado: true, requiereLargo: true, variable: true },
+const mockServices: Omit<FeaturedServiceUI, 'id'>[] = [
+  { name: 'ALISADO FOTÓNICO LASER', price: 34999, image: '/images/services/alisado.png', badge: 'NOVEDAD' },
+  { name: 'PERMANENTE', price: 34999, image: '/images/services/permanente.png', badge: 'TENDENCIA' },
+  { name: 'BALAYAGE', price: 29999, image: '/images/services/balayage.png', badge: 'MÁS BUSCADOS' },
+  { name: 'CORTE & ESTILO', price: 15999, image: '/images/services/corte.png', badge: 'CLÁSICO' },
+  { name: 'COLORACIÓN PROFESIONAL', price: 24999, image: '/images/services/coloracion.png', badge: 'PREMIUM' },
+  { name: 'KERATINA PROFESIONAL', price: 39999, image: '/images/services/keratina.png', badge: 'TRATAMIENTO' },
 ];
 
 // CAMBIO 1: Props del tenant
@@ -28,50 +34,39 @@ interface SalonFeaturedServicesProps {
 }
 
 export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFeaturedServicesProps) {
-  const [services, setServices] = useState<Servicio[]>([]);
+  const [services, setServices] = useState<FeaturedServiceUI[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        // CAMBIO 2: Query a subcolección del tenant en lugar de colección legacy
-        const servicesQuery = query(
-          collection(db, 'tenants', tenantId, 'services'),
-          where('active', '==', true)
-        );
-        const querySnapshot = await getDocs(servicesQuery);
+        const dbServices = await getServices(tenantId, true); // true = onlyActive
 
-        // Mapeo de campos schema nuevo → tipo Servicio legacy (sin modificar types.ts)
-        let servicesData: Servicio[] = querySnapshot.docs.map(doc => {
-          const data = doc.data();
+        // Mapeo de campos schema nuevo → tipo UI
+        let servicesData: FeaturedServiceUI[] = dbServices.map(s => {
           // price puede ser number (precio fijo) o objeto {corto, mediano, largo}
-          const precio = typeof data.price === 'number'
-            ? data.price
-            : (data.price?.corto ?? data.price?.mediano ?? data.price?.largo ?? 0);
+          const price = typeof s.price === 'number'
+            ? s.price
+            : (s.price?.corto ?? s.price?.mediano ?? s.price?.largo ?? 0);
 
           return {
-            id: doc.id,
-            nombre: data.name ?? '',
-            descripcion: data.description ?? '',
-            precio,
-            imagen: data.image ?? undefined,
-            badge: undefined,           // el schema nuevo no tiene badge — se muestra sin badge
-            destacado: true,
-            duracion: data.durationMinutes ?? 60,
-            requiereLargo: data.requiresLengthSelection ?? false,
-            variable: data.variablePrice ?? false,
-          } as Servicio;
+            id: s.id,
+            name: s.name,
+            price,
+            image: s.image,
+            badge: undefined,
+          };
         });
 
         if (servicesData.length === 0) {
           console.log("No services found in tenant, using mock data.");
-          servicesData = mockServices.map((s, i) => ({ ...s, id: `mock-${i}`, duracion: 60, descripcion: '' }));
+          servicesData = mockServices.map((s, i) => ({ ...s, id: `mock-${i}` }));
         }
 
         setServices(servicesData.slice(0, 6));
       } catch (error: any) {
         console.warn("Fetch de servicios falló, usando datos de prueba.", error?.message || error);
-        setServices(mockServices.map((s, i) => ({ ...s, id: `mock-${i}`, duracion: 60, descripcion: '' })));
+        setServices(mockServices.map((s, i) => ({ ...s, id: `mock-${i}` })));
       } finally {
         setLoading(false);
       }
@@ -123,10 +118,10 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
                 <ScrollReveal key={service.id} delay={index * 0.1}>
                   <div className="bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-black/[0.03]">
                     <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-6">
-                      {service.imagen ? (
+                      {service.image ? (
                         <img
-                          src={service.imagen}
-                          alt={service.nombre}
+                          src={service.image}
+                          alt={service.name}
                           className="object-cover w-full h-full"
                         />
                       ) : (
@@ -140,7 +135,7 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
                     </div>
                     <div className="space-y-3">
                       <h3 className="font-serif text-xl font-bold text-foreground">
-                        {service.nombre.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')}
+                        {service.name.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')}
                       </h3>
                       <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                         Asesoramiento personalizado de nuestros expertos styling final para un look moderno renovado.
@@ -171,10 +166,10 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
                         <div className="group relative flex h-full flex-col overflow-hidden rounded-[2.5rem] transition-all duration-500 p-8 bg-white shadow-[0_10px_40px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(163,127,255,0.12)] border border-black/5">
                           <div className="relative mb-8 flex-shrink-0">
                             <div className="overflow-hidden rounded-3xl transition-all duration-500">
-                              {service.imagen ? (
+                              {service.image ? (
                                 <img
-                                  src={service.imagen}
-                                  alt={service.nombre}
+                                  src={service.image}
+                                  alt={service.name}
                                   className="object-cover w-full h-80 group-hover:scale-105 transition-transform duration-700"
                                 />
                               ) : (
@@ -188,10 +183,10 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
                             )}
                           </div>
                           <div className="flex flex-grow flex-col">
-                            <h3 className="flex-grow text-2xl font-normal uppercase tracking-wide text-foreground font-serif">{service.nombre}</h3>
+                            <h3 className="flex-grow text-2xl font-normal uppercase tracking-wide text-foreground font-serif">{service.name}</h3>
                             <div className="mt-6 pt-6 border-t border-dotted border-black/10">
                               <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Desde</p>
-                              <p className="text-4xl font-bold text-[#9D6EFE]">{formatPrice(service.precio || 0)}</p>
+                              <p className="text-4xl font-bold text-[#9D6EFE]">{formatPrice(service.price || 0)}</p>
                             </div>
                             <div className="mt-8">
                               {/* CAMBIO 3: /login → /salones/{tenantSlug}/book */}

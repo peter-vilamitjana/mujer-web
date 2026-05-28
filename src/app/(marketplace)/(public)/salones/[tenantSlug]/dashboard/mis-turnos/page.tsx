@@ -7,7 +7,6 @@ import { format, parseISO, isFuture, isPast, subDays, startOfDay } from "date-fn
 import { es } from "date-fns/locale";
 import { db } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
-import type { Turno } from "@/lib/_types_archive";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/contexts/UserContext";
 import Link from "next/link";
@@ -32,10 +31,10 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn, safeFormatDate } from "@/lib/utils";
-import { getMyAppointments } from "@/actions/appointments.actions";
+import { getMyAppointments, type ClientAppointment } from "@/actions/appointments.actions";
 
-function ProximoTurnoCard({ turno, onCancel }: { turno: Turno & { tenantId: string }, onCancel: (id: string, tenantId: string) => void }) {
-  const services = turno.servicio.split(',').map(s => s.trim());
+function ProximoTurnoCard({ turno, onCancel }: { turno: ClientAppointment, onCancel: (id: string, tenantId: string) => void }) {
+  const services = turno.serviceNames.split(',').map(s => s.trim());
   const [isExpanded, setIsExpanded] = useState(false);
 
   const displayServices = isExpanded ? services : services.slice(0, 3);
@@ -46,12 +45,12 @@ function ProximoTurnoCard({ turno, onCancel }: { turno: Turno & { tenantId: stri
   let time = "00:00";
 
   try {
-    const dateObj = parseISO(turno.fecha);
+    const dateObj = parseISO(turno.date);
     day = format(dateObj, "d", { locale: es });
     month = format(dateObj, "MMMM", { locale: es });
     time = format(dateObj, "HH:mm");
   } catch (e) {
-    console.error("Invalid date in card:", turno.fecha);
+    console.error("Invalid date in card:", turno.date);
   }
 
   return (
@@ -69,7 +68,7 @@ function ProximoTurnoCard({ turno, onCancel }: { turno: Turno & { tenantId: stri
 
       <div className="flex-1 flex flex-col justify-between">
         <div>
-          <p className="flex items-center gap-2 text-sm opacity-90"><User className="h-4 w-4" />Con {turno.empleadaNombre}</p>
+          <p className="flex items-center gap-2 text-sm opacity-90"><User className="h-4 w-4" />Con {turno.staffName}</p>
           <p className="font-semibold mt-3 mb-1 text-sm">Servicios:</p>
           <Collapsible open={isExpanded} onOpenChange={setIsExpanded} className="space-y-1">
             <ul className="space-y-1 text-xs list-disc list-inside text-white/90">
@@ -110,7 +109,7 @@ function ProximoTurnoCard({ turno, onCancel }: { turno: Turno & { tenantId: stri
 }
 
 export default function MisTurnosPage() {
-  const [turnos, setTurnos] = useState<Turno[]>([]);
+  const [turnos, setTurnos] = useState<ClientAppointment[]>([]);
   const [loading, setLoading] = useState(true);
   const user = useUser();
   const { toast } = useToast();
@@ -143,27 +142,7 @@ export default function MisTurnosPage() {
 
     setLoading(true);
     getMyAppointments().then((data) => {
-      const mapped: (Turno & { tenantId: string })[] = data.map(d => {
-        let estado: Turno['estado'] = 'pendiente';
-        if (d.status === 'completed') estado = 'realizado';
-        else if (d.status === 'cancelled') estado = 'cancelado';
-        else if (d.status === 'pending_payment') estado = 'pendiente_pago';
-
-        return {
-          id: d.id,
-          clienteNombre: user.nombre || '',
-          empleadaNombre: d.staffName,
-          servicio: d.serviceNames,
-          fecha: d.date,
-          estado,
-          precio: d.priceEstimated,
-          duracion: d.durationMinutes,
-          clienteId: user.id,
-          tenantId: d.tenantId,
-        } as Turno & { tenantId: string };
-      });
-
-      setTurnos(mapped);
+      setTurnos(data);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [user?.id]);
@@ -173,7 +152,7 @@ export default function MisTurnosPage() {
     try {
       const turnoRef = doc(db, 'tenants', turnoTenantId, 'appointments', turnoId);
       await updateDoc(turnoRef, { status: 'cancelled' });
-      setTurnos(prev => prev.map(t => t.id === turnoId ? { ...t, estado: 'cancelado' as const } : t));
+      setTurnos(prev => prev.map(t => t.id === turnoId ? { ...t, status: 'cancelled' as const } : t));
       toast({ title: "Turno cancelado", description: "Tu turno ha sido cancelado con éxito." });
     } catch (error) {
       console.error("Error al cancelar turno:", error);
@@ -181,29 +160,33 @@ export default function MisTurnosPage() {
     }
   };
 
-  const getStatusInfo = (status: Turno['estado']) => {
+  const getStatusInfo = (status: string) => {
     switch (status) {
-      case 'pendiente':
+      case 'pending':
         return { text: 'Pendiente', icon: Clock, className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' };
-      case 'realizado':
+      case 'confirmed':
+        return { text: 'Confirmado', icon: CheckCircle, className: 'bg-blue-500/20 text-blue-400 border-blue-500/30' };
+      case 'completed':
+      case 'cobrado':
         return { text: 'Realizado', icon: CheckCircle, className: 'bg-green-500/20 text-green-400 border-green-500/30' };
-      case 'cancelado':
+      case 'cancelled':
+      case 'no_show':
         return { text: 'Cancelado', icon: Ban, className: 'bg-red-500/20 text-red-400 border-red-500/30' };
-      case 'pendiente_pago':
+      case 'pending_payment':
         return { text: 'Pendiente de Seña', icon: Clock, className: 'bg-orange-500/20 text-orange-400 border-orange-500/30' };
       default:
         return { text: 'Desconocido', icon: Clock, className: 'bg-gray-500/20 text-gray-400 border-gray-500/30' };
     }
   };
 
-  const proximosTurnos = turnos.filter(t => isFuture(parseISO(t.fecha)) && (t.estado === 'pendiente' || t.estado === 'pendiente_pago'));
+  const proximosTurnos = turnos.filter(t => isFuture(parseISO(t.date)) && (t.status === 'pending' || t.status === 'pending_payment' || t.status === 'confirmed'));
 
   const historialTurnos = useMemo(() => {
     const allPastTurnos = turnos.filter(t => !proximosTurnos.some(pt => pt.id === t.id));
     if (filter === 'all') return allPastTurnos;
     const daysToSubtract = ({ week: 7, month: 30, quarter: 90 } as Record<string, number>)[filter] ?? 30;
     const startDate = startOfDay(subDays(new Date(), daysToSubtract));
-    return allPastTurnos.filter(t => new Date(t.fecha) >= startDate);
+    return allPastTurnos.filter(t => new Date(t.date) >= startDate);
   }, [turnos, proximosTurnos, filter]);
 
   const visibleHistorial = historialTurnos.slice(0, visibleCount);
@@ -234,7 +217,7 @@ export default function MisTurnosPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {proximosTurnos.map(turno => (
-              <ProximoTurnoCard key={turno.id} turno={turno as Turno & { tenantId: string }} onCancel={handleCancelTurno} />
+              <ProximoTurnoCard key={turno.id} turno={turno} onCancel={handleCancelTurno} />
             ))}
           </CardContent>
         </Card>
@@ -274,10 +257,10 @@ export default function MisTurnosPage() {
           ) : visibleHistorial.length > 0 ? (
             <div className="space-y-4">
               {visibleHistorial.map(turno => {
-                const statusInfo = getStatusInfo(turno.estado);
-                let dateStr = turno.fecha;
+                const statusInfo = getStatusInfo(turno.status);
+                let dateStr = turno.date;
                 try {
-                  dateStr = format(parseISO(turno.fecha), "d 'de' MMMM yyyy", { locale: es });
+                  dateStr = format(parseISO(turno.date), "d 'de' MMMM yyyy", { locale: es });
                 } catch (e) {
                   console.error("Date error in history:", e);
                 }
@@ -287,7 +270,7 @@ export default function MisTurnosPage() {
                       <div className="space-y-1">
                         <p className="font-semibold capitalize text-base">{dateStr}</p>
                         <ul className="text-sm text-muted-foreground list-disc list-inside">
-                          {turno.servicio.split(',').map((s, i) => <li key={i}>{s.trim()}</li>)}
+                          {turno.serviceNames.split(',').map((s, i) => <li key={i}>{s.trim()}</li>)}
                         </ul>
                       </div>
                       <Badge variant="outline" className={`gap-2 text-xs font-bold ${statusInfo.className}`}>
