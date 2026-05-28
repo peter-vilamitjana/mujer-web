@@ -10,6 +10,7 @@ import {
   type SerializedPreferences,
   type FavoriteSalonData,
   updateMyPreferences,
+  updateMyHairProfile,
   cancelMyAppointment,
 } from '@/actions/profile.actions';
 import ExplorarTab from './ExplorarTab';
@@ -107,6 +108,21 @@ export default function PerfilClient({
   const hairCondition = initialHairProfile?.condition ?? null;
   const ringOffset = 213.6 * (1 - hairScore / 100);
 
+  // ── Hair profile editing ─────────────────────────────────────────────────
+  const [hairForm, setHairForm] = React.useState({
+    type:      initialHairProfile?.type      ?? '',
+    thickness: initialHairProfile?.thickness ?? '',
+    condition: initialHairProfile?.condition ?? '',
+    goal:      initialHairProfile?.goal      ?? '',
+    allergies: initialHairProfile?.allergies?.join(', ') ?? '',
+  });
+  const [hairSaving, setHairSaving] = React.useState(false);
+  const [hairSaved,  setHairSaved]  = React.useState(false);
+  const [hairError,  setHairError]  = React.useState<string | null>(null);
+
+  const hairFormScore = CONDITION_SCORE[hairForm.condition] ?? hairScore;
+  const hairFormLabel = CONDITION_LABEL[hairForm.condition] ?? hairStatusLabel;
+
   // ── Favorites for the panel map widget ───────────────────────────────────
   const mySalons = initialFavorites.slice(0, 3).map((s, i) => ({
     id: i + 1,
@@ -119,6 +135,27 @@ export default function PerfilClient({
     (a) => a.status === 'confirmed' || a.status === 'pending',
   ).length;
   const nextAppointment = upcomingAppointments[0] ?? null;
+
+  const handleSaveHairProfile = async () => {
+    setHairSaving(true);
+    setHairError(null);
+    const result = await updateMyHairProfile({
+      type:      hairForm.type      || undefined,
+      thickness: hairForm.thickness || undefined,
+      condition: hairForm.condition || undefined,
+      goal:      hairForm.goal      || undefined,
+      allergies: hairForm.allergies
+        ? hairForm.allergies.split(',').map(a => a.trim()).filter(Boolean)
+        : [],
+    });
+    setHairSaving(false);
+    if (result.success) {
+      setHairSaved(true);
+      setTimeout(() => setHairSaved(false), 2500);
+    } else {
+      setHairError(result.error ?? 'Error al guardar.');
+    }
+  };
 
   const handleCancelAppointment = async (appt: HistorialEntry) => {
     if (!appt.tenantId) return;
@@ -732,6 +769,166 @@ export default function PerfilClient({
                               : '"Creá tu ficha capilar para que tu estilista pueda personalizarte el tratamiento."'}
                           </span>
                         </div>
+                      </div>
+
+                      {/* ── Formulario de edición ─────────────────────────── */}
+                      <div className="mt-8 border-t border-white/5 pt-8">
+
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-6">
+                          <div>
+                            <p className="text-[9px] text-[#7a766e] uppercase tracking-[0.4em] font-label font-bold mb-1">
+                              Tu cabello
+                            </p>
+                            <h3 className="font-headline text-xl text-[#f5f0e8] italic">
+                              Expediente Capilar
+                            </h3>
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <span className="text-[#f1c97d] font-headline text-2xl italic">
+                              {hairFormScore}%
+                            </span>
+                            <span className="text-[10px] text-[#7a766e] font-label">
+                              {hairFormLabel}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Selector grid — Tipo / Grosor / Estado */}
+                        <div className="grid grid-cols-3 gap-3 mb-5">
+
+                          {/* Tipo */}
+                          <div>
+                            <p className="text-[9px] text-[#7a766e] uppercase tracking-[0.25em] font-label font-bold mb-2">
+                              Tipo
+                            </p>
+                            <div className="flex flex-col gap-1.5">
+                              {['liso', 'ondulado', 'rizado', 'afro'].map((opt) => (
+                                <button
+                                  key={opt}
+                                  onClick={() => setHairForm(f => ({ ...f, type: opt }))}
+                                  className={`px-3 py-2 rounded-xl text-[11px] font-label font-medium
+                                    text-left transition-all duration-200 capitalize cursor-pointer
+                                    ${hairForm.type === opt
+                                      ? 'bg-[#f1c97d]/10 border border-[#f1c97d]/30 text-[#f1c97d]'
+                                      : 'bg-white/[0.03] border border-white/[0.06] text-[#7a766e] hover:text-[#a09a8e]'
+                                    }`}
+                                >
+                                  {opt}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Grosor */}
+                          <div>
+                            <p className="text-[9px] text-[#7a766e] uppercase tracking-[0.25em] font-label font-bold mb-2">
+                              Grosor
+                            </p>
+                            <div className="flex flex-col gap-1.5">
+                              {['fino', 'normal', 'grueso'].map((opt) => (
+                                <button
+                                  key={opt}
+                                  onClick={() => setHairForm(f => ({ ...f, thickness: opt }))}
+                                  className={`px-3 py-2 rounded-xl text-[11px] font-label font-medium
+                                    text-left transition-all duration-200 capitalize cursor-pointer
+                                    ${hairForm.thickness === opt
+                                      ? 'bg-[#f1c97d]/10 border border-[#f1c97d]/30 text-[#f1c97d]'
+                                      : 'bg-white/[0.03] border border-white/[0.06] text-[#7a766e] hover:text-[#a09a8e]'
+                                    }`}
+                                >
+                                  {opt}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Estado */}
+                          <div>
+                            <p className="text-[9px] text-[#7a766e] uppercase tracking-[0.25em] font-label font-bold mb-2">
+                              Estado
+                            </p>
+                            <div className="flex flex-col gap-1.5">
+                              {['sano', 'procesado', 'dañado', 'muy-dañado'].map((opt) => (
+                                <button
+                                  key={opt}
+                                  onClick={() => setHairForm(f => ({ ...f, condition: opt }))}
+                                  className={`px-3 py-2 rounded-xl text-[11px] font-label font-medium
+                                    text-left transition-all duration-200 capitalize cursor-pointer
+                                    ${hairForm.condition === opt
+                                      ? 'bg-[#f1c97d]/10 border border-[#f1c97d]/30 text-[#f1c97d]'
+                                      : 'bg-white/[0.03] border border-white/[0.06] text-[#7a766e] hover:text-[#a09a8e]'
+                                    }`}
+                                >
+                                  {opt.replace('-', ' ')}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Alergias */}
+                        <div className="mb-4">
+                          <p className="text-[9px] text-[#7a766e] uppercase tracking-[0.25em] font-label font-bold mb-2">
+                            Alergias o sensibilidades
+                          </p>
+                          <input
+                            type="text"
+                            value={hairForm.allergies}
+                            onChange={e => setHairForm(f => ({ ...f, allergies: e.target.value }))}
+                            placeholder="Ej: amonio, parafenilendiamina..."
+                            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl
+                              px-4 py-3 text-[13px] text-[#f5f0e8] font-label placeholder:text-[#7a766e]
+                              focus:border-[#f1c97d]/40 focus:bg-white/[0.06] outline-none
+                              transition-all duration-200"
+                          />
+                          <p className="text-[10px] text-[#7a766e] mt-1.5 font-label">
+                            Separadas por coma si hay más de una
+                          </p>
+                        </div>
+
+                        {/* Objetivo capilar */}
+                        <div className="mb-6">
+                          <p className="text-[9px] text-[#7a766e] uppercase tracking-[0.25em] font-label font-bold mb-2">
+                            Mi objetivo capilar
+                          </p>
+                          <textarea
+                            value={hairForm.goal}
+                            onChange={e => setHairForm(f => ({ ...f, goal: e.target.value }))}
+                            placeholder="Ej: Quiero llegar al rubio platino sin romper mi cabello..."
+                            rows={3}
+                            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl
+                              px-4 py-3 text-[13px] text-[#f5f0e8] font-label placeholder:text-[#7a766e]
+                              focus:border-[#f1c97d]/40 focus:bg-white/[0.06] outline-none
+                              transition-all duration-200 resize-none"
+                          />
+                        </div>
+
+                        {/* Error */}
+                        {hairError && (
+                          <p className="text-[12px] text-red-400 mb-4 font-label">{hairError}</p>
+                        )}
+
+                        {/* Botón guardar */}
+                        <button
+                          onClick={handleSaveHairProfile}
+                          disabled={hairSaving}
+                          className={`w-full py-3.5 rounded-full font-label font-bold text-[12px]
+                            uppercase tracking-widest transition-all duration-200 cursor-pointer
+                            ${hairSaved
+                              ? 'bg-emerald-400/20 text-emerald-400 border border-emerald-400/30'
+                              : hairSaving
+                                ? 'bg-[#f1c97d]/40 text-[#09090b]/60 cursor-not-allowed'
+                                : 'bg-[#f1c97d] text-[#09090b] hover:bg-[#f1c97d]/90 active:scale-[0.98]'
+                            }`}
+                        >
+                          {hairSaved
+                            ? '✓ Guardado'
+                            : hairSaving
+                              ? 'Guardando...'
+                              : 'Guardar perfil capilar'
+                          }
+                        </button>
                       </div>
                     </div>
                   </div>
