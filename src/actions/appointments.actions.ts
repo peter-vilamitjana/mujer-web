@@ -35,6 +35,28 @@ export async function getAppointmentsForDay(
   }
 }
 
+export async function getAppointmentsForPeriod(
+  tenantId: string,
+  branchId: string | null,
+  startDate: Date,
+  endDate?: Date,
+): Promise<Appointment[]> {
+  const base = adminDb.collection('tenants').doc(tenantId).collection('appointments');
+  const baseQ = branchId ? base.where('branchId', '==', branchId) : base;
+  const dateQ = endDate
+    ? baseQ.where('date', '>=', Timestamp.fromDate(startDate)).where('date', '<=', Timestamp.fromDate(endDate))
+    : baseQ.where('date', '>=', Timestamp.fromDate(startDate));
+  const q = dateQ.orderBy('date', 'desc');
+
+  try {
+    const snap = await q.get();
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }) as Appointment);
+  } catch (err) {
+    console.warn('[getAppointmentsForPeriod] Firestore read failed (returning []):', (err as Error)?.message);
+    return [];
+  }
+}
+
 // ─── Client-facing reads (Firestore REST — no Firebase Auth required) ─────────
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'mujer-app';
