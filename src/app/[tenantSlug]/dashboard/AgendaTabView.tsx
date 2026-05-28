@@ -2,15 +2,11 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus, Sparkles } from 'lucide-react';
-import {
-  collection, query, where, orderBy, getDocs, Timestamp,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useTenant } from '@/contexts/TenantContext';
 import { useStaff } from '@/hooks/useStaff';
 import { useCatalog } from '@/hooks/useCatalog';
 import { searchCustomers, createCustomer } from '@/actions/customer.actions';
-import { createAppointment } from '@/actions/appointments.actions';
+import { createAppointment, getAppointmentsForDay } from '@/actions/appointments.actions';
 import { closeAppointment } from '@/actions/checkout.actions';
 import type { Appointment, AppointmentStatus, Service } from '@/lib/schema';
 import type { CreateEventBody } from '@/app/api/google/event/route';
@@ -101,7 +97,9 @@ function getServiceDurSlots(svc: Service): number {
 }
 
 function mapToAppt(a: Appointment, pros: Pro[]): Appt | null {
-  const date = (a.date as Timestamp).toDate();
+  const dateRaw = a.date as any;
+  const date = dateRaw?.toDate?.() ? dateRaw.toDate() :
+               (dateRaw?._seconds ? new Date(dateRaw._seconds * 1000) : new Date(dateRaw));
   const slot = dateToSlot(date);
   if (slot < 0 || slot >= SLOTS.length) return null;
   const proIdx = pros.findIndex(p => p.id === a.staffId);
@@ -258,22 +256,12 @@ export default function AgendaTabView() {
     try {
       const targetDate = new Date();
       targetDate.setDate(targetDate.getDate() + dateOffset);
-      const start = new Date(targetDate); start.setHours(0, 0, 0, 0);
-      const end   = new Date(targetDate); end.setHours(23, 59, 59, 999);
 
-      const constraints = [
-        where('status', 'not-in', ['cancelled', 'no_show']),
-        where('date', '>=', Timestamp.fromDate(start)),
-        where('date', '<=', Timestamp.fromDate(end)),
-        orderBy('date', 'asc'),
-      ];
-      if (branchId) constraints.unshift(where('branchId', '==', branchId) as any);
+      const rawAppts = await getAppointmentsForDay(tenantId, branchId ?? null, targetDate);
+      const validAppts = rawAppts.filter(a => a.status !== 'cancelled' && a.status !== 'no_show');
 
-      const snap = await getDocs(
-        query(collection(db, 'tenants', tenantId, 'appointments'), ...constraints),
-      );
-      const loaded = snap.docs
-        .map(d => mapToAppt({ id: d.id, ...d.data() } as Appointment, pros))
+      const loaded = validAppts
+        .map(a => mapToAppt(a, pros))
         .filter((a): a is Appt => a !== null);
       setAppts(loaded);
     } catch (err) {

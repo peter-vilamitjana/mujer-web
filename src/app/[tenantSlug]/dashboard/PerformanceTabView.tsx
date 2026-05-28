@@ -1,14 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useTransition } from 'react';
-import {
-  collection, query, where, orderBy,
-  getDocs, Timestamp,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useTenant } from '@/contexts/TenantContext';
 import { useStaff } from '@/hooks/useStaff';
 import { updateStaffCommissions } from '@/actions/staff.actions';
+import { getServices } from '@/actions/services.actions';
+import { getAppointmentsForPeriod } from '@/actions/appointments.actions';
 import type { Staff, Appointment, Service, StaffCommissions } from '@/lib/schema';
 import { format, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -41,8 +38,9 @@ function getPeriodLabel(period: 'dia' | 'semana' | 'mes'): string {
   return format(now, 'MMMM yyyy', { locale: es });
 }
 
-const toDate = (val: unknown): Date =>
-  (val as { toDate?: () => Date })?.toDate?.() ?? new Date(val as string);
+const toDate = (val: any): Date =>
+  val?.toDate?.() ? val.toDate() :
+  (val?._seconds ? new Date(val._seconds * 1000) : new Date(val));
 
 const fmtDate = (val: unknown) => format(toDate(val), "d MMM", { locale: es });
 
@@ -261,8 +259,8 @@ export default function PerformanceTabView() {
   // Load services for commission editor
   useEffect(() => {
     if (!tenantId) return;
-    getDocs(collection(db, 'tenants', tenantId, 'services'))
-      .then(snap => setServices(snap.docs.map(d => ({ id: d.id, ...d.data() } as Service))))
+    getServices(tenantId)
+      .then(data => setServices(data))
       .catch(console.error);
   }, [tenantId]);
 
@@ -271,14 +269,8 @@ export default function PerformanceTabView() {
     if (!tenantId) return;
     setApptLoading(true);
     const periodStart = getPeriodStart(period);
-    const q = query(
-      collection(db, 'tenants', tenantId, 'appointments'),
-      where('date', '>=', Timestamp.fromDate(periodStart)),
-      orderBy('date', 'desc')
-    );
-    getDocs(q)
-      .then(snap => {
-        const all = snap.docs.map(d => ({ id: d.id, ...d.data() } as Appointment));
+    getAppointmentsForPeriod(tenantId, null, periodStart)
+      .then(all => {
         setAppointments(all.filter(a => COMPLETED_STATUSES.includes(a.status)));
       })
       .catch(err => console.error('[PerformanceTabView] appointments query:', err))
