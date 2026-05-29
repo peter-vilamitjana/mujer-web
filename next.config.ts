@@ -12,10 +12,10 @@ const cspDirectives = [
   "default-src 'self'",
   // Next.js necesita 'unsafe-inline' para scripts de hidratación del cliente
   "script-src 'self' 'unsafe-inline' https://apis.google.com",
-  // Tailwind y Framer Motion emiten estilos inline
-  "style-src 'self' 'unsafe-inline'",
-  // Fuentes propias únicamente
-  "font-src 'self'",
+  // Tailwind, Framer Motion y Google Fonts (hojas de estilo)
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  // Fuentes propias + Google Fonts (archivos de fuente desde gstatic)
+  "font-src 'self' https://fonts.gstatic.com",
   // Imágenes: Firebase Storage, avatares de Google, datos embebidos
   "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://lh3.googleusercontent.com",
   // Conexiones: Firebase, Google APIs, Sentry, MercadoPago, WhatsApp API
