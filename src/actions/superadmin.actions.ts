@@ -3,6 +3,7 @@
 import { requireSuperAdmin } from '@/lib/auth-guards'
 import { adminDb } from '@/lib/firebase-admin'
 import { FieldValue } from 'firebase-admin/firestore'
+import type { QuerySnapshot } from 'firebase-admin/firestore'
 
 // ── Vista 1: Command Center ────────────────────────────────────────────
 
@@ -32,11 +33,19 @@ export async function getSuperAdminStats() {
   const todayEnd = new Date(today)
   todayEnd.setHours(23, 59, 59, 999)
 
-  const apptSnap = await adminDb
-    .collectionGroup('appointments')
-    .where('date', '>=', today)
-    .where('date', '<=', todayEnd)
-    .get()
+  // Requiere índice COLLECTION_GROUP_ASC en appointments/date.
+  // Si el índice aún no existe, devuelve 0 en lugar de crashear.
+  let apptCount = 0
+  try {
+    const apptSnap = await adminDb
+      .collectionGroup('appointments')
+      .where('date', '>=', today)
+      .where('date', '<=', todayEnd)
+      .get()
+    apptCount = apptSnap.size
+  } catch {
+    apptCount = 0
+  }
 
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
@@ -84,7 +93,7 @@ export async function getSuperAdminStats() {
     activeTenants:     activeTenants.length,
     totalCustomers:    customerUsers.length,
     totalAdmins:       adminUsers.length,
-    appointmentsToday: apptSnap.size,
+    appointmentsToday: apptCount,
     planCounts,
     newTenantsThisWeek,
     newCustomersThisWeek,
@@ -207,11 +216,18 @@ export async function getSystemStatus() {
 export async function getRecentActivity(limit = 50) {
   await requireSuperAdmin()
 
-  const [tenantsSnap, usersSnap, apptSnap] = await Promise.all([
+  const [tenantsSnap, usersSnap] = await Promise.all([
     adminDb.collection('tenants').orderBy('createdAt', 'desc').limit(20).get(),
     adminDb.collection('users').orderBy('createdAt', 'desc').limit(20).get(),
-    adminDb.collectionGroup('appointments').orderBy('createdAt', 'desc').limit(20).get(),
   ])
+
+  // collectionGroup en appointments requiere índice — graceful fallback si no existe
+  let apptSnap: QuerySnapshot | null = null
+  try {
+    apptSnap = await adminDb.collectionGroup('appointments').orderBy('createdAt', 'desc').limit(20).get()
+  } catch {
+    apptSnap = null
+  }
 
   type ActivityItem = {
     type: 'salon' | 'user' | 'appointment'
@@ -243,7 +259,7 @@ export async function getRecentActivity(limit = 50) {
     })
   })
 
-  apptSnap.docs.forEach(d => {
+  apptSnap?.docs.forEach(d => {
     const data = d.data()
     events.push({
       type: 'appointment',
