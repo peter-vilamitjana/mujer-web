@@ -58,72 +58,80 @@ export function SalonesTable({ initialTenants }: { initialTenants: Tenant[] }) {
   }
 
   return (
-    <div className="rounded-xl border border-white/[0.06] overflow-hidden">
+    <div className="relative isolate rounded-[1.5rem] border border-white/[0.06] bg-[#0d0d0d]/60 overflow-hidden">
+      <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
+
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-white/[0.06] bg-white/[0.02]">
-            <th className="text-left px-4 py-3 text-xs text-white/40 font-medium uppercase tracking-wide">Nombre</th>
-            <th className="text-left px-4 py-3 text-xs text-white/40 font-medium uppercase tracking-wide">Plan</th>
-            <th className="text-left px-4 py-3 text-xs text-white/40 font-medium uppercase tracking-wide">Estado</th>
-            <th className="text-left px-4 py-3 text-xs text-white/40 font-medium uppercase tracking-wide">Creado</th>
-            <th className="text-right px-4 py-3 text-xs text-white/40 font-medium uppercase tracking-wide">Acciones</th>
+          <tr className="border-b border-white/[0.06]">
+            <th className="text-left px-5 py-3.5 text-[10px] text-[#7a766e] font-bold uppercase tracking-[0.15em]">Nombre</th>
+            <th className="text-left px-5 py-3.5 text-[10px] text-[#7a766e] font-bold uppercase tracking-[0.15em]">Plan</th>
+            <th className="text-left px-5 py-3.5 text-[10px] text-[#7a766e] font-bold uppercase tracking-[0.15em]">Estado</th>
+            <th className="text-left px-5 py-3.5 text-[10px] text-[#7a766e] font-bold uppercase tracking-[0.15em] hidden sm:table-cell">Creado</th>
+            <th className="text-right px-5 py-3.5 text-[10px] text-[#7a766e] font-bold uppercase tracking-[0.15em]">Acciones</th>
           </tr>
         </thead>
         <tbody>
           {tenants.length === 0 && (
             <tr>
-              <td colSpan={5} className="px-4 py-6 text-center text-white/30 text-sm">
-                Sin salones registrados
+              <td colSpan={5} className="px-5 py-14 text-center">
+                <span className="material-symbols-outlined text-[#7a766e]/30 block mb-2" style={{ fontSize: '32px' }}>store</span>
+                <p className="text-sm text-[#7a766e]">Sin salones registrados</p>
               </td>
             </tr>
           )}
           {tenants.map(tenant => (
             <tr
               key={tenant.id}
-              className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"
+              className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.025] transition-colors"
             >
-              <td className="px-4 py-3">
-                <div>
-                  <span className="text-white font-medium">{tenant.name}</span>
-                  <span className="block text-xs text-white/30">{tenant.slug}</span>
+              <td className="px-5 py-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-red-500/[0.08] border border-red-500/20 flex items-center justify-center text-[11px] font-bold text-red-400 shrink-0">
+                    {(tenant.name || '?')[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-semibold text-[#f5f0e8]">{tenant.name}</p>
+                    <p className="text-[11px] text-[#7a766e]">{tenant.slug}</p>
+                  </div>
                 </div>
               </td>
-              <td className="px-4 py-3">
+              <td className="px-5 py-3.5">
                 <select
                   value={tenant.plan}
                   onChange={e => handlePlanChange(tenant.id, e.target.value)}
                   disabled={isPending}
-                  className="bg-transparent border border-white/[0.08] rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-red-500/50 cursor-pointer"
+                  className="bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-[11px] text-[#f5f0e8] focus:outline-none focus:border-red-500/40 cursor-pointer transition-colors hover:border-white/[0.15] disabled:opacity-40"
                 >
                   {PLAN_OPTIONS.map(p => (
                     <option key={p} value={p} className="bg-[#0d0d0d]">{p}</option>
                   ))}
                 </select>
               </td>
-              <td className="px-4 py-3">
+              <td className="px-5 py-3.5">
                 <button
                   onClick={() => handleToggleActive(tenant.id, tenant.isActivePublicly)}
                   disabled={isPending}
                   className={[
-                    'text-xs px-2 py-0.5 rounded border transition-colors',
+                    'text-[11px] font-bold px-2.5 py-1 rounded-full border transition-all cursor-pointer disabled:opacity-40',
                     tenant.isActivePublicly
-                      ? 'text-green-400 border-green-500/20 bg-green-500/5 hover:bg-green-500/10'
-                      : 'text-red-400 border-red-500/20 bg-red-500/5 hover:bg-red-500/10',
+                      ? 'text-emerald-400 border-emerald-500/20 bg-emerald-500/[0.06] hover:bg-emerald-500/10'
+                      : 'text-rose-400 border-rose-500/20 bg-rose-500/[0.06] hover:bg-rose-500/10',
                   ].join(' ')}
                 >
-                  {tenant.isActivePublicly ? 'Activo' : 'Suspendido'}
+                  {tenant.isActivePublicly ? '● Activo' : '○ Suspendido'}
                 </button>
               </td>
-              <td className="px-4 py-3 text-xs text-white/30">
+              <td className="px-5 py-3.5 text-[11px] text-[#7a766e] font-mono hidden sm:table-cell">
                 {tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString('es-AR') : '—'}
               </td>
-              <td className="px-4 py-3">
-                <div className="flex items-center justify-end gap-2">
+              <td className="px-5 py-3.5">
+                <div className="flex items-center justify-end gap-1.5">
                   <a
                     href={`/${tenant.slug}/dashboard`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-1.5 rounded text-white/30 hover:text-white/70 hover:bg-white/[0.05] transition-colors"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-[#7a766e] hover:text-[#f5f0e8] hover:bg-white/[0.06] transition-all cursor-pointer"
                     title="Ver dashboard"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -133,13 +141,13 @@ export function SalonesTable({ initialTenants }: { initialTenants: Tenant[] }) {
                       <button
                         onClick={() => handleDelete(tenant.id)}
                         disabled={isPending}
-                        className="text-xs px-2 py-1 rounded bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                        className="text-[11px] px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors cursor-pointer"
                       >
                         Confirmar
                       </button>
                       <button
                         onClick={() => setConfirmDelete(null)}
-                        className="text-xs px-2 py-1 rounded text-white/40 hover:text-white/70 transition-colors"
+                        className="text-[11px] px-2.5 py-1 rounded-lg text-[#7a766e] hover:text-[#f5f0e8] hover:bg-white/[0.04] transition-colors cursor-pointer"
                       >
                         Cancelar
                       </button>
@@ -147,7 +155,7 @@ export function SalonesTable({ initialTenants }: { initialTenants: Tenant[] }) {
                   ) : (
                     <button
                       onClick={() => setConfirmDelete(tenant.id)}
-                      className="p-1.5 rounded text-white/20 hover:text-red-400 hover:bg-red-500/[0.05] transition-colors"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-[#7a766e]/40 hover:text-red-400 hover:bg-red-500/[0.06] transition-all cursor-pointer"
                       title="Eliminar salón"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -159,8 +167,10 @@ export function SalonesTable({ initialTenants }: { initialTenants: Tenant[] }) {
           ))}
         </tbody>
       </table>
+
       {isPending && (
-        <div className="px-4 py-2 text-xs text-white/30 border-t border-white/[0.04]">
+        <div className="px-5 py-2.5 text-[11px] text-[#7a766e] border-t border-white/[0.04] flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
           Guardando…
         </div>
       )}

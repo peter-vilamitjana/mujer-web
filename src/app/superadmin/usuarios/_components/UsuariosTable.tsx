@@ -46,11 +46,16 @@ export function UsuariosTable({ initialUsers }: { initialUsers: UserRow[] }) {
         pointer-events-none rounded-[inherit] -z-10" />
 
       {/* Header con filtros */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-white/[0.06]">
-        <h3 className="font-playfair text-xl italic text-[#f5f0e8]">
-          Todos los usuarios
-        </h3>
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+        <div className="flex items-center gap-3">
+          <h3 className="font-playfair text-xl italic text-[#f5f0e8]">
+            Usuarios
+          </h3>
+          <span className="text-[10px] font-bold text-[#7a766e] bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-full">
+            {filtered.length}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
           {(Object.keys(FILTER_LABELS) as Filter[]).map(f => (
             <button
               key={f}
@@ -59,15 +64,12 @@ export function UsuariosTable({ initialUsers }: { initialUsers: UserRow[] }) {
                 uppercase tracking-wider transition-all cursor-pointer ${
                 filter === f
                   ? 'bg-red-500/[0.12] text-red-400 border border-red-500/20'
-                  : 'text-[#7a766e] border border-white/[0.06] hover:text-[#f5f0e8]'
+                  : 'text-[#7a766e] border border-white/[0.06] hover:text-[#f5f0e8] hover:border-white/[0.12]'
               }`}
             >
               {FILTER_LABELS[f]}
             </button>
           ))}
-          <span className="ml-2 text-[11px] text-[#7a766e]">
-            {filtered.length} usuarios
-          </span>
         </div>
       </div>
 
@@ -138,9 +140,9 @@ export function UsuariosTable({ initialUsers }: { initialUsers: UserRow[] }) {
                   value={user.role === 'admin' ? 'admin' : 'customer'}
                   onChange={e => handleRoleChange(user.id, e.target.value)}
                   disabled={isPending}
-                  className="bg-[#0d0d0d] border border-white/[0.08] rounded-xl
-                    px-3 py-1.5 text-[11px] text-[#7a766e] outline-none
-                    hover:border-white/[0.15] transition-all cursor-pointer shrink-0
+                  className="bg-white/[0.04] border border-white/[0.08] rounded-lg
+                    px-2.5 py-1.5 text-[11px] text-[#f5f0e8] outline-none
+                    hover:border-white/[0.15] focus:border-red-500/40 transition-all cursor-pointer shrink-0
                     disabled:opacity-40"
                 >
                   <option value="customer" className="bg-[#0d0d0d]">Clienta</option>
@@ -153,7 +155,8 @@ export function UsuariosTable({ initialUsers }: { initialUsers: UserRow[] }) {
       </div>
 
       {isPending && (
-        <div className="px-6 py-2 text-[11px] text-[#7a766e] border-t border-white/[0.04]">
+        <div className="px-6 py-2.5 text-[11px] text-[#7a766e] border-t border-white/[0.04] flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
           Guardando…
         </div>
       )}

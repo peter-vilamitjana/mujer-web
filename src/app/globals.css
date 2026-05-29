@@ -180,6 +180,23 @@
   box-shadow: 0 32px 64px -12px rgba(25, 28, 29, 0.04);
 }
 
+/* ─── SuperAdmin utilities ───────────────────────────────────── */
+.chart-grid {
+  background-image:
+    linear-gradient(to right,  rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.glass-hover {
+  transition: background 0.15s ease;
+}
+.status-glow-emerald {
+  box-shadow: 0 0 15px rgba(52, 211, 153, 0.12);
+}
+.refractive-edge {
+  box-shadow: inset 0 0 0 0.5px rgba(255,255,255,0.05);
+}
+
 /* ─── Dark Elegance — variantes glass para dashboard B2C ────── */
 /* Fuera de @layer utilities para evitar conflictos con PostCSS  */
 

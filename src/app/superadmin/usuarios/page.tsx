@@ -13,29 +13,18 @@ export default async function UsuariosPage() {
   }).length
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-[#f5f0e8] p-8">
+    <div className="max-w-6xl mx-auto pb-6">
 
-      {/* Glow de fondo — igual al dashboard admin */}
-      <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute inset-0" style={{
-          background: 'radial-gradient(circle at 15% 25%, rgba(239,68,68,0.05) 0%, transparent 50%), radial-gradient(circle at 85% 75%, rgba(185,28,28,0.03) 0%, transparent 40%)',
-        }} />
-      </div>
-
-      <div className="max-w-6xl mx-auto">
-
-        <div className="mb-10">
+        <div className="mb-8 md:mb-10">
           <p className="text-[9px] text-[#7a766e] uppercase tracking-[0.4em] font-bold mb-2">
             Super Admin · Gestión
           </p>
           <div className="flex items-end justify-between">
-            <h1 className="font-vogue text-4xl italic text-[#f5f0e8]">
+            <h1 className="font-playfair text-3xl md:text-4xl italic text-[#f5f0e8]">
               Usuarios
             </h1>
             {thisWeek > 0 && (
-              <span className="text-[10px] font-bold text-red-400
-                bg-red-500/[0.08] border border-red-500/20
-                px-3 py-1.5 rounded-full uppercase tracking-wider mb-1">
+              <span className="text-[10px] font-bold text-red-400 bg-red-500/[0.08] border border-red-500/20 px-3 py-1.5 rounded-full uppercase tracking-wider mb-1">
                 +{thisWeek} esta semana
               </span>
             )}
@@ -63,7 +52,7 @@ export default async function UsuariosPage() {
                   {icon}
                 </span>
               </div>
-              <p className="font-vogue text-3xl italic text-[#f5f0e8] mb-1">
+              <p className="font-playfair text-3xl italic text-[#f5f0e8] mb-1">
                 {value}
               </p>
               <p className="text-[10px] text-[#7a766e] uppercase tracking-[0.2em] font-bold">
@@ -75,7 +64,6 @@ export default async function UsuariosPage() {
 
         <UsuariosTable initialUsers={users} />
 
-      </div>
     </div>
   )
 }
