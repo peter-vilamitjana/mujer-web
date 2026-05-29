@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { signIn, getSession } from 'next-auth/react';
@@ -115,8 +114,17 @@ export default function LoginPage() {
     if (result?.ok) {
       setSuccess(true);
       const session = await getSession();
-      const slug = session?.user?.salonSlug || 'dashboard';
-      setTimeout(() => router.push(session?.user?.role === 'customer' ? '/perfil' : `/${slug}/dashboard`), 1400);
+      setTimeout(() => {
+        const role = (session?.user as any)?.role;
+        if (role === 'superadmin') {
+          router.push('/superadmin/dashboard');
+        } else if (role === 'customer') {
+          router.push('/perfil');
+        } else {
+          const slug = session?.user?.salonSlug || '';
+          router.push(`/${slug}/dashboard`);
+        }
+      }, 1400);
     }
   };
 
@@ -189,21 +197,17 @@ export default function LoginPage() {
 
       {/* ── Main — centered card ─────────────────────────────────────────── */}
       <main className="relative z-10 flex-1 flex items-center justify-center px-4">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={mode}
-            initial={{ opacity: 0, y: 16, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -12, scale: 0.98 }}
-            transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-            className="w-full"
-            style={{ maxWidth: '420px' }}
-          >
+        <div
+          key={mode}
+          className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500"
+          style={{ maxWidth: '420px' }}
+        >
             {/* ── Selector B2C / B2B (Glass Segmented Control) ────────────── */}
-            <div className="flex p-1 mb-5 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 shadow-[inset_0_2px_12px_rgba(0,0,0,0.5)]">
+            <div className="relative z-50 flex p-1 mb-5 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 shadow-[inset_0_2px_12px_rgba(0,0,0,0.5)]">
               <button
                 type="button"
-                onClick={() => setUserType('clienta')}
+                onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); setUserType('clienta'); }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserType('clienta'); }}
                 className={cn(
                   'flex-1 py-2.5 rounded-xl text-[9px] tracking-[0.35em] uppercase font-bold transition-all duration-300 cursor-pointer',
                   userType === 'clienta'
@@ -215,7 +219,8 @@ export default function LoginPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setUserType('duena')}
+                onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); setUserType('duena'); }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setUserType('duena'); }}
                 className={cn(
                   'flex-1 py-2.5 rounded-xl text-[9px] tracking-[0.35em] uppercase font-bold transition-all duration-300 cursor-pointer',
                   userType === 'duena'
@@ -349,20 +354,14 @@ export default function LoginPage() {
                       )}
                     </div>
 
-                    {/* Error */}
-                    <AnimatePresence>
-                      {error && (
-                        <motion.p
-                          role="alert"
-                          initial={{ opacity: 0, y: -4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          className="text-red-400 text-[9px] tracking-widest uppercase text-center font-bold pt-1"
-                        >
-                          {error}
-                        </motion.p>
-                      )}
-                    </AnimatePresence>
+                    {error && (
+                      <p
+                        role="alert"
+                        className="text-red-400 text-[9px] tracking-widest uppercase text-center font-bold pt-1 animate-in fade-in slide-in-from-top-1"
+                      >
+                        {error}
+                      </p>
+                    )}
 
                     {/* Submit */}
                     <div className="pt-2 space-y-2.5">
@@ -497,20 +496,14 @@ export default function LoginPage() {
                       {fieldErrors.phone && <p role="alert" className="mt-1 ml-1 text-red-400/80 text-[8px] tracking-widest uppercase">{fieldErrors.phone}</p>}
                     </div>
 
-                    {/* Error */}
-                    <AnimatePresence>
-                      {error && (
-                        <motion.p
-                          role="alert"
-                          initial={{ opacity: 0, y: -4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          className="text-red-400 text-[9px] tracking-widest uppercase text-center font-bold pt-0.5"
-                        >
-                          {error}
-                        </motion.p>
-                      )}
-                    </AnimatePresence>
+                    {error && (
+                      <p
+                        role="alert"
+                        className="text-red-400 text-[9px] tracking-widest uppercase text-center font-bold pt-0.5 animate-in fade-in slide-in-from-top-1"
+                      >
+                        {error}
+                      </p>
+                    )}
 
                     {/* Submit */}
                     <div className="pt-1.5 space-y-2.5">
@@ -566,8 +559,7 @@ export default function LoginPage() {
                 </p>
               </div>
             </div>
-          </motion.div>
-        </AnimatePresence>
+        </div>
       </main>
 
       {/* ── Bottom bar ──────────────────────────────────────────────────── */}
