@@ -8,10 +8,15 @@ import { withSentryConfig } from '@sentry/nextjs';
 // (hidratación del cliente) y Tailwind/Framer Motion (estilos inline).
 // Los controles más críticos anti-XSS son object-src 'none', base-uri 'self'
 // y frame-ancestors 'none'. Nonces por ruta es el siguiente paso de hardening.
+const isDev = process.env.NODE_ENV === 'development';
+
 const cspDirectives = [
   "default-src 'self'",
-  // Next.js necesita 'unsafe-inline' para scripts de hidratación del cliente
-  "script-src 'self' 'unsafe-inline' https://apis.google.com",
+  // Next.js necesita 'unsafe-inline' para scripts de hidratación del cliente.
+  // En dev además necesita 'unsafe-eval' para sourcemaps y hot reload —
+  // sin él React no puede hydratar y los event handlers no se adjuntan.
+  // En producción Next.js no usa eval(), así que no se incluye.
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://apis.google.com`,
   // Tailwind, Framer Motion y Google Fonts (hojas de estilo)
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   // Fuentes propias + Google Fonts (archivos de fuente desde gstatic)
