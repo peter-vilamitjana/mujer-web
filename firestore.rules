@@ -116,7 +116,17 @@ service cloud.firestore {
       }
     }
 
-    // --- 3. LEGACY Compatibility (Phase 4: READ-ONLY ARCHIVE) ---
+    // --- 3. SuperAdmin Collections (Admin SDK only — client blocked) ---
+    // Todas las mutaciones van por Server Actions con Admin SDK (bypasa estas reglas).
+    // El bloqueo explícito protege contra acceso directo desde el cliente.
+    match /subscriptions/{subId} {
+      allow read, write: if false;
+    }
+    match /auditLogs/{logId} {
+      allow read, write: if false;
+    }
+
+    // --- 4. LEGACY Compatibility (Phase 4: READ-ONLY ARCHIVE) ---
     // Migración completada. Todas las colecciones legacy son inaccesibles vía cliente.
     // Acceso solo posible via Firebase Admin SDK (Server Actions / scripts de migración).
 

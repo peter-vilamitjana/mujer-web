@@ -128,12 +128,22 @@ export async function createTenantWithAdmin(data: OnboardingData): Promise<{ suc
       });
     }
 
+    // TODO: staffEmail — implementar invitación por WhatsApp post-MVP
+    // Por ahora se ignora silenciosamente para no generar expectativas falsas
+
     const userRef = adminDb.collection('users').doc(uid);
+    const userSnap = await userRef.get();
+    
     batch.set(userRef, {
       displayName: (userName ?? 'Admin').slice(0, 100),
       email: userEmail ?? '',
+      role: 'admin',
       salonId: tenantId,
       updatedAt: FieldValue.serverTimestamp(),
+      ...(!userSnap.exists && {
+        createdAt: FieldValue.serverTimestamp(),
+        photoURL: null
+      })
     }, { merge: true });
 
     const membershipRef = adminDb.collection('users').doc(uid).collection('memberships').doc(tenantId);

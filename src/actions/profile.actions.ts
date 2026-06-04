@@ -13,6 +13,13 @@ export type { ProfileData, HistorialEntry, HistorialGroup, HairProfile, Serializ
 
 const PHONE_RE = /^\+?[\d\s\-().]{6,20}$/;
 
+function normalizeArgPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, '')
+  if (digits.startsWith('54')) return '+' + digits
+  if (digits.startsWith('0'))  return '+54' + digits.slice(1)
+  return '+54' + digits
+}
+
 export async function getMyProfile(): Promise<ProfileData | null> {
   let auth: Awaited<ReturnType<typeof requireAuthSession>>;
   try { auth = await requireAuthSession(); } catch { return null; }
@@ -69,7 +76,7 @@ export async function updateMyProfile(
   try {
     const payload: Record<string, any> = { updatedAt: FieldValue.serverTimestamp() };
     if (displayName) payload.displayName = displayName;
-    if (phone !== undefined) payload.phone = phone;
+    if (phone) payload.phone = normalizeArgPhone(phone);
 
     await adminDb.collection('users').doc(uid).set(payload, { merge: true });
     return { success: true };

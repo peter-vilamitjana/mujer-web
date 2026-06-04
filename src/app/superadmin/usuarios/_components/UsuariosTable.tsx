@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useMemo } from 'react'
 import { updateUserRole } from '@/actions/superadmin.actions'
+import { Search } from 'lucide-react'
 
 type UserRow = {
   id: string
@@ -23,14 +24,19 @@ const FILTER_LABELS: Record<Filter, string> = {
 export function UsuariosTable({ initialUsers }: { initialUsers: UserRow[] }) {
   const [users, setUsers]            = useState(initialUsers)
   const [filter, setFilter]          = useState<Filter>('all')
+  const [query,  setQuery]           = useState('')
   const [isPending, startTransition] = useTransition()
 
-  const filtered = users.filter(u => {
-    if (filter === 'all')      return u.role !== 'superadmin'
-    if (filter === 'customer') return u.role === 'customer' || !u.role
-    if (filter === 'admin')    return u.role === 'admin'
-    return true
-  })
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase().trim()
+    return users.filter(u => {
+      if (u.role === 'superadmin') return false
+      if (filter === 'customer' && u.role !== 'customer' && !!u.role) return false
+      if (filter === 'admin'    && u.role !== 'admin')                 return false
+      if (q && !u.name.toLowerCase().includes(q) && !u.email.toLowerCase().includes(q)) return false
+      return true
+    })
+  }, [users, filter, query])
 
   function handleRoleChange(uid: string, role: string) {
     startTransition(async () => {
@@ -45,17 +51,20 @@ export function UsuariosTable({ initialUsers }: { initialUsers: UserRow[] }) {
       <div className="absolute inset-0 liquid-glass-rich
         pointer-events-none rounded-[inherit] -z-10" />
 
-      {/* Header con filtros */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
-        <div className="flex items-center gap-3">
-          <h3 className="font-playfair text-xl italic text-[#f5f0e8]">
-            Usuarios
-          </h3>
-          <span className="text-[10px] font-bold text-[#7a766e] bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-full">
-            {filtered.length}
-          </span>
+      {/* Header con búsqueda + filtros */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-6 py-4 border-b border-white/[0.06]">
+        {/* Search */}
+        <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.06] rounded-xl px-3 py-2 w-full sm:w-56">
+          <Search className="w-3.5 h-3.5 text-[#7a766e] shrink-0" />
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Buscar por nombre o email…"
+            className="bg-transparent text-[12px] text-[#f5f0e8] outline-none placeholder:text-[#7a766e]/60 w-full"
+          />
         </div>
-        <div className="flex items-center gap-1.5">
+
+        <div className="flex items-center gap-1.5 flex-wrap">
           {(Object.keys(FILTER_LABELS) as Filter[]).map(f => (
             <button
               key={f}
@@ -70,6 +79,9 @@ export function UsuariosTable({ initialUsers }: { initialUsers: UserRow[] }) {
               {FILTER_LABELS[f]}
             </button>
           ))}
+          <span className="text-[10px] font-bold text-[#7a766e] bg-white/[0.04] border border-white/[0.06] px-2 py-1 rounded-full font-mono">
+            {filtered.length}
+          </span>
         </div>
       </div>
 

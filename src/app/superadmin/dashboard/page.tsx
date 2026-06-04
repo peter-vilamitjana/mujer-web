@@ -1,4 +1,4 @@
-import { getSuperAdminStats, getSystemStatus } from '@/actions/superadmin.actions'
+import { getSuperAdminStats, getSystemStatus, getRevenueStats, getSubscriberGrowth } from '@/actions/superadmin.actions'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 import Link from 'next/link'
@@ -17,18 +17,12 @@ const EVENT_CONFIG: Record<string, { color: string; bg: string; border: string; 
 }
 
 export default async function CommandCenterPage() {
-  const [stats, systemStatus] = await Promise.all([
+  const [stats, systemStatus, revenue, growth] = await Promise.all([
     getSuperAdminStats(),
     getSystemStatus(),
+    getRevenueStats(),
+    getSubscriberGrowth(6),
   ])
-
-  // Mock actionable activity feed since real backend doesn't output this yet
-  const actionableActivity = [
-    { type: 'success', tenant: 'Studio Beauty 54', description: 'Suscripción Pro Activada', createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(), tenantId: 'tenant1' },
-    { type: 'warning', tenant: 'Glamour Nails', description: 'Límite de staff alcanzado', createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(), tenantId: 'tenant2' },
-    { type: 'alert',   tenant: 'Peluquería VIP', description: 'Pago de suscripción rechazado', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), tenantId: 'tenant3' },
-    { type: 'info',    tenant: 'Barber Shop Pro', description: 'Nuevo registro Free (Onboarding)', createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), tenantId: 'tenant4' },
-  ]
 
   return (
     <div className="max-w-[1400px] mx-auto pb-6 text-[#dde4dd]">
@@ -42,12 +36,16 @@ export default async function CommandCenterPage() {
           </div>
           <div className="flex justify-between items-start mb-4 relative z-10">
             <span className="material-symbols-outlined text-[#5af0b3] p-2 bg-[#5af0b3]/10 rounded-lg">trending_up</span>
-            <span className="text-[#5af0b3] bg-[#5af0b3]/10 border border-[#5af0b3]/20 px-2 py-0.5 rounded-full text-[11px] font-bold">+12.4%</span>
+            <span className="text-[#5af0b3] bg-[#5af0b3]/10 border border-[#5af0b3]/20 px-2 py-0.5 rounded-full text-[11px] font-bold">
+              {revenue.activeSubscriptions} activas
+            </span>
           </div>
-          <p className="font-sans text-[12px] font-semibold tracking-[0.05em] uppercase text-[#bbcac0] mb-1 relative z-10">Total MRR</p>
+          <p className="font-sans text-[12px] font-semibold tracking-[0.05em] uppercase text-[#bbcac0] mb-1 relative z-10">MRR Total</p>
           <div className="flex items-baseline gap-1 relative z-10">
             <span className="text-[16px] text-[#bbcac0] font-medium">ARS</span>
-            <p className="font-sans text-[28px] font-medium tracking-tight text-white">$142,850.00</p>
+            <p className="font-sans text-[28px] font-medium tracking-tight text-white">
+              ${revenue.mrr > 0 ? revenue.mrr.toLocaleString('es-AR') : '—'}
+            </p>
           </div>
         </div>
 
@@ -68,7 +66,7 @@ export default async function CommandCenterPage() {
             <span className="text-[#ffb4ab] bg-[#93000a]/20 border border-[#ffb4ab]/20 px-2 py-0.5 rounded-full text-[11px] font-bold">-0.2% vs last mo</span>
           </div>
           <p className="font-sans text-[12px] font-semibold tracking-[0.05em] uppercase text-[#bbcac0] mb-1">Churn Rate</p>
-          <p className="font-sans text-[28px] font-medium tracking-tight text-white">2.4%</p>
+          <p className="font-sans text-[28px] font-medium tracking-tight text-white">{revenue.churnRate}%</p>
         </div>
 
         {/* Mora / Friction */}
@@ -79,8 +77,8 @@ export default async function CommandCenterPage() {
           </div>
           <p className="font-sans text-[12px] font-semibold tracking-[0.05em] uppercase text-[#bbcac0] mb-1">Suscripciones en Mora</p>
           <div className="flex items-baseline gap-2">
-            <p className="font-sans text-[28px] font-medium tracking-tight text-white">14</p>
-            <span className="text-[14px] text-[#ffccad]">Rechazados</span>
+            <p className="font-sans text-[28px] font-medium tracking-tight text-white">{revenue.pastDueCount}</p>
+            <span className="text-[14px] text-[#ffccad]">{revenue.pastDueCount === 1 ? 'Rechazada' : 'Rechazadas'}</span>
           </div>
         </div>
       </section>
@@ -92,7 +90,7 @@ export default async function CommandCenterPage() {
           <div className="flex justify-between items-start mb-6 relative z-10">
             <div>
               <h3 className="font-sans text-[24px] font-medium tracking-tight text-white mb-1">Subscriber Growth</h3>
-              <p className="text-[14px] text-[#bbcac0]">Net new subscriptions by plan tier</p>
+              <p className="text-[14px] text-[#bbcac0]">Nuevas suscripciones por plan — últimos 6 meses</p>
             </div>
             <div className="flex flex-col items-end gap-3">
               <div className="flex bg-white/5 p-1 rounded-lg border border-white/10">
@@ -114,75 +112,72 @@ export default async function CommandCenterPage() {
             backgroundSize: '40px 40px',
             minHeight: '220px'
           }}>
-            {/* Stacked Chart Bars */}
-            {[
-              { label: 'Jan', free: 12, pro: 5, enterprise: 1 },
-              { label: 'Feb', free: 15, pro: 8, enterprise: 2 },
-              { label: 'Mar', free: 18, pro: 10, enterprise: 2 },
-              { label: 'Apr', free: 24, pro: 14, enterprise: 3 },
-              { label: 'May', free: 28, pro: 18, enterprise: 4 },
-              { label: 'Jun', free: 35, pro: 22, enterprise: 6 },
-            ].map((month, i, arr) => {
-              const maxTotal = Math.max(...arr.map(m => m.free + m.pro + m.enterprise))
-              const total = month.free + month.pro + month.enterprise
-              const heightPct = (total / maxTotal) * 100
+            {/* Empty state cuando no hay suscripciones aún */}
+            {growth.every(m => m.free + m.pro + m.enterprise === 0) ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                <span className="material-symbols-outlined text-[#3c4a42] text-[40px]">bar_chart</span>
+                <p className="text-[12px] text-[#3c4a42]">Sin suscripciones registradas aún</p>
+              </div>
+            ) : (
+              growth.map((month, i, arr) => {
+                const maxTotal = Math.max(...arr.map(m => m.free + m.pro + m.enterprise), 1)
+                const total    = month.free + month.pro + month.enterprise
+                const heightPct = Math.max((total / maxTotal) * 100, total > 0 ? 4 : 0)
 
-              return (
-                <div key={i} className="flex-1 flex flex-col justify-end group relative h-full">
-                  {/* Tooltip */}
-                  <div className="absolute -top-24 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-[#0e1511] p-3 rounded-xl text-[11px] border border-[#00f0ff]/30 text-[#bbcac0] z-20 whitespace-nowrap shadow-2xl pointer-events-none">
-                    <p className="font-bold text-[#00f0ff] mb-2">{month.label} <span className="text-white">({total} total)</span></p>
-                    <div className="flex justify-between gap-4"><span className="text-[#00f0ff]">Enterprise</span> <span className="text-white font-mono">{month.enterprise}</span></div>
-                    <div className="flex justify-between gap-4"><span className="text-[#5af0b3]">Pro</span> <span className="text-white font-mono">{month.pro}</span></div>
-                    <div className="flex justify-between gap-4"><span className="text-white/60">Free</span> <span className="text-white font-mono">{month.free}</span></div>
-                  </div>
+                return (
+                  <div key={i} className="flex-1 flex flex-col justify-end group relative h-full">
+                    {/* Tooltip */}
+                    <div className="absolute -top-24 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-[#0e1511] p-3 rounded-xl text-[11px] border border-[#00f0ff]/30 text-[#bbcac0] z-20 whitespace-nowrap shadow-2xl pointer-events-none">
+                      <p className="font-bold text-[#00f0ff] mb-2">{month.label} <span className="text-white">({total} total)</span></p>
+                      <div className="flex justify-between gap-4"><span className="text-[#00f0ff]">Enterprise</span><span className="text-white font-mono">{month.enterprise}</span></div>
+                      <div className="flex justify-between gap-4"><span className="text-[#5af0b3]">Pro</span><span className="text-white font-mono">{month.pro}</span></div>
+                      <div className="flex justify-between gap-4"><span className="text-white/60">Free</span><span className="text-white font-mono">{month.free}</span></div>
+                    </div>
 
-                  {/* Stacked Bar */}
-                  <div className="w-full flex flex-col justify-end gap-[2px] group-hover:opacity-80 transition-opacity cursor-pointer" style={{ height: `${heightPct}%` }}>
-                    <div className="w-full bg-[#00f0ff] rounded-t-sm shadow-[0_0_10px_rgba(0,240,255,0.2)]" style={{ height: `${(month.enterprise / total) * 100}%` }}></div>
-                    <div className="w-full bg-[#5af0b3]" style={{ height: `${(month.pro / total) * 100}%` }}></div>
-                    <div className="w-full bg-white/10 rounded-b-sm" style={{ height: `${(month.free / total) * 100}%` }}></div>
+                    {/* Stacked Bar */}
+                    {total > 0 ? (
+                      <div className="w-full flex flex-col justify-end gap-[2px] group-hover:opacity-80 transition-opacity cursor-pointer" style={{ height: `${heightPct}%` }}>
+                        {month.enterprise > 0 && <div className="w-full bg-[#00f0ff] rounded-t-sm shadow-[0_0_10px_rgba(0,240,255,0.2)]" style={{ height: `${(month.enterprise / total) * 100}%` }} />}
+                        {month.pro        > 0 && <div className="w-full bg-[#5af0b3]" style={{ height: `${(month.pro / total) * 100}%` }} />}
+                        {month.free       > 0 && <div className="w-full bg-white/10 rounded-b-sm" style={{ height: `${(month.free / total) * 100}%` }} />}
+                      </div>
+                    ) : (
+                      <div className="w-full h-1 bg-white/5 rounded-sm" />
+                    )}
+
+                    {/* X-Axis Label */}
+                    <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[11px] font-medium text-[#bbcac0]">{month.label}</div>
                   </div>
-                  
-                  {/* X-Axis Label */}
-                  <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[11px] font-medium text-[#bbcac0]">{month.label}</div>
-                </div>
-              )
-            })}
+                )
+              })
+            )}
           </div>
         </div>
 
         {/* Actionable Activity Feed */}
         <div className="bg-[#0e1511]/60 backdrop-blur-[40px] border-[0.5px] border-zinc-800 p-6 rounded-[24px] shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.05)] flex flex-col">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="font-sans text-[24px] font-medium tracking-tight text-white">Recent Activity</h3>
-            <button className="material-symbols-outlined text-[#bbcac0] hover:text-white transition-colors">filter_list</button>
+            <h3 className="font-sans text-[24px] font-medium tracking-tight text-white">Actividad</h3>
+            <Link href="/superadmin/actividad" className="text-[11px] text-[#5af0b3] hover:underline">Ver todo</Link>
           </div>
-          <div className="space-y-6 flex-1">
-            {actionableActivity.map((event, i) => {
-              const cfg = EVENT_CONFIG[event.type]
-              const isLast = i === actionableActivity.length - 1
+          <div className="space-y-5 flex-1">
+            {[
+              ...stats.recentTenants.map(t => ({ icon: 'store', color: 'text-[#5af0b3]', bg: 'bg-[#5af0b3]/10', border: 'border-[#5af0b3]/30', title: t.name, desc: `Salón registrado · ${t.plan}`, createdAt: t.createdAt })),
+              ...stats.recentCustomers.map(u => ({ icon: 'person_add', color: 'text-[#9dd2b6]', bg: 'bg-[#1c503a]', border: 'border-[#9dd2b6]/30', title: u.name || u.email, desc: 'Clienta registrada', createdAt: u.createdAt })),
+            ].sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime())
+             .slice(0, 5)
+             .map((event, i, arr) => {
+              const isLast = i === arr.length - 1
               return (
-                <div key={i} className="flex gap-4 relative group">
+                <div key={i} className="flex gap-4 relative">
                   {!isLast && <div className="h-full w-[1px] bg-zinc-800 absolute left-[15px] top-[32px]"></div>}
-                  <div className={`h-8 w-8 rounded-full ${cfg.bg} border ${cfg.border} flex items-center justify-center shrink-0 relative z-10`}>
-                    <span className={`material-symbols-outlined text-[16px] ${cfg.color}`}>{cfg.icon}</span>
+                  <div className={`h-8 w-8 rounded-full ${event.bg} border ${event.border} flex items-center justify-center shrink-0 relative z-10`}>
+                    <span className={`material-symbols-outlined text-[16px] ${event.color}`} style={{ fontVariationSettings: "'FILL' 1" }}>{event.icon}</span>
                   </div>
-                  <div className="pb-4 flex-1 flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                    <div>
-                      <p className="text-[14px] text-white font-medium line-clamp-1">{event.tenant}</p>
-                      <p className="text-[13px] text-[#bbcac0] mb-1">{event.description}</p>
-                      <p className="text-[11px] text-zinc-500 uppercase tracking-wider">{relativeTime(event.createdAt)}</p>
-                    </div>
-                    {/* Ghost Buttons */}
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="h-7 px-2 rounded bg-white/5 hover:bg-white/10 text-[#bbcac0] hover:text-white text-[11px] font-semibold border border-white/5 flex items-center gap-1 transition-colors">
-                        <span className="material-symbols-outlined text-[14px]">visibility</span>
-                      </button>
-                      <button className="h-7 px-2 rounded bg-[#00f0ff]/10 hover:bg-[#00f0ff]/20 text-[#00f0ff] text-[11px] font-semibold border border-[#00f0ff]/20 flex items-center gap-1 transition-colors">
-                        <span className="material-symbols-outlined text-[14px]">admin_panel_settings</span>
-                      </button>
-                    </div>
+                  <div className="pb-4 flex-1">
+                    <p className="text-[13px] text-white font-medium line-clamp-1">{event.title}</p>
+                    <p className="text-[12px] text-[#bbcac0]">{event.desc}</p>
+                    <p className="text-[11px] text-zinc-500">{relativeTime(event.createdAt)}</p>
                   </div>
                 </div>
               )
@@ -285,13 +280,9 @@ export default async function CommandCenterPage() {
                     </div>
                   </td>
                   <td className="px-4 py-4">
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold border ${
-                      t.isActivePublicly !== false
-                      ? 'bg-[#5af0b3]/10 text-[#5af0b3] border-[#5af0b3]/20'
-                      : 'bg-[#93000a]/20 text-[#ffb4ab] border-[#ffb4ab]/20'
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${t.isActivePublicly !== false ? 'bg-[#5af0b3] animate-pulse' : 'bg-[#ffb4ab]'}`}></span> 
-                      {t.isActivePublicly !== false ? 'Active' : 'Suspended'}
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold border bg-[#5af0b3]/10 text-[#5af0b3] border-[#5af0b3]/20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#5af0b3] animate-pulse"></span>
+                      Active
                     </span>
                   </td>
                   <td className="px-4 py-4 text-[#bbcac0] text-[14px] capitalize">

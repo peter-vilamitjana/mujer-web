@@ -302,3 +302,49 @@ export interface DashboardAppointment {
     status: AppointmentStatus;
     price: number;
 }
+
+// ── SuperAdmin: Suscripciones SaaS ────────────────────────────────────────
+// Colección top-level: subscriptions/{subscriptionId}
+
+export type SubscriptionStatus = 'active' | 'past_due' | 'cancelled' | 'trialing'
+export type BillingCycle       = 'monthly' | 'annual'
+export type SubPaymentMethod   = 'mercadopago' | 'transferencia' | 'efectivo'
+
+export interface Subscription {
+    id: string
+    tenantId: string
+    plan: 'free' | 'pro' | 'enterprise'
+    status: SubscriptionStatus
+    billingCycle: BillingCycle
+    amountARS: number
+    currentPeriodStart: Timestamp
+    currentPeriodEnd: Timestamp
+    paymentMethod: SubPaymentMethod
+    lastPaymentAt: Timestamp | null
+    cancelledAt: Timestamp | null
+    createdAt: Timestamp
+}
+
+// ── SuperAdmin: Audit Log ─────────────────────────────────────────────────
+// Colección top-level: auditLogs/{logId}
+
+export type AuditAction =
+    | 'tenant.plan_changed'
+    | 'tenant.suspended'
+    | 'tenant.activated'
+    | 'tenant.deleted'
+    | 'user.role_changed'
+    | 'subscription.payment_recorded'
+    | 'subscription.status_changed'
+
+export interface AuditLog {
+    id: string
+    actorUid: string
+    actorEmail: string
+    action: AuditAction
+    targetId: string
+    targetName: string
+    before: Record<string, unknown>
+    after: Record<string, unknown>
+    createdAt: Timestamp
+}

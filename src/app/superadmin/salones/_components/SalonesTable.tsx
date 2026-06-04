@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useMemo } from 'react'
 import { updateTenantPlan, toggleTenantActive, deleteTenant } from '@/actions/superadmin.actions'
-import { ExternalLink, Trash2 } from 'lucide-react'
+import { ExternalLink, Trash2, Search } from 'lucide-react'
+import Link from 'next/link'
 
 type Tenant = {
   id: string
@@ -18,22 +19,26 @@ type Tenant = {
 
 const PLAN_OPTIONS = ['free', 'pro', 'enterprise'] as const
 
-function PlanBadge({ plan }: { plan: string }) {
-  const color =
-    plan === 'enterprise' ? 'text-yellow-400 bg-yellow-400/10' :
-    plan === 'pro'        ? 'text-violet-400 bg-violet-400/10' :
-                            'text-white/40 bg-white/[0.05]'
-  return (
-    <span className={`text-xs px-2 py-0.5 rounded font-medium ${color}`}>
-      {plan}
-    </span>
-  )
-}
-
 export function SalonesTable({ initialTenants }: { initialTenants: Tenant[] }) {
-  const [tenants, setTenants] = useState(initialTenants.filter(t => !t.isDeleted))
-  const [isPending, startTransition] = useTransition()
+  const [tenants, setTenants]         = useState(initialTenants.filter(t => !t.isDeleted))
+  const [isPending, startTransition]  = useTransition()
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+
+  // Filtros
+  const [query,       setQuery]       = useState('')
+  const [planFilter,  setPlanFilter]  = useState<string>('all')
+  const [statusFilter,setStatusFilter]= useState<string>('all')
+
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase().trim()
+    return tenants.filter(t => {
+      if (q && !t.name.toLowerCase().includes(q) && !t.slug.toLowerCase().includes(q)) return false
+      if (planFilter !== 'all' && t.plan !== planFilter) return false
+      if (statusFilter === 'active'    && !t.isActivePublicly) return false
+      if (statusFilter === 'suspended' &&  t.isActivePublicly) return false
+      return true
+    })
+  }, [tenants, query, planFilter, statusFilter])
 
   function handlePlanChange(tenantId: string, plan: string) {
     startTransition(async () => {
@@ -61,6 +66,48 @@ export function SalonesTable({ initialTenants }: { initialTenants: Tenant[] }) {
     <div className="relative isolate rounded-[1.5rem] border border-white/[0.06] bg-[#0d0d0d]/60 overflow-hidden">
       <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-10" />
 
+      {/* Barra de filtros */}
+      <div className="px-5 py-4 border-b border-white/[0.06] flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        {/* Search */}
+        <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.06] rounded-xl px-3 py-2 w-full sm:w-64">
+          <Search className="w-3.5 h-3.5 text-[#7a766e] shrink-0" />
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Buscar por nombre o slug…"
+            className="bg-transparent text-[12px] text-[#f5f0e8] outline-none placeholder:text-[#7a766e]/60 w-full"
+          />
+        </div>
+
+        {/* Filtros + contador */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <select
+            value={planFilter}
+            onChange={e => setPlanFilter(e.target.value)}
+            className="bg-white/[0.04] border border-white/[0.06] rounded-lg px-2.5 py-1.5 text-[11px] text-[#f5f0e8] outline-none cursor-pointer hover:border-white/[0.15] transition-colors"
+          >
+            <option value="all"        className="bg-[#0e1511]">Todos los planes</option>
+            <option value="free"       className="bg-[#0e1511]">Free</option>
+            <option value="pro"        className="bg-[#0e1511]">Pro</option>
+            <option value="enterprise" className="bg-[#0e1511]">Enterprise</option>
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="bg-white/[0.04] border border-white/[0.06] rounded-lg px-2.5 py-1.5 text-[11px] text-[#f5f0e8] outline-none cursor-pointer hover:border-white/[0.15] transition-colors"
+          >
+            <option value="all"       className="bg-[#0e1511]">Todos los estados</option>
+            <option value="active"    className="bg-[#0e1511]">Activos</option>
+            <option value="suspended" className="bg-[#0e1511]">Suspendidos</option>
+          </select>
+
+          <span className="text-[11px] text-[#7a766e] bg-white/[0.04] border border-white/[0.06] px-2.5 py-1.5 rounded-lg font-mono whitespace-nowrap">
+            {filtered.length} / {tenants.length}
+          </span>
+        </div>
+      </div>
+
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/[0.06]">
@@ -72,29 +119,29 @@ export function SalonesTable({ initialTenants }: { initialTenants: Tenant[] }) {
           </tr>
         </thead>
         <tbody>
-          {tenants.length === 0 && (
+          {filtered.length === 0 && (
             <tr>
               <td colSpan={5} className="px-5 py-14 text-center">
-                <span className="material-symbols-outlined text-[#7a766e]/30 block mb-2" style={{ fontSize: '32px' }}>store</span>
-                <p className="text-sm text-[#7a766e]">Sin salones registrados</p>
+                <span className="material-symbols-outlined text-[#7a766e]/30 block mb-2" style={{ fontSize: '32px' }}>search_off</span>
+                <p className="text-sm text-[#7a766e]">Sin resultados para los filtros aplicados</p>
               </td>
             </tr>
           )}
-          {tenants.map(tenant => (
+          {filtered.map(tenant => (
             <tr
               key={tenant.id}
               className="border-b border-white/[0.04] last:border-0 hover:bg-white/[0.025] transition-colors"
             >
               <td className="px-5 py-3.5">
-                <div className="flex items-center gap-3">
+                <Link href={`/superadmin/salones/${tenant.id}`} className="flex items-center gap-3 group/name">
                   <div className="w-8 h-8 rounded-full bg-red-500/[0.08] border border-red-500/20 flex items-center justify-center text-[11px] font-bold text-red-400 shrink-0">
                     {(tenant.name || '?')[0].toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-[13px] font-semibold text-[#f5f0e8]">{tenant.name}</p>
+                    <p className="text-[13px] font-semibold text-[#f5f0e8] group-hover/name:text-[#5af0b3] transition-colors">{tenant.name}</p>
                     <p className="text-[11px] text-[#7a766e]">{tenant.slug}</p>
                   </div>
-                </div>
+                </Link>
               </td>
               <td className="px-5 py-3.5">
                 <select
@@ -127,6 +174,13 @@ export function SalonesTable({ initialTenants }: { initialTenants: Tenant[] }) {
               </td>
               <td className="px-5 py-3.5">
                 <div className="flex items-center justify-end gap-1.5">
+                  <Link
+                    href={`/superadmin/salones/${tenant.id}`}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-[#7a766e] hover:text-[#5af0b3] hover:bg-[#5af0b3]/[0.06] transition-all cursor-pointer"
+                    title="Ver detalle"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                  </Link>
                   <a
                     href={`/${tenant.slug}/dashboard`}
                     target="_blank"

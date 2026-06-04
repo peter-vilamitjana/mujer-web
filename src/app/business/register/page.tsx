@@ -321,7 +321,7 @@ function Step4({ data, onChange }: { data: WizardData; onChange: (patch: Partial
           onChange={(e) => onChange({ staffEmail: e.target.value })}
         />
         <p className="text-xs text-muted-foreground">
-          Recibirá un email para unirse a tu equipo.
+          Te recordaremos agregarlo desde el dashboard una vez que esté configurado.
         </p>
       </div>
 

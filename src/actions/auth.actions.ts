@@ -1,12 +1,21 @@
 'use server'
 
-const FIREBASE_API_KEY    = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
-const FIREBASE_PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+import { adminDb } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
+
+const FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
 
 // ─── Validators ───────────────────────────────────────────────────────────────
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^\+?[\d\s\-().]{6,20}$/;
+
+function normalizeArgPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, '')
+  if (digits.startsWith('54')) return '+' + digits
+  if (digits.startsWith('0'))  return '+54' + digits.slice(1)
+  return '+54' + digits
+}
 
 function validateRegistration(data: {
   name: string;
@@ -73,39 +82,27 @@ export async function registerCustomer(data: {
 
     if (!authRes.ok) {
       const msg = authData.error?.message;
-      if (msg === 'EMAIL_EXISTS')            return { success: false, error: 'ESTE EMAIL YA TIENE UNA CUENTA' };
-      if (msg?.startsWith('WEAK_PASSWORD'))  return { success: false, error: 'CONTRASEÑA MUY DÉBIL (MÍNIMO 6 CARACTERES)' };
-      return { success: false, error: 'ERROR AL CREAR LA CUENTA' };
+      if (msg === 'EMAIL_EXISTS')            return { success: false, error: 'Ya existe una cuenta con ese email.' };
+      if (msg?.startsWith('WEAK_PASSWORD'))  return { success: false, error: 'La contraseña debe tener al menos 6 caracteres.' };
+      return { success: false, error: 'No se pudo crear la cuenta. Intentá de nuevo.' };
     }
 
-    const uid: string     = authData.localId;
-    const idToken: string = authData.idToken;
+    const uid: string = authData.localId;
 
     // 2. Crear documento en Firestore users/{uid}
-    const firestoreRes = await fetch(
-      `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${uid}`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({
-          fields: {
-            fullName:    { stringValue: name },
-            email:       { stringValue: email },
-            phone:       { stringValue: phone },
-            role:        { stringValue: 'customer' },
-            createdAt:   { timestampValue: new Date().toISOString() },
-            memberships: { arrayValue: { values: [] } },
-          },
-        }),
-      }
-    );
-
-    if (!firestoreRes.ok) {
-      // El usuario se creó en Auth pero no en Firestore — no fallar, el login igual funciona
-      console.error('[registerCustomer] Error creando doc Firestore:', await firestoreRes.text());
+    try {
+      await adminDb.collection('users').doc(uid).set({
+        id: uid,
+        displayName: name,
+        email,
+        phone: normalizeArgPhone(phone),
+        role: 'customer',
+        photoURL: null,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    } catch (fsError) {
+      console.error('[registerCustomer] Error creando doc Firestore con Admin SDK:', fsError);
+      return { success: false, error: 'No se pudo crear el perfil. Intentá de nuevo.' };
     }
 
     return { success: true, uid };
