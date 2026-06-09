@@ -1,5 +1,7 @@
 import LandingHeader from '@/components/landing/LandingHeader';
 import BusinessHero from '@/components/business/BusinessHero';
+import { ScrollProgress } from '@/components/business/ScrollProgress';
+import { BusinessCursor } from '@/components/business/BusinessCursor';
 import DolorSection from '@/components/business/DolorSection';
 import SolucionesSection from '@/components/business/SolucionesSection';
 import ComoFuncionaSection from '@/components/business/ComoFuncionaSection';
@@ -17,6 +19,8 @@ export const metadata = {
 export default function BusinessPage() {
   return (
     <div className="bg-[#09090b] min-h-screen">
+      <ScrollProgress />
+      <BusinessCursor />
       <LandingHeader />
       <main>
         <BusinessHero />

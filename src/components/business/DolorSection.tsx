@@ -3,6 +3,12 @@
 import React, { useRef } from 'react';
 import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { MessageCircle, Calendar, DollarSign, UserX, Clock, Phone } from 'lucide-react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
+import { AnimatedHeadline } from '@/components/ui/AnimatedHeadline';
+
+gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 const pains = [
   {
@@ -52,18 +58,13 @@ function PainCard({
         bg-zinc-900/50 backdrop-blur-sm border border-white/[0.05]"
     >
       <div className="relative z-10">
-        {/* Icon badge */}
         <div className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-400/[0.20]
           flex items-center justify-center mb-4">
           <Icon className="w-4 h-4 text-rose-400" aria-hidden="true" />
         </div>
-
-        {/* Primary pain quote — centre of attention */}
         <p className="font-playfair text-[0.98rem] text-zinc-200 italic font-medium leading-snug mb-2.5">
           &ldquo;{quote}&rdquo;
         </p>
-
-        {/* Supporting description — secondary hierarchy */}
         <p className="text-sm text-zinc-500 leading-relaxed">{description}</p>
       </div>
     </div>
@@ -90,7 +91,7 @@ const PainColumn = ({
   const shouldReduce = useReducedMotion();
 
   return (
-    // Outer div: Framer Motion entrance animation only — no continuous loop here
+    // Outer wrapper: FM entrance + GSAP x-parallax via class name
     <motion.div
       ref={ref}
       className={className}
@@ -100,13 +101,7 @@ const PainColumn = ({
     >
       {/*
         Inner div: CSS animation drives the continuous marquee scroll.
-        Using CSS (not Framer Motion) so `animation-play-state` can be
-        toggled by the `group-hover:[animation-play-state:paused]` class —
-        Framer Motion's JS loop ignores that CSS property entirely.
-
-        The `group` context lives on the grid wrapper two levels up;
-        hovering anywhere inside the grid propagates the group-hover signal
-        here, freezing all three columns simultaneously.
+        group-hover pauses all columns simultaneously via Tailwind group context.
       */}
       <div
         className="flex flex-col gap-4 pb-4 will-change-transform group-hover:[animation-play-state:paused]"
@@ -116,7 +111,6 @@ const PainColumn = ({
             : `pain-scroll-${direction} ${duration}s linear infinite`,
         }}
       >
-        {/* Three full copies = seamless loop (only 1/3 visible at a time) */}
         {[0, 1, 2].map((idx) => (
           <React.Fragment key={idx}>
             {pains.map(({ icon, quote, description }: Pain, i: number) => (
@@ -139,19 +133,61 @@ const col2 = [pains[2], pains[3]];
 const col3 = [pains[4], pains[5]];
 
 export default function DolorSection() {
+  const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLDivElement>(null);
   const headingInView = useInView(headingRef, { once: true, margin: '-80px' });
   const shouldReduce = useReducedMotion();
 
+  // GSAP parallax — each column shifts at a slightly different x-rate as the
+  // section scrolls through the viewport. Creates z-depth layering on top of
+  // the existing CSS marquee loops (which run on the inner divs, separate layer).
+  useGSAP(() => {
+    if (shouldReduce) return;
+
+    gsap.to('.marquee-row-1', {
+      x: '-5%',
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.dolor-section',
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: 1.2,
+      },
+    });
+
+    gsap.to('.marquee-row-2', {
+      x: '5%',
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.dolor-section',
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: 1.2,
+      },
+    });
+
+    gsap.to('.marquee-row-3', {
+      x: '-3%',
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.dolor-section',
+        start: 'top bottom',
+        end: 'bottom top',
+        scrub: 1.6,
+      },
+    });
+  }, { scope: sectionRef, dependencies: [shouldReduce] });
+
   return (
-    <section className="relative z-10 bg-[#09090b] overflow-hidden w-full">
-      {/* Top separator */}
+    <section
+      ref={sectionRef}
+      className="dolor-section relative z-10 bg-[#09090b] overflow-hidden w-full"
+    >
       <div
         className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"
         aria-hidden="true"
       />
 
-      {/* Atmospheric background — rose vignette, more sophisticated than pure red */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -162,7 +198,6 @@ export default function DolorSection() {
       />
 
       <div className="py-24 w-full flex flex-col items-center">
-        {/* Heading */}
         <div ref={headingRef} className="text-center mb-12 px-6 max-w-xl">
           <motion.p
             initial={shouldReduce ? {} : { opacity: 0, y: 12 }}
@@ -173,23 +208,12 @@ export default function DolorSection() {
             El problema
           </motion.p>
 
-          <h2 className="font-playfair text-[clamp(2.2rem,5vw,3.5rem)] text-white italic leading-tight overflow-hidden">
-            {'¿Te suena familiar?'.split(' ').map((word, i) => (
-              <motion.span
-                key={i}
-                className="inline-block mr-[0.25em]"
-                initial={shouldReduce ? {} : { opacity: 0, y: '100%' }}
-                animate={headingInView ? { opacity: 1, y: 0 } : {}}
-                transition={{
-                  delay: 0.13 + i * 0.08,
-                  duration: 0.6,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-              >
-                {word}
-              </motion.span>
-            ))}
-          </h2>
+          <AnimatedHeadline
+            tag="h2"
+            className="font-playfair text-[clamp(2.2rem,5vw,3.5rem)] text-white italic leading-tight"
+          >
+            ¿Te suena familiar?
+          </AnimatedHeadline>
 
           <motion.p
             initial={shouldReduce ? {} : { opacity: 0, y: 16 }}
@@ -202,16 +226,9 @@ export default function DolorSection() {
         </div>
 
         {/*
-          Grid wrapper — two responsibilities:
-          1. `group`: provides the hover scope so group-hover in children fires
-             whenever the cursor enters anywhere inside this div.
-          2. `[mask-image:...]`: CSS mask that fades cards at top + bottom,
-             creating the cinematographic "cards emerging from darkness" effect.
-             Uses `-webkit-mask-image` for Safari + `mask-image` for modern browsers
-             (Tailwind's arbitrary `[mask-image:...]` only emits the unprefixed form,
-             so we apply both via the style prop for full cross-browser support).
-          3. `overflow-hidden`: required so the mask clips correctly and the
-             infinite scroll doesn't leak outside the container.
+          Grid wrapper — `group` propagates hover to pause all marquees simultaneously.
+          mask-image fades cards at top + bottom for cinematographic depth.
+          GSAP ScrollTrigger x-parallax added via .marquee-row-{n} classNames.
         */}
         <div
           className="group w-full px-6 flex justify-center gap-6 mt-8 max-h-[520px] overflow-hidden"
@@ -224,21 +241,21 @@ export default function DolorSection() {
         >
           <PainColumn
             pains={col1}
-            className="flex-1 max-w-[360px] w-full"
+            className="marquee-row-1 flex-1 max-w-[360px] w-full"
             duration={24}
             direction="down"
             delay={0.1}
           />
           <PainColumn
             pains={col2}
-            className="hidden sm:block flex-1 max-w-[360px] w-full"
+            className="marquee-row-2 hidden sm:block flex-1 max-w-[360px] w-full"
             duration={32}
             direction="up"
             delay={0.2}
           />
           <PainColumn
             pains={col3}
-            className="hidden lg:block flex-1 max-w-[360px] w-full"
+            className="marquee-row-3 hidden lg:block flex-1 max-w-[360px] w-full"
             duration={27}
             direction="down"
             delay={0.3}
@@ -247,17 +264,7 @@ export default function DolorSection() {
 
       </div>
 
-      {/*
-        ── Bridge: "Con Ouleeh, todo eso queda atrás." ──────────────────
-        Standalone block separated from the pain grid so it gets its own
-        breathing room (py-24) without stacking on top of the grid's padding.
-
-        Blur-to-focus: both lines start blurred (filter: blur 12px), at 95%
-        scale and fully transparent. As the block enters the viewport,
-        opacity→1, scale→1 and blur→0 in ~700ms. The second line is delayed
-        120ms so it appears to resolve just after the first — reinforcing the
-        "the solution becomes clear" mental model.
-      */}
+      {/* Bridge — blur-to-focus reveal as this block scrolls into view */}
       <div className="w-full py-40 flex flex-col items-center gap-4 text-center px-6">
         <motion.p
           initial={shouldReduce ? {} : { opacity: 0, scale: 0.96, filter: 'blur(16px)' }}

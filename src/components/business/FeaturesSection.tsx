@@ -1,14 +1,24 @@
 'use client';
 
 import {
-  motion, useInView, useReducedMotion,
-  useMotionValue, useSpring, useTransform, useMotionTemplate,
+  motion,
+  useReducedMotion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  useMotionTemplate,
 } from 'framer-motion';
 import {
   Calendar, MessageSquare, CreditCard, Users,
   BarChart3, Globe, CheckCircle2, Sparkles, Check,
 } from 'lucide-react';
 import { useRef, useCallback } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
+import { AnimatedHeadline } from '@/components/ui/AnimatedHeadline';
+
+gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 // ─── Tags ─────────────────────────────────────────────────────────────────────
 
@@ -108,7 +118,7 @@ const bentoItems: BentoItem[] = [
           <MessageSquare className="w-2.5 h-2.5 text-violet-400" />
         </div>
         <div className="min-w-0">
-          <p className="text-[8px] text-zinc-600 mb-0.5">MujerApp · hace 2 min</p>
+          <p className="text-[8px] text-zinc-600 mb-0.5">Ouleeh · hace 2 min</p>
           <p className="text-[10px] text-zinc-300 leading-snug">
             ✅ Valentina, tu turno del mar 14/05 a las 10:00h está confirmado.
           </p>
@@ -191,10 +201,6 @@ const bentoItems: BentoItem[] = [
 
 const CARD_BASE = 'group relative rounded-2xl p-4 overflow-hidden cursor-default';
 
-/*
-  Gradient border via background-clip padding-box / border-box.
-  boxShadow is driven by a MotionValue (premiumShadow) so it animates with hover.
-*/
 const PREMIUM_BORDER_STYLE = {
   border: '1px solid transparent',
   background: [
@@ -203,60 +209,37 @@ const PREMIUM_BORDER_STYLE = {
   ].join(', '),
 };
 
-// ─── Spring config — low stiffness, high damping = fluid, non-mechanical ─────
+// Spring config — low stiffness, high damping = fluid, non-mechanical
 const SPRING = { stiffness: 80, damping: 20, mass: 1 };
 
 // ─── BentoCard ────────────────────────────────────────────────────────────────
+// Framer Motion handles hover physics (tilt + glare).
+// GSAP (on outer wrapper) handles the entrance from a unique direction.
 
-function BentoCard({ item, index }: { item: BentoItem; index: number }) {
-  const ref          = useRef<HTMLDivElement>(null);
-  const inView       = useInView(ref, { once: true, margin: '-50px' });
-  const shouldReduce = useReducedMotion();
+function BentoCard({ item }: { item: BentoItem }) {
   const isPremium    = item.tier === 'premium';
+  const shouldReduce = useReducedMotion();
 
-  // ── Raw mouse position: [-0.5, 0.5] from card center ─────────────────────
-  //   (0, 0) = center → no rotation
-  //   (-0.5, -0.5) = top-left → max negative rotation
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-
-  // 0 = idle, 1 = hovered — drives glare opacity + premium glow
   const hoverProgress = useMotionValue(0);
 
-  // ── Layer 1: Card frame — full 3D rotation (±6°) ──────────────────────────
-  //   mouseY → rotateX: moving mouse down tilts the TOP of the card toward us
-  //   mouseX → rotateY: moving mouse right tilts the RIGHT side away from us
   const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [6, -6]), SPRING);
   const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-6, 6]), SPRING);
-
-  // ── Layer 2: Content — translate at 50% of tilt range ────────────────────
-  //   When the card tilts right (+rotateY), content drifts right (+translateX).
-  //   The difference in magnitude makes the brain perceive the content as
-  //   sitting behind the card frame — a parallax depth illusion.
   const contentX = useSpring(useTransform(mouseX, [-0.5, 0.5], [-5, 5]), SPRING);
   const contentY = useSpring(useTransform(mouseY, [-0.5, 0.5], [-5, 5]), SPRING);
 
-  // ── Glare: radial gradient that follows the cursor ─────────────────────────
-  //   Position mapped from [-0.5, 0.5] → ['0%', '100%']
-  //   Built with useMotionTemplate → zero React re-renders per frame
-  //   mix-blend-mode: screen → light can only ADD, never darken (physically correct)
   const glareX   = useTransform(mouseX, [-0.5, 0.5], ['0%', '100%']);
   const glareY   = useTransform(mouseY, [-0.5, 0.5], ['0%', '100%']);
-  const glareOpacity  = useSpring(hoverProgress, { stiffness: 200, damping: 30 });
+  const glareOpacity = useSpring(hoverProgress, { stiffness: 200, damping: 30 });
   const glareBackground = useMotionTemplate`radial-gradient(circle at ${glareX} ${glareY}, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.04) 35%, transparent 65%)`;
 
-  // ── Premium glow: border ring + ambient shadow animate on hover ───────────
   const glowProgress  = useSpring(hoverProgress, { stiffness: 180, damping: 22 });
   const glowBorder    = useTransform(glowProgress, [0, 1], [0.28, 0.68]);
   const glowAmbient   = useTransform(glowProgress, [0, 1], [0.12, 0.32]);
   const glowDepth     = useTransform(glowProgress, [0, 1], [0.40, 0.68]);
   const premiumShadow = useMotionTemplate`0 0 0 1px rgba(167,139,250,${glowBorder}), 0 0 52px rgba(109,40,217,${glowAmbient}), 0 12px 40px rgba(0,0,0,${glowDepth})`;
 
-  // ── Coordinate calculation ─────────────────────────────────────────────────
-  //   x = (clientX − rect.left) / rect.width  − 0.5  → [-0.5, 0.5]
-  //   y = (clientY − rect.top)  / rect.height − 0.5  → [-0.5, 0.5]
-  //   Center of the card = (0, 0) = zero rotation.
-  //   Corner of the card = (±0.5, ±0.5) = ±6° rotation.
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (shouldReduce) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -269,152 +252,156 @@ function BentoCard({ item, index }: { item: BentoItem; index: number }) {
   }, [hoverProgress, shouldReduce]);
 
   const handleMouseLeave = useCallback(() => {
-    // Spring pulls everything back to (0,0) smoothly
     mouseX.set(0);
     mouseY.set(0);
     hoverProgress.set(0);
   }, [mouseX, mouseY, hoverProgress]);
 
   return (
-    /*
-      Perspective wrapper — carries the grid placement and the perspective
-      context that makes the 3D rotation visually meaningful.
-      Needs display:contents or h-full to let the inner card fill the cell.
-    */
-    <div
-      ref={ref}
-      className={`${item.gridClass} min-h-0`}
-      style={{ perspective: '900px' }}
+    <motion.div
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className={[
+        CARD_BASE,
+        'backdrop-blur-md h-full',
+        isPremium
+          ? 'transition-colors duration-500'
+          : [
+              'bg-zinc-900/40 border border-white/[0.05]',
+              'transition-colors duration-300',
+              'hover:border-white/[0.10]',
+            ].join(' '),
+      ].join(' ')}
+      style={{
+        rotateX: shouldReduce ? undefined : rotateX,
+        rotateY: shouldReduce ? undefined : rotateY,
+        ...(isPremium ? { ...PREMIUM_BORDER_STYLE, boxShadow: premiumShadow } : {}),
+      }}
     >
-      <motion.div
-        initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 24, scale: 0.98 }}
-        animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
-        transition={{ duration: 0.6, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
-        onMouseMove={handleMouseMove}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
+      {isPremium && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at 50% -20%, rgba(139,92,246,0.16) 0%, transparent 62%)' }}
+          aria-hidden="true"
+        />
+      )}
+
+      <div
         className={[
-          CARD_BASE,
-          'backdrop-blur-md h-full',
-          isPremium
-            ? 'transition-colors duration-500'
-            : [
-                'bg-zinc-900/40 border border-white/[0.05]',
-                'transition-colors duration-300',
-                'hover:border-white/[0.10]',
-              ].join(' '),
+          'absolute top-0 inset-x-0 h-px pointer-events-none transition-opacity duration-500',
+          isPremium ? 'opacity-50 group-hover:opacity-100' : 'opacity-0 group-hover:opacity-100',
         ].join(' ')}
         style={{
-          // Layer 1: full 3D rotation (disabled if prefers-reduced-motion)
-          rotateX: shouldReduce ? undefined : rotateX,
-          rotateY: shouldReduce ? undefined : rotateY,
-          // Premium: gradient border (static) + animated box-shadow glow
-          ...(isPremium
-            ? { ...PREMIUM_BORDER_STYLE, boxShadow: premiumShadow }
-            : {}
-          ),
+          background: isPremium
+            ? 'linear-gradient(to right, transparent, rgba(167,139,250,0.65), transparent)'
+            : 'linear-gradient(to right, transparent, rgba(167,139,250,0.35), transparent)',
+        }}
+        aria-hidden="true"
+      />
+
+      {!isPremium && (
+        <div
+          className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-500"
+          style={{ background: 'radial-gradient(ellipse at 35% -10%, rgba(167,139,250,0.07) 0%, transparent 65%)' }}
+          aria-hidden="true"
+        />
+      )}
+
+      <motion.div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-10 rounded-2xl overflow-hidden"
+        style={{
+          background: glareBackground,
+          opacity: glareOpacity,
+          mixBlendMode: 'screen',
+        }}
+      />
+
+      <motion.div
+        className="relative z-20 h-full flex flex-col"
+        style={{
+          translateX: shouldReduce ? undefined : contentX,
+          translateY: shouldReduce ? undefined : contentY,
         }}
       >
-
-        {/* Static inner glow (premium only) */}
-        {isPremium && (
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: 'radial-gradient(ellipse at 50% -20%, rgba(139,92,246,0.16) 0%, transparent 62%)' }}
-            aria-hidden="true"
-          />
-        )}
-
-        {/* Top shimmer line */}
-        <div
-          className={[
-            'absolute top-0 inset-x-0 h-px pointer-events-none transition-opacity duration-500',
-            isPremium ? 'opacity-50 group-hover:opacity-100' : 'opacity-0 group-hover:opacity-100',
-          ].join(' ')}
-          style={{
-            background: isPremium
-              ? 'linear-gradient(to right, transparent, rgba(167,139,250,0.65), transparent)'
-              : 'linear-gradient(to right, transparent, rgba(167,139,250,0.35), transparent)',
-          }}
-          aria-hidden="true"
-        />
-
-        {/* Free card ambient glow on hover */}
-        {!isPremium && (
-          <div
-            className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-500"
-            style={{ background: 'radial-gradient(ellipse at 35% -10%, rgba(167,139,250,0.07) 0%, transparent 65%)' }}
-            aria-hidden="true"
-          />
-        )}
-
-        {/*
-          ── Dynamic glare overlay (z-10) ─────────────────────────────────────
-          Position: gradient center = cursor position (0%–100% within card).
-          Opacity:  springs from 0 → 1 on mouseenter, 1 → 0 on mouseleave.
-          Blend:    mix-blend-mode: screen → adds light only, never darkens.
-          Rendered above the static glow layers, below the content (z-20).
-        */}
-        <motion.div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-10 rounded-2xl overflow-hidden"
-          style={{
-            background: glareBackground,
-            opacity: glareOpacity,
-            mixBlendMode: 'screen',
-          }}
-        />
-
-        {/*
-          ── Layer 2: Content (z-20) — parallax depth ─────────────────────────
-          translateX/Y at ±5px in the SAME direction as the card tilt.
-          The card frame moves at ±6° (angular), the content moves at ±5px (linear).
-          The mismatch in scale units makes the brain read them as being at
-          different Z depths — the frame appears to protrude, the content recedes.
-          Spring config is identical to the tilt spring → coherent timing.
-        */}
-        <motion.div
-          className="relative z-20 h-full flex flex-col"
-          style={{
-            translateX: shouldReduce ? undefined : contentX,
-            translateY: shouldReduce ? undefined : contentY,
-          }}
-        >
-          {/* Header: icon badge + tier tag */}
-          <div className="flex items-start justify-between gap-2 mb-2.5">
-            <div className={[
-              'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300',
-              isPremium
-                ? 'bg-gradient-to-br from-violet-500/[0.18] to-purple-700/[0.08] border border-violet-400/[0.30] group-hover:border-violet-400/[0.55] group-hover:from-violet-500/[0.25]'
-                : 'bg-violet-400/[0.08] border border-violet-400/[0.14] group-hover:bg-violet-400/[0.13] group-hover:border-violet-400/[0.26]',
-            ].join(' ')}>
-              <item.icon className="w-4 h-4 text-violet-400" aria-hidden="true" />
-            </div>
-            {isPremium ? <PremiumTag /> : <FreeTag />}
+        <div className="flex items-start justify-between gap-2 mb-2.5">
+          <div className={[
+            'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300',
+            isPremium
+              ? 'bg-gradient-to-br from-violet-500/[0.18] to-purple-700/[0.08] border border-violet-400/[0.30] group-hover:border-violet-400/[0.55] group-hover:from-violet-500/[0.25]'
+              : 'bg-violet-400/[0.08] border border-violet-400/[0.14] group-hover:bg-violet-400/[0.13] group-hover:border-violet-400/[0.26]',
+          ].join(' ')}>
+            <item.icon className="w-4 h-4 text-violet-400" aria-hidden="true" />
           </div>
+          {isPremium ? <PremiumTag /> : <FreeTag />}
+        </div>
 
-          <h3 className="text-[0.88rem] text-zinc-100 font-semibold leading-snug mb-1">
-            {item.title}
-          </h3>
-          <p className="text-[0.78rem] text-zinc-400 leading-relaxed">{item.description}</p>
+        <h3 className="text-[0.88rem] text-zinc-100 font-semibold leading-snug mb-1">
+          {item.title}
+        </h3>
+        <p className="text-[0.78rem] text-zinc-400 leading-relaxed">{item.description}</p>
 
-          {item.preview && <div className="mt-auto">{item.preview}</div>}
-        </motion.div>
-
+        {item.preview && <div className="mt-auto">{item.preview}</div>}
       </motion.div>
-    </div>
+    </motion.div>
   );
 }
+
+// ─── Directional enter vectors — each card arrives from a unique angle ────────
+const ENTER_DIRS = [
+  { x: -40, y:   0 }, // agenda    — from left
+  { x:   0, y:  40 }, // whatsapp  — from below
+  { x:  40, y:   0 }, // perfil    — from right
+  { x:   0, y:  40 }, // mp        — from below
+  { x: -24, y:  32 }, // crm       — diagonal TL
+  { x:  24, y:  32 }, // reportes  — diagonal TR
+];
 
 // ─── Section ──────────────────────────────────────────────────────────────────
 
 export default function FeaturesSection() {
-  const headingRef   = useRef<HTMLDivElement>(null);
-  const inView       = useInView(headingRef, { once: true, margin: '-80px' });
+  const containerRef = useRef<HTMLElement>(null);
   const shouldReduce = useReducedMotion();
+
+  useGSAP(() => {
+    if (shouldReduce) return;
+
+    const cards = gsap.utils.toArray<HTMLElement>('.bento-card');
+
+    cards.forEach((card, i) => {
+      const dir = ENTER_DIRS[i % ENTER_DIRS.length];
+
+      gsap.fromTo(
+        card,
+        {
+          opacity: 0,
+          x: dir.x,
+          y: dir.y,
+          scale: 0.95,
+          filter: 'blur(6px)',
+        },
+        {
+          opacity: 1,
+          x: 0,
+          y: 0,
+          scale: 1,
+          filter: 'blur(0px)',
+          duration: 0.8,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: card,
+            start: 'top 88%',
+            once: true,
+          },
+        },
+      );
+    });
+  }, { scope: containerRef, dependencies: [shouldReduce] });
 
   return (
     <section
+      ref={containerRef}
       className="relative z-10 overflow-hidden"
       style={{
         background: [
@@ -432,28 +419,30 @@ export default function FeaturesSection() {
       <div className="py-24 px-6 max-w-5xl mx-auto">
 
         {/* Heading */}
-        <motion.div
-          ref={headingRef}
-          initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center mb-14"
-        >
-          <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-4">
-            Todo lo que incluye
-          </p>
-          <h2 className="font-playfair text-[clamp(2.8rem,5vw,4.5rem)] font-normal text-white leading-[1.05] tracking-[-0.02em]">
-            Herramientas que tu salón{' '}
-            <span className="text-violet-400">necesita</span>
-          </h2>
+        <div className="text-center mb-14">
+          <AnimatedHeadline
+            tag="h2"
+            className="font-playfair text-[clamp(2.8rem,5vw,4.5rem)] font-normal text-white leading-[1.05] tracking-[-0.02em]"
+          >
+            Herramientas que tu salón necesita
+          </AnimatedHeadline>
           <p className="text-zinc-500 text-[0.9rem] mt-4 max-w-md mx-auto leading-relaxed">
             El plan base cubre lo esencial. El premium lo lleva al siguiente nivel.
           </p>
-        </motion.div>
+        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 auto-rows-auto">
-          {bentoItems.map((item, i) => (
-            <BentoCard key={item.id} item={item} index={i} />
+        {/* Bento grid — perspective on the wrapper lets tilt work correctly */}
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 auto-rows-auto"
+          style={{ perspective: '900px' }}
+        >
+          {bentoItems.map((item) => (
+            <div
+              key={item.id}
+              className={`bento-card ${item.gridClass} min-h-0`}
+            >
+              <BentoCard item={item} />
+            </div>
           ))}
         </div>
 
