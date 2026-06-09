@@ -173,14 +173,23 @@ export default function DolorSection() {
             El problema
           </motion.p>
 
-          <motion.h2
-            initial={shouldReduce ? {} : { opacity: 0, y: 22 }}
-            animate={headingInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.65, delay: 0.13, ease: [0.22, 1, 0.36, 1] }}
-            className="font-playfair text-[clamp(2.2rem,5vw,3.5rem)] text-white italic leading-tight"
-          >
-            ¿Te suena familiar?
-          </motion.h2>
+          <h2 className="font-playfair text-[clamp(2.2rem,5vw,3.5rem)] text-white italic leading-tight overflow-hidden">
+            {'¿Te suena familiar?'.split(' ').map((word, i) => (
+              <motion.span
+                key={i}
+                className="inline-block mr-[0.25em]"
+                initial={shouldReduce ? {} : { opacity: 0, y: '100%' }}
+                animate={headingInView ? { opacity: 1, y: 0 } : {}}
+                transition={{
+                  delay: 0.13 + i * 0.08,
+                  duration: 0.6,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+              >
+                {word}
+              </motion.span>
+            ))}
+          </h2>
 
           <motion.p
             initial={shouldReduce ? {} : { opacity: 0, y: 16 }}

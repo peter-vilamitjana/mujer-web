@@ -40,9 +40,35 @@ export const ContainerScroll = ({
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  const rotate    = useTransform(lenisScroll, [0, 600], [20, 0]);
-  const scale     = useTransform(lenisScroll, [0, 600], isMobile ? [0.7, 0.9] : [1.05, 1]);
-  const translate = useTransform(lenisScroll, [0, 600], [0, -80]);
+  // Phase 1 — Revelation (0→600): dashboard falls toward viewer and normalizes
+  // Phase 2 — Immersion  (600→1000): dashboard tilts forward and zooms in
+  const rotate = useTransform(
+    lenisScroll,
+    [0, 600, 1000],
+    [20, 0, -4]
+  );
+
+  const scale = useTransform(
+    lenisScroll,
+    [0, 600, 1000],
+    isMobile ? [0.7, 0.9, 1.05] : [1.05, 1.0, 1.18]
+  );
+
+  const translate = useTransform(
+    lenisScroll,
+    [0, 600, 1000],
+    [0, -80, -80]
+  );
+
+  // Card fades out as viewer "enters" it — disappears into the next section
+  const cardOpacity = useTransform(lenisScroll, [800, 1100], [1, 0]);
+
+  // Border fades out during immersion phase so nothing breaks the illusion
+  const borderColor = useTransform(
+    lenisScroll,
+    [600, 1000],
+    ["rgba(241,201,125,0.2)", "rgba(241,201,125,0)"]
+  );
 
   return (
     <div
@@ -54,7 +80,12 @@ export const ContainerScroll = ({
         style={{ perspective: "1000px" }}
       >
         <Header translate={translate} titleComponent={titleComponent} />
-        <Card rotate={rotate} scale={scale}>
+        <Card
+          rotate={rotate}
+          scale={scale}
+          cardOpacity={cardOpacity}
+          borderColor={borderColor}
+        >
           {children}
         </Card>
       </div>
@@ -90,10 +121,14 @@ export const Header = ({
 export const Card = ({
   rotate,
   scale,
+  cardOpacity,
+  borderColor,
   children,
 }: {
   rotate: MotionValue<number>;
   scale: MotionValue<number>;
+  cardOpacity: MotionValue<number>;
+  borderColor: MotionValue<string>;
   children: React.ReactNode;
 }) => {
   return (
@@ -101,13 +136,15 @@ export const Card = ({
       style={{
         rotateX: rotate,
         scale,
+        opacity: cardOpacity,
+        borderColor,
         boxShadow:
           "0 0 #0000004d, 0 9px 20px #0000004a, " +
           "0 37px 37px #00000042, 0 84px 50px #00000026, " +
           "0 149px 60px #0000000a, 0 233px 65px #00000003",
       }}
       className="max-w-6xl mx-auto w-full h-[30rem] md:h-[40rem]
-                 border-4 border-[#f1c97d]/20 p-2 md:p-6
+                 border-4 p-2 md:p-6
                  bg-[#111010] rounded-[2rem] shadow-2xl"
     >
       <div className="h-full w-full overflow-hidden rounded-2xl bg-[#050504]">

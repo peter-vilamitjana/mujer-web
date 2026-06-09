@@ -45,7 +45,7 @@ export default function CTAFinalSection() {
         <motion.p
           initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
           className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-8"
         >
           Empezá hoy
@@ -58,7 +58,7 @@ export default function CTAFinalSection() {
               key={line}
               initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 36, filter: 'blur(8px)' }}
               animate={inView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-              transition={{ duration: 0.85, delay: 0.1 + i * 0.16, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.85, delay: 0.1 + i * 0.16, ease: [0.16, 1, 0.3, 1] }}
               className={`block ${i === 1 ? 'italic text-purple-400' : 'text-white'}`}
             >
               {line}
@@ -70,7 +70,7 @@ export default function CTAFinalSection() {
         <motion.p
           initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.75, delay: 0.42, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.75, delay: 0.42, ease: [0.16, 1, 0.3, 1] }}
           className="text-zinc-400 text-[clamp(1rem,2vw,1.15rem)] leading-[1.75] mb-12"
         >
           Gratis para siempre en el plan base.{' '}
@@ -81,10 +81,17 @@ export default function CTAFinalSection() {
         <motion.div
           initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 20, scale: 0.96 }}
           animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
-          transition={{ duration: 0.75, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.75, delay: 0.55, type: 'spring', stiffness: 300, damping: 20 }}
           className="flex flex-col items-center gap-5"
         >
-          <div className="relative group">
+          <motion.div
+            className="relative group"
+            whileHover={shouldReduce ? {} : {
+              scale: 1.03,
+              transition: { type: 'spring', stiffness: 400, damping: 25 },
+            }}
+            whileTap={{ scale: 0.97 }}
+          >
             {/* Animated outer glow ring */}
             <motion.div
               className="absolute -inset-[3px] rounded-full pointer-events-none"
@@ -125,7 +132,7 @@ export default function CTAFinalSection() {
                 aria-hidden="true"
               />
             </Link>
-          </div>
+          </motion.div>
 
           <p className="text-zinc-600 text-xs tracking-wide">
             Sin tarjeta de crédito · Configuración en 5 minutos

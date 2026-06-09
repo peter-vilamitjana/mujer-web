@@ -4,7 +4,7 @@ import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { CalendarCheck, MessageSquareOff, TrendingUp } from 'lucide-react';
 import { useRef } from 'react';
 
-const EASE = [0.22, 1, 0.36, 1] as const;
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 const stats = [
   {
@@ -137,7 +137,7 @@ export default function SocialProofSection() {
               initial={shouldReduce ? { opacity: 1 } : { opacity: 0, y: 36, scale: 0.97, filter: 'blur(8px)' }}
               whileInView={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
               viewport={{ once: true, margin: '-50px' }}
-              transition={{ duration: 0.7, delay: i * 0.10, ease: EASE }}
+              transition={{ duration: 0.65, delay: i * 0.10, ease: EASE }}
               className="group relative rounded-3xl p-8 overflow-hidden cursor-default
                 backdrop-blur-xl bg-zinc-900/40 border border-white/[0.05]
                 hover:-translate-y-1 hover:bg-zinc-800/50 hover:border-white/[0.10]

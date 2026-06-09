@@ -394,6 +394,15 @@ export default function SolucionesSection() {
 
           {/* RIGHT — Sticky 3D macOS window */}
           <div className="sticky top-0 h-screen flex items-center justify-center">
+            {/* Scroll progress bar — top of sticky panel */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] overflow-hidden" aria-hidden="true">
+              <motion.div
+                className="h-full bg-gradient-to-r from-transparent via-violet-400/60 to-transparent"
+                animate={{ scaleX: (activeStep + 1) / solutions.length }}
+                transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+                style={{ transformOrigin: 'left' }}
+              />
+            </div>
             <div
               className="relative flex flex-col items-center"
               style={{ perspective: '1200px', transformStyle: 'preserve-3d' }}

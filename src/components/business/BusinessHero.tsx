@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
+import { motion, useReducedMotion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import { useLenis } from 'lenis/react';
 import { ArrowRight } from 'lucide-react';
 import { ContainerScroll } from '@/components/ui/container-scroll-animation';
 
@@ -24,6 +25,17 @@ export default function BusinessHero() {
   const shouldReduce = useReducedMotion();
   const [wordIndex, setWordIndex] = useState(0);
 
+  // Sync Lenis virtual scroll — same pattern as ContainerScroll
+  const lenisScroll = useMotionValue(0);
+  useLenis(({ scroll }) => { lenisScroll.set(scroll); });
+
+  // Text dissolves upward as the hero card takes over the viewport
+  const textOpacity = useTransform(lenisScroll, [0, 320], shouldReduce ? [1, 1] : [1, 0]);
+  const textY       = useTransform(lenisScroll, [0, 320], shouldReduce ? [0, 0] : [0, -24]);
+
+  // Dark overlay that completes the immersion — fades in as the card disappears
+  const overlayOpacity = useTransform(lenisScroll, [900, 1100], [0, 1]);
+
   useEffect(() => {
     if (shouldReduce) return;
     const interval = setInterval(() => {
@@ -38,6 +50,18 @@ export default function BusinessHero() {
       aria-label="Hero — Ouleeh para negocios"
       suppressHydrationWarning
     >
+      {/* Scroll indicator — pulses to invite first scroll */}
+      <motion.div
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5 pointer-events-none"
+        animate={shouldReduce ? {} : { opacity: [1, 0.3, 1] }}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        aria-hidden="true"
+      >
+        <span className="text-[9px] text-white/30 uppercase tracking-[0.4em] font-bold">
+          Scroll
+        </span>
+        <div className="w-px h-8 bg-gradient-to-b from-white/20 to-transparent" />
+      </motion.div>
       {/* Ambient orbs — fixed behind everything */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
         <motion.div
@@ -68,10 +92,20 @@ export default function BusinessHero() {
         />
       </div>
 
+      {/* Immersion overlay — completes the "enter the software" illusion */}
+      {!shouldReduce && (
+        <motion.div
+          className="absolute inset-0 bg-[#09090b] pointer-events-none z-20"
+          style={{ opacity: overlayOpacity }}
+          aria-hidden="true"
+        />
+      )}
+
       {/* ContainerScroll — offsets the fixed navbar */}
       <div className="relative z-10 pt-28 lg:pt-36">
         <ContainerScroll
           titleComponent={
+            <motion.div style={{ opacity: textOpacity, y: textY }}>
             <div className="flex flex-col items-center text-center">
 
               {/* Headline — animated word-by-word with cycling ending */}
@@ -159,6 +193,7 @@ export default function BusinessHero() {
                 </Link>
               </motion.div>
             </div>
+            </motion.div>
           }
         >
           <DashboardMockup />

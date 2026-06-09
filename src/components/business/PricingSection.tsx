@@ -5,7 +5,7 @@ import { TimelineContent } from "@/components/ui/timeline-animation";
 import { VerticalCutReveal } from "@/components/ui/vertical-cut-reveal";
 import { cn } from "@/lib/utils";
 import NumberFlow from "@number-flow/react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useRef, useState } from "react";
 
 const plans = [
@@ -115,9 +115,29 @@ const PricingSwitch = ({ onSwitch }: { onSwitch: (value: string) => void }) => {
   );
 };
 
+// Staggered card entrance — Pro (index 1) starts at scale 0.97 for extra presence
+const cardRevealVariants = {
+  hidden: (i: number) => ({
+    opacity: 0,
+    y: 32,
+    scale: i === 1 ? 0.97 : 1,
+  }),
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      delay: i * 0.12,
+      duration: 0.65,
+      ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+    },
+  }),
+};
+
 export default function PricingSection() {
   const [isYearly, setIsYearly] = useState(false);
   const pricingRef = useRef<HTMLDivElement>(null);
+  const shouldReduce = useReducedMotion();
 
   const revealVariants = {
     visible: (i: number) => ({
@@ -236,12 +256,13 @@ export default function PricingSection() {
 
       <div className="grid md:grid-cols-3 max-w-5xl gap-4 py-6 mx-auto px-4">
         {plans.map((plan, index) => (
-          <TimelineContent
+          <motion.div
             key={plan.name}
-            as="div"
-            animationNum={2 + index}
-            timelineRef={pricingRef}
-            customVariants={revealVariants}
+            variants={shouldReduce ? {} : cardRevealVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-80px' }}
+            custom={index}
           >
             <Card
               className={`relative text-white border-neutral-800 ${
@@ -304,7 +325,7 @@ export default function PricingSection() {
                 </div>
               </CardContent>
             </Card>
-          </TimelineContent>
+          </motion.div>
         ))}
       </div>
     </div>
