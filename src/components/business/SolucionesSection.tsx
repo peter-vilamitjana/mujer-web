@@ -7,10 +7,14 @@ import {
 } from 'framer-motion';
 import { useLenis } from 'lenis/react';
 import { Calendar, TrendingUp, LayoutDashboard, CheckCircle } from 'lucide-react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
+
+gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
-const VIOLET_HEX  = '#a78bfa';
-const APPLE_EASE  = [0.25, 0.46, 0.45, 0.94] as const;
+const VIOLET_HEX   = '#a78bfa';
 const MOUSE_SPRING = { stiffness: 90, damping: 22, mass: 1 } as const;
 
 const TRAFFIC = [
@@ -154,12 +158,27 @@ const MOCKUPS = [MockupReserva, MockupAgenda, MockupMetricas];
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function SolucionesSection() {
-  const [activeStep, setActiveStep]   = useState(0);
-  const [isMobile,   setIsMobile]     = useState(false);
+  const [activeStep, setActiveStep] = useState(0);
+  const [isMobile,   setIsMobile]   = useState(false);
 
-  const layerRefs    = useRef<(HTMLDivElement | null)[]>([null, null, null]);
-  const glareRef     = useRef<HTMLDivElement>(null);
+  const layerRefs     = useRef<(HTMLDivElement | null)[]>([null, null, null]);
+  const glareRef      = useRef<HTMLDivElement>(null);
   const activeStepRef = useRef(0);
+
+  // GSAP scope + title targets
+  const sectionRef = useRef<HTMLElement>(null);
+  const eyebrowRef = useRef<HTMLParagraphElement>(null);
+  const h2Ref      = useRef<HTMLHeadingElement>(null);
+  const mobileRef  = useRef<HTMLDivElement>(null);
+
+  // ── Mejora 1 — Container entrance via Lenis scroll progress ──────────────
+  const lenisScroll            = useMotionValue(0);
+  const containerEntranceY     = useMotionValue(60);
+  const containerEntranceOpacity = useMotionValue(0);
+  const containerEntranceScale = useMotionValue(0.94);
+
+  // ── Mejora 3 — Breathing MotionValue ──────────────────────────────────────
+  const breathingY = useMotionValue(0);
 
   const prefersReducedMotion = useReducedMotion();
 
@@ -167,6 +186,7 @@ export default function SolucionesSection() {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
+  // isMobile detection
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1024);
     check();
@@ -174,28 +194,91 @@ export default function SolucionesSection() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // ── Lenis scroll → layer detection ────────────────────────────────────────
-  // getBoundingClientRect() is correct with Lenis because Lenis scrolls via
-  // native scrollTop (not CSS transforms), so positions are viewport-relative.
+  // ── Mejora 3 — Breathing: sinusoidal RAF loop ──────────────────────────────
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    let startTime: number | null = null;
+    let rafId: number;
+    const tick = (ts: number) => {
+      if (!startTime) startTime = ts;
+      const t = (ts - startTime) / 1000;
+      breathingY.set(Math.sin(t * (Math.PI * 2 / 6)) * 4);
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [prefersReducedMotion, breathingY]);
+
+  // ── Mejora 1 — Track raw Lenis scroll position ────────────────────────────
+  useLenis(({ scroll }: { scroll: number }) => {
+    lenisScroll.set(scroll);
+  });
+
+  // ── Lenis: ScrollTrigger sync + layer detection + entrance progress ────────
   useLenis(() => {
+    ScrollTrigger.update();
+
+    // Mejora 1 — entrance progress from section top crossing 80% viewport
+    if (sectionRef.current && !prefersReducedMotion) {
+      const rect  = sectionRef.current.getBoundingClientRect();
+      const viewH = window.innerHeight;
+      const progress = Math.max(0, Math.min(1,
+        (viewH * 0.8 - rect.top) / (viewH * 0.4),
+      ));
+      containerEntranceY.set(60 * (1 - progress));
+      containerEntranceOpacity.set(progress);
+      containerEntranceScale.set(0.94 + 0.06 * progress);
+    }
+
     if (isMobile) return;
+
+    // Active layer detection — closest center to viewport midpoint
     const vhCenter = window.innerHeight / 2;
     let closestIdx  = 0;
     let closestDist = Infinity;
-
     layerRefs.current.forEach((ref, i) => {
       if (!ref) return;
-      const rect    = ref.getBoundingClientRect();
+      const rect     = ref.getBoundingClientRect();
       const elCenter = rect.top + rect.height / 2;
-      const dist    = Math.abs(elCenter - vhCenter);
+      const dist     = Math.abs(elCenter - vhCenter);
       if (dist < closestDist) { closestDist = dist; closestIdx = i; }
     });
-
     if (closestIdx !== activeStepRef.current) {
       activeStepRef.current = closestIdx;
       setActiveStep(closestIdx);
     }
   });
+
+  // ── GSAP ScrollTrigger: title entrance + mobile cards ─────────────────────
+  useGSAP(() => {
+    if (prefersReducedMotion) return;
+
+    const titleTl = gsap.timeline({
+      scrollTrigger: {
+        trigger: eyebrowRef.current,
+        start: 'top 88%',
+        once: true,
+      },
+    });
+    titleTl
+      .from(eyebrowRef.current, { opacity: 0, y: 16, duration: 0.6, ease: 'power2.out' })
+      .from(h2Ref.current,      { opacity: 0, y: 36, duration: 1.0, ease: 'power3.out' }, '-=0.3');
+
+    const mm = gsap.matchMedia();
+    mm.add('(max-width: 1023px)', () => {
+      if (!mobileRef.current) return;
+      const cards = mobileRef.current.querySelectorAll('.mobile-card');
+      if (!cards.length) return;
+      ScrollTrigger.batch(cards, {
+        onEnter: (elements) => {
+          gsap.from(elements, { opacity: 0, y: 52, duration: 0.78, stagger: 0.13, ease: 'power2.out' });
+        },
+        start: 'top 88%',
+        once: true,
+      });
+    });
+    return () => mm.revert();
+  }, { scope: sectionRef });
 
   // ── Mouse micro-tilt springs (+4° max, both axes) ─────────────────────────
   const mouseRotateX = useSpring(
@@ -217,15 +300,26 @@ export default function SolucionesSection() {
     ([m]: number[]) => (prefersReducedMotion ? 0 : -6) + m,
   ) as MotionValue<number>;
 
-  // ── Apple-grade multi-layer shadow ────────────────────────────────────────
-  const monitorShadow = [
-    'inset 0 1px 0 rgba(255,255,255,0.18)',
-    'inset 0 0 0 1px rgba(255,255,255,0.06)',
-    '0 0 0 1px rgba(255,255,255,0.08)',
-    '0 32px 80px -12px rgba(0,0,0,0.85)',
-    '0 72px 160px -24px rgba(0,0,0,0.60)',
-    '0 0 140px rgba(167,139,250,0.14)',
-  ].join(', ');
+  // ── Mejora 4 — Dynamic shadow that follows the tilt ───────────────────────
+  const shadowX = useTransform(
+    mouseRotateY, [-4, 4],
+    prefersReducedMotion ? [0, 0] : [-8, 8],
+  );
+  const shadowY = useTransform(
+    mouseRotateX, [-4, 4],
+    prefersReducedMotion ? [0, 0] : [4, -4],
+  );
+  const dynamicShadow = useTransform(
+    [shadowX, shadowY] as any,
+    ([sx, sy]: number[]) => [
+      'inset 0 1px 0 rgba(255,255,255,0.18)',
+      'inset 0 0 0 1px rgba(255,255,255,0.06)',
+      '0 0 0 1px rgba(255,255,255,0.08)',
+      `${-sx * 2}px ${32 + sy * 2}px 80px -12px rgba(0,0,0,0.85)`,
+      `${-sx * 4}px ${72 + sy * 4}px 160px -24px rgba(0,0,0,0.60)`,
+      '0 0 140px rgba(167,139,250,0.14)',
+    ].join(', '),
+  ) as MotionValue<string>;
 
   // ── Glare — direct DOM mutation, zero re-renders ──────────────────────────
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -256,6 +350,7 @@ export default function SolucionesSection() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <section
+      ref={sectionRef}
       className="relative bg-[#09090b] border-b border-white/[0.04]"
       style={{
         background: [
@@ -265,13 +360,19 @@ export default function SolucionesSection() {
       }}
     >
 
-      {/* ── Desvinculado Title — centrado, respira antes del split ────────── */}
+      {/* ── Title ─────────────────────────────────────────────────────────── */}
       <div className="max-w-3xl mx-auto text-center px-6 pt-32 pb-20 md:pb-28">
-        <p className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-4">
+        <p
+          ref={eyebrowRef}
+          className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-4"
+        >
           Potencia y Simplicidad
         </p>
-        <h2 className="font-playfair text-[clamp(2.8rem,5vw,4.2rem)] font-normal
-          text-white leading-[1.08] tracking-tight">
+        <h2
+          ref={h2Ref}
+          className="font-playfair text-[clamp(2.8rem,5vw,4.2rem)] font-normal
+            text-white leading-[1.08] tracking-tight"
+        >
           Tu salón bajo control,{' '}
           <span className="text-violet-400 italic">capa por capa.</span>
         </h2>
@@ -279,12 +380,12 @@ export default function SolucionesSection() {
 
       {/* ── Mobile — stacked ──────────────────────────────────────────────── */}
       {isMobile ? (
-        <div className="px-6 pb-24 space-y-24">
+        <div ref={mobileRef} className="px-6 pb-24 space-y-24">
           {solutions.map((sol, index) => {
             const Icon            = sol.icon;
             const MockupComponent = MOCKUPS[index];
             return (
-              <div key={sol.id} className="space-y-8">
+              <div key={sol.id} className="mobile-card space-y-8">
                 <div
                   className="w-full rounded-[10px] overflow-hidden border border-white/[0.10] bg-zinc-900/30"
                   style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 60px rgba(167,139,250,0.06)' }}
@@ -299,7 +400,6 @@ export default function SolucionesSection() {
                   </div>
                   <div className="h-64 bg-[#050504]"><MockupComponent /></div>
                 </div>
-
                 <div className="space-y-5">
                   <div className="flex gap-3 items-center">
                     <div className="w-10 h-10 rounded-xl border flex items-center justify-center
@@ -329,7 +429,7 @@ export default function SolucionesSection() {
         /* ── Desktop — Sticky Split-View ──────────────────────────────────── */
         <div className="grid grid-cols-2 max-w-7xl mx-auto">
 
-          {/* LEFT — Scrollable text layers, each h-screen */}
+          {/* LEFT — Scrollable text layers ───────────────────────────────── */}
           <div>
             {solutions.map((sol, i) => {
               const Icon     = sol.icon;
@@ -340,12 +440,25 @@ export default function SolucionesSection() {
                   ref={(el) => { layerRefs.current[i] = el; }}
                   className="h-screen flex flex-col justify-center px-12 xl:px-20"
                 >
+                  {/*
+                    Mejora 6 — key changes with isActive so active layer
+                    re-mounts with initial { opacity:0, y:12 } for a
+                    micro-slide entrance; inactive layers snap to dimmed state.
+                  */}
                   <motion.div
+                    key={`text-${i}-${isActive}`}
+                    initial={isActive && !prefersReducedMotion
+                      ? { opacity: 0, y: 12 }
+                      : false
+                    }
                     animate={{
-                      opacity: isActive ? 1 : 0.2,
-                      y:       isActive ? 0 : 10,
+                      opacity: isActive ? 1 : 0.18,
+                      y:       isActive ? 0  : 8,
                     }}
-                    transition={{ duration: 0.55, ease: APPLE_EASE }}
+                    transition={{
+                      opacity: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
+                      y:       { type: 'spring', stiffness: 300, damping: 28 },
+                    }}
                   >
                     {/* Icon + subtitle label */}
                     <div className="flex items-center gap-3 mb-6">
@@ -365,8 +478,7 @@ export default function SolucionesSection() {
 
                     {/* Title */}
                     <h3 className={`font-playfair text-[clamp(1.9rem,3vw,2.8rem)] font-normal
-                      leading-tight tracking-tight mb-5
-                      transition-colors duration-500
+                      leading-tight tracking-tight mb-5 transition-colors duration-500
                       ${isActive ? 'text-white' : 'text-zinc-700'}`}>
                       {sol.title}
                     </h3>
@@ -392,9 +504,9 @@ export default function SolucionesSection() {
             })}
           </div>
 
-          {/* RIGHT — Sticky 3D macOS window */}
+          {/* RIGHT — Sticky 3D macOS window ──────────────────────────────── */}
           <div className="sticky top-0 h-screen flex items-center justify-center">
-            {/* Scroll progress bar — top of sticky panel */}
+            {/* Scroll progress bar */}
             <div className="absolute top-0 left-0 right-0 h-[2px] overflow-hidden" aria-hidden="true">
               <motion.div
                 className="h-full bg-gradient-to-r from-transparent via-violet-400/60 to-transparent"
@@ -403,17 +515,33 @@ export default function SolucionesSection() {
                 style={{ transformOrigin: 'left' }}
               />
             </div>
-            <div
-              className="relative flex flex-col items-center"
-              style={{ perspective: '1200px', transformStyle: 'preserve-3d' }}
-            >
 
-              {/* macOS window — Liquid Glass */}
+            {/*
+              Mejora 1 — Entrance driven by Lenis scroll progress:
+              containerEntranceY/Opacity/Scale animate from initial values
+              as the section top crosses 80% of the viewport height.
+            */}
+            <motion.div
+              className="relative flex flex-col items-center"
+              style={{
+                perspective:      '1200px',
+                transformStyle:   'preserve-3d',
+                y:       prefersReducedMotion ? 0 : containerEntranceY,
+                opacity: prefersReducedMotion ? 1 : containerEntranceOpacity,
+                scale:   prefersReducedMotion ? 1 : containerEntranceScale,
+              }}
+            >
+              {/*
+                Mejora 3 — Breathing: breathingY floats the window ±4px on a
+                6-second sine cycle via RAF.
+                Mejora 4 — dynamicShadow: boxShadow follows the mouse tilt.
+              */}
               <motion.div
                 style={{
                   rotateX:   combinedRotateX,
                   rotateY:   combinedRotateY,
-                  boxShadow: monitorShadow,
+                  y:         prefersReducedMotion ? 0 : breathingY,
+                  boxShadow: dynamicShadow,
                 }}
                 className="w-[min(48vw,680px)] h-[min(56vh,520px)]
                   rounded-[12px] overflow-hidden flex flex-col
@@ -428,7 +556,7 @@ export default function SolucionesSection() {
                   className="h-9 shrink-0 border-b border-white/[0.06]
                     flex items-center px-4 relative select-none"
                   style={{
-                    background:    'linear-gradient(to bottom, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)',
+                    background:     'linear-gradient(to bottom, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)',
                     backdropFilter: 'blur(8px)',
                   }}
                 >
@@ -452,65 +580,101 @@ export default function SolucionesSection() {
                   </div>
                 </div>
 
-                {/* Crossfade content — todos en DOM, sin flicker */}
+                {/*
+                  Mejora 2 — 3D mockup transition:
+                  Inactive mockups rest at rotateX:6 + blur(2px).
+                  Active mockup animates to rotateX:0 + blur(0px) with spring.
+                  Creates a "page turn from depth" effect on transition.
+                */}
                 <div className="flex-1 relative overflow-hidden bg-[#050504]">
                   {MOCKUPS.map((MockupComponent, mi) => (
                     <motion.div
                       key={mi}
                       className="absolute inset-0"
+                      initial={prefersReducedMotion ? {} : {
+                        opacity: 0,
+                        scale:   0.95,
+                        rotateX: -8,
+                        filter:  'blur(3px)',
+                      }}
                       animate={{
-                        opacity: mi === activeStep ? 1 : 0,
-                        scale:   mi === activeStep ? 1 : 0.97,
+                        opacity: mi === activeStep ? 1    : 0,
+                        scale:   mi === activeStep ? 1    : 0.96,
+                        rotateX: mi === activeStep ? 0    : 6,
+                        filter:  mi === activeStep ? 'blur(0px)' : 'blur(2px)',
                       }}
                       transition={{
                         opacity: {
-                          duration: prefersReducedMotion ? 0 : 0.38,
-                          ease:     APPLE_EASE,
+                          duration: prefersReducedMotion ? 0 : 0.42,
+                          ease:     [0.16, 1, 0.3, 1],
                         },
                         scale: prefersReducedMotion
                           ? { duration: 0 }
-                          : { type: 'spring', stiffness: 300, damping: 26, mass: 0.8 },
+                          : { type: 'spring', stiffness: 280, damping: 28 },
+                        rotateX: prefersReducedMotion
+                          ? { duration: 0 }
+                          : { type: 'spring', stiffness: 200, damping: 24 },
+                        filter: {
+                          duration: prefersReducedMotion ? 0 : 0.35,
+                        },
                       }}
-                      style={{ transformOrigin: 'center top' }}
+                      style={{
+                        transformOrigin: 'center top',
+                        transformStyle:  'preserve-3d',
+                      }}
                     >
                       <MockupComponent />
                     </motion.div>
                   ))}
 
-                  {/* Glare — mutación directa al DOM, cero re-renders */}
+                  {/* Glare */}
                   <div
                     ref={glareRef}
                     aria-hidden="true"
                     className="pointer-events-none absolute inset-0 z-20"
                     style={{
-                      opacity:       0,
-                      background:    'radial-gradient(circle at 50% 30%, rgba(255,255,255,0.04) 0%, transparent 60%)',
-                      mixBlendMode:  'screen',
-                      transition:    'opacity 300ms ease',
+                      opacity:      0,
+                      background:   'radial-gradient(circle at 50% 30%, rgba(255,255,255,0.04) 0%, transparent 60%)',
+                      mixBlendMode: 'screen',
+                      transition:   'opacity 300ms ease',
                     }}
                   />
                 </div>
               </motion.div>
 
-              {/* Step dots — clickables with focus ring */}
-              <div className="flex gap-2 justify-center mt-8">
-                {solutions.map((_, di) => (
-                  <button
+              {/*
+                Mejora 5 — Step dots with spring width + hover scale physics.
+              */}
+              <div className="flex gap-2.5 justify-center mt-8" role="tablist">
+                {solutions.map((sol, di) => (
+                  <motion.button
                     key={di}
                     onClick={() => setActiveStep(di)}
-                    aria-label={`Ir a capa ${di + 1}`}
-                    className="rounded-full cursor-pointer transition-all duration-500
-                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60"
-                    style={{
-                      width:           di === activeStep ? '18px' : '6px',
-                      height:          '6px',
-                      backgroundColor: di === activeStep ? VIOLET_HEX : 'rgba(255,255,255,0.15)',
+                    aria-label={`Ir a ${sol.title}`}
+                    aria-selected={di === activeStep}
+                    role="tab"
+                    className="rounded-full cursor-pointer
+                      focus-visible:outline-none focus-visible:ring-2
+                      focus-visible:ring-violet-400/60"
+                    animate={{
+                      width:           di === activeStep ? 24 : 6,
+                      backgroundColor: di === activeStep
+                        ? VIOLET_HEX
+                        : 'rgba(255,255,255,0.15)',
+                      scale: di === activeStep ? 1 : 0.9,
                     }}
+                    whileHover={{ scale: di === activeStep ? 1 : 1.3 }}
+                    transition={{
+                      width:           { type: 'spring', stiffness: 400, damping: 30 },
+                      scale:           { type: 'spring', stiffness: 400, damping: 25 },
+                      backgroundColor: { duration: 0.3 },
+                    }}
+                    style={{ height: 6 }}
                   />
                 ))}
               </div>
 
-            </div>
+            </motion.div>
           </div>
 
         </div>
