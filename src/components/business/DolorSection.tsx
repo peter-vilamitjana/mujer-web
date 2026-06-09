@@ -91,7 +91,6 @@ const PainColumn = ({
   const shouldReduce = useReducedMotion();
 
   return (
-    // Outer wrapper: FM entrance + GSAP x-parallax via class name
     <motion.div
       ref={ref}
       className={className}
@@ -99,10 +98,6 @@ const PainColumn = ({
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
     >
-      {/*
-        Inner div: CSS animation drives the continuous marquee scroll.
-        group-hover pauses all columns simultaneously via Tailwind group context.
-      */}
       <div
         className="flex flex-col gap-4 pb-4 will-change-transform group-hover:[animation-play-state:paused]"
         style={{
@@ -134,16 +129,17 @@ const col3 = [pains[4], pains[5]];
 
 export default function DolorSection() {
   const sectionRef = useRef<HTMLElement>(null);
+  const bridgeRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLDivElement>(null);
   const headingInView = useInView(headingRef, { once: true, margin: '-80px' });
   const shouldReduce = useReducedMotion();
 
-  // GSAP parallax — each column shifts at a slightly different x-rate as the
-  // section scrolls through the viewport. Creates z-depth layering on top of
-  // the existing CSS marquee loops (which run on the inner divs, separate layer).
   useGSAP(() => {
     if (shouldReduce) return;
 
+    // ── Parallax — columnas con velocidades distintas de x ──────────────────
+    // Targets son string selectors, que GSAP resuelve en el documento (no scoped).
+    // El trigger '.dolor-section' también se resuelve globalmente por ScrollTrigger.
     gsap.to('.marquee-row-1', {
       x: '-5%',
       ease: 'none',
@@ -176,12 +172,71 @@ export default function DolorSection() {
         scrub: 1.6,
       },
     });
+
+    // ── Bridge pin — Apple AirPods Pro "Silence. Perfected." style ───────────
+    // El bridge se pinea en el top del viewport durante 120vh de scroll.
+    // Mientras dura el pin, el timeline anima el texto y el glow con scrub:0.8
+    // (el playhead del timeline "alcanza" la posición de scroll suavemente).
+    // Solo cuando el usuario scrollea más allá del end, el pin se libera
+    // y SolucionesSection aparece.
+    if (!bridgeRef.current) return;
+
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: bridgeRef.current,
+        start: 'top top',
+        end: '+=120%',
+        pin: true,
+        scrub: 0.8,
+        anticipatePin: 1,
+      },
+    });
+
+    // Fase 1 (0%–30%): color de fondo transiciona de rose a neutral (ambos ~0 alpha — establece el interpolado)
+    tl.fromTo(bridgeRef.current,
+      { backgroundColor: 'rgba(244,63,94,0)' },
+      { backgroundColor: 'rgba(139,92,246,0)', duration: 0.3 },
+    )
+
+    // Fase 2 (0%–50%): "Con Ouleeh," entra desde abajo con blur mientras se scrollea
+    .fromTo('.bridge-line-1',
+      { yPercent: 60, opacity: 0, filter: 'blur(20px)', scale: 0.92 },
+      { yPercent: 0, opacity: 1, filter: 'blur(0px)', scale: 1, duration: 0.4, ease: 'power3.out' },
+      0,
+    )
+
+    // Fase 3 (20%–70%): "todo eso queda atrás." entra 200ms después con el mismo gesto
+    .fromTo('.bridge-line-2',
+      { yPercent: 60, opacity: 0, filter: 'blur(20px)', scale: 0.92 },
+      { yPercent: 0, opacity: 1, filter: 'blur(0px)', scale: 1, duration: 0.4, ease: 'power3.out' },
+      0.2,
+    )
+
+    // Fase 4 (40%–80%): violeta de transición aparece en el fondo
+    .fromTo('.bridge-bg-transition',
+      { opacity: 0 },
+      { opacity: 1, duration: 0.4 },
+      0.4,
+    )
+
+    // Fase 5 (50%–90%): glow central florece desde un punto
+    .fromTo('.bridge-glow',
+      { opacity: 0, scale: 0.4 },
+      { opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' },
+      0.5,
+    )
+
+    // Fase final (85%–100%): todo se evapora al dejar la sección — sin corte abrupto
+    .to(['.bridge-line-1', '.bridge-line-2'],
+      { opacity: 0, yPercent: -20, filter: 'blur(8px)', duration: 0.15, ease: 'power2.in' },
+      0.85,
+    );
   }, { scope: sectionRef, dependencies: [shouldReduce] });
 
   return (
     <section
       ref={sectionRef}
-      className="dolor-section relative z-10 bg-[#09090b] overflow-hidden w-full"
+      className="dolor-section relative z-10 bg-[#09090b] w-full"
     >
       <div
         className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent"
@@ -189,7 +244,7 @@ export default function DolorSection() {
       />
 
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none overflow-hidden"
         style={{
           background:
             'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(244,63,94,0.045) 0%, transparent 70%)',
@@ -197,6 +252,7 @@ export default function DolorSection() {
         aria-hidden="true"
       />
 
+      {/* ── Heading + marquee ────────────────────────────────────────────── */}
       <div className="py-24 w-full flex flex-col items-center">
         <div ref={headingRef} className="text-center mb-12 px-6 max-w-xl">
           <motion.p
@@ -225,11 +281,6 @@ export default function DolorSection() {
           </motion.p>
         </div>
 
-        {/*
-          Grid wrapper — `group` propagates hover to pause all marquees simultaneously.
-          mask-image fades cards at top + bottom for cinematographic depth.
-          GSAP ScrollTrigger x-parallax added via .marquee-row-{n} classNames.
-        */}
         <div
           className="group w-full px-6 flex justify-center gap-6 mt-8 max-h-[520px] overflow-hidden"
           style={{
@@ -261,31 +312,63 @@ export default function DolorSection() {
             delay={0.3}
           />
         </div>
-
       </div>
 
-      {/* Bridge — blur-to-focus reveal as this block scrolls into view */}
-      <div className="w-full py-40 flex flex-col items-center gap-4 text-center px-6">
-        <motion.p
-          initial={shouldReduce ? {} : { opacity: 0, scale: 0.96, filter: 'blur(16px)' }}
-          whileInView={shouldReduce ? {} : { opacity: 1, scale: 1, filter: 'blur(0px)' }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          className="font-sans font-bold text-zinc-100 text-[clamp(3rem,7vw,5.5rem)] tracking-[-0.03em] leading-none"
+      {/* ── Bridge pineado — Apple "Silence. Perfected." ─────────────────── */}
+      {/*
+        ref={bridgeRef} es el elemento que GSAP pineará (position:fixed en el viewport
+        top). min-h-screen garantiza que llena el viewport durante el pin.
+        bg-[#09090b] evita que el fondo sea transparente durante el pin.
+      */}
+      <div
+        ref={bridgeRef}
+        className="relative w-full min-h-screen flex flex-col items-center
+          justify-center gap-4 text-center px-6 bg-[#09090b] overflow-hidden"
+      >
+        {/* Violeta de transición — GSAP lo anima desde opacity 0 → 1 en fase 4 */}
+        <div
+          className="bridge-bg-transition absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(167,139,250,0.06) 0%, transparent 60%)',
+            opacity: 0,
+          }}
+          aria-hidden="true"
+        />
+
+        {/* Glow central — GSAP lo escala desde scale:0.4 en fase 5 */}
+        <div
+          className="bridge-glow absolute inset-0 pointer-events-none flex
+            items-center justify-center opacity-0"
+          aria-hidden="true"
+        >
+          <div
+            className="w-[800px] h-[500px] rounded-full blur-[120px]"
+            style={{
+              background:
+                'radial-gradient(circle, rgba(139,92,246,0.25) 0%, rgba(168,85,247,0.08) 50%, transparent 70%)',
+            }}
+          />
+        </div>
+
+        {/* Línea 1 — empieza invisible; GSAP la revela en fase 2 */}
+        <p
+          className={`bridge-line-1 font-sans font-bold text-zinc-100
+            text-[clamp(3rem,7vw,5.5rem)] tracking-[-0.03em] leading-none
+            relative z-10 ${shouldReduce ? 'opacity-100' : 'opacity-0'}`}
         >
           Con Ouleeh,
-        </motion.p>
-        <motion.p
-          initial={shouldReduce ? {} : { opacity: 0, scale: 0.96, filter: 'blur(16px)' }}
-          whileInView={shouldReduce ? {} : { opacity: 1, scale: 1, filter: 'blur(0px)' }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.95, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
-          className="font-playfair font-normal italic text-transparent bg-clip-text
-            bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400
-            text-[clamp(3.4rem,8vw,7rem)] leading-none pb-2"
+        </p>
+
+        {/* Línea 2 — gradient text; empieza invisible; GSAP la revela en fase 3 */}
+        <p
+          className={`bridge-line-2 font-playfair font-normal italic text-transparent
+            bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400
+            text-[clamp(3.4rem,8vw,7rem)] leading-none pb-2
+            relative z-10 ${shouldReduce ? 'opacity-100' : 'opacity-0'}`}
         >
           todo eso queda atrás.
-        </motion.p>
+        </p>
       </div>
     </section>
   );
