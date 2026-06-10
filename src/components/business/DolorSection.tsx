@@ -192,10 +192,18 @@ export default function DolorSection() {
       },
     });
 
-    // Fase 1 (0%–30%): color de fondo transiciona de rose a neutral (ambos ~0 alpha — establece el interpolado)
-    tl.fromTo(bridgeRef.current,
-      { backgroundColor: 'rgba(244,63,94,0)' },
-      { backgroundColor: 'rgba(139,92,246,0)', duration: 0.3 },
+    // Fase 1 (0%–50%): el momento vivid — el fondo dark se enciende en violeta
+    // vibrante via overlay de opacity (GPU-safe; los gradients no interpolan).
+    tl.fromTo('.bridge-vivid',
+      { opacity: 0 },
+      { opacity: 1, duration: 0.5, ease: 'power2.inOut' },
+      0,
+    )
+
+    // Pico → asentamiento (70%–100%): el vivid baja de intensidad — arco dramático
+    .to('.bridge-vivid',
+      { opacity: 0.55, duration: 0.3, ease: 'power1.inOut' },
+      0.7,
     )
 
     // Fase 2 (0%–50%): "Con Ouleeh," entra desde abajo con blur mientras se scrollea
@@ -219,16 +227,27 @@ export default function DolorSection() {
       0.4,
     )
 
-    // Fase 5 (50%–90%): glow central florece desde un punto
+    // Fase 5 (50%–90%): glow central florece desde un punto — más grande que antes
     .fromTo('.bridge-glow',
-      { opacity: 0, scale: 0.4 },
-      { opacity: 1, scale: 1, duration: 0.4, ease: 'power2.out' },
+      { opacity: 0, scale: 0.3 },
+      { opacity: 1, scale: 1.2, duration: 0.4, ease: 'power2.out' },
       0.5,
     )
 
+    // Fase 6 (65%–95%): línea de contexto aparece debajo del statement
+    .fromTo('.bridge-line-3',
+      { opacity: 0, y: 20, filter: 'blur(8px)' },
+      { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.3, ease: 'power2.out' },
+      0.65,
+    )
+
     // Fase final (85%–100%): todo se evapora al dejar la sección — sin corte abrupto
-    .to(['.bridge-line-1', '.bridge-line-2'],
+    .to(['.bridge-line-1', '.bridge-line-2', '.bridge-line-3'],
       { opacity: 0, yPercent: -20, filter: 'blur(8px)', duration: 0.15, ease: 'power2.in' },
+      0.85,
+    )
+    .to(['.bridge-vivid', '.bridge-glow'],
+      { opacity: 0.2, duration: 0.15, ease: 'power2.in' },
       0.85,
     );
   }, { scope: sectionRef, dependencies: [shouldReduce] });
@@ -325,6 +344,17 @@ export default function DolorSection() {
         className="relative w-full min-h-screen flex flex-col items-center
           justify-center gap-4 text-center px-6 bg-[#09090b] overflow-hidden"
       >
+        {/* Momento vivid — violeta vibrante full-bleed; GSAP lo enciende en fase 1 */}
+        <div
+          className="bridge-vivid absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 120% 80% at 50% 50%, rgba(124,58,237,0.35) 0%, rgba(168,85,247,0.15) 40%, transparent 70%)',
+            opacity: 0,
+          }}
+          aria-hidden="true"
+        />
+
         {/* Violeta de transición — GSAP lo anima desde opacity 0 → 1 en fase 4 */}
         <div
           className="bridge-bg-transition absolute inset-0 pointer-events-none"
@@ -368,6 +398,15 @@ export default function DolorSection() {
             relative z-10 ${shouldReduce ? 'opacity-100' : 'opacity-0'}`}
         >
           todo eso queda atrás.
+        </p>
+
+        {/* Línea 3 — contexto; empieza invisible; GSAP la revela en fase 6 */}
+        <p
+          className={`bridge-line-3 text-[clamp(1rem,2vw,1.25rem)] text-white/50
+            font-normal tracking-tight max-w-md mx-auto mt-6
+            relative z-10 ${shouldReduce ? 'opacity-100' : 'opacity-0'}`}
+        >
+          Tu salón, finalmente bajo control.
         </p>
       </div>
     </section>

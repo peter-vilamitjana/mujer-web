@@ -355,13 +355,41 @@ export default function SolucionesSection() {
       style={{
         background: [
           'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(167,139,250,0.09) 0%, transparent 55%)',
+          'radial-gradient(ellipse 40% 60% at 80% 50%, rgba(139,92,246,0.06) 0%, transparent 50%)',
           '#09090b',
         ].join(', '),
       }}
     >
 
       {/* ── Title ─────────────────────────────────────────────────────────── */}
-      <div className="max-w-3xl mx-auto text-center px-6 pt-32 pb-20 md:pb-28">
+      <div className="max-w-3xl mx-auto text-center px-6 pt-32 pb-20 md:pb-28 relative">
+        {/* Mini ribbon detrás del título — eco del gesto orgánico del hero */}
+        {!prefersReducedMotion && (
+          <div
+            className="absolute inset-0 pointer-events-none overflow-hidden"
+            aria-hidden="true"
+          >
+            <svg
+              viewBox="0 0 600 200"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full opacity-30"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <linearGradient id="title-ribbon" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#ec4899" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.4" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M 0 100 C 150 40, 300 160, 600 80"
+                stroke="url(#title-ribbon)"
+                strokeWidth="1.5"
+                fill="none"
+              />
+            </svg>
+          </div>
+        )}
         <p
           ref={eyebrowRef}
           className="text-[10px] text-zinc-500 uppercase tracking-[0.4em] font-bold mb-4"

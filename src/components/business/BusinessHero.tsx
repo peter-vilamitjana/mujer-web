@@ -36,6 +36,9 @@ export default function BusinessHero() {
   // Dark overlay that completes the immersion — fades in as the card disappears
   const overlayOpacity = useTransform(lenisScroll, [900, 1100], [0, 1]);
 
+  // Ribbon parallax — drifts upward slower than the content, reads as depth
+  const ribbonY = useTransform(lenisScroll, [0, 800], shouldReduce ? [0, 0] : [0, -40]);
+
   useEffect(() => {
     if (shouldReduce) return;
     const interval = setInterval(() => {
@@ -91,6 +94,66 @@ export default function BusinessHero() {
           }}
         />
       </div>
+
+      {/* Ribbon SVG — único gesto orgánico del hero, cruza detrás del headline */}
+      {!shouldReduce && (
+        <motion.div
+          className="absolute inset-0 pointer-events-none overflow-hidden z-0"
+          style={{ y: ribbonY }}
+          aria-hidden="true"
+        >
+          <svg
+            className="absolute w-full h-full"
+            viewBox="0 0 1440 900"
+            preserveAspectRatio="xMidYMid slice"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <linearGradient id="ribbon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#ec4899" stopOpacity="0.6" />
+                <stop offset="50%" stopColor="#a855f7" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.4" />
+              </linearGradient>
+              <filter id="ribbon-blur">
+                <feGaussianBlur stdDeviation="2.5" />
+              </filter>
+            </defs>
+            {/* Glow ancho detrás del ribbon — atmósfera, no línea */}
+            <path
+              d="M -100 420
+                 C 200 180, 480 680, 720 380
+                 C 960 80, 1200 600, 1540 320"
+              stroke="url(#ribbon-gradient)"
+              strokeWidth="80"
+              fill="none"
+              opacity="0.04"
+            />
+            {/* Curva principal — sweeping de izquierda a derecha */}
+            <path
+              d="M -100 420
+                 C 200 180, 480 680, 720 380
+                 C 960 80, 1200 600, 1540 320"
+              stroke="url(#ribbon-gradient)"
+              strokeWidth="3"
+              fill="none"
+              filter="url(#ribbon-blur)"
+              opacity="0.7"
+            />
+            {/* Curva secundaria más fina — profundidad */}
+            <path
+              d="M -100 480
+                 C 240 220, 520 720, 760 420
+                 C 1000 120, 1240 640, 1540 380"
+              stroke="url(#ribbon-gradient)"
+              strokeWidth="1.5"
+              fill="none"
+              filter="url(#ribbon-blur)"
+              opacity="0.4"
+            />
+          </svg>
+        </motion.div>
+      )}
 
       {/* Immersion overlay — completes the "enter the software" illusion */}
       {!shouldReduce && (

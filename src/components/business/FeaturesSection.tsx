@@ -240,6 +240,17 @@ function BentoCard({ item }: { item: BentoItem }) {
   const glowDepth     = useTransform(glowProgress, [0, 1], [0.40, 0.68]);
   const premiumShadow = useMotionTemplate`0 0 0 1px rgba(167,139,250,${glowBorder}), 0 0 52px rgba(109,40,217,${glowAmbient}), 0 12px 40px rgba(0,0,0,${glowDepth})`;
 
+  // Free cards — violet glow on hover, quieter than premium
+  const freeRing    = useTransform(glowProgress, [0, 1], [0, 0.2]);
+  const freeAmbient = useTransform(glowProgress, [0, 1], [0, 0.08]);
+  const freeShadow  = useMotionTemplate`0 0 0 1px rgba(139,92,246,${freeRing}), 0 20px 40px rgba(139,92,246,${freeAmbient})`;
+
+  // Lift sutil compartido — escala con spring, no whileHover (conviviría mal con el tilt)
+  const cardScale = useSpring(useTransform(hoverProgress, [0, 1], [1, 1.015]), {
+    stiffness: 400,
+    damping: 25,
+  });
+
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (shouldReduce) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -276,7 +287,10 @@ function BentoCard({ item }: { item: BentoItem }) {
       style={{
         rotateX: shouldReduce ? undefined : rotateX,
         rotateY: shouldReduce ? undefined : rotateY,
-        ...(isPremium ? { ...PREMIUM_BORDER_STYLE, boxShadow: premiumShadow } : {}),
+        scale: shouldReduce ? undefined : cardScale,
+        ...(isPremium
+          ? { ...PREMIUM_BORDER_STYLE, boxShadow: premiumShadow }
+          : { boxShadow: freeShadow }),
       }}
     >
       {isPremium && (
@@ -405,14 +419,19 @@ export default function FeaturesSection() {
       className="relative z-10 overflow-hidden"
       style={{
         background: [
-          'radial-gradient(ellipse 80% 40% at 50% 0%, rgba(139,92,246,0.05) 0%, transparent 55%)',
+          'radial-gradient(ellipse 100% 60% at 50% 0%, rgba(139,92,246,0.07) 0%, transparent 50%)',
+          'radial-gradient(ellipse 60% 40% at 80% 80%, rgba(168,85,247,0.04) 0%, transparent 45%)',
           '#09090b',
         ].join(', '),
       }}
     >
+      {/* Línea separadora violet — marca el cambio de temperatura de la sección */}
       <div
         className="absolute top-0 inset-x-0 h-px pointer-events-none"
-        style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.07), transparent)' }}
+        style={{
+          background:
+            'linear-gradient(90deg, transparent, rgba(139,92,246,0.4) 30%, rgba(168,85,247,0.6) 50%, rgba(139,92,246,0.4) 70%, transparent)',
+        }}
         aria-hidden="true"
       />
 
