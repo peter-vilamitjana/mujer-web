@@ -1,6 +1,7 @@
 import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 
 // Simple in-memory sliding-window rate limiter.
 // Note: state is per-process — not shared across multiple server instances.
@@ -79,6 +80,20 @@ export async function middleware(req: NextRequest) {
     }
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (!token) {
+      // Diagnóstico de un bug intermitente donde getToken() falla a decodificar
+      // una sesión válida (ver docs/PERITAJE-TECNICO-2026-07-10.md) — breadcrumb
+      // liviano, no cambia el comportamiento del redirect.
+      Sentry.addBreadcrumb({
+        category: 'middleware.auth',
+        message: 'getToken() returned null for protected page route',
+        level: 'warning',
+        data: {
+          pathname,
+          hasSessionCookie:
+            req.cookies.has('next-auth.session-token') ||
+            req.cookies.has('__Secure-next-auth.session-token'),
+        },
+      });
       const url = req.nextUrl.clone();
       url.pathname = '/login';
       return NextResponse.redirect(url);

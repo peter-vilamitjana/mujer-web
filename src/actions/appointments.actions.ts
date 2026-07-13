@@ -15,6 +15,7 @@ export async function getAppointmentsForDay(
   branchId: string | null,
   date: Date,
 ): Promise<Appointment[]> {
+  await requireTenantAccess(tenantId);
   const start = new Date(date);
   start.setHours(0, 0, 0, 0);
   const end = new Date(date);
@@ -41,6 +42,7 @@ export async function getAppointmentsForPeriod(
   startDate: Date,
   endDate?: Date,
 ): Promise<Appointment[]> {
+  await requireTenantAccess(tenantId);
   const base = adminDb.collection('tenants').doc(tenantId).collection('appointments');
   const baseQ = branchId ? base.where('branchId', '==', branchId) : base;
   const dateQ = endDate
@@ -145,6 +147,7 @@ export async function getAppointmentsToday(
   tenantId: string,
   branchId: string | null = null,
 ): Promise<Appointment[]> {
+  await requireTenantAccess(tenantId);
   return getAppointmentsForDay(tenantId, branchId, new Date());
 }
 
@@ -152,6 +155,7 @@ export async function getNextAppointment(
   tenantId: string,
   branchId: string | null = null,
 ): Promise<Appointment | null> {
+  await requireTenantAccess(tenantId);
   const base = adminDb.collection('tenants').doc(tenantId).collection('appointments');
   const q = (branchId ? base.where('branchId', '==', branchId) : base)
     .where('status', 'in', ['confirmed', 'pending'])
@@ -201,6 +205,7 @@ export async function getDailyMetrics(
   branchId: string,
   date: Date = new Date(),
 ): Promise<DailyMetrics> {
+  await requireTenantAccess(tenantId);
   const [todayAppts, yesterdayAppts] = await Promise.all([
     getAppointmentsForDay(tenantId, branchId, date),
     getAppointmentsForDay(tenantId, branchId, new Date(date.getTime() - 86_400_000)),
@@ -296,6 +301,7 @@ export async function getWeeklyRevenue(
   tenantId: string,
   branchId: string,
 ): Promise<DayRevenue[]> {
+  await requireTenantAccess(tenantId);
   const today = new Date();
   const dow = today.getDay();
   const startOfWeek = new Date(today);
