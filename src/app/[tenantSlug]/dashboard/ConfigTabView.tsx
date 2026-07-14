@@ -5,6 +5,9 @@ import { useTenant } from '@/contexts/TenantContext';
 import { useStaff } from '@/hooks/useStaff';
 import { getTenantSettings, updateTenantSettings } from '@/actions/tenant.actions';
 import { updateStaffCommissions, createStaffMember, toggleStaffActive } from '@/actions/staff.actions';
+import { getStaffAccessState, revokeStaffAccess } from '@/actions/invitations.actions';
+import type { StaffAccessState } from '@/actions/invitations.actions';
+import StaffAccessModal from './StaffAccessModal';
 import { usePlan } from '@/hooks/usePlan';
 
 const DAYS_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -20,6 +23,40 @@ const initials = (name = '') => {
   return p.length > 1 ? (p[0][0] + p[p.length - 1][0]).toUpperCase() : name.slice(0, 2).toUpperCase();
 };
 
+function AccessBadge({ state }: { state?: StaffAccessState }) {
+  if (!state) {
+    return <span className="text-[9px] font-bold uppercase tracking-widest text-[#7a766e]/40">…</span>;
+  }
+  if (state.hasAccess) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-400/[0.10] border border-emerald-400/25 text-emerald-300 text-[9px] font-bold uppercase tracking-widest">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+        Acceso activo · {state.role === 'admin' ? 'Admin' : 'Profesional'}
+      </span>
+    );
+  }
+  if (state.pendingInvite && !state.pendingInvite.expired) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400/[0.10] border border-amber-400/25 text-amber-300 text-[9px] font-bold uppercase tracking-widest">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+        Invitación pendiente
+      </span>
+    );
+  }
+  if (state.pendingInvite && state.pendingInvite.expired) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-500/[0.08] border border-zinc-500/20 text-zinc-500 text-[9px] font-bold uppercase tracking-widest">
+        Invitación vencida
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] text-zinc-500 text-[9px] font-bold uppercase tracking-widest">
+      Sin acceso
+    </span>
+  );
+}
+
 type HoursMap = Record<string, { open: string; close: string; isOpen: boolean }>;
 
 function defaultHours(): HoursMap {
@@ -28,7 +65,7 @@ function defaultHours(): HoursMap {
 
 export default function ConfigTabView() {
   const { tenantId } = useTenant();
-  const { staff }    = useStaff();
+  const { staff, refetch: refetchStaff } = useStaff();
   const planFeatures = usePlan();
 
   // ── Perfil del local ──────────────────────────────────────────────────────
@@ -74,6 +111,11 @@ export default function ConfigTabView() {
   const [newComm, setNewComm]           = useState('30');
   const [creatingStaff, setCreatingStaff] = useState(false);
   const [togglingStaff, setTogglingStaff] = useState<string | null>(null);
+
+  // ── Acceso a la cuenta (invitaciones) ─────────────────────────────────────
+  const [accessState, setAccessState] = useState<Record<string, StaffAccessState>>({});
+  const [accessModalStaffId, setAccessModalStaffId] = useState<string | null>(null);
+  const [revokingAccess, setRevokingAccess] = useState<string | null>(null);
 
   // ── Save state ────────────────────────────────────────────────────────────
   const [saving, setSaving]   = useState(false);
@@ -191,6 +233,32 @@ export default function ConfigTabView() {
     setSavingComm(staffId);
     await updateStaffCommissions(tenantId, staffId, { default: val });
     setSavingComm(null);
+  }
+
+  // ── Acceso a la cuenta (invitaciones) ─────────────────────────────────────
+  async function loadAccessState() {
+    if (!tenantId) return;
+    const states = await getStaffAccessState(tenantId);
+    setAccessState(Object.fromEntries(states.map(s => [s.staffId, s])));
+  }
+
+  useEffect(() => {
+    loadAccessState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantId, staff.length]);
+
+  async function handleRevokeAccess(staffId: string) {
+    if (!tenantId) return;
+    if (!confirm('¿Quitarle el acceso a la cuenta a este profesional?')) return;
+    setRevokingAccess(staffId);
+    await revokeStaffAccess(tenantId, staffId);
+    setRevokingAccess(null);
+    await Promise.all([loadAccessState(), refetchStaff()]);
+  }
+
+  function handleAccessModalChanged() {
+    loadAccessState();
+    refetchStaff();
   }
 
   // ── Hours helpers ─────────────────────────────────────────────────────────
@@ -558,6 +626,33 @@ export default function ConfigTabView() {
                         )}
                       </button>
                     </div>
+
+                    {/* Acceso a la cuenta */}
+                    <div className="flex items-center justify-between gap-2 mb-4">
+                      <AccessBadge state={accessState[s.id]} />
+                      {accessState[s.id]?.hasAccess ? (
+                        <button
+                          onClick={() => handleRevokeAccess(s.id)}
+                          disabled={revokingAccess === s.id}
+                          title="Quitar acceso"
+                          className="shrink-0 w-6 h-6 rounded-lg flex items-center justify-center text-[#7a766e] hover:text-rose-400 hover:bg-rose-500/10 transition-all cursor-pointer disabled:opacity-40"
+                        >
+                          {revokingAccess === s.id ? (
+                            <span className="material-symbols-outlined animate-spin" style={{ fontSize: '13px' }}>progress_activity</span>
+                          ) : (
+                            <span className="material-symbols-outlined" style={{ fontSize: '13px' }}>person_remove</span>
+                          )}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setAccessModalStaffId(s.id)}
+                          className="shrink-0 text-[9px] font-bold text-violet-300 hover:text-violet-200 uppercase tracking-widest cursor-pointer transition-colors"
+                        >
+                          Habilitar acceso
+                        </button>
+                      )}
+                    </div>
+
                     {isActive && (
                       <div className="space-y-1.5">
                         <label className="text-[9px] font-bold text-[#7a766e] uppercase tracking-widest">Comisión %</label>
@@ -752,6 +847,21 @@ export default function ConfigTabView() {
         </section>
 
       </div>
+
+      {accessModalStaffId && tenantId && (() => {
+        const modalStaff = staff.find(s => s.id === accessModalStaffId);
+        if (!modalStaff) return null;
+        return (
+          <StaffAccessModal
+            staff={modalStaff}
+            tenantId={tenantId}
+            tenantName={name}
+            pendingInvite={accessState[modalStaff.id]?.pendingInvite ?? null}
+            onClose={() => setAccessModalStaffId(null)}
+            onChanged={handleAccessModalChanged}
+          />
+        );
+      })()}
     </div>
   );
 }

@@ -125,6 +125,11 @@ service cloud.firestore {
     match /auditLogs/{logId} {
       allow read, write: if false;
     }
+    // El token de invitación vive como doc ID — si se pudiera listar la
+    // colección, se filtrarían todos los tokens activos.
+    match /invitations/{token} {
+      allow read, write: if false;
+    }
 
     // --- 4. LEGACY Compatibility (Phase 4: READ-ONLY ARCHIVE) ---
     // Migración completada. Todas las colecciones legacy son inaccesibles vía cliente.

@@ -397,3 +397,25 @@ export interface AuditLog {
     after: Record<string, unknown>
     createdAt: Timestamp
 }
+
+// ── Invitaciones de acceso (empleadas/admins) ──────────────────────────────
+// Colección top-level: invitations/{token} — el doc ID ES el token. La
+// invitada llega con solo el token, sin conocer el tenantId, así que un
+// .doc(token).get() directo evita una collectionGroup query con índice.
+// firestore.rules bloquea la colección entera — solo el Admin SDK la toca.
+
+export interface Invitation {
+    id: string              // el token mismo (doc ID = token)
+    tenantId: string
+    tenantName: string      // denormalizado, para renderizar sin lookup extra
+    staffId: string         // el perfil de Staff que se habilita
+    staffName: string       // denormalizado
+    role: 'admin' | 'employee'
+    invitedBy: string       // uid de la dueña
+    invitedByName: string   // denormalizado
+    createdAt: Timestamp
+    expiresAt: Timestamp    // 7 días
+    usedAt: Timestamp | null
+    usedBy: string | null   // uid de quien la aceptó
+    revokedAt: Timestamp | null
+}
