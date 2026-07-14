@@ -8,15 +8,16 @@ import type { WhatsAppMessage } from './whatsapp-templates';
 
 export async function sendWhatsAppMessage(
     message: WhatsAppMessage
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; skipped?: boolean; error?: string }> {
     const apiUrl = process.env.WHATSAPP_API_URL;
     const apiToken = process.env.WHATSAPP_API_TOKEN;
     const fromNumber = process.env.WHATSAPP_FROM_NUMBER;
 
-    // If env vars not configured, log and skip silently (dev/staging safety)
+    // If env vars not configured, log and skip — non-blocking (don't fail the
+    // booking flow), but callers can tell "skipped" apart from "actually sent".
     if (!apiUrl || !apiToken || !fromNumber) {
         console.warn('[WhatsApp] Env vars not configured — skipping send to', message.to);
-        return { success: true }; // non-blocking: don't fail the booking flow
+        return { success: true, skipped: true };
     }
 
     try {

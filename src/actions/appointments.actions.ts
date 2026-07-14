@@ -3,7 +3,8 @@
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { syncAppointmentToCalendar, cancelCalendarEvent } from './calendar.actions';
-import { requireTenantAccess, requireAuthSession } from '@/lib/auth-guards';
+import { requireRole, requireAuthSession } from '@/lib/auth-guards';
+import { buildSlotLockId, isSlotLockExpired } from '@/lib/booking-utils';
 import type { Appointment, PaymentSplit, Staff } from '@/lib/schema';
 
 type ActionResult = { success: true; id?: string } | { success: false; error: string };
@@ -15,7 +16,7 @@ export async function getAppointmentsForDay(
   branchId: string | null,
   date: Date,
 ): Promise<Appointment[]> {
-  await requireTenantAccess(tenantId);
+  await requireRole(tenantId, ['admin', 'employee']);
   const start = new Date(date);
   start.setHours(0, 0, 0, 0);
   const end = new Date(date);
@@ -42,7 +43,7 @@ export async function getAppointmentsForPeriod(
   startDate: Date,
   endDate?: Date,
 ): Promise<Appointment[]> {
-  await requireTenantAccess(tenantId);
+  await requireRole(tenantId, ['admin', 'employee']);
   const base = adminDb.collection('tenants').doc(tenantId).collection('appointments');
   const baseQ = branchId ? base.where('branchId', '==', branchId) : base;
   const dateQ = endDate
@@ -147,7 +148,7 @@ export async function getAppointmentsToday(
   tenantId: string,
   branchId: string | null = null,
 ): Promise<Appointment[]> {
-  await requireTenantAccess(tenantId);
+  await requireRole(tenantId, ['admin', 'employee']);
   return getAppointmentsForDay(tenantId, branchId, new Date());
 }
 
@@ -155,7 +156,7 @@ export async function getNextAppointment(
   tenantId: string,
   branchId: string | null = null,
 ): Promise<Appointment | null> {
-  await requireTenantAccess(tenantId);
+  await requireRole(tenantId, ['admin', 'employee']);
   const base = adminDb.collection('tenants').doc(tenantId).collection('appointments');
   const q = (branchId ? base.where('branchId', '==', branchId) : base)
     .where('status', 'in', ['confirmed', 'pending'])
@@ -205,7 +206,7 @@ export async function getDailyMetrics(
   branchId: string,
   date: Date = new Date(),
 ): Promise<DailyMetrics> {
-  await requireTenantAccess(tenantId);
+  await requireRole(tenantId, ['admin']);
   const [todayAppts, yesterdayAppts] = await Promise.all([
     getAppointmentsForDay(tenantId, branchId, date),
     getAppointmentsForDay(tenantId, branchId, new Date(date.getTime() - 86_400_000)),
@@ -301,7 +302,7 @@ export async function getWeeklyRevenue(
   tenantId: string,
   branchId: string,
 ): Promise<DayRevenue[]> {
-  await requireTenantAccess(tenantId);
+  await requireRole(tenantId, ['admin']);
   const today = new Date();
   const dow = today.getDay();
   const startOfWeek = new Date(today);
@@ -367,6 +368,7 @@ export async function getRevenueTimeSeries(
   branchId: string,
   period: 'dia' | 'semana' | 'mes',
 ): Promise<RevenueSeries> {
+  await requireRole(tenantId, ['admin']);
   const now = new Date();
 
   if (period === 'dia') {
@@ -467,7 +469,7 @@ export async function createAppointment(
   payload: CreateAppointmentPayload,
 ): Promise<ActionResult> {
   try {
-    const { uid } = await requireTenantAccess(tenantId);
+    const { uid } = await requireRole(tenantId, ['admin', 'employee']);
 
     const staffSnap = await adminDb
       .collection('tenants').doc(tenantId)
@@ -531,14 +533,14 @@ export async function createAppointment(
 
     // Slot-lock: documento determinístico que previene el double-booking
     // atómico entre requests concurrentes que pasaron el pre-check.
-    const slotLockId  = `${payload.staffId}_${slotStartMs}`;
+    const slotLockId  = buildSlotLockId(payload.staffId, payload.date);
     const slotLockRef = adminDb
       .collection('tenants').doc(tenantId)
       .collection('slotLocks').doc(slotLockId);
 
     await adminDb.runTransaction(async (txn) => {
       const lockSnap = await txn.get(slotLockRef);
-      if (lockSnap.exists) {
+      if (lockSnap.exists && !isSlotLockExpired(lockSnap.data() as { expiresAt?: Timestamp })) {
         throw Object.assign(new Error('SLOT_TAKEN'), { code: 'SLOT_TAKEN' });
       }
 
@@ -593,7 +595,7 @@ export async function cancelAppointmentAdmin(
   reason?: string,
 ): Promise<ActionResult> {
   try {
-    const { uid } = await requireTenantAccess(tenantId);
+    const { uid } = await requireRole(tenantId, ['admin', 'employee']);
 
     const ref = adminDb
       .collection('tenants').doc(tenantId)

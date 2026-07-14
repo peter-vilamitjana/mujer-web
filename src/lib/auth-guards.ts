@@ -2,6 +2,8 @@
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { adminDb } from '@/lib/firebase-admin';
+import type { UserRole } from '@/lib/schema';
 
 export interface AuthenticatedSession {
   uid: string;
@@ -35,6 +37,31 @@ export async function requireTenantAccess(tenantId: string): Promise<Authenticat
     image: session.user.image,
     phone: (session.user as any).phone ?? null,
   };
+}
+
+/**
+ * Verifica que el usuario autenticado tenga uno de los roles permitidos
+ * DENTRO del tenant especificado. El rol se lee del documento de membership
+ * (users/{uid}/memberships/{tenantId}), no del JWT — el JWT solo guarda un
+ * rol global ('staff'/'customer') que no distingue admin de employee.
+ */
+export async function requireRole(
+  tenantId: string,
+  allowedRoles: UserRole[],
+): Promise<AuthenticatedSession & { role: UserRole }> {
+  const session = await requireTenantAccess(tenantId);
+
+  const membershipSnap = await adminDb
+    .collection('users').doc(session.uid)
+    .collection('memberships').doc(tenantId)
+    .get();
+
+  if (!membershipSnap.exists) throw new Error('Acceso denegado.');
+
+  const role = membershipSnap.data()?.role as UserRole | undefined;
+  if (!role || !allowedRoles.includes(role)) throw new Error('Acceso denegado.');
+
+  return { ...session, role };
 }
 
 /**

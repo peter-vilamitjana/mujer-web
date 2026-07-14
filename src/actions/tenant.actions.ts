@@ -2,7 +2,7 @@
 
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { requireTenantAccess } from '@/lib/auth-guards';
+import { requireRole } from '@/lib/auth-guards';
 import type { Tenant } from '@/lib/schema';
 
 function toSerializable<T>(val: T): T {
@@ -24,7 +24,7 @@ export async function updateTenantSettings(
   data: Partial<Omit<Tenant, 'id' | 'createdAt'>>
 ): Promise<ActionResult> {
   try {
-    await requireTenantAccess(tenantId);
+    await requireRole(tenantId, ['admin']);
     await adminDb.collection('tenants').doc(tenantId).update({
       ...data,
       updatedAt: FieldValue.serverTimestamp(),

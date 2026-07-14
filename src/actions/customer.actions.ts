@@ -1,6 +1,6 @@
 'use server';
 
-import { requireTenantAccess, requireAuthSession } from '@/lib/auth-guards';
+import { requireRole, requireAuthSession } from '@/lib/auth-guards';
 import {
   getAppointmentsByClientId,
   getAppointmentsByPhone,
@@ -35,6 +35,7 @@ export async function getCustomers(
   tenantId: string,
   opts: { lim?: number } = {},
 ): Promise<Customer[]> {
+  await requireRole(tenantId, ['admin']);
   try {
     const lim = opts.lim ?? 50;
     const snap = await adminDb
@@ -59,6 +60,7 @@ export async function searchCustomers(
 ): Promise<Customer[]> {
   if (!searchQuery.trim()) return [];
 
+  await requireRole(tenantId, ['admin', 'employee']);
   try {
     const normalized = searchQuery.trim();
     const end = normalized.slice(0, -1) + String.fromCharCode(normalized.charCodeAt(normalized.length - 1) + 1);
@@ -99,6 +101,7 @@ export async function getCustomer(
   tenantId: string,
   customerId: string,
 ): Promise<Customer | null> {
+  await requireRole(tenantId, ['admin']);
   const snap = await adminDb
     .collection('tenants').doc(tenantId)
     .collection('customers').doc(customerId)
@@ -115,6 +118,7 @@ export async function getCustomerAppointments(
   customerId: string,
   lim = 20,
 ): Promise<Appointment[]> {
+  await requireRole(tenantId, ['admin']);
   try {
     const snap = await adminDb
       .collection('tenants').doc(tenantId)
@@ -191,7 +195,7 @@ export async function createCustomer(
   data: Omit<Customer, 'id' | 'createdAt'>,
 ): Promise<ActionResult> {
   try {
-    await requireTenantAccess(tenantId);
+    await requireRole(tenantId, ['admin', 'employee']);
 
     const clean = sanitizeCustomerData(data as Record<string, any>);
     if (!clean.fullName) return { success: false, error: 'El nombre del cliente es obligatorio.' };
@@ -224,7 +228,7 @@ export async function updateCustomer(
   data: Partial<Omit<Customer, 'id' | 'createdAt'>>,
 ): Promise<ActionResult> {
   try {
-    await requireTenantAccess(tenantId);
+    await requireRole(tenantId, ['admin', 'employee']);
 
     const clean = sanitizeCustomerData(data as Record<string, any>);
 

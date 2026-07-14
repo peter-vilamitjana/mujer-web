@@ -2,7 +2,7 @@
 
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { requireTenantAccess } from '@/lib/auth-guards';
+import { requireRole } from '@/lib/auth-guards';
 import type { Branch } from '@/lib/schema';
 
 type ActionResult = { success: true; id?: string } | { success: false; error: string };
@@ -12,7 +12,7 @@ export async function createBranch(
   data: Omit<Branch, 'id'>
 ): Promise<ActionResult> {
   try {
-    await requireTenantAccess(tenantId);
+    await requireRole(tenantId, ['admin']);
     const ref = await adminDb
       .collection('tenants').doc(tenantId)
       .collection('branches')
@@ -30,7 +30,7 @@ export async function updateBranch(
   data: Partial<Omit<Branch, 'id'>>
 ): Promise<ActionResult> {
   try {
-    await requireTenantAccess(tenantId);
+    await requireRole(tenantId, ['admin']);
     await adminDb
       .collection('tenants').doc(tenantId)
       .collection('branches').doc(branchId)
@@ -48,7 +48,7 @@ export async function toggleBranchActive(
   active: boolean
 ): Promise<ActionResult> {
   try {
-    await requireTenantAccess(tenantId);
+    await requireRole(tenantId, ['admin']);
     await adminDb
       .collection('tenants').doc(tenantId)
       .collection('branches').doc(branchId)

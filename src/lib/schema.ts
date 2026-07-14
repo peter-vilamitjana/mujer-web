@@ -198,6 +198,9 @@ export interface Appointment {
     isGuestBooking?: boolean;         // true cuando reserva sin sesión NextAuth
     guestEmail?: string;              // email del invitado para confirmación
     guestPhone?: string;              // WhatsApp del invitado
+    // ── Recordatorios ────────────────────────────────────────────
+    reminderSentAt?: Timestamp;       // cuándo se procesó el recordatorio
+    reminderSkipped?: boolean;        // true si se skipeó por falta de config WhatsApp
 }
 
 export interface Customer {

@@ -2,7 +2,7 @@
 
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { requireTenantAccess } from '@/lib/auth-guards';
+import { requireRole } from '@/lib/auth-guards';
 import type { Service } from '@/lib/schema';
 
 type ActionResult = { success: true; id?: string } | { success: false; error: string };
@@ -22,7 +22,7 @@ export async function createService(
   data: Omit<Service, 'id'>
 ): Promise<ActionResult> {
   try {
-    await requireTenantAccess(tenantId);
+    await requireRole(tenantId, ['admin']);
     const ref = await adminDb
       .collection('tenants').doc(tenantId)
       .collection('services')
@@ -40,7 +40,7 @@ export async function updateService(
   data: Partial<Omit<Service, 'id'>>
 ): Promise<ActionResult> {
   try {
-    await requireTenantAccess(tenantId);
+    await requireRole(tenantId, ['admin']);
     await adminDb
       .collection('tenants').doc(tenantId)
       .collection('services').doc(serviceId)
@@ -58,7 +58,7 @@ export async function toggleServiceActive(
   active: boolean
 ): Promise<ActionResult> {
   try {
-    await requireTenantAccess(tenantId);
+    await requireRole(tenantId, ['admin']);
     await adminDb
       .collection('tenants').doc(tenantId)
       .collection('services').doc(serviceId)

@@ -2,7 +2,7 @@
 
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { requireTenantAccess } from '@/lib/auth-guards';
+import { requireRole } from '@/lib/auth-guards';
 import { createCalendarEvent, deleteCalendarEvent } from '@/lib/google-calendar.server';
 import type { Appointment } from '@/lib/schema';
 
@@ -13,7 +13,7 @@ export async function syncAppointmentToCalendar(
   appointmentId: string
 ): Promise<ActionResult> {
   try {
-    await requireTenantAccess(tenantId);
+    await requireRole(tenantId, ['admin', 'employee']);
 
     const apptSnap = await adminDb
       .collection('tenants').doc(tenantId)
@@ -61,7 +61,7 @@ export async function cancelCalendarEvent(
   appointmentId: string
 ): Promise<ActionResult> {
   try {
-    await requireTenantAccess(tenantId);
+    await requireRole(tenantId, ['admin', 'employee']);
 
     const apptSnap = await adminDb
       .collection('tenants').doc(tenantId)

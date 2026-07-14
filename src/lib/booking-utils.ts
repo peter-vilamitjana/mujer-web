@@ -1,6 +1,26 @@
 import { adminDb } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 
+/**
+ * Genera el ID único de lock para un slot de turno. DEBE ser idéntico en
+ * los tres flujos de reserva (admin, cliente, invitado) para que los locks
+ * colisionen correctamente y prevengan doble booking entre ellos.
+ * `slotStart` es el datetime completo del turno (fecha + hora ya combinadas).
+ */
+export function buildSlotLockId(staffId: string, slotStart: Date): string {
+  return `${staffId}_${slotStart.getTime()}`;
+}
+
+/**
+ * Un slotLock vencido (>24h desde que se creó) se trata como libre —
+ * ninguno de los flujos de cancelación borra el lock, así que sin esto
+ * un turno cancelado dejaría el slot bloqueado para siempre.
+ */
+export function isSlotLockExpired(lockData: { expiresAt?: Timestamp } | undefined): boolean {
+  if (!lockData?.expiresAt) return false;
+  return lockData.expiresAt.toMillis() < Date.now();
+}
+
 export async function hasSlotConflict(
   tenantId: string,
   staffId: string,

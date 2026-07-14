@@ -4,7 +4,7 @@ import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import { buildConfirmationMessage } from '@/lib/whatsapp-templates';
-import { hasSlotConflict } from '@/lib/booking-utils';
+import { hasSlotConflict, buildSlotLockId, isSlotLockExpired } from '@/lib/booking-utils';
 
 export interface GuestBookingPayload {
   tenantId: string;
@@ -110,6 +110,8 @@ export async function createGuestBooking(
     }
     const tenantName: string = tenantSnap.data()!.name ?? 'tu salón';
 
+    // Pre-check no atómico — evita el round-trip de la transacción en la
+    // mayoría de los casos. La transacción de abajo es la barrera definitiva.
     const conflict = await hasSlotConflict(
       payload.tenantId,
       payload.staffId,
@@ -124,35 +126,68 @@ export async function createGuestBooking(
     const [hour, minute] = payload.time.split(':').map(Number);
     const appointmentDateTime = new Date(payload.date);
     appointmentDateTime.setHours(hour, minute, 0, 0);
+    const slotStart = Timestamp.fromDate(appointmentDateTime);
 
     const appointmentRef = adminDb
       .collection('tenants').doc(payload.tenantId)
       .collection('appointments').doc();
 
-    await appointmentRef.set({
-      id:              appointmentRef.id,
-      tenantId:        payload.tenantId,
-      branchId:        await getDefaultBranchId(payload.tenantId),
-      clientId:        null,
-      clientName:      guestName,
-      staffId:         payload.staffId,
-      staffName:       payload.staffName.trim().slice(0, 100),
-      serviceIds:      payload.serviceIds,
-      serviceNames:    payload.serviceNames.trim().slice(0, 500),
-      date:            Timestamp.fromDate(appointmentDateTime),
-      durationMinutes: payload.durationMinutes,
-      status:          'pending',
-      priceEstimated:  payload.totalFrom,
-      depositAmount:   0,
-      depositPaid:     false,
-      createdAt:       FieldValue.serverTimestamp(),
-      createdBy:       'guest',
-      source:          'marketplace',
-      isGuestBooking:  true,
-      guestEmail,
-      guestPhone,
-      notes:           '',
-    });
+    const branchId = await getDefaultBranchId(payload.tenantId);
+
+    // Slot-lock: mismo patrón que createAppointment (admin) y createBooking
+    // (cliente con cuenta) — la fórmula de slotLockId debe ser idéntica en
+    // los tres flujos o los locks no colisionan entre sí.
+    const slotLockId  = buildSlotLockId(payload.staffId, appointmentDateTime);
+    const slotLockRef = adminDb
+      .collection('tenants').doc(payload.tenantId)
+      .collection('slotLocks').doc(slotLockId);
+
+    try {
+      await adminDb.runTransaction(async (txn) => {
+        const lockSnap = await txn.get(slotLockRef);
+        if (lockSnap.exists && !isSlotLockExpired(lockSnap.data() as { expiresAt?: Timestamp })) {
+          throw Object.assign(new Error('SLOT_TAKEN'), { code: 'SLOT_TAKEN' });
+        }
+
+        const lockExpiry = Timestamp.fromDate(new Date(Date.now() + 24 * 60 * 60_000));
+        txn.set(slotLockRef, {
+          staffId:       payload.staffId,
+          date:          slotStart,
+          appointmentId: appointmentRef.id,
+          expiresAt:     lockExpiry,
+        });
+
+        txn.set(appointmentRef, {
+          id:              appointmentRef.id,
+          tenantId:        payload.tenantId,
+          branchId,
+          clientId:        null,
+          clientName:      guestName,
+          staffId:         payload.staffId,
+          staffName:       payload.staffName.trim().slice(0, 100),
+          serviceIds:      payload.serviceIds,
+          serviceNames:    payload.serviceNames.trim().slice(0, 500),
+          date:            slotStart,
+          durationMinutes: payload.durationMinutes,
+          status:          'pending',
+          priceEstimated:  payload.totalFrom,
+          depositAmount:   0,
+          depositPaid:     false,
+          createdAt:       FieldValue.serverTimestamp(),
+          createdBy:       'guest',
+          source:          'marketplace',
+          isGuestBooking:  true,
+          guestEmail,
+          guestPhone,
+          notes:           '',
+        });
+      });
+    } catch (err: any) {
+      if (err?.code === 'SLOT_TAKEN') {
+        return { success: false, error: 'El horario ya no está disponible. Por favor elegí otro.' };
+      }
+      throw err;
+    }
 
     sendWhatsAppMessage(
       buildConfirmationMessage({

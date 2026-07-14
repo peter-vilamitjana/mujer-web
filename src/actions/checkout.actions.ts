@@ -2,7 +2,7 @@
 
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { requireTenantAccess } from '@/lib/auth-guards';
+import { requireRole } from '@/lib/auth-guards';
 import type { PaymentMethod, PaymentSplit, AppointmentStatus } from '@/lib/schema';
 
 export interface CheckoutPayload {
@@ -19,7 +19,7 @@ export async function closeAppointment(
 ): Promise<{ success: boolean; error?: string }> {
     let uid: string;
     try {
-        ({ uid } = await requireTenantAccess(tenantId));
+        ({ uid } = await requireRole(tenantId, ['admin', 'employee']));
     } catch {
         return { success: false, error: 'No autorizado.' };
     }

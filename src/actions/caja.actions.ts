@@ -1,6 +1,7 @@
 'use server';
 
 import { getAppointmentsForDay } from './appointments.actions';
+import { requireRole } from '@/lib/auth-guards';
 import type { PaymentSplit } from '@/lib/schema';
 
 export interface TopService {
@@ -31,6 +32,7 @@ export async function getCierreCaja(
   branchId: string,
   date: Date = new Date(),
 ): Promise<CierreCajaData> {
+  await requireRole(tenantId, ['admin']);
   const appts = await getAppointmentsForDay(tenantId, branchId || null, date);
   const cobrados = appts.filter(a => a.status === 'cobrado' || a.status === 'completed');
 
