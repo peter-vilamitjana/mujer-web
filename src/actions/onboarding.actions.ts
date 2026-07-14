@@ -1,8 +1,10 @@
 'use server';
 
 import { adminDb } from '@/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { requireAuthSession } from '@/lib/auth-guards';
+
+const TRIAL_DAYS = 14;
 
 export interface OnboardingData {
   salonName: string;
@@ -151,6 +153,26 @@ export async function createTenantWithAdmin(data: OnboardingData): Promise<{ suc
       role: 'admin',
       tenantId,
       joinedAt: FieldValue.serverTimestamp(),
+    });
+
+    // Subscription en trial — colección top-level, doc autogenerado, se
+    // busca por tenantId (misma convención que recordManualPayment /
+    // getTenantDetail / getSubscriptions en superadmin.actions.ts).
+    const now      = new Date();
+    const trialEnd = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
+    const subscriptionRef = adminDb.collection('subscriptions').doc();
+    batch.set(subscriptionRef, {
+      tenantId,
+      plan:               'free',
+      status:             'trialing',
+      billingCycle:       'monthly',
+      amountARS:          0,
+      currentPeriodStart: Timestamp.fromDate(now),
+      currentPeriodEnd:   Timestamp.fromDate(trialEnd),
+      paymentMethod:      'transferencia',
+      lastPaymentAt:      null,
+      cancelledAt:        null,
+      createdAt:          FieldValue.serverTimestamp(),
     });
 
     await batch.commit();

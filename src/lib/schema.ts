@@ -328,6 +328,52 @@ export interface Subscription {
     createdAt: Timestamp
 }
 
+// ── Payments (fuente de verdad para reportes financieros) ─────────────────
+// Colección top-level: payments/{paymentId} — misma convención que
+// subscriptions: doc autogenerado, tenantId explícito, se busca por campo.
+// Los campos sueltos en Appointment (amountPaid, depositPaid, etc.) quedan
+// por retrocompatibilidad, pero Payment es la fuente nueva.
+
+export type PaymentType   = 'deposit' | 'full_payment' | 'subscription'
+export type PaymentSource = 'mercadopago' | 'efectivo' | 'tarjeta' | 'transferencia'
+export type PaymentState  = 'pending' | 'approved' | 'rejected' | 'refunded'
+
+export interface Payment {
+    id: string
+    tenantId: string
+    appointmentId: string | null   // null para pagos de suscripción
+    amount: number                  // en pesos (ARS)
+    type: PaymentType
+    source: PaymentSource
+    state: PaymentState
+
+    // Referencia externa (ID de pago de MercadoPago, etc.)
+    externalId: string | null
+
+    // Split de métodos — para pagos mixtos en el checkout. Mismas 4 claves
+    // que PaymentSplit (checkout.actions.ts pasa payload.paymentMethods tal
+    // cual acá).
+    methodBreakdown?: {
+        efectivo?: number
+        mercadopago?: number
+        tarjeta?: number
+        transferencia?: number
+    }
+
+    // ── Campos AFIP (preparados, sin poblar todavía — épica futura) ───────
+    afip?: {
+        invoiceType?: 'A' | 'B' | 'C'
+        cae?: string
+        caeExpiry?: Timestamp
+        invoiceNumber?: string
+        pointOfSale?: number
+        issuedAt?: Timestamp
+    }
+
+    createdAt: Timestamp
+    createdBy: string   // uid o 'system' (webhook)
+}
+
 // ── SuperAdmin: Audit Log ─────────────────────────────────────────────────
 // Colección top-level: auditLogs/{logId}
 

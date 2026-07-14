@@ -3,6 +3,7 @@ import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { getPaymentStatus } from '@/lib/mercadopago';
 import { rateLimit } from '@/lib/rate-limit';
+import { mpWebhookPaymentSchema, parseOrError } from '@/lib/validation/schemas';
 import crypto from 'crypto';
 
 function verifyMpSignature(req: NextRequest, rawBody: string): boolean {
@@ -69,7 +70,17 @@ export async function POST(req: NextRequest) {
     }
 
     const paymentId = String(data.id);
-    const payment = await getPaymentStatus(paymentId);
+    const rawPayment = await getPaymentStatus(paymentId);
+
+    // Valida la forma del payload de MP antes de tocar Firestore. No
+    // rechazamos con 4xx — MP reintentaría agresivamente el webhook. Un
+    // payload inválido se loguea y se ignora, igual que el catch de abajo.
+    const parsedPayment = parseOrError(mpWebhookPaymentSchema, rawPayment);
+    if (!parsedPayment.ok) {
+      console.error('[MP Webhook] Payload de MP inválido:', parsedPayment.error, rawPayment);
+      return NextResponse.json({ ok: true });
+    }
+    const payment = parsedPayment.data;
 
     // external_reference = "tenantId:appointmentId"
     const [tenantId, appointmentId] = (payment.external_reference ?? '').split(':');
@@ -86,12 +97,27 @@ export async function POST(req: NextRequest) {
       await appointmentRef.update({
         status:           'confirmed',
         paymentStatus:    'paid_partially',
-        depositPaid:      payment.amount,
+        depositPaid:      true,             // boolean — el monto va en depositAmount, no acá
+        depositAmount:    payment.amount,
         depositPaymentId: paymentId,
         depositPaidAt:    FieldValue.serverTimestamp(),
         updatedAt:        FieldValue.serverTimestamp(),
       });
       console.log(`[MP Webhook] Pago aprobado — appt ${appointmentId}, $${payment.amount}`);
+
+      const paymentRef = adminDb.collection('payments').doc();
+      await paymentRef.set({
+        id:            paymentRef.id,
+        tenantId,
+        appointmentId,
+        amount:        payment.amount,
+        type:          'deposit',
+        source:        'mercadopago',
+        state:         'approved',
+        externalId:    paymentId,
+        createdAt:     FieldValue.serverTimestamp(),
+        createdBy:     'system',
+      });
     } else if (payment.status === 'rejected') {
       await appointmentRef.update({
         status:        'pending',

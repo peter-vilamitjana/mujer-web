@@ -7,6 +7,7 @@ import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import { buildConfirmationMessage } from '@/lib/whatsapp-templates';
 import { hasSlotConflict, buildSlotLockId, isSlotLockExpired } from '@/lib/booking-utils';
 import { rateLimitDistributed } from '@/lib/rate-limit-distributed';
+import { guestBookingPayloadSchema, parseOrError } from '@/lib/validation/schemas';
 
 export interface GuestBookingPayload {
   tenantId: string;
@@ -24,54 +25,7 @@ export interface GuestBookingPayload {
   guestPhone: string;
 }
 
-// ─── Validators ───────────────────────────────────────────────────────────────
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_RE = /^\+?[\d\s\-().]{6,20}$/;
-const DATE_RE  = /^\d{4}-\d{2}-\d{2}$/;
-const TIME_RE  = /^([01]\d|2[0-3]):[0-5]\d$/;
-
-function validateGuestBooking(p: GuestBookingPayload): string | null {
-  // Identidad del invitado
-  const name = p.guestName?.trim() ?? '';
-  if (!name || name.length < 2)    return 'El nombre debe tener al menos 2 caracteres.';
-  if (name.length > 100)           return 'El nombre es demasiado largo.';
-
-  const email = p.guestEmail?.trim() ?? '';
-  if (email && !EMAIL_RE.test(email)) return 'El email no tiene un formato válido.';
-  if (email.length > 254)          return 'El email es demasiado largo.';
-
-  const phone = p.guestPhone?.trim() ?? '';
-  if (!phone)                      return 'El teléfono es obligatorio.';
-  if (!PHONE_RE.test(phone))       return 'El teléfono no tiene un formato válido.';
-
-  // Fecha y hora
-  if (!DATE_RE.test(p.date))       return 'Fecha inválida.';
-  if (!TIME_RE.test(p.time))       return 'Hora inválida.';
-
-  // La fecha no puede ser en el pasado (comparación a nivel de día)
-  const bookingDate = new Date(p.date);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  if (bookingDate < today)         return 'No se puede reservar en una fecha pasada.';
-
-  // Duración y precio
-  if (!Number.isInteger(p.durationMinutes) || p.durationMinutes < 5 || p.durationMinutes > 480) {
-    return 'Duración inválida.';
-  }
-  if (!Number.isFinite(p.totalFrom) || p.totalFrom < 0 || p.totalFrom > 1_000_000) {
-    return 'Precio inválido.';
-  }
-
-  // IDs mínimos
-  if (!p.tenantId?.trim())         return 'Salón inválido.';
-  if (!p.staffId?.trim())          return 'Profesional inválido.';
-  if (!Array.isArray(p.serviceIds) || p.serviceIds.length === 0) {
-    return 'Debe seleccionar al menos un servicio.';
-  }
-
-  return null;
-}
+// Validación: ver guestBookingPayloadSchema en src/lib/validation/schemas.ts
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -97,8 +51,8 @@ export async function createGuestBooking(
   payload: GuestBookingPayload
 ): Promise<{ success: boolean; appointmentId?: string; error?: string }> {
   // Validación server-side antes de tocar Firestore
-  const validationError = validateGuestBooking(payload);
-  if (validationError) return { success: false, error: validationError };
+  const parsed = parseOrError(guestBookingPayloadSchema, payload);
+  if (!parsed.ok) return { success: false, error: parsed.error };
 
   // Rate limit por IP — sin cuenta ni sesión, es el flujo más expuesto a
   // bots creando reservas fantasma.

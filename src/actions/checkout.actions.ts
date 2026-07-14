@@ -3,6 +3,7 @@
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { requireRole } from '@/lib/auth-guards';
+import { checkoutPayloadSchema, parseOrError } from '@/lib/validation/schemas';
 import type { PaymentMethod, PaymentSplit, AppointmentStatus } from '@/lib/schema';
 
 export interface CheckoutPayload {
@@ -24,9 +25,8 @@ export async function closeAppointment(
         return { success: false, error: 'No autorizado.' };
     }
 
-    if (!Number.isFinite(payload.amountPaid) || payload.amountPaid < 0) {
-        return { success: false, error: 'Monto inválido.' };
-    }
+    const parsed = parseOrError(checkoutPayloadSchema, payload);
+    if (!parsed.ok) return { success: false, error: parsed.error };
 
     const staffCommissionAmount = payload.commissionCalculated != null
         ? Math.round(payload.amountPaid * payload.commissionCalculated / 100)
@@ -65,6 +65,21 @@ export async function closeAppointment(
                     updatedAt: FieldValue.serverTimestamp(),
                 });
         }
+
+        const paymentRef = adminDb.collection('payments').doc();
+        await paymentRef.set({
+            id: paymentRef.id,
+            tenantId,
+            appointmentId,
+            amount: payload.amountPaid,
+            type: 'full_payment',
+            source: payload.paymentMethod,
+            state: 'approved',
+            externalId: null,
+            ...(payload.paymentMethods ? { methodBreakdown: payload.paymentMethods } : {}),
+            createdAt: FieldValue.serverTimestamp(),
+            createdBy: uid,
+        });
 
         return { success: true };
     } catch (err) {

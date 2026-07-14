@@ -7,6 +7,7 @@ import { syncAppointmentToCalendar } from './calendar.actions';
 import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import { buildConfirmationMessage } from '@/lib/whatsapp-templates';
 import { hasSlotConflict, buildOccupiedSlots, buildSlotLockId, isSlotLockExpired } from '@/lib/booking-utils';
+import { bookingPayloadSchema, parseOrError } from '@/lib/validation/schemas';
 
 export async function getAvailableSlots(
   tenantId: string,
@@ -65,41 +66,7 @@ export interface BookingPayload {
   clientPhone: string;
 }
 
-// ─── Validators ───────────────────────────────────────────────────────────────
-
-const PHONE_RE = /^\+?[\d\s\-().]{6,20}$/;
-const DATE_RE  = /^\d{4}-\d{2}-\d{2}$/;
-const TIME_RE  = /^([01]\d|2[0-3]):[0-5]\d$/;
-
-function validateBookingPayload(p: BookingPayload): string | null {
-  if (!DATE_RE.test(p.date))       return 'Fecha inválida.';
-  if (!TIME_RE.test(p.time))       return 'Hora inválida.';
-
-  const bookingDate = new Date(p.date);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  if (bookingDate < today)         return 'No se puede reservar en una fecha pasada.';
-
-  if (!Number.isInteger(p.durationMinutes) || p.durationMinutes < 5 || p.durationMinutes > 480) {
-    return 'Duración inválida.';
-  }
-  if (!Number.isFinite(p.totalFrom) || p.totalFrom < 0 || p.totalFrom > 1_000_000) {
-    return 'Precio inválido.';
-  }
-  if (!Number.isFinite(p.depositAmount) || p.depositAmount < 0 || p.depositAmount > p.totalFrom) {
-    return 'Seña inválida.';
-  }
-  if (p.clientPhone && !PHONE_RE.test(p.clientPhone.trim())) {
-    return 'El teléfono no tiene un formato válido.';
-  }
-  if (!p.tenantId?.trim())         return 'Salón inválido.';
-  if (!p.staffId?.trim())          return 'Profesional inválido.';
-  if (!Array.isArray(p.serviceIds) || p.serviceIds.length === 0) {
-    return 'Debe seleccionar al menos un servicio.';
-  }
-
-  return null;
-}
+// Validación: ver bookingPayloadSchema en src/lib/validation/schemas.ts
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -136,8 +103,8 @@ export async function createBooking(
     return { success: false, error: 'No autenticado. Por favor iniciá sesión.' };
   }
 
-  const validationError = validateBookingPayload(payload);
-  if (validationError) return { success: false, error: validationError };
+  const parsed = parseOrError(bookingPayloadSchema, payload);
+  if (!parsed.ok) return { success: false, error: parsed.error };
 
   const clientPhone = payload.clientPhone?.trim() || null;
 
