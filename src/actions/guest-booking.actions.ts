@@ -1,10 +1,12 @@
 'use server';
 
+import { headers } from 'next/headers';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import { buildConfirmationMessage } from '@/lib/whatsapp-templates';
 import { hasSlotConflict, buildSlotLockId, isSlotLockExpired } from '@/lib/booking-utils';
+import { rateLimitDistributed } from '@/lib/rate-limit-distributed';
 
 export interface GuestBookingPayload {
   tenantId: string;
@@ -97,6 +99,14 @@ export async function createGuestBooking(
   // Validación server-side antes de tocar Firestore
   const validationError = validateGuestBooking(payload);
   if (validationError) return { success: false, error: validationError };
+
+  // Rate limit por IP — sin cuenta ni sesión, es el flujo más expuesto a
+  // bots creando reservas fantasma.
+  const ip = (await headers()).get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';
+  const allowed = await rateLimitDistributed(`guest-booking:${ip}`, 5, 60_000);
+  if (!allowed) {
+    return { success: false, error: 'Demasiadas solicitudes. Intentá de nuevo en un minuto.' };
+  }
 
   // Normalizar strings limpios
   const guestName  = payload.guestName.trim().slice(0, 100);

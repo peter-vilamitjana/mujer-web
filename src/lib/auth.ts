@@ -5,6 +5,7 @@ import { adminDb } from '@/lib/firebase-admin';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { FieldValue } from 'firebase-admin/firestore';
+import { rateLimitDistributed } from '@/lib/rate-limit-distributed';
 
 async function refreshAccessToken(token: any) {
     try {
@@ -65,8 +66,16 @@ export const authOptions: NextAuthOptions = {
                 email: { label: 'Email', type: 'email' },
                 password: { label: 'Password', type: 'password' },
             },
-            async authorize(credentials) {
+            async authorize(credentials, req) {
                 if (!credentials?.email || !credentials?.password) return null;
+
+                // Rate limit por IP — el login no tenía ninguna capa de throttle,
+                // ni la del middleware (no cubre /api/auth/*) ni la en memoria.
+                const ip = ((req?.headers?.['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim())
+                    || '127.0.0.1';
+                const allowed = await rateLimitDistributed(`login:${ip}`, 10, 60_000);
+                if (!allowed) return null;
+
                 try {
                     const userCredential = await signInWithEmailAndPassword(
                         auth,
