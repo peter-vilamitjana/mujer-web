@@ -21,8 +21,8 @@ export default function Hero() {
           Innovation Meets High Aesthetic
         </p>
         <h2 className="font-vogue hero-title italic text-white text-center transition-colors duration-500">
-          La Nouvelle <br/>
-          <span className="not-italic text-white transition-colors duration-500">Présence</span>
+          Tu Próximo <br/>
+          <span className="not-italic text-white transition-colors duration-500">Salón</span>
         </h2>
         <div className="mt-12 flex flex-col items-center">
           <p className="text-white/60 text-[10px] md:text-[11px] font-light tracking-[0.5em] uppercase max-w-md leading-relaxed">
