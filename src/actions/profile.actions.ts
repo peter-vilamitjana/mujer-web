@@ -3,6 +3,7 @@
 import { requireAuthSession } from '@/lib/auth-guards';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { buildSlotLockId } from '@/lib/booking-utils';
 import type {
   UserPreferences,
   ProfileData, HistorialEntry, HistorialGroup,
@@ -383,6 +384,16 @@ export async function cancelMyAppointment(
     }
 
     await apptRef.update({ status: 'cancelled' });
+
+    // Liberar el slotLock para que el horario vuelva a estar disponible.
+    const slotStart = (data.date as Timestamp).toDate();
+    const slotLockId = buildSlotLockId(data.staffId, slotStart);
+    await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('slotLocks').doc(slotLockId)
+      .delete()
+      .catch(err => console.error('[cancelMyAppointment] slotLock cleanup failed:', err));
+
     return { success: true };
   } catch (err) {
     console.error('[cancelMyAppointment] Error:', err);

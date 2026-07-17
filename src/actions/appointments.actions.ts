@@ -615,6 +615,16 @@ export async function cancelAppointmentAdmin(
       cancelledBy:        uid,
     });
 
+    // Liberar el slotLock para que el horario vuelva a estar disponible.
+    // data.date es un Timestamp — convertir a Date para buildSlotLockId.
+    const slotStart = (data.date as Timestamp).toDate();
+    const slotLockId = buildSlotLockId(data.staffId, slotStart);
+    await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('slotLocks').doc(slotLockId)
+      .delete()
+      .catch(err => console.error('[cancelAppointmentAdmin] slotLock cleanup failed:', err));
+
     cancelCalendarEvent(tenantId, appointmentId).catch(err =>
       console.error('[cancelAppointmentAdmin] GCal delete failed:', err),
     );

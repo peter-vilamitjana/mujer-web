@@ -8,6 +8,7 @@ import {
 import { getSalonBySlug } from '@/lib/services/marketplace.service';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { buildSlotLockId } from '@/lib/booking-utils';
 import type { Customer, Appointment, DashboardAppointment } from '@/lib/schema';
 
 type ActionResult = { success: true; id?: string } | { success: false; error: string };
@@ -336,6 +337,15 @@ export async function cancelAppointment(
       cancelledAt: FieldValue.serverTimestamp(),
       cancelledBy: uid,
     });
+
+    // Liberar el slotLock para que el horario vuelva a estar disponible.
+    const slotStart = (data.date as Timestamp).toDate();
+    const slotLockId = buildSlotLockId(data.staffId, slotStart);
+    await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('slotLocks').doc(slotLockId)
+      .delete()
+      .catch(err => console.error('[cancelAppointment] slotLock cleanup failed:', err));
 
     // WhatsApp cancellation — fire and forget
     const clientPhone = authSession.phone ?? null;
