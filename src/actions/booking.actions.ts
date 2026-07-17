@@ -6,7 +6,7 @@ import { requireAuthSession } from '@/lib/auth-guards';
 import { syncAppointmentToCalendar } from './calendar.actions';
 import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import { buildConfirmationMessage } from '@/lib/whatsapp-templates';
-import { hasSlotConflict, buildOccupiedSlots, buildSlotLockId, isSlotLockExpired } from '@/lib/booking-utils';
+import { hasSlotConflict, buildOccupiedSlots, buildSlotLockId, isSlotLockExpired, parseLocalDate } from '@/lib/booking-utils';
 import { bookingPayloadSchema, parseOrError } from '@/lib/validation/schemas';
 
 export async function getAvailableSlots(
@@ -15,9 +15,9 @@ export async function getAvailableSlots(
   date: string
 ): Promise<{ occupiedSlots: string[]; error?: string }> {
   try {
-    const startOfDay = new Date(date);
+    const startOfDay = parseLocalDate(date);
     startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(date);
+    const endOfDay = parseLocalDate(date);
     endOfDay.setHours(23, 59, 59, 999);
 
     const snap = await adminDb
@@ -129,7 +129,7 @@ export async function createBooking(
     }
 
     const [hour, minute] = payload.time.split(':').map(Number);
-    const appointmentDateTime = new Date(payload.date);
+    const appointmentDateTime = parseLocalDate(payload.date);
     appointmentDateTime.setHours(hour, minute, 0, 0);
     const slotStart = Timestamp.fromDate(appointmentDateTime);
 

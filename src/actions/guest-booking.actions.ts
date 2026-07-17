@@ -5,7 +5,7 @@ import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { sendWhatsAppMessage } from '@/lib/whatsapp';
 import { buildConfirmationMessage } from '@/lib/whatsapp-templates';
-import { hasSlotConflict, buildSlotLockId, isSlotLockExpired } from '@/lib/booking-utils';
+import { hasSlotConflict, buildSlotLockId, isSlotLockExpired, parseLocalDate } from '@/lib/booking-utils';
 import { rateLimitDistributed } from '@/lib/rate-limit-distributed';
 import { guestBookingPayloadSchema, parseOrError } from '@/lib/validation/schemas';
 
@@ -88,7 +88,7 @@ export async function createGuestBooking(
     }
 
     const [hour, minute] = payload.time.split(':').map(Number);
-    const appointmentDateTime = new Date(payload.date);
+    const appointmentDateTime = parseLocalDate(payload.date);
     appointmentDateTime.setHours(hour, minute, 0, 0);
     const slotStart = Timestamp.fromDate(appointmentDateTime);
 

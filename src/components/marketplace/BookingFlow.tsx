@@ -232,7 +232,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
           staffName: selectedStaff.name,
           serviceIds: selectedServices.map(s => s.id),
           serviceNames: selectedServiceNames,
-          date: selectedDate.toISOString(),
+          date: format(selectedDate, 'yyyy-MM-dd'),
           time: selectedTime,
           totalFrom,
           durationMinutes: totalDuration,
@@ -265,7 +265,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
             requiereLargo: s.requiresLengthSelection,
             variable: s.variablePrice,
           })),
-          date: selectedDate.toISOString(),
+          date: format(selectedDate, 'yyyy-MM-dd'),
           time: selectedTime,
           totalFrom,
           totalTo,
@@ -304,7 +304,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
       const params = new URLSearchParams({
         service: selectedServiceNames,
         staff: selectedStaff.name,
-        date: selectedDate.toISOString(),
+        date: format(selectedDate, 'yyyy-MM-dd'),
         time: selectedTime,
         isGuest: String(!isAuthenticated),
         ...((!isAuthenticated) && {
