@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Sparkles } from 'lucide-react';
 import { useTenant } from '@/contexts/TenantContext';
 import { useStaff } from '@/hooks/useStaff';
 import { useCatalog } from '@/hooks/useCatalog';
 import { searchCustomers, createCustomer } from '@/actions/customer.actions';
-import { createAppointment, getAppointmentsForDay } from '@/actions/appointments.actions';
-import { closeAppointment } from '@/actions/checkout.actions';
+import { createAppointment, getAppointmentsForDay, type CreateAppointmentPayload } from '@/actions/appointments.actions';
+import { closeAppointment, type CheckoutPayload } from '@/actions/checkout.actions';
+import { queryKeys } from '@/lib/query-keys';
 import type { Appointment, AppointmentStatus, Service } from '@/lib/schema';
 import type { CreateEventBody } from '@/app/api/google/event/route';
 
@@ -148,10 +150,6 @@ export default function AgendaTabView() {
     [catalogServices],
   );
 
-  // ── Appointment state ────────────────────────────────────────────────────────
-  const [appts, setAppts]         = useState<Appt[]>([]);
-  const [apptLoading, setApptLoading] = useState(false);
-
   // ── UI state ─────────────────────────────────────────────────────────────────
   const [selectedId, setSelectedId]   = useState<string | null>(null);
   const [checkoutId, setCheckoutId]   = useState<string | null>(null);
@@ -162,6 +160,93 @@ export default function AgendaTabView() {
   const [newAppt, setNewAppt]           = useState<NewApptForm | null>(null);
   const [draggedId, setDraggedId]       = useState<string | null>(null);
   const [dropTarget, setDropTarget]     = useState<{ slot: number; pro: number } | null>(null);
+
+  // ── Appointment state (TanStack Query) ────────────────────────────────────────
+  const queryClient = useQueryClient();
+
+  // Fecha objetivo derivada de dateOffset — misma lógica que loadAppts tenía antes.
+  // Se calcula el ISO local a mano (no .toISOString()) para no correr el día por
+  // timezone, igual que en booking-utils.ts.
+  const targetDate = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + dateOffset);
+    return d;
+  }, [dateOffset]);
+
+  const targetDateISO = useMemo(() => {
+    const y = targetDate.getFullYear();
+    const m = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const day = String(targetDate.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }, [targetDate]);
+
+  const apptsQueryKey = queryKeys.appointments.day(tenantId ?? '', branchId ?? null, targetDateISO);
+
+  const { data: appts = [], isLoading: apptLoading } = useQuery({
+    queryKey: apptsQueryKey,
+    queryFn: async () => {
+      const rawAppts = await getAppointmentsForDay(tenantId!, branchId ?? null, targetDate);
+      const validAppts = rawAppts.filter(a => a.status !== 'cancelled' && a.status !== 'no_show');
+      return validAppts.map(a => mapToAppt(a, pros)).filter((a): a is Appt => a !== null);
+    },
+    // pros llega de useStaff() — si cambia mid-sesión (staff nuevo/editado) el
+    // cache ya cargado no se re-mapea hasta el próximo fetch real (invalidación
+    // o cambio de día). Tradeoff aceptado: el staff casi no cambia en vivo.
+    enabled: !!tenantId && pros.length > 0,
+  });
+
+  // Crear turno — optimistic: agrega el Appt al cache antes de que vuelva el
+  // servidor, revierte en error, y siempre invalida al terminar para
+  // reconciliar con el estado real (patrón recomendado de TanStack Query).
+  const createApptMutation = useMutation({
+    mutationFn: (vars: { serverPayload: CreateAppointmentPayload; uiAppt: Omit<Appt, 'id'> }) =>
+      createAppointment(tenantId!, vars.serverPayload),
+    onMutate: async (vars) => {
+      await queryClient.cancelQueries({ queryKey: apptsQueryKey });
+      const previous = queryClient.getQueryData<Appt[]>(apptsQueryKey);
+      const tempId = `optimistic-${Date.now()}`;
+      queryClient.setQueryData<Appt[]>(apptsQueryKey, (old = []) => [...old, { id: tempId, ...vars.uiAppt }]);
+      return { previous, tempId };
+    },
+    onSuccess: (result, _vars, context) => {
+      if (result.success) {
+        queryClient.setQueryData<Appt[]>(apptsQueryKey, (old = []) =>
+          old.map(a => (a.id === context?.tempId ? { ...a, id: result.id ?? a.id } : a)));
+      } else if (context) {
+        queryClient.setQueryData(apptsQueryKey, context.previous);
+      }
+    },
+    onError: (_err, _vars, context) => {
+      if (context) queryClient.setQueryData(apptsQueryKey, context.previous);
+    },
+    onSettled: () => {
+      if (tenantId) queryClient.invalidateQueries({ queryKey: queryKeys.appointments.all(tenantId) });
+    },
+  });
+
+  // Cobrar turno — mismo patrón optimistic + rollback + invalidación.
+  const closeApptMutation = useMutation({
+    mutationFn: (vars: { appointmentId: string; payload: CheckoutPayload }) =>
+      closeAppointment(tenantId!, vars.appointmentId, vars.payload),
+    onMutate: async (vars) => {
+      await queryClient.cancelQueries({ queryKey: apptsQueryKey });
+      const previous = queryClient.getQueryData<Appt[]>(apptsQueryKey);
+      queryClient.setQueryData<Appt[]>(apptsQueryKey, (old = []) =>
+        old.map(a => (a.id === vars.appointmentId ? { ...a, status: 'completado' as const, firestoreStatus: 'cobrado' } : a)));
+      return { previous };
+    },
+    onSuccess: (result, _vars, context) => {
+      if (!result.success && context) {
+        queryClient.setQueryData(apptsQueryKey, context.previous);
+      }
+    },
+    onError: (_err, _vars, context) => {
+      if (context) queryClient.setQueryData(apptsQueryKey, context.previous);
+    },
+    onSettled: () => {
+      if (tenantId) queryClient.invalidateQueries({ queryKey: queryKeys.appointments.all(tenantId) });
+    },
+  });
 
   // ── Google Calendar integration ──────────────────────────────────────────────
   const [gcalConnected, setGcalConnected] = useState<boolean | null>(null); // null = loading
@@ -248,32 +333,6 @@ export default function AgendaTabView() {
     }, 300);
     return () => clearTimeout(timer);
   }, [newAppt?.clientSearch, newAppt?.clientMode, tenantId]);
-
-  // ── Load appointments for selected date ─────────────────────────────────────
-  const loadAppts = useCallback(async () => {
-    if (!tenantId || pros.length === 0) return;
-    setApptLoading(true);
-    try {
-      const targetDate = new Date();
-      targetDate.setDate(targetDate.getDate() + dateOffset);
-
-      const rawAppts = await getAppointmentsForDay(tenantId, branchId ?? null, targetDate);
-      const validAppts = rawAppts.filter(a => a.status !== 'cancelled' && a.status !== 'no_show');
-
-      const loaded = validAppts
-        .map(a => mapToAppt(a, pros))
-        .filter((a): a is Appt => a !== null);
-      setAppts(loaded);
-    } catch (err) {
-      console.error('[AgendaTabView] loadAppts:', err);
-    } finally {
-      setApptLoading(false);
-    }
-  }, [tenantId, branchId, dateOffset, pros]);
-
-  useEffect(() => {
-    loadAppts();
-  }, [loadAppts]);
 
   // ── Derived ──────────────────────────────────────────────────────────────────
   const selectedAppt = appts.find(a => a.id === selectedId) ?? null;
@@ -427,25 +486,22 @@ export default function AgendaTabView() {
         }
       }
 
-      const result = await createAppointment(tenantId, {
-        branchId:        branchId ?? '',
-        clientId:        resolvedClientId ?? `guest-${Date.now()}`,
-        clientName,
-        staffId:         selectedStaff.id,
-        staffName:       selectedStaff.name,
-        serviceIds:      svcIds,
-        serviceNames:    svcNames,
-        date:            slotToDate(newAppt.slot, dateOffset),
-        durationMinutes: Math.max(totalDur, 1) * 30,
-        priceEstimated:  totalAmt,
-        notes:           newAppt.notes || undefined,
-        status:          newAppt.status === 'confirmado' ? 'confirmed' : 'pending',
-      });
-
-      if (result.success) {
-        const newId = result.id ?? `local-${Date.now()}`;
-        setAppts(prev => [...prev, {
-          id:      newId,
+      const result = await createApptMutation.mutateAsync({
+        serverPayload: {
+          branchId:        branchId ?? '',
+          clientId:        resolvedClientId ?? `guest-${Date.now()}`,
+          clientName,
+          staffId:         selectedStaff.id,
+          staffName:       selectedStaff.name,
+          serviceIds:      svcIds,
+          serviceNames:    svcNames,
+          date:            slotToDate(newAppt.slot, dateOffset),
+          durationMinutes: Math.max(totalDur, 1) * 30,
+          priceEstimated:  totalAmt,
+          notes:           newAppt.notes || undefined,
+          status:          newAppt.status === 'confirmado' ? 'confirmed' : 'pending',
+        },
+        uiAppt: {
           pro:     newAppt.pro,
           slot:    newAppt.slot,
           dur:     Math.max(totalDur, 1),
@@ -454,8 +510,11 @@ export default function AgendaTabView() {
           status:  newAppt.status,
           amount:  totalAmt,
           ...(newAppt.notes ? { notes: newAppt.notes } : {}),
-        }]);
-        setSelectedId(newId);
+        },
+      });
+
+      if (result.success) {
+        setSelectedId(result.id ?? null);
         setNewAppt(null);
 
         // Best-effort Google Calendar sync
@@ -487,16 +546,16 @@ export default function AgendaTabView() {
     setCheckoutSubmitting(true);
     setCheckoutError(null);
     try {
-      const result = await closeAppointment(tenantId, checkoutAppt.id, {
-        amountPaid: checkoutAppt.amount,
-        paymentMethod: method,
-        paymentMethods: { [method]: checkoutAppt.amount } as any,
-        commissionCalculated: commissionRate,
+      const result = await closeApptMutation.mutateAsync({
+        appointmentId: checkoutAppt.id,
+        payload: {
+          amountPaid: checkoutAppt.amount,
+          paymentMethod: method,
+          paymentMethods: { [method]: checkoutAppt.amount } as any,
+          commissionCalculated: commissionRate,
+        },
       });
       if (result.success) {
-        setAppts(prev => prev.map(a =>
-          a.id === checkoutAppt.id ? { ...a, status: 'completado' as const, firestoreStatus: 'cobrado' } : a,
-        ));
         setCheckoutId(null);
         setSelectedId(checkoutAppt.id);
       } else {
@@ -668,7 +727,8 @@ export default function AgendaTabView() {
                         onDrop={e => {
                           e.preventDefault();
                           if (draggedId !== null && validTarget) {
-                            setAppts(prev => prev.map(a => a.id === draggedId ? { ...a, slot, pro } : a));
+                            queryClient.setQueryData<Appt[]>(apptsQueryKey, (prev = []) =>
+                              prev.map(a => a.id === draggedId ? { ...a, slot, pro } : a));
                             setSelectedId(draggedId);
                           }
                           setDraggedId(null); setDropTarget(null);

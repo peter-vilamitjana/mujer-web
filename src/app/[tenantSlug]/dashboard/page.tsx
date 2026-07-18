@@ -10,6 +10,7 @@ import ConfigTabView from './ConfigTabView';
 import PerformanceTabView from './PerformanceTabView';
 import DashboardTabView from './DashboardTabView';
 import CajaTabView from './CajaTabView';
+import { QueryProvider } from '@/components/providers/QueryProvider';
 
 const ADMIN_NAV = [
   { icon: 'dashboard',    label: 'Dashboard',     tab: 'dashboard' as const },
@@ -25,6 +26,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = React.useState<'dashboard' | 'agenda' | 'clientes' | 'servicios' | 'caja' | 'performance' | 'config'>('dashboard');
 
   return (
+    <QueryProvider>
     <div
       className="min-h-screen text-[#f5f0e8] selection:bg-violet-500/30 selection:text-[#f5f0e8] relative"
       style={{
@@ -162,5 +164,6 @@ export default function AdminDashboard() {
       </nav>
 
     </div>
+    </QueryProvider>
   );
 }
