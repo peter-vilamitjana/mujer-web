@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { fetchPublicSalons, type SalonListing } from '@/actions/explore.actions';
+import { getMyFavorites, toggleFavorite as toggleFavoriteAction } from '@/actions/profile.actions';
 
 // ── Search Engine ──────────────────────────────────────────────────────────────
 
@@ -653,14 +654,34 @@ export default function ExplorarTab() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    getMyFavorites()
+      .then(favs => setFavorites(new Set(favs.map(f => f.tenantId))))
+      .catch(() => setFavorites(new Set()));
+  }, []);
+
   const toggleFavorite = useCallback((id: string) => {
+    const wasFavorite = favorites.has(id);
+
+    // Optimistic update — revert if the server call fails.
     setFavorites(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
+      if (wasFavorite) next.delete(id);
       else next.add(id);
       return next;
     });
-  }, []);
+
+    toggleFavoriteAction(id).then(result => {
+      if (result.error) {
+        setFavorites(prev => {
+          const next = new Set(prev);
+          if (wasFavorite) next.add(id);
+          else next.delete(id);
+          return next;
+        });
+      }
+    });
+  }, [favorites]);
 
   const filtered = useMemo(() => {
     let results = [...salons];
