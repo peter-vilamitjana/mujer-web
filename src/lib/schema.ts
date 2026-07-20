@@ -109,6 +109,7 @@ export interface Service {
     variablePrice: boolean; // If true, "desde" logic applies
     active: boolean;
     image?: string;
+    badge?: 'novedad' | 'tendencia' | 'popular'; // opcional, sin poblar todavía
 }
 
 export type PromoType = 'standard' | 'warm' | 'popular' | 'premium';

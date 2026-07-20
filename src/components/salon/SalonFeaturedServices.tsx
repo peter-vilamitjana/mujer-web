@@ -17,16 +17,6 @@ interface FeaturedServiceUI {
   badge?: string;
 }
 
-// Mock data — fallback idéntico al original
-const mockServices: Omit<FeaturedServiceUI, 'id'>[] = [
-  { name: 'ALISADO FOTÓNICO LASER', price: 34999, image: '/images/services/alisado.png', badge: 'NOVEDAD' },
-  { name: 'PERMANENTE', price: 34999, image: '/images/services/permanente.png', badge: 'TENDENCIA' },
-  { name: 'BALAYAGE', price: 29999, image: '/images/services/balayage.png', badge: 'MÁS BUSCADOS' },
-  { name: 'CORTE & ESTILO', price: 15999, image: '/images/services/corte.png', badge: 'CLÁSICO' },
-  { name: 'COLORACIÓN PROFESIONAL', price: 24999, image: '/images/services/coloracion.png', badge: 'PREMIUM' },
-  { name: 'KERATINA PROFESIONAL', price: 39999, image: '/images/services/keratina.png', badge: 'TRATAMIENTO' },
-];
-
 // CAMBIO 1: Props del tenant
 interface SalonFeaturedServicesProps {
   tenantId: string;
@@ -43,7 +33,7 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
         const dbServices = await getServices(tenantId, true); // true = onlyActive
 
         // Mapeo de campos schema nuevo → tipo UI
-        let servicesData: FeaturedServiceUI[] = dbServices.map(s => {
+        const servicesData: FeaturedServiceUI[] = dbServices.map(s => {
           // price puede ser number (precio fijo) o objeto {corto, mediano, largo}
           const price = typeof s.price === 'number'
             ? s.price
@@ -54,19 +44,14 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
             name: s.name,
             price,
             image: s.image,
-            badge: undefined,
+            badge: s.badge ?? undefined,
           };
         });
 
-        if (servicesData.length === 0) {
-          console.log("No services found in tenant, using mock data.");
-          servicesData = mockServices.map((s, i) => ({ ...s, id: `mock-${i}` }));
-        }
-
         setServices(servicesData.slice(0, 6));
       } catch (error: any) {
-        console.warn("Fetch de servicios falló, usando datos de prueba.", error?.message || error);
-        setServices(mockServices.map((s, i) => ({ ...s, id: `mock-${i}` })));
+        console.error('[SalonFeaturedServices] fetch failed:', error?.message || error);
+        setServices([]);
       } finally {
         setLoading(false);
       }
@@ -77,6 +62,8 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price);
+
+  if (!loading && services.length === 0) return null;
 
   return (
     <section className="py-20 sm:py-28 relative z-0 overflow-hidden bg-[#F2F2F7]/30">
