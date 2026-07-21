@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { ScrollReveal } from './ScrollReveal';
+import HeroParallaxImage from './HeroParallaxImage';
 
 interface SalonHeroProps {
   tenantSlug: string;
@@ -16,11 +17,9 @@ export default function SalonHero({ tenantSlug, salonName, coverImageUrl }: Salo
 
   return (
     <section className="relative overflow-hidden bg-surface md:bg-transparent">
-      {/* Desktop Background (Hidden on mobile) */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0 hidden md:block"
-        style={{ backgroundImage: `url('${heroBg}')` }}
-      >
+      {/* Desktop Background (Hidden on mobile) — parallax sutil vía HeroParallaxImage */}
+      <div className="absolute inset-0 z-0 hidden md:block">
+        <HeroParallaxImage src={heroBg} alt={salonName} />
         <div className="absolute inset-0 bg-surface/60" />
       </div>
 
