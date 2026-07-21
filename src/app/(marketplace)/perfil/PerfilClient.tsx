@@ -62,6 +62,7 @@ export default function PerfilClient({
 }: Props) {
   const { data: session } = useSession();
   const userName = session?.user?.name || '';
+  const userInitial = userName.charAt(0).toUpperCase() || '?';
 
   const [activeTab, setActiveTab] = React.useState<'panel' | 'turnos' | 'perfil' | 'explorar'>('panel');
   const [upcomingAppointments, setUpcomingAppointments] = React.useState<HistorialEntry[]>(initialAppointments);
@@ -265,11 +266,17 @@ export default function PerfilClient({
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[#f5f0e8]">{userName}</p>
                 <p className="text-[8px] text-[#f1c97d] uppercase tracking-[0.15em]">Premium</p>
               </div>
-              <img
-                src={session?.user?.image || ''}
-                alt={userName}
-                className="w-9 h-9 rounded-full object-cover border border-white/20"
-              />
+              {session?.user?.image ? (
+                <img
+                  src={session.user.image}
+                  alt={userName}
+                  className="w-9 h-9 rounded-full object-cover border border-white/20"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full border border-white/20 bg-[#050504] flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-[#f1c97d]">{userInitial}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -599,8 +606,12 @@ export default function PerfilClient({
                     <div className="absolute top-0 right-0 w-48 h-48 bg-[#f1c97d]/10 rounded-full blur-[50px] -translate-y-1/2 translate-x-1/4 -z-10 transition-opacity duration-700 opacity-50 group-hover/id:opacity-100" />
                     <div className="relative mb-6 group">
                       <div className="w-36 h-36 rounded-full p-[2px] shadow-[0_0_50px_rgba(241,201,125,0.15)] bg-gradient-to-tr from-[#f1c97d] via-[#f1c97d]/20 to-[#f1c97d] relative overflow-hidden transition-transform duration-700 hover:scale-105">
-                        <div className="w-full h-full rounded-full bg-[#050504] p-1">
-                          <img src={session?.user?.image || ''} alt={userName} className="w-full h-full rounded-full object-cover grayscale brightness-90 group-hover:grayscale-0 transition-all duration-700" />
+                        <div className="w-full h-full rounded-full bg-[#050504] p-1 flex items-center justify-center overflow-hidden">
+                          {session?.user?.image ? (
+                            <img src={session.user.image} alt={userName} className="w-full h-full rounded-full object-cover grayscale brightness-90 group-hover:grayscale-0 transition-all duration-700" />
+                          ) : (
+                            <span className="text-3xl font-vogue text-[#f1c97d]">{userInitial}</span>
+                          )}
                         </div>
                       </div>
                     </div>
