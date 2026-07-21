@@ -55,34 +55,43 @@ export default function PromoSection({ tenantSlug }: { tenantSlug: string }) {
     // Header: fade-up simple al entrar en viewport.
     useGSAP(() => {
         if (!headerRef.current) return;
-        gsap.from(headerRef.current, {
-            opacity: 0,
-            y: 20,
-            duration: 0.6,
-            ease: 'power2.out',
-            scrollTrigger: {
-                trigger: headerRef.current,
-                start: 'top 85%',
-                toggleActions: 'play none none reverse',
-            },
+        const mm = gsap.matchMedia();
+        mm.add('(prefers-reduced-motion: no-preference)', () => {
+            gsap.from(headerRef.current, {
+                opacity: 0,
+                y: 20,
+                duration: 0.6,
+                ease: 'power2.out',
+                scrollTrigger: {
+                    trigger: headerRef.current,
+                    start: 'top 85%',
+                    toggleActions: 'play none none reverse',
+                },
+            });
         });
+        return () => mm.revert();
     }, []);
 
     // Tarjetas: coreografía en cascada coordinada por sección (ScrollTrigger.batch)
-    // en vez de un ScrollReveal individual por tarjeta.
+    // en vez de un ScrollReveal individual por tarjeta. Sin animación si el
+    // usuario prefiere menos movimiento — las tarjetas quedan visibles directo.
     useGSAP(() => {
         if (!sectionRef.current) return;
         const cards = gsap.utils.toArray<HTMLElement>('[data-reveal="promo-card"]', sectionRef.current);
         if (cards.length === 0) return;
 
-        gsap.set(cards, { autoAlpha: 0, y: 28 });
-        const triggers = ScrollTrigger.batch(cards, {
-            start: 'top 85%',
-            onEnter: (batch) => gsap.to(batch, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.12, ease: 'power2.out', overwrite: true }),
-            onLeaveBack: (batch) => gsap.set(batch, { autoAlpha: 0, y: 28 }),
+        const mm = gsap.matchMedia();
+        mm.add('(prefers-reduced-motion: no-preference)', () => {
+            gsap.set(cards, { autoAlpha: 0, y: 28 });
+            const triggers = ScrollTrigger.batch(cards, {
+                start: 'top 85%',
+                onEnter: (batch) => gsap.to(batch, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.12, ease: 'power2.out', overwrite: true }),
+                onLeaveBack: (batch) => gsap.set(batch, { autoAlpha: 0, y: 28 }),
+            });
+            return () => triggers.forEach((t) => t.kill());
         });
 
-        return () => triggers.forEach((t) => t.kill());
+        return () => mm.revert();
     }, []);
 
     return (
@@ -123,7 +132,7 @@ export default function PromoSection({ tenantSlug }: { tenantSlug: string }) {
 
                                 <CardContent className="p-0 flex flex-col flex-grow relative z-10 pt-2">
                                     <div className="flex-grow">
-                                        <p className="font-sans text-[9px] tracking-[0.5em] uppercase text-on-surface-variant font-bold mb-4">Combo • 0{index + 1}</p>
+                                        <p className="font-sans text-[9px] tracking-[0.5em] uppercase text-on-surface-secondary font-bold mb-4">Combo • 0{index + 1}</p>
                                         <h4 className="font-vogue text-3xl mb-8 italic text-on-surface">{promo.subtitle}</h4>
 
                                         <div className="my-8 font-vogue text-5xl flex items-baseline gap-2 text-on-surface">

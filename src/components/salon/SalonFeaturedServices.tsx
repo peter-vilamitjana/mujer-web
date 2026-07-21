@@ -72,34 +72,43 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
   // Header: fade-up simple al entrar en viewport.
   useGSAP(() => {
     if (!headerRef.current) return;
-    gsap.from(headerRef.current, {
-      opacity: 0,
-      y: 20,
-      duration: 0.6,
-      ease: 'power2.out',
-      scrollTrigger: {
-        trigger: headerRef.current,
-        start: 'top 85%',
-        toggleActions: 'play none none reverse',
-      },
+    const mm = gsap.matchMedia();
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.from(headerRef.current, {
+        opacity: 0,
+        y: 20,
+        duration: 0.6,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: headerRef.current,
+          start: 'top 85%',
+          toggleActions: 'play none none reverse',
+        },
+      });
     });
+    return () => mm.revert();
   }, []);
 
   // Tarjetas: coreografía en cascada coordinada por sección (ScrollTrigger.batch)
-  // en vez de un ScrollReveal individual por tarjeta.
+  // en vez de un ScrollReveal individual por tarjeta. Sin animación si el
+  // usuario prefiere menos movimiento — las tarjetas quedan visibles directo.
   useGSAP(() => {
     if (loading || services.length === 0 || !sectionRef.current) return;
     const cards = gsap.utils.toArray<HTMLElement>('[data-reveal="service-card"]', sectionRef.current);
     if (cards.length === 0) return;
 
-    gsap.set(cards, { autoAlpha: 0, y: 28 });
-    const triggers = ScrollTrigger.batch(cards, {
-      start: 'top 85%',
-      onEnter: (batch) => gsap.to(batch, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.12, ease: 'power2.out', overwrite: true }),
-      onLeaveBack: (batch) => gsap.set(batch, { autoAlpha: 0, y: 28 }),
+    const mm = gsap.matchMedia();
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.set(cards, { autoAlpha: 0, y: 28 });
+      const triggers = ScrollTrigger.batch(cards, {
+        start: 'top 85%',
+        onEnter: (batch) => gsap.to(batch, { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.12, ease: 'power2.out', overwrite: true }),
+        onLeaveBack: (batch) => gsap.set(batch, { autoAlpha: 0, y: 28 }),
+      });
+      return () => triggers.forEach((t) => t.kill());
     });
 
-    return () => triggers.forEach((t) => t.kill());
+    return () => mm.revert();
   }, [loading, services]);
 
   if (!loading && services.length === 0) return null;
@@ -206,7 +215,7 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
                         <div className="flex flex-grow flex-col">
                           <h3 className="flex-grow text-2xl font-normal uppercase tracking-wide text-on-surface font-vogue">{service.name}</h3>
                           <div className="mt-6 pt-6 border-t border-dotted border-outline-subtle">
-                            <p className="font-sans text-xs uppercase tracking-wider text-on-surface-variant mb-1">Desde</p>
+                            <p className="font-sans text-xs uppercase tracking-wider text-on-surface-secondary mb-1">Desde</p>
                             <p className="font-vogue text-4xl font-bold text-primary">{formatPrice(service.price || 0)}</p>
                           </div>
                           <div className="mt-8">

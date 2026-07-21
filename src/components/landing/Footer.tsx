@@ -41,11 +41,12 @@ export default function Footer({ tenantSlug, salon }: FooterProps) {
           </nav>
 
           {/* Social */}
+          {/* p-3 -m-3: agranda el área táctil a 44px sin mover el ícono visualmente */}
           <div className="flex items-center gap-6">
             <Link
               href={instagramUrl}
               target="_blank"
-              className="hover:text-primary transition-all duration-300 hover:scale-110 active:scale-95"
+              className="p-3 -m-3 hover:text-primary transition-all duration-300 hover:scale-110 active:scale-95"
               aria-label="Instagram"
             >
               <Instagram className="h-5 w-5" />

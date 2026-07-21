@@ -142,9 +142,10 @@ export default function LandingHeader() {
           </div>
 
           {/* ── Mobile menu toggle ── */}
+          {/* p-2.5 -m-2.5: agranda el área táctil a 44px sin mover el ícono visualmente */}
           <button
             className={cn(
-              'md:hidden transition-colors duration-300',
+              'md:hidden p-2.5 -m-2.5 transition-colors duration-300',
               textWhite ? 'text-white' : 'text-[#1A1A1A]'
             )}
             aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}

@@ -66,7 +66,7 @@ function ReviewCard({ review }: { review: ReviewData }) {
       {review.comment && (
         <p className="font-sans text-sm text-on-surface-secondary leading-relaxed line-clamp-4">{review.comment}</p>
       )}
-      <p className="font-sans text-[11px] text-on-surface-variant">{date}</p>
+      <p className="font-sans text-[11px] text-on-surface-secondary">{date}</p>
     </div>
   );
 }

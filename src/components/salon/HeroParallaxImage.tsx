@@ -22,16 +22,23 @@ export default function HeroParallaxImage({ src, alt }: HeroParallaxImageProps) 
   useGSAP(() => {
     if (!containerRef.current || !imgRef.current) return;
 
-    gsap.to(imgRef.current, {
-      yPercent: 12,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: containerRef.current,
-        start: 'top top',
-        end: 'bottom top',
-        scrub: true,
-      },
+    const mm = gsap.matchMedia();
+    // Sin parallax si el usuario prefiere menos movimiento — la imagen se
+    // queda estática en su posición base, sin animar en absoluto.
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.to(imgRef.current, {
+        yPercent: 12,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: 'top top',
+          end: 'bottom top',
+          scrub: true,
+        },
+      });
     });
+
+    return () => mm.revert();
   }, []);
 
   return (
