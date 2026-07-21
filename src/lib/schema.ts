@@ -45,6 +45,8 @@ export interface Tenant {
     description?: string;
     phone?: string;
     address?: string;
+    lat?: number;
+    lng?: number;
     logoUrl?: string;
     coverImageUrl?: string;
     isActivePublicly?: boolean;
