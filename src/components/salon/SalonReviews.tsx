@@ -152,7 +152,7 @@ export default function SalonReviews({ tenantSlug, initialReviews, stats }: Prop
 
   if (initialReviews.length === 0 && !showForm) {
     return (
-      <section className="py-16 px-4 border-t border-outline-subtle bg-surface">
+      <section id="reviews" className="py-16 px-4 border-t border-outline-subtle bg-surface">
         <div className="max-w-5xl mx-auto text-center space-y-4">
           <p className="font-sans text-on-surface-secondary text-sm">Todavía no hay reseñas. ¡Sé el primero!</p>
           <button
@@ -175,7 +175,7 @@ export default function SalonReviews({ tenantSlug, initialReviews, stats }: Prop
   }
 
   return (
-    <section className="py-16 px-4 border-t border-outline-subtle bg-surface overflow-hidden">
+    <section id="reviews" className="py-16 px-4 border-t border-outline-subtle bg-surface overflow-hidden">
       <div className="max-w-5xl mx-auto">
 
         {/* Header */}

@@ -105,7 +105,7 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
   if (!loading && services.length === 0) return null;
 
   return (
-    <section ref={sectionRef} className="py-20 sm:py-28 relative z-0 overflow-hidden bg-surface">
+    <section id="servicios" ref={sectionRef} className="py-20 sm:py-28 relative z-0 overflow-hidden bg-surface">
       <div className="container mx-auto px-4 relative z-10">
         {/* Mobile Header — idéntico al original */}
         <div className="flex items-end justify-between mb-8 md:hidden">
