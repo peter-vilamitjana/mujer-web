@@ -8,7 +8,7 @@ import SalonFeaturedServices from '@/components/salon/SalonFeaturedServices';
 import SalonReviews from '@/components/salon/SalonReviews';
 import InfoBar from '@/components/landing/InfoBar';
 import PromoSection from '@/components/landing/PromoSection';
-import MapAndReviews from '@/components/landing/MapAndReviews';
+import LocationSection from '@/components/landing/LocationSection';
 import Footer from '@/components/landing/Footer';
 
 interface Props {
@@ -78,7 +78,7 @@ export default async function SalonPage({ params }: Props) {
         initialReviews={salonReviews}
         stats={salonStats}
       />
-      <MapAndReviews salon={salon} reviews={salonReviews} />
+      <LocationSection salon={salon} />
       <Footer tenantSlug={tenantSlug} salon={salon} />
     </div>
   );
