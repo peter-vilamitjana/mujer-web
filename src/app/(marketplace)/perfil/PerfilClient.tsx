@@ -335,32 +335,14 @@ export default function PerfilClient({
                     )}
                   </div>
 
-                  {/* Sugerencia Valentina */}
-                  <div className="relative isolate z-0 rounded-[2rem] overflow-hidden min-h-[260px] flex flex-col justify-center group border border-white/10" style={{ boxShadow: '0 0 30px -10px rgba(255,255,255,0.05)', WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
+                  {/* Sugerencias para vos */}
+                  <div className="relative isolate z-0 rounded-[2rem] overflow-hidden min-h-[260px] flex flex-col items-center justify-center gap-3 border border-white/10" style={{ boxShadow: '0 0 30px -10px rgba(255,255,255,0.05)' }}>
                     <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20" />
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-[#f1c97d]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 -z-10" />
-                    <div className="relative z-10 max-w-[65%] pl-8 md:pl-10 pr-4 py-8">
-                      <div className="inline-flex px-3.5 py-1.5 bg-[#f1c97d]/10 border border-[#f1c97d]/25 rounded-full mb-4">
-                        <span className="text-[8px] font-label uppercase tracking-[0.2em] text-[#f1c97d]">PARA VOS</span>
-                      </div>
-                      <h2 className="text-2xl font-body font-light text-[#f5f0e8] mb-2 leading-tight">Valentina tiene disponibilidad el jueves</h2>
-                      <p className="text-[#7a766e] text-xs leading-relaxed mb-4 font-label tracking-wide uppercase">
-                        <span className="text-[#f1c97d]/50">—</span> TU ESTILISTA HABITUAL EN MAISON
-                      </p>
-                      <div className="flex items-center gap-3.5 mb-4">
-                        <div className="flex items-center gap-2 bg-[#050504]/50 border border-white/5 px-3.5 py-1.5 rounded-full backdrop-blur-md">
-                          <span className="material-symbols-outlined text-[#f1c97d] text-[14px]">schedule</span>
-                          <span className="text-[10px] text-[#f5f0e8] font-label tracking-wider">11:00 am</span>
-                        </div>
-                        <span className="text-white/20">•</span>
-                        <span className="text-sm font-headline italic text-[#f5f0e8] tracking-wide">$4.500</span>
-                      </div>
-                      <button className="liquid-glass-floating h-10 px-6 flex items-center gap-2 rounded-[1.25rem] text-[13px] font-medium hover:bg-white/10 transition-all duration-300 group/btn border border-white/10 w-fit cursor-pointer">
-                        <span className="text-[#f5f0e8] whitespace-nowrap">Reservar en un tap</span>
-                        <span className="material-symbols-outlined text-[#f5f0e8] text-[16px] group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
-                      </button>
+                    <div className="inline-flex px-3.5 py-1.5 bg-white/[0.03] border border-white/10 rounded-full">
+                      <span className="text-[8px] font-label uppercase tracking-[0.2em] text-[#7a766e]">PARA VOS</span>
                     </div>
-                    <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800" alt="" aria-hidden="true" className="absolute right-0 top-0 h-full w-[45%] max-w-[280px] object-cover object-center translate-x-4 group-hover:translate-x-0 transition-transform duration-1000 opacity-50 mix-blend-luminosity -z-10 rounded-[inherit] pointer-events-none" style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 40%)', maskImage: 'linear-gradient(to right, transparent, black 40%)' }} />
+                    <p className="text-[#7a766e] text-sm text-center max-w-[280px]">Todavía no tenemos sugerencias para vos</p>
+                    <Link href="/explore" className="text-[10px] font-label uppercase tracking-widest text-[#f1c97d] hover:opacity-70 transition-opacity">Explorar salones →</Link>
                   </div>
                 </div>
 

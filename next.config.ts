@@ -22,7 +22,7 @@ const cspDirectives = [
   // Fuentes propias + Google Fonts (archivos de fuente desde gstatic)
   "font-src 'self' https://fonts.gstatic.com",
   // Imágenes: Firebase Storage, avatares de Google, datos embebidos
-  "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://lh3.googleusercontent.com",
+  "img-src 'self' data: blob: https://firebasestorage.googleapis.com https://lh3.googleusercontent.com https://images.unsplash.com https://plus.unsplash.com",
   // Conexiones: Firebase, Google APIs, Sentry, MercadoPago, WhatsApp API
   [
     "connect-src 'self'",
@@ -78,6 +78,16 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'plus.unsplash.com',
         pathname: '/**',
       },
     ],
