@@ -339,7 +339,7 @@ export default function PerfilClient({
                   <div className="relative isolate z-0 rounded-[2rem] overflow-hidden min-h-[260px] flex flex-col justify-center group border border-white/10" style={{ boxShadow: '0 0 30px -10px rgba(255,255,255,0.05)', WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
                     <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20" />
                     <div className="absolute top-0 right-0 w-64 h-64 bg-[#f1c97d]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 -z-10" />
-                    <div className="relative z-10 max-w-[60%] pl-14 pr-4 py-8">
+                    <div className="relative z-10 max-w-[65%] pl-8 md:pl-10 pr-4 py-8">
                       <div className="inline-flex px-3.5 py-1.5 bg-[#f1c97d]/10 border border-[#f1c97d]/25 rounded-full mb-4">
                         <span className="text-[8px] font-label uppercase tracking-[0.2em] text-[#f1c97d]">PARA VOS</span>
                       </div>
@@ -360,7 +360,7 @@ export default function PerfilClient({
                         <span className="material-symbols-outlined text-[#f5f0e8] text-[16px] group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
                       </button>
                     </div>
-                    <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800" alt="Estilista" className="absolute right-0 top-0 h-full w-[45%] max-w-[280px] object-cover object-center translate-x-4 group-hover:translate-x-0 transition-transform duration-1000 opacity-50 mix-blend-luminosity -z-10 rounded-[inherit]" style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 40%)', maskImage: 'linear-gradient(to right, transparent, black 40%)' }} />
+                    <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=800" alt="" aria-hidden="true" className="absolute right-0 top-0 h-full w-[45%] max-w-[280px] object-cover object-center translate-x-4 group-hover:translate-x-0 transition-transform duration-1000 opacity-50 mix-blend-luminosity -z-10 rounded-[inherit] pointer-events-none" style={{ WebkitMaskImage: 'linear-gradient(to right, transparent, black 40%)', maskImage: 'linear-gradient(to right, transparent, black 40%)' }} />
                   </div>
                 </div>
 
