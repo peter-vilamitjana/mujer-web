@@ -2,16 +2,20 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import { AlertTriangle, Target } from 'lucide-react';
+import { AlertTriangle, Target, Loader2 } from 'lucide-react';
 import {
   type HistorialEntry,
   type HairProfile,
   type SerializedPreferences,
   type FavoriteSalonData,
+  type MySuggestion,
   updateMyPreferences,
   updateMyHairProfile,
   cancelMyAppointment,
+  getMySuggestion,
+  bookSuggestedAppointment,
 } from '@/actions/profile.actions';
 import ExplorarTab from './ExplorarTab';
 
@@ -61,11 +65,23 @@ export default function PerfilClient({
   initialPhone,
 }: Props) {
   const { data: session } = useSession();
+  const router = useRouter();
   const userName = session?.user?.name || '';
   const userInitial = userName.charAt(0).toUpperCase() || '?';
 
   const [activeTab, setActiveTab] = React.useState<'panel' | 'turnos' | 'perfil' | 'explorar'>('panel');
   const [upcomingAppointments, setUpcomingAppointments] = React.useState<HistorialEntry[]>(initialAppointments);
+  const [suggestion, setSuggestion] = React.useState<MySuggestion | null>(null);
+  const [suggestionLoading, setSuggestionLoading] = React.useState(true);
+  const [booking, setBooking] = React.useState(false);
+  const [suggestionError, setSuggestionError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    getMySuggestion()
+      .then(setSuggestion)
+      .catch(() => setSuggestion(null))
+      .finally(() => setSuggestionLoading(false));
+  }, []);
   const [cancellingId, setCancellingId] = React.useState<string | null>(null);
 
   // ── Preferences (server-synced, debounced save) ──────────────────────────
@@ -171,6 +187,38 @@ export default function PerfilClient({
     }
     setCancellingId(null);
   };
+
+  const handleOneTapBook = async () => {
+    if (!suggestion) return;
+    setBooking(true);
+    setSuggestionError(null);
+    const result = await bookSuggestedAppointment(
+      suggestion.pattern.tenantId,
+      suggestion.pattern.staffId,
+      suggestion.slot.date,
+      suggestion.slot.time,
+    );
+    if (result.success) {
+      const params = new URLSearchParams({
+        service: suggestion.pattern.serviceNames,
+        staff: suggestion.pattern.staffName,
+        date: suggestion.slot.date,
+        time: suggestion.slot.time,
+        isGuest: 'false',
+      });
+      router.push(`/salones/${suggestion.pattern.tenantSlug}/book/confirmation/${result.appointmentId}?${params.toString()}`);
+      return;
+    }
+    setBooking(false);
+    setSuggestionError(result.error ?? 'No se pudo reservar. Intentá de nuevo.');
+  };
+
+  const slotMs = suggestion
+    ? new Date(`${suggestion.slot.date}T${suggestion.slot.time}:00`).getTime()
+    : 0;
+  const slotMonthLabel = suggestion
+    ? new Date(slotMs).toLocaleDateString('es-AR', { month: 'long' })
+    : '';
 
   return (
     <div
@@ -335,15 +383,66 @@ export default function PerfilClient({
                     )}
                   </div>
 
-                  {/* Sugerencias para vos */}
-                  <div className="relative isolate z-0 rounded-[2rem] overflow-hidden min-h-[260px] flex flex-col items-center justify-center gap-3 border border-white/10" style={{ boxShadow: '0 0 30px -10px rgba(255,255,255,0.05)' }}>
-                    <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20" />
-                    <div className="inline-flex px-3.5 py-1.5 bg-white/[0.03] border border-white/10 rounded-full">
-                      <span className="text-[8px] font-label uppercase tracking-[0.2em] text-[#7a766e]">PARA VOS</span>
+                  {/* Sugerencia inteligente — estilista habitual + próximo horario libre */}
+                  {suggestionLoading ? (
+                    <div className="relative isolate z-0 rounded-[2rem] overflow-hidden min-h-[260px] flex items-center justify-center border border-white/10">
+                      <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20" />
+                      <Loader2 className="w-5 h-5 text-[#7a766e] animate-spin" />
                     </div>
-                    <p className="text-[#7a766e] text-sm text-center max-w-[280px]">Todavía no tenemos sugerencias para vos</p>
-                    <Link href="/explore" className="text-[10px] font-label uppercase tracking-widest text-[#f1c97d] hover:opacity-70 transition-opacity">Explorar salones →</Link>
-                  </div>
+                  ) : suggestion ? (
+                    <div className="relative isolate z-0 rounded-[2rem] overflow-hidden min-h-[260px] flex flex-col justify-center border border-white/10" style={{ boxShadow: '0 0 30px -10px rgba(255,255,255,0.05)' }}>
+                      <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20" />
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-[#f1c97d]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 -z-10" />
+                      <div className="relative z-10 px-8 md:px-10 py-8">
+                        <div className="inline-flex px-3.5 py-1.5 bg-[#f1c97d]/10 border border-[#f1c97d]/25 rounded-full mb-4">
+                          <span className="text-[8px] font-label uppercase tracking-[0.2em] text-[#f1c97d]">PARA VOS</span>
+                        </div>
+                        <h2 className="text-2xl font-body font-light text-[#f5f0e8] mb-2 leading-tight">
+                          {suggestion.pattern.staffName} tiene disponibilidad el {fmtDay(slotMs)} de {slotMonthLabel}
+                        </h2>
+                        <p className="text-[#7a766e] text-xs leading-relaxed mb-4 font-label tracking-wide uppercase">
+                          <span className="text-[#f1c97d]/50">—</span> TU ESTILISTA HABITUAL EN {suggestion.pattern.salonName.toUpperCase()}
+                        </p>
+                        <div className="flex items-center gap-3.5 mb-4">
+                          <div className="flex items-center gap-2 bg-[#050504]/50 border border-white/5 px-3.5 py-1.5 rounded-full backdrop-blur-md">
+                            <span className="material-symbols-outlined text-[#f1c97d] text-[14px]">schedule</span>
+                            <span className="text-[10px] text-[#f5f0e8] font-label tracking-wider">{fmtTime(slotMs)}</span>
+                          </div>
+                          <span className="text-white/20">•</span>
+                          <span className="text-sm font-headline italic text-[#f5f0e8] tracking-wide">${suggestion.pattern.priceEstimated.toLocaleString('es-AR')}</span>
+                        </div>
+                        {suggestionError && (
+                          <p className="text-red-400 text-[11px] mb-3">{suggestionError}</p>
+                        )}
+                        <button
+                          onClick={handleOneTapBook}
+                          disabled={booking}
+                          className="liquid-glass-floating h-10 px-6 flex items-center gap-2 rounded-[1.25rem] text-[13px] font-medium hover:bg-white/10 transition-all duration-300 group/btn border border-white/10 w-fit cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {booking ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin text-[#f5f0e8]" />
+                              <span className="text-[#f5f0e8] whitespace-nowrap">Reservando...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-[#f5f0e8] whitespace-nowrap">Reservar en un tap</span>
+                              <span className="material-symbols-outlined text-[#f5f0e8] text-[16px] group-hover/btn:translate-x-1 transition-transform">arrow_forward</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative isolate z-0 rounded-[2rem] overflow-hidden min-h-[260px] flex flex-col items-center justify-center gap-3 border border-white/10" style={{ boxShadow: '0 0 30px -10px rgba(255,255,255,0.05)' }}>
+                      <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20" />
+                      <div className="inline-flex px-3.5 py-1.5 bg-white/[0.03] border border-white/10 rounded-full">
+                        <span className="text-[8px] font-label uppercase tracking-[0.2em] text-[#7a766e]">PARA VOS</span>
+                      </div>
+                      <p className="text-[#7a766e] text-sm text-center max-w-[280px]">Todavía no tenemos sugerencias para vos</p>
+                      <Link href="/explore" className="text-[10px] font-label uppercase tracking-widest text-[#f1c97d] hover:opacity-70 transition-opacity">Explorar salones →</Link>
+                    </div>
+                  )}
                 </div>
 
                 {/* COL DERECHA — span 4 */}

@@ -1,5 +1,9 @@
 import { adminDb } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
+import type { Staff } from '@/lib/schema';
+import { ALL_TIME_SLOTS } from '@/lib/time-slots';
+
+const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
 /**
  * Parsea un string 'YYYY-MM-DD' como medianoche en el timezone LOCAL del
@@ -87,4 +91,39 @@ export function buildOccupiedSlots(
     }
   }
   return slots;
+}
+
+/**
+ * Slots libres de un staff para un día puntual: ALL_TIME_SLOTS acotado
+ * al horario de trabajo cargado en `staff.schedule` (mismo criterio que
+ * createAppointment en appointments.actions.ts — start/end en minutos,
+ * available:false o día ausente del schedule = sin horario ese día),
+ * menos los `occupiedSlots` ya ocupados. Si el staff no tiene `schedule`
+ * cargado (campo opcional, hoy sin poblar en la mayoría), se usa
+ * ALL_TIME_SLOTS completo como universo.
+ */
+export function getFreeSlotsForDay(
+  schedule: Staff['schedule'] | undefined,
+  date: Date,
+  occupiedSlots: string[],
+): string[] {
+  let universe: string[] = ALL_TIME_SLOTS;
+
+  if (schedule) {
+    const daySched = schedule[DAY_NAMES[date.getDay()]];
+    if (!daySched || !daySched.available) return [];
+
+    const [sh, sm] = daySched.start.split(':').map(Number);
+    const [eh, em] = daySched.end.split(':').map(Number);
+    const startMin = sh * 60 + sm;
+    const endMin = eh * 60 + em;
+
+    universe = ALL_TIME_SLOTS.filter((t) => {
+      const [h, m] = t.split(':').map(Number);
+      const min = h * 60 + m;
+      return min >= startMin && min < endMin;
+    });
+  }
+
+  return universe.filter((t) => !occupiedSlots.includes(t));
 }

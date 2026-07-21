@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { Checkbox } from '@/components/ui/checkbox';
 import { getAvailableSlots, createBooking } from '@/actions/booking.actions';
+import { ALL_TIME_SLOTS } from '@/lib/time-slots';
 import { createGuestBooking } from '@/actions/guest-booking.actions';
 import { createDepositPreference } from '@/actions/mercadopago.actions';
 import type { Service, Staff, ServicePriceByLength } from '@/lib/schema';
@@ -26,7 +27,6 @@ import {
 } from "@/components/ui/popover";
 
 const MONTO_SEÑA_PORCENTAJE = 0.15;
-const ALL_TIME_SLOTS = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00"];
 
 interface Props {
   tenantId: string;

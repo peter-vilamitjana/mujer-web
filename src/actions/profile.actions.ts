@@ -3,12 +3,16 @@
 import { requireAuthSession } from '@/lib/auth-guards';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import { buildSlotLockId } from '@/lib/booking-utils';
+import { format } from 'date-fns';
+import {
+  buildSlotLockId, isSlotLockExpired, hasSlotConflict, parseLocalDate, getFreeSlotsForDay,
+} from '@/lib/booking-utils';
+import { getAvailableSlots, getDefaultBranchId } from '@/actions/booking.actions';
 import type {
   UserPreferences,
   ProfileData, HistorialEntry, HistorialGroup,
   HairProfile, SerializedPreferences, FavoriteSalonData,
-  AppointmentStatus,
+  AppointmentStatus, Staff,
 } from '@/lib/schema';
 
 export type { ProfileData, HistorialEntry, HistorialGroup, HairProfile, SerializedPreferences, FavoriteSalonData };
@@ -402,5 +406,288 @@ export async function cancelMyAppointment(
   } catch (err) {
     console.error('[cancelMyAppointment] Error:', err);
     return { success: false, error: 'No se pudo cancelar el turno.' };
+  }
+}
+
+// ── Sugerencia "Para vos" (estilista habitual + próximo horario libre) ────────
+
+const MIN_VISITS_FOR_PATTERN = 3;
+const COMPLETED_STATUSES = ['completed', 'cobrado']; // dos valores distintos y reales, ver schema.ts
+
+export interface SuggestedPattern {
+  tenantId: string;
+  tenantSlug: string;
+  salonName: string;
+  staffId: string;
+  staffName: string;
+  serviceIds: string[];
+  serviceNames: string;
+  priceEstimated: number;
+  durationMinutes: number;
+  visitCount: number;
+}
+
+interface PatternAccumulator {
+  tenantId: string;
+  staffId: string;
+  staffName: string;
+  salonName: string;
+  salonSlug: string;
+  count: number;
+  lastServiceIds: string[];
+  lastServiceNames: string;
+  lastPrice: number;
+  lastDuration: number;
+}
+
+/**
+ * Detecta si la clienta tiene un patrón de visitas repetidas con la misma
+ * estilista en el mismo salón (3+ turnos completados). Devuelve el patrón
+ * más frecuente, o null si no hay ninguno. No depende de ningún campo
+ * cargado a mano — se infiere del historial real.
+ */
+export async function detectFavoriteStylistPattern(): Promise<SuggestedPattern | null> {
+  let uid: string; let tenantIds: string[];
+  try { ({ uid, tenantIds } = await requireAuthSession()); } catch { return null; }
+  if (tenantIds.length === 0) return null;
+
+  const patternCounts = new Map<string, PatternAccumulator>();
+
+  await Promise.all(
+    tenantIds.map(async (tenantId) => {
+      try {
+        const tenantSnap = await adminDb.collection('tenants').doc(tenantId).get();
+        if (!tenantSnap.exists) return;
+        const tenantData = tenantSnap.data()!;
+
+        const snap = await adminDb
+          .collection('tenants').doc(tenantId)
+          .collection('appointments')
+          .where('clientId', '==', uid)
+          .where('status', 'in', COMPLETED_STATUSES)
+          .orderBy('date', 'desc')
+          .limit(30)
+          .get();
+
+        for (const doc of snap.docs) {
+          const d = doc.data();
+          const key = `${tenantId}_${d.staffId}`;
+          const existing = patternCounts.get(key);
+
+          if (existing) {
+            existing.count++;
+          } else {
+            patternCounts.set(key, {
+              tenantId,
+              staffId: d.staffId,
+              staffName: d.staffName ?? 'tu profesional',
+              salonName: tenantData.name ?? 'el salón',
+              salonSlug: tenantData.slug ?? tenantId,
+              count: 1,
+              lastServiceIds: d.serviceIds ?? [],
+              lastServiceNames: d.serviceNames ?? '',
+              lastPrice: d.priceEstimated ?? 0,
+              lastDuration: d.durationMinutes ?? 30,
+            });
+          }
+        }
+      } catch (err) {
+        console.error(`[detectFavoriteStylistPattern] tenant ${tenantId}:`, err);
+      }
+    }),
+  );
+
+  let best: PatternAccumulator | null = null;
+  for (const pattern of patternCounts.values()) {
+    if (pattern.count >= MIN_VISITS_FOR_PATTERN && (!best || pattern.count > best.count)) {
+      best = pattern;
+    }
+  }
+  if (!best) return null;
+
+  return {
+    tenantId: best.tenantId,
+    tenantSlug: best.salonSlug,
+    salonName: best.salonName,
+    staffId: best.staffId,
+    staffName: best.staffName,
+    serviceIds: best.lastServiceIds,
+    serviceNames: best.lastServiceNames,
+    priceEstimated: best.lastPrice,
+    durationMinutes: best.lastDuration,
+    visitCount: best.count,
+  };
+}
+
+export interface SuggestedSlot {
+  date: string; // 'YYYY-MM-DD'
+  time: string; // 'HH:mm'
+}
+
+const DAYS_TO_CHECK = 14;
+
+/**
+ * Busca el próximo horario libre de un staff, hasta 14 días adelante.
+ * Reusa getAvailableSlots (booking.actions.ts) para los ocupados y
+ * getFreeSlotsForDay (booking-utils.ts) para acotar por staff.schedule
+ * cuando existe — no reimplementa ninguno de los dos cálculos.
+ */
+export async function findNextAvailableSlot(
+  tenantId: string,
+  staffId: string,
+): Promise<SuggestedSlot | null> {
+  try {
+    const staffSnap = await adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('staff').doc(staffId)
+      .get();
+    const schedule = staffSnap.exists ? (staffSnap.data() as Staff).schedule : undefined;
+
+    for (let i = 1; i <= DAYS_TO_CHECK; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      const dateStr = format(date, 'yyyy-MM-dd');
+
+      const { occupiedSlots, error } = await getAvailableSlots(tenantId, staffId, dateStr);
+      if (error) continue;
+
+      const freeSlots = getFreeSlotsForDay(schedule, date, occupiedSlots);
+      if (freeSlots.length > 0) {
+        return { date: dateStr, time: freeSlots[0] };
+      }
+    }
+
+    return null; // sin disponibilidad en las próximas 2 semanas
+  } catch (err) {
+    console.error('[findNextAvailableSlot] Error:', err);
+    return null;
+  }
+}
+
+export interface MySuggestion {
+  pattern: SuggestedPattern;
+  slot: SuggestedSlot;
+}
+
+export async function getMySuggestion(): Promise<MySuggestion | null> {
+  try {
+    const pattern = await detectFavoriteStylistPattern();
+    if (!pattern) return null;
+
+    const slot = await findNextAvailableSlot(pattern.tenantId, pattern.staffId);
+    if (!slot) return null;
+
+    return { pattern, slot };
+  } catch (err) {
+    console.error('[getMySuggestion] Error:', err);
+    return null;
+  }
+}
+
+/**
+ * Reserva en un tap. Re-valida el patrón server-side — el cliente no
+ * manda tenantId/staffId/precio/servicio "a mano", solo confirma que
+ * quiere ESE turno puntual. Reusa el mismo patrón transaccional
+ * (slotLock + runTransaction) que createBooking en booking.actions.ts.
+ */
+export async function bookSuggestedAppointment(
+  tenantId: string,
+  staffId: string,
+  date: string,
+  time: string,
+): Promise<{ success: boolean; appointmentId?: string; error?: string }> {
+  let uid: string; let userName: string | null | undefined;
+  try {
+    const auth = await requireAuthSession();
+    uid = auth.uid;
+    userName = auth.name;
+  } catch {
+    return { success: false, error: 'Iniciá sesión para reservar.' };
+  }
+
+  const pattern = await detectFavoriteStylistPattern();
+  if (!pattern || pattern.tenantId !== tenantId || pattern.staffId !== staffId) {
+    return { success: false, error: 'No se pudo confirmar la sugerencia. Reservá desde el buscador.' };
+  }
+
+  try {
+    const tenantSnap = await adminDb.collection('tenants').doc(tenantId).get();
+    if (!tenantSnap.exists || tenantSnap.data()!.isActivePublicly !== true) {
+      return { success: false, error: 'Este salón no está disponible para reservas en este momento.' };
+    }
+
+    // Pre-check no atómico — mismo criterio que createBooking. La
+    // transacción de abajo es la barrera definitiva contra doble booking.
+    const conflict = await hasSlotConflict(tenantId, staffId, date, time, pattern.durationMinutes);
+    if (conflict) {
+      return { success: false, error: 'El horario ya no está disponible. Reservá desde el buscador.' };
+    }
+
+    const [hour, minute] = time.split(':').map(Number);
+    const appointmentDateTime = parseLocalDate(date);
+    appointmentDateTime.setHours(hour, minute, 0, 0);
+    const slotStart = Timestamp.fromDate(appointmentDateTime);
+
+    const appointmentRef = adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('appointments').doc();
+
+    const branchId = await getDefaultBranchId(tenantId);
+
+    // Slot-lock: mismo patrón que los otros 3 flujos de reserva — la
+    // fórmula de slotLockId debe ser idéntica o los locks no colisionan.
+    const slotLockId = buildSlotLockId(staffId, appointmentDateTime);
+    const slotLockRef = adminDb
+      .collection('tenants').doc(tenantId)
+      .collection('slotLocks').doc(slotLockId);
+
+    try {
+      await adminDb.runTransaction(async (txn) => {
+        const lockSnap = await txn.get(slotLockRef);
+        if (lockSnap.exists && !isSlotLockExpired(lockSnap.data() as { expiresAt?: Timestamp })) {
+          throw Object.assign(new Error('SLOT_TAKEN'), { code: 'SLOT_TAKEN' });
+        }
+
+        const lockExpiry = Timestamp.fromDate(new Date(Date.now() + 24 * 60 * 60_000));
+        txn.set(slotLockRef, {
+          staffId,
+          date: slotStart,
+          appointmentId: appointmentRef.id,
+          expiresAt: lockExpiry,
+        });
+
+        txn.set(appointmentRef, {
+          id: appointmentRef.id,
+          tenantId,
+          branchId,
+          clientId: uid,
+          clientName: (userName ?? 'Cliente').slice(0, 100),
+          staffId,
+          staffName: pattern.staffName.slice(0, 100),
+          serviceIds: pattern.serviceIds,
+          serviceNames: pattern.serviceNames.slice(0, 500),
+          date: slotStart,
+          durationMinutes: pattern.durationMinutes,
+          status: 'pending_payment',
+          priceEstimated: pattern.priceEstimated,
+          depositAmount: 0,
+          depositPaid: false,
+          createdAt: FieldValue.serverTimestamp(),
+          createdBy: uid,
+          source: 'suggested',
+          notes: '',
+        });
+      });
+    } catch (err: any) {
+      if (err?.code === 'SLOT_TAKEN') {
+        return { success: false, error: 'El horario ya no está disponible. Reservá desde el buscador.' };
+      }
+      throw err;
+    }
+
+    return { success: true, appointmentId: appointmentRef.id };
+  } catch (err) {
+    console.error('[bookSuggestedAppointment] Error:', err);
+    return { success: false, error: 'No se pudo crear el turno. Intentá de nuevo.' };
   }
 }

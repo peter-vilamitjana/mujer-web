@@ -70,7 +70,7 @@ export interface BookingPayload {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function getDefaultBranchId(tenantId: string): Promise<string> {
+export async function getDefaultBranchId(tenantId: string): Promise<string> {
   const snap = await adminDb
     .collection('tenants').doc(tenantId)
     .collection('branches')
