@@ -3,7 +3,7 @@ import { test, expect, TEST_SALON_SLUG } from './fixtures/auth';
 /**
  * Tests del flujo de reserva (BookingFlow) — flujo crítico de conversión B2C.
  * Usa storageState de clienta (project: customer — chromium).
- * Precondición: demo-salon tiene al menos 1 servicio y 1 staff activos (seed).
+ * Precondición: e2e-test-salon tiene al menos 1 servicio y 1 staff activos (seed).
  */
 test.describe('Booking Flow — autenticado', () => {
   test.beforeEach(async ({ page }) => {
@@ -49,7 +49,7 @@ test.describe('Booking Flow — autenticado', () => {
     const staffCards = page.locator('div.rounded-xl.cursor-pointer');
     const staffCount = await staffCards.count();
     if (staffCount === 0) {
-      test.skip(true, 'Sin staff en demo-salon — seed requerido');
+      test.skip(true, 'Sin staff en e2e-test-salon — seed requerido');
     }
     await staffCards.first().click();
 

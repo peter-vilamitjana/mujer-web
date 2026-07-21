@@ -6,7 +6,7 @@ import { test, expect, TEST_SALON_SLUG } from './fixtures/auth';
  * y comportamiento del botón "Volver" (sin cancelar).
  *
  * Nota: Los tests que requieren turnos activos en Firestore usan skip graceful
- * si el estado del demo-salon no tiene citas pendientes.
+ * si el estado del e2e-test-salon no tiene citas pendientes.
  */
 test.describe('Flujo de Cancelación — portal cliente autenticado', () => {
   test('el portal cliente carga para una clienta autenticada', async ({ page }) => {
@@ -35,7 +35,7 @@ test.describe('Flujo de Cancelación — portal cliente autenticado', () => {
 
     const cancelBtn = page.getByRole('button', { name: /cancelar turno/i }).first();
     if (!await cancelBtn.isVisible({ timeout: 5_000 })) {
-      test.skip(true, 'Sin turnos activos en demo-salon — seed requerido');
+      test.skip(true, 'Sin turnos activos en e2e-test-salon — seed requerido');
     }
 
     await cancelBtn.click();
@@ -52,7 +52,7 @@ test.describe('Flujo de Cancelación — portal cliente autenticado', () => {
 
     const cancelBtn = page.getByRole('button', { name: /cancelar turno/i }).first();
     if (!await cancelBtn.isVisible({ timeout: 5_000 })) {
-      test.skip(true, 'Sin turnos activos en demo-salon — seed requerido');
+      test.skip(true, 'Sin turnos activos en e2e-test-salon — seed requerido');
     }
 
     await cancelBtn.click();
@@ -72,7 +72,7 @@ test.describe('Flujo de Cancelación — portal cliente autenticado', () => {
 
     const cancelBtn = page.getByRole('button', { name: /cancelar turno/i }).first();
     if (!await cancelBtn.isVisible({ timeout: 5_000 })) {
-      test.skip(true, 'Sin turnos activos en demo-salon — seed requerido');
+      test.skip(true, 'Sin turnos activos en e2e-test-salon — seed requerido');
     }
 
     await cancelBtn.click();

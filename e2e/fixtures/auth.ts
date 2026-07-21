@@ -6,7 +6,7 @@
 import { test as base, expect, type Page } from '@playwright/test';
 
 export const TEST_SALON_SLUG =
-  process.env.E2E_TEST_SALON_SLUG ?? 'demo-salon';
+  process.env.E2E_TEST_SALON_SLUG ?? 'e2e-test-salon';
 
 export type AuthFixtures = {
   testSalonSlug: string;

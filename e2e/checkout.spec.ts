@@ -2,7 +2,7 @@ import { test, expect } from './fixtures/auth';
 
 /**
  * Tests del flujo de cierre de turno (Checkout / Cierre de Caja).
- * Precondición: el global-setup siembra demo-salon y asigna rol admin al usuario e2e.
+ * Precondición: el global-setup siembra e2e-test-salon y asigna rol admin al usuario e2e.
  * Si las reglas de Firestore bloquean el seed, estos tests se saltean graciosamente.
  */
 test.describe('Checkout Admin', () => {

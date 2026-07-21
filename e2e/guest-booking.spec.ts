@@ -34,7 +34,7 @@ test.describe('Guest Booking — sin autenticación', () => {
     const serviceCards = page.locator('div.rounded-xl.cursor-pointer');
     const cardCount = await serviceCards.count();
     if (cardCount === 0) {
-      test.skip(true, 'Sin servicios en demo-salon — seed requerido');
+      test.skip(true, 'Sin servicios en e2e-test-salon — seed requerido');
     }
 
     await serviceCards.first().click();
@@ -51,7 +51,7 @@ test.describe('Guest Booking — sin autenticación', () => {
 
     const serviceCards = page.locator('div.rounded-xl.cursor-pointer');
     if (await serviceCards.count() === 0) {
-      test.skip(true, 'Sin servicios en demo-salon — seed requerido');
+      test.skip(true, 'Sin servicios en e2e-test-salon — seed requerido');
     }
 
     await serviceCards.first().click();
@@ -69,7 +69,7 @@ test.describe('Guest Booking — sin autenticación', () => {
 
     const serviceCards = page.locator('div.rounded-xl.cursor-pointer');
     if (await serviceCards.count() === 0) {
-      test.skip(true, 'Sin servicios en demo-salon — seed requerido');
+      test.skip(true, 'Sin servicios en e2e-test-salon — seed requerido');
     }
 
     await serviceCards.first().click();
@@ -83,7 +83,7 @@ test.describe('Guest Booking — sin autenticación', () => {
     const staffClickable = page.locator('div.rounded-xl.cursor-pointer');
     const staffCount = await staffClickable.count();
     if (staffCount === 0) {
-      test.skip(true, 'Sin staff en demo-salon — seed requerido');
+      test.skip(true, 'Sin staff en e2e-test-salon — seed requerido');
     }
 
     await staffClickable.first().click();

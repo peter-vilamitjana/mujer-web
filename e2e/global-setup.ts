@@ -1,6 +1,6 @@
 /**
  * Playwright global setup — crea usuarios de prueba en Firebase Auth si no existen,
- * semilla demo-salon en Firestore, y genera storageState para reutilizar en tests.
+ * semilla e2e-test-salon en Firestore, y genera storageState para reutilizar en tests.
  */
 import { chromium, FullConfig } from '@playwright/test';
 import * as fs from 'fs';
@@ -96,9 +96,11 @@ async function firestoreSet(
   }
 }
 
-/** Siembra demo-salon en Firestore y asigna rol admin al usuario. */
+/** Siembra e2e-test-salon en Firestore y asigna rol admin al usuario. */
 async function seedDemoSalon(idToken: string, adminUid: string): Promise<void> {
-  const TENANT = 'demo-salon';
+  // Tenant dedicado exclusivamente a E2E — nunca debe coincidir con el ID de un
+  // salón real (el PATCH de firestoreSet reemplaza el documento entero).
+  const TENANT = process.env.E2E_TEST_SALON_SLUG ?? 'e2e-test-salon';
 
   // Tenant raíz
   await firestoreSet(idToken, `tenants/${TENANT}`, {
@@ -179,7 +181,7 @@ export default async function globalSetup(config: FullConfig) {
 
   // ── Firestore seed ───────────────────────────────────────────────────────────
   if (firebaseReady) {
-    console.log('[e2e setup] Sembrando demo-salon en Firestore...');
+    console.log('[e2e setup] Sembrando e2e-test-salon en Firestore...');
     try {
       const { idToken, localId } = await firebaseSignIn(ADMIN_EMAIL, ADMIN_PASSWORD);
       await seedDemoSalon(idToken, localId);
