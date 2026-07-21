@@ -19,8 +19,8 @@ function StarRow({ rating, interactive = false, onRate }: {
             interactive ? 'cursor-pointer w-6 h-6' : 'w-4 h-4'
           } ${
             n <= (interactive ? (hover || rating) : rating)
-              ? 'text-amber-400 fill-amber-400'
-              : 'text-muted-foreground/30 fill-transparent'
+              ? 'text-primary fill-primary'
+              : 'text-on-surface-variant/30 fill-transparent'
           }`}
           onMouseEnter={() => interactive && setHover(n)}
           onMouseLeave={() => interactive && setHover(0)}
@@ -45,28 +45,28 @@ function ReviewCard({ review }: { review: ReviewData }) {
     .toUpperCase();
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 flex flex-col gap-3 min-w-[280px] max-w-[320px] shrink-0">
+    <div className="rounded-[1.5rem] border border-outline-subtle bg-surface-card p-5 flex flex-col gap-3 min-w-[280px] max-w-[320px] shrink-0">
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
+          <div className="w-9 h-9 rounded-full bg-surface-hover flex items-center justify-center font-sans text-xs font-bold text-on-surface-secondary">
             {initials}
           </div>
           <div>
-            <p className="text-sm font-semibold leading-tight">{review.clientName}</p>
+            <p className="font-sans text-sm font-semibold leading-tight text-on-surface">{review.clientName}</p>
             {review.serviceName && (
-              <p className="text-[11px] text-muted-foreground leading-tight">{review.serviceName}</p>
+              <p className="font-sans text-[11px] text-on-surface-secondary leading-tight">{review.serviceName}</p>
             )}
           </div>
         </div>
         {review.verified && (
-          <span className="text-[10px] text-emerald-500 font-medium shrink-0 mt-0.5">✓ Verificada</span>
+          <span className="font-sans text-[10px] text-success font-medium shrink-0 mt-0.5">✓ Verificada</span>
         )}
       </div>
       <StarRow rating={review.rating} />
       {review.comment && (
-        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-4">{review.comment}</p>
+        <p className="font-sans text-sm text-on-surface-secondary leading-relaxed line-clamp-4">{review.comment}</p>
       )}
-      <p className="text-[11px] text-muted-foreground/60">{date}</p>
+      <p className="font-sans text-[11px] text-on-surface-variant">{date}</p>
     </div>
   );
 }
@@ -97,42 +97,42 @@ function ReviewForm({ tenantSlug, onDone }: { tenantSlug: string; onDone: () => 
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 space-y-4 max-w-md w-full mx-auto">
-      <h3 className="text-base font-semibold">Dejá tu reseña</h3>
+    <div className="rounded-[1.5rem] border border-outline-subtle bg-surface-card p-6 space-y-4 max-w-md w-full mx-auto">
+      <h3 className="font-sans text-base font-semibold text-on-surface">Dejá tu reseña</h3>
 
       <div className="space-y-1">
-        <label className="text-xs text-muted-foreground uppercase tracking-wide">Puntaje</label>
+        <label className="font-sans text-xs text-on-surface-secondary uppercase tracking-wide">Puntaje</label>
         <StarRow rating={rating} interactive onRate={setRating} />
       </div>
 
       <div className="space-y-1">
-        <label className="text-xs text-muted-foreground uppercase tracking-wide">Tu nombre</label>
+        <label className="font-sans text-xs text-on-surface-secondary uppercase tracking-wide">Tu nombre</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Ej: Laura G."
-          className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className="w-full rounded-xl border border-outline-subtle bg-surface px-4 py-2.5 font-sans text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
       </div>
 
       <div className="space-y-1">
-        <label className="text-xs text-muted-foreground uppercase tracking-wide">Comentario (opcional)</label>
+        <label className="font-sans text-xs text-on-surface-secondary uppercase tracking-wide">Comentario (opcional)</label>
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           placeholder="Contá tu experiencia..."
           rows={3}
-          className="w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+          className="w-full rounded-xl border border-outline-subtle bg-surface px-4 py-2.5 font-sans text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
         />
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <p className="font-sans text-sm text-danger">{error}</p>}
 
       <button
         onClick={handleSubmit}
         disabled={isPending}
-        className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+        className="w-full h-11 rounded-xl bg-primary hover:bg-primary-dark text-surface font-sans text-sm font-semibold transition-colors disabled:opacity-50"
       >
         {isPending ? 'Enviando...' : 'Publicar reseña'}
       </button>
@@ -152,12 +152,12 @@ export default function SalonReviews({ tenantSlug, initialReviews, stats }: Prop
 
   if (initialReviews.length === 0 && !showForm) {
     return (
-      <section className="py-16 px-4 border-t border-border">
+      <section className="py-16 px-4 border-t border-outline-subtle bg-surface">
         <div className="max-w-5xl mx-auto text-center space-y-4">
-          <p className="text-muted-foreground text-sm">Todavía no hay reseñas. ¡Sé el primero!</p>
+          <p className="font-sans text-on-surface-secondary text-sm">Todavía no hay reseñas. ¡Sé el primero!</p>
           <button
             onClick={() => setShowForm(true)}
-            className="inline-flex h-10 items-center px-6 rounded-xl border border-border bg-card hover:bg-accent text-sm font-medium transition-colors"
+            className="inline-flex h-10 items-center px-6 rounded-xl border border-outline-subtle bg-surface-card hover:bg-surface-hover font-sans text-sm font-medium text-on-surface transition-colors"
           >
             Dejar una reseña
           </button>
@@ -167,7 +167,7 @@ export default function SalonReviews({ tenantSlug, initialReviews, stats }: Prop
             </div>
           )}
           {submitted && (
-            <p className="text-sm text-emerald-500 font-medium">¡Gracias por tu reseña!</p>
+            <p className="font-sans text-sm text-success font-medium">¡Gracias por tu reseña!</p>
           )}
         </div>
       </section>
@@ -175,31 +175,31 @@ export default function SalonReviews({ tenantSlug, initialReviews, stats }: Prop
   }
 
   return (
-    <section className="py-16 px-4 border-t border-border overflow-hidden">
+    <section className="py-16 px-4 border-t border-outline-subtle bg-surface overflow-hidden">
       <div className="max-w-5xl mx-auto">
 
         {/* Header */}
         <div className="flex items-end justify-between gap-4 mb-8">
           <div className="space-y-1">
-            <h2 className="text-2xl font-semibold tracking-tight">Reseñas</h2>
+            <h2 className="font-vogue text-2xl font-semibold tracking-tight text-on-surface">Reseñas</h2>
             {stats.count > 0 && (
               <div className="flex items-center gap-2">
                 <StarRow rating={Math.round(stats.average)} />
-                <span className="text-sm font-medium">{stats.average.toFixed(1)}</span>
-                <span className="text-sm text-muted-foreground">({stats.count} reseñas)</span>
+                <span className="font-sans text-sm font-medium text-on-surface">{stats.average.toFixed(1)}</span>
+                <span className="font-sans text-sm text-on-surface-secondary">({stats.count} reseñas)</span>
               </div>
             )}
           </div>
           {!submitted && (
             <button
               onClick={() => setShowForm((v) => !v)}
-              className="shrink-0 h-10 px-5 rounded-xl border border-border bg-card hover:bg-accent text-sm font-medium transition-colors"
+              className="shrink-0 h-10 px-5 rounded-xl border border-outline-subtle bg-surface-card hover:bg-surface-hover font-sans text-sm font-medium text-on-surface transition-colors"
             >
               {showForm ? 'Cancelar' : 'Escribir reseña'}
             </button>
           )}
           {submitted && (
-            <span className="text-sm text-emerald-500 font-medium shrink-0">¡Gracias por tu reseña!</span>
+            <span className="font-sans text-sm text-success font-medium shrink-0">¡Gracias por tu reseña!</span>
           )}
         </div>
 
