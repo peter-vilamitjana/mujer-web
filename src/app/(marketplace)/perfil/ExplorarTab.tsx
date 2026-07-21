@@ -314,7 +314,7 @@ type CategoryId = typeof CATEGORIES[number]['id'];
 
 const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&q=85',
-  'https://images.unsplash.com/photo-1633681122987-5efb6b4ce5ba?w=800&q=85',
+  'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800&q=85',
   'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&q=85',
   'https://images.unsplash.com/photo-1600948836101-f9ffda59d250?w=800&q=85',
   'https://images.unsplash.com/photo-1487412912498-0447578fcca8?w=800&q=85',
@@ -381,7 +381,12 @@ function SalonSearchCard({ salon, index, isFavorited, onToggleFavorite }: {
             alt={salon.name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
             loading="lazy"
-            onError={(e) => { (e.target as HTMLImageElement).src = fallback; }}
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              if (target.src !== FALLBACK_IMAGES[0]) {
+                target.src = FALLBACK_IMAGES[0];
+              }
+            }}
           />
 
           {/* Bottom gradient */}
