@@ -7,15 +7,19 @@ import { ScrollReveal } from './ScrollReveal';
 interface SalonHeroProps {
   tenantSlug: string;
   salonName: string;
+  coverImageUrl?: string;
 }
 
-export default function SalonHero({ tenantSlug, salonName }: SalonHeroProps) {
+export default function SalonHero({ tenantSlug, salonName, coverImageUrl }: SalonHeroProps) {
+  const heroBg = coverImageUrl || '/hero-salon.png';
+  const mobileImg = coverImageUrl || '/landing/hero-mobile.jpg';
+
   return (
     <section className="relative overflow-hidden bg-surface md:bg-transparent">
       {/* Desktop Background (Hidden on mobile) */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0 hidden md:block"
-        style={{ backgroundImage: "url('/hero-salon.png')" }}
+        style={{ backgroundImage: `url('${heroBg}')` }}
       >
         <div className="absolute inset-0 bg-surface/60" />
       </div>
@@ -38,7 +42,7 @@ export default function SalonHero({ tenantSlug, salonName }: SalonHeroProps) {
                     <Image src="/landing/hero-left.png" alt="" fill className="object-cover" />
                   </div>
                   <div className="relative z-20 w-[320px] aspect-[4/5] rounded-[1.5rem] overflow-hidden shrink-0 shadow-card-glow">
-                    <Image src="/landing/hero-mobile.jpg" alt="Mujer disfrutando tratamiento de belleza" fill priority className="object-cover" />
+                    <Image src={mobileImg} alt={salonName || "Salon Hero"} fill priority className="object-cover" />
                   </div>
                   <div aria-hidden="true" className="relative w-[200px] h-[360px] rounded-[1.5rem] overflow-hidden shrink-0 select-none pointer-events-none border border-outline-subtle">
                     <Image src="/landing/hero-right.png" alt="" fill className="object-cover" />

@@ -66,6 +66,7 @@ export default async function SalonPage({ params }: Props) {
       <SalonHero
         tenantSlug={tenantSlug}
         salonName={salon.name}
+        coverImageUrl={salon.coverImageUrl}
       />
       <InfoBar salon={salon} />
       <SalonFeaturedServices
