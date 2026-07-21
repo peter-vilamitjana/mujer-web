@@ -8,6 +8,7 @@ import type {
   UserPreferences,
   ProfileData, HistorialEntry, HistorialGroup,
   HairProfile, SerializedPreferences, FavoriteSalonData,
+  AppointmentStatus,
 } from '@/lib/schema';
 
 export type { ProfileData, HistorialEntry, HistorialGroup, HairProfile, SerializedPreferences, FavoriteSalonData };
@@ -179,6 +180,9 @@ export async function getMyUpcomingAppointments(): Promise<HistorialEntry[]> {
 
         for (const d of snap.docs) {
           const data = d.data();
+          const status: AppointmentStatus = data.status ?? 'pending';
+          if (status === 'cancelled' || status === 'no_show') continue;
+
           const ts = data.date as Timestamp | undefined;
           const dateMs: number = ts?.toMillis?.() ?? (ts?.seconds ? ts.seconds * 1000 : 0);
           if (!dateMs || dateMs < nowMs) continue;
@@ -191,7 +195,7 @@ export async function getMyUpcomingAppointments(): Promise<HistorialEntry[]> {
             service: data.serviceNames ?? '',
             staffName: data.staffName ?? '',
             dateMs,
-            status: data.status ?? 'pending',
+            status,
             price: data.priceEstimated ?? 0,
           });
         }
