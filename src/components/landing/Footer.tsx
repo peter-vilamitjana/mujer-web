@@ -12,26 +12,26 @@ export default function Footer({ tenantSlug, salon }: FooterProps) {
   const instagramUrl = salon.socialLinks?.instagram || 'https://instagram.com';
 
   return (
-    <footer className="bg-white md:bg-zinc-950 text-zinc-400 py-12 border-t border-zinc-100 md:border-zinc-900">
+    <footer className="bg-surface text-on-surface-secondary py-12 border-t border-outline-subtle">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Mobile View */}
         <div className="md:hidden flex flex-col items-center">
           <div className="mb-10 text-center">
-            <h2 className="text-2xl font-bold text-[#9D6EFE] tracking-widest uppercase font-serif">{salon.name}</h2>
+            <h2 className="text-2xl font-bold text-primary tracking-widest uppercase font-vogue">{salon.name}</h2>
           </div>
 
           <nav className="flex flex-col items-center gap-6 mb-12">
-            <Link href="#servicios" className="text-xs font-semibold tracking-widest uppercase text-zinc-600">Servicios</Link>
-            <Link href="#promotions" className="text-xs font-semibold tracking-widest uppercase text-zinc-600">Combos</Link>
-            <Link href="/gift-cards" className="text-xs font-semibold tracking-widest uppercase text-zinc-600">Gift Cards</Link>
-            <Link href="/contacto" className="text-xs font-semibold tracking-widest uppercase text-zinc-600">Contacto</Link>
+            <Link href="#servicios" className="font-sans text-xs font-semibold tracking-widest uppercase text-on-surface-secondary">Servicios</Link>
+            <Link href="#promotions" className="font-sans text-xs font-semibold tracking-widest uppercase text-on-surface-secondary">Combos</Link>
+            <Link href="/gift-cards" className="font-sans text-xs font-semibold tracking-widest uppercase text-on-surface-secondary">Gift Cards</Link>
+            <Link href="/contacto" className="font-sans text-xs font-semibold tracking-widest uppercase text-on-surface-secondary">Contacto</Link>
           </nav>
 
           <div className="flex items-center gap-8 mb-12">
             <Link
               href="https://twitter.com"
               target="_blank"
-              className="text-[#9D6EFE]"
+              className="text-primary"
               aria-label="Twitter"
             >
               <Twitter className="h-5 w-5" />
@@ -39,15 +39,15 @@ export default function Footer({ tenantSlug, salon }: FooterProps) {
             <Link
               href={instagramUrl}
               target="_blank"
-              className="text-[#9D6EFE]"
+              className="text-primary"
               aria-label="Instagram"
             >
               <Instagram className="h-5 w-5" />
             </Link>
           </div>
 
-          <div className="pt-8 w-full border-t border-zinc-100 text-center">
-            <p className="text-[10px] font-medium tracking-tight text-zinc-300">
+          <div className="pt-8 w-full border-t border-outline-subtle text-center">
+            <p className="font-sans text-[10px] font-medium tracking-tight text-on-surface-variant">
               © {currentYear} {salon.name}. <br />
               Todos los derechos reservados.
             </p>
@@ -58,13 +58,13 @@ export default function Footer({ tenantSlug, salon }: FooterProps) {
         <div className="hidden md:flex flex-col">
           <div className="flex justify-between items-center gap-8 mb-12">
             {/* Brand */}
-            <div className="flex flex-col items-start text-zinc-400">
-              <h2 className="text-2xl font-bold text-white tracking-widest uppercase font-serif">{salon.name}</h2>
-              <p className="mt-2 text-sm italic font-serif tracking-widest uppercase opacity-50">Estilo & Belleza</p>
+            <div className="flex flex-col items-start">
+              <h2 className="text-2xl font-bold text-on-surface tracking-widest uppercase font-vogue">{salon.name}</h2>
+              <p className="mt-2 text-sm italic font-vogue tracking-widest uppercase opacity-50">Estilo & Belleza</p>
             </div>
 
             {/* Nav Links */}
-            <nav className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-xs font-semibold tracking-widest uppercase">
+            <nav className="flex flex-wrap justify-center gap-x-8 gap-y-4 font-sans text-xs font-semibold tracking-widest uppercase">
               <Link href="#promotions" className="hover:text-primary transition-colors duration-300">Promociones</Link>
               <Link href={`/salones/${tenantSlug}/book`} className="hover:text-primary transition-colors duration-300">Reservar Turno</Link>
               <Link href="#testimonios" className="hover:text-primary transition-colors duration-300">Testimonios</Link>
@@ -76,7 +76,7 @@ export default function Footer({ tenantSlug, salon }: FooterProps) {
               <Link
                 href={instagramUrl}
                 target="_blank"
-                className="hover:text-white transition-all duration-300 hover:scale-110 active:scale-95"
+                className="hover:text-on-surface transition-all duration-300 hover:scale-110 active:scale-95"
                 aria-label="Instagram"
               >
                 <Instagram className="h-5 w-5" />
@@ -85,7 +85,7 @@ export default function Footer({ tenantSlug, salon }: FooterProps) {
           </div>
 
           {/* Bottom Bar */}
-          <div className="pt-8 border-t border-zinc-900 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-light tracking-widest uppercase opacity-40">
+          <div className="pt-8 border-t border-outline-subtle flex flex-col sm:flex-row justify-between items-center gap-4 font-sans text-xs font-light tracking-widest uppercase opacity-40">
             <p>© {currentYear} {salon.name}. TODOS LOS DERECHOS RESERVADOS.</p>
             <div className="flex gap-6">
               <Link href="#" className="hover:underline underline-offset-4">Privacidad</Link>
