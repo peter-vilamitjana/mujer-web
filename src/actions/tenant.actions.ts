@@ -61,3 +61,24 @@ export async function getTenantSettings(tenantId: string): Promise<Tenant | null
     return null;
   }
 }
+
+// Info pública mínima para el header de la vitrina — nombre/slug/logo son
+// datos ya públicos en /salones/{slug}, no requiere sesión ni rol.
+export async function getSalonHeaderInfo(
+  slug: string
+): Promise<{ name: string; slug: string; logoUrl?: string } | null> {
+  try {
+    const snap = await adminDb
+      .collection('tenants')
+      .where('slug', '==', slug)
+      .where('isActivePublicly', '==', true)
+      .limit(1)
+      .get();
+    if (snap.empty) return null;
+    const data = snap.docs[0].data();
+    return { name: data.name, slug: data.slug, logoUrl: data.logoUrl };
+  } catch (err) {
+    console.error('[getSalonHeaderInfo]', err);
+    return null;
+  }
+}

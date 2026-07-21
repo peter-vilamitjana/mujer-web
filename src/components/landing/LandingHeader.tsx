@@ -1,43 +1,93 @@
 'use client';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useSession } from 'next-auth/react';
 import { GlassButton } from '@/components/ui/apple-tahoe-liquid-glass-button';
+import { getSalonHeaderInfo } from '@/actions/tenant.actions';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function LandingHeader() {
   const { data: session, status } = useSession();
   const [overHero, setOverHero] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [salon, setSalon] = useState<{ name: string; slug: string } | null>(null);
   const { theme } = useTheme();
   const router = useRouter();
+  const pathname = usePathname();
+  const headerRef = useRef<HTMLElement>(null);
+
+  const salonSlug = useMemo(() => {
+    const match = pathname?.match(/^\/salones\/([^/]+)/);
+    return match?.[1] ?? null;
+  }, [pathname]);
 
   useEffect(() => {
     setMounted(true);
-    const header = document.getElementById('main-header');
-
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      const scrolled = scrollY > 50;
-
-      if (header) {
-        header.style.top = scrolled ? '-10px' : '0px';
-      }
-
-      setOverHero(scrollY < window.innerHeight * 0.85);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Nav flotante: se "levanta" 10px al pasar los primeros 50px de scroll, y el
+  // texto/fondo cambian de modo "sobre el hero" a "sobre contenido" al bajar
+  // el 85% de la altura de viewport. Antes esto corría en un listener de
+  // window.scroll mutando estilos a mano en cada tick — acá queda resuelto
+  // con dos ScrollTrigger que solo notifican en el cruce del umbral.
+  useGSAP(() => {
+    const header = headerRef.current;
+    if (!header) return;
+
+    ScrollTrigger.create({
+      trigger: document.body,
+      start: 'top -50px',
+      onEnter: () => gsap.set(header, { top: '-10px' }),
+      onLeaveBack: () => gsap.set(header, { top: '0px' }),
+    });
+
+    ScrollTrigger.create({
+      trigger: document.body,
+      start: 'top top',
+      end: () => `+=${window.innerHeight * 0.85}`,
+      onToggle: (self) => setOverHero(self.isActive),
+    });
+  }, []);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    if (!salonSlug) {
+      setSalon(null);
+      return;
+    }
+    let cancelled = false;
+    getSalonHeaderInfo(salonSlug).then((info) => {
+      if (!cancelled) setSalon(info);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [salonSlug]);
+
   const textWhite = (mounted && theme === 'dark') || overHero;
+
+  const navLinks = salon
+    ? [{ label: 'Reservar turno', href: `/salones/${salon.slug}/book` }]
+    : [
+        { label: 'Reservar turno', href: '/explore' },
+        { label: 'Sumá tu salón', href: '/business' },
+      ];
+
+  const logoHref = salon ? `/salones/${salon.slug}` : '/';
+  const logoLabel = salon?.name ?? 'Ouleeh';
 
   return (
     <header
       id="main-header"
+      ref={headerRef}
       className="fixed top-0 inset-x-0 z-[100] flex justify-center pt-6 px-6 transition-[top] duration-700"
       suppressHydrationWarning
     >
@@ -53,21 +103,18 @@ export default function LandingHeader() {
           )}
         >
           {/* ── Logo ── */}
-          <div className="flex items-center">
+          <Link href={logoHref} className="flex items-center min-w-0">
             <span className={cn(
-              'font-vogue text-3xl font-black tracking-tighter uppercase transition-colors duration-300',
+              'font-vogue text-3xl font-black tracking-tighter uppercase transition-colors duration-300 truncate',
               textWhite ? 'text-white' : 'text-[#1A1A1A]'
             )}>
-              Ouleeh
+              {logoLabel}
             </span>
-          </div>
+          </Link>
 
           {/* ── Desktop nav ── */}
           <div className="hidden md:flex gap-6 items-center">
-            {[
-              { label: 'Reservar turno', href: '/explore' },
-              { label: 'Sumá tu salón', href: '/business' },
-            ].map(({ label, href }) => (
+            {navLinks.map(({ label, href }) => (
               <Link
                 key={label}
                 href={href}
@@ -94,16 +141,43 @@ export default function LandingHeader() {
             </GlassButton>
           </div>
 
-          {/* ── Mobile menu ── */}
+          {/* ── Mobile menu toggle ── */}
           <button
             className={cn(
               'md:hidden transition-colors duration-300',
               textWhite ? 'text-white' : 'text-[#1A1A1A]'
             )}
-            aria-label="Abrir menú"
+            aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((v) => !v)}
           >
-            <span className="material-symbols-outlined">menu</span>
+            <span className="material-symbols-outlined">{mobileMenuOpen ? 'close' : 'menu'}</span>
           </button>
+
+          {/* ── Mobile menu panel ── */}
+          {mobileMenuOpen && (
+            <div className="md:hidden absolute top-full left-0 right-0 mt-3 rounded-[2rem] overflow-hidden bg-white/95 dark:bg-black/90 backdrop-blur-xl border border-white/20 shadow-[0_16px_48px_rgba(0,0,0,0.25)] flex flex-col p-2">
+              {navLinks.map(({ label, href }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-5 py-3 rounded-2xl text-[13px] font-semibold uppercase tracking-wide text-[#1A1A1A] dark:text-white hover:bg-black/[0.06] dark:hover:bg-white/10 transition-colors"
+                >
+                  {label}
+                </Link>
+              ))}
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  router.push(status === 'authenticated' ? '/perfil' : '/login');
+                }}
+                className="px-5 py-3 rounded-2xl text-[13px] font-semibold uppercase tracking-wide text-left text-[#1A1A1A] dark:text-white hover:bg-black/[0.06] dark:hover:bg-white/10 transition-colors"
+              >
+                {status === 'authenticated' ? 'Mi Perfil' : 'Iniciar sesión'}
+              </button>
+            </div>
+          )}
         </nav>
       </div>
     </header>
