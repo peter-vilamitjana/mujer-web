@@ -67,7 +67,7 @@ export default async function SalonPage({ params }: Props) {
         tenantSlug={tenantSlug}
         salonName={salon.name}
       />
-      <InfoBar />
+      <InfoBar salon={salon} />
       <SalonFeaturedServices
         tenantId={salon.id}
         tenantSlug={tenantSlug}
@@ -78,8 +78,8 @@ export default async function SalonPage({ params }: Props) {
         initialReviews={salonReviews}
         stats={salonStats}
       />
-      <MapAndReviews />
-      <Footer tenantSlug={tenantSlug} />
+      <MapAndReviews salon={salon} reviews={salonReviews} />
+      <Footer tenantSlug={tenantSlug} salon={salon} />
     </div>
   );
 }

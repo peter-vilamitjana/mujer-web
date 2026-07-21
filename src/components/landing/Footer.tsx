@@ -1,8 +1,15 @@
 import { Instagram, Twitter } from 'lucide-react';
 import Link from 'next/link';
+import type { Tenant } from '@/lib/schema';
 
-export default function Footer({ tenantSlug }: { tenantSlug: string }) {
+interface FooterProps {
+  tenantSlug: string;
+  salon: Pick<Tenant, 'name' | 'socialLinks'>;
+}
+
+export default function Footer({ tenantSlug, salon }: FooterProps) {
   const currentYear = new Date().getFullYear();
+  const instagramUrl = salon.socialLinks?.instagram || 'https://instagram.com';
 
   return (
     <footer className="bg-white md:bg-zinc-950 text-zinc-400 py-12 border-t border-zinc-100 md:border-zinc-900">
@@ -10,7 +17,7 @@ export default function Footer({ tenantSlug }: { tenantSlug: string }) {
         {/* Mobile View */}
         <div className="md:hidden flex flex-col items-center">
           <div className="mb-10 text-center">
-            <h2 className="text-2xl font-bold text-[#9D6EFE] tracking-widest uppercase font-serif">MUJER</h2>
+            <h2 className="text-2xl font-bold text-[#9D6EFE] tracking-widest uppercase font-serif">{salon.name}</h2>
           </div>
 
           <nav className="flex flex-col items-center gap-6 mb-12">
@@ -30,7 +37,7 @@ export default function Footer({ tenantSlug }: { tenantSlug: string }) {
               <Twitter className="h-5 w-5" />
             </Link>
             <Link
-              href="https://instagram.com"
+              href={instagramUrl}
               target="_blank"
               className="text-[#9D6EFE]"
               aria-label="Instagram"
@@ -41,7 +48,7 @@ export default function Footer({ tenantSlug }: { tenantSlug: string }) {
 
           <div className="pt-8 w-full border-t border-zinc-100 text-center">
             <p className="text-[10px] font-medium tracking-tight text-zinc-300">
-              © {currentYear} MUJER Studio Beauty Center. <br />
+              © {currentYear} {salon.name}. <br />
               Todos los derechos reservados.
             </p>
           </div>
@@ -52,7 +59,7 @@ export default function Footer({ tenantSlug }: { tenantSlug: string }) {
           <div className="flex justify-between items-center gap-8 mb-12">
             {/* Brand */}
             <div className="flex flex-col items-start text-zinc-400">
-              <h2 className="text-2xl font-bold text-white tracking-widest uppercase font-serif">MUJER</h2>
+              <h2 className="text-2xl font-bold text-white tracking-widest uppercase font-serif">{salon.name}</h2>
               <p className="mt-2 text-sm italic font-serif tracking-widest uppercase opacity-50">Estilo & Belleza</p>
             </div>
 
@@ -67,7 +74,7 @@ export default function Footer({ tenantSlug }: { tenantSlug: string }) {
             {/* Social */}
             <div className="flex items-center gap-6">
               <Link
-                href="https://instagram.com"
+                href={instagramUrl}
                 target="_blank"
                 className="hover:text-white transition-all duration-300 hover:scale-110 active:scale-95"
                 aria-label="Instagram"
@@ -79,7 +86,7 @@ export default function Footer({ tenantSlug }: { tenantSlug: string }) {
 
           {/* Bottom Bar */}
           <div className="pt-8 border-t border-zinc-900 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs font-light tracking-widest uppercase opacity-40">
-            <p>© {currentYear} MUJER. TODOS LOS DERECHOS RESERVADOS.</p>
+            <p>© {currentYear} {salon.name}. TODOS LOS DERECHOS RESERVADOS.</p>
             <div className="flex gap-6">
               <Link href="#" className="hover:underline underline-offset-4">Privacidad</Link>
               <Link href="#" className="hover:underline underline-offset-4">Términos</Link>

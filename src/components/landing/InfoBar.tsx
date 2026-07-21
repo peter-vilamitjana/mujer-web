@@ -1,31 +1,36 @@
 'use client';
 import { CreditCard, MapPin, Percent, Phone } from 'lucide-react';
 import { ScrollReveal } from './ScrollReveal';
+import type { Tenant } from '@/lib/schema';
 
-const infoItems = [
-  {
-    icon: CreditCard,
-    title: 'Pagá online',
-    description: 'Reservá tu turno de forma segura.',
-  },
-  {
-    icon: Percent,
-    title: '¡Promos!',
-    description: 'Conocé nuestras ofertas especiales.',
-  },
-  {
-    icon: MapPin,
-    title: 'Ubicación',
-    description: 'Guillermo Rawson 3688, La Lucila',
-  },
-  {
-    icon: Phone,
-    title: 'Línea directa',
-    description: '(011) 1234-5678',
-  },
-];
+interface InfoBarProps {
+  salon: Pick<Tenant, 'address' | 'phone'>;
+}
 
-export default function InfoBar() {
+export default function InfoBar({ salon }: InfoBarProps) {
+  const infoItems = [
+    {
+      icon: CreditCard,
+      title: 'Pagá online',
+      description: 'Reservá tu turno de forma segura.',
+    },
+    {
+      icon: Percent,
+      title: '¡Promos!',
+      description: 'Conocé nuestras ofertas especiales.',
+    },
+    {
+      icon: MapPin,
+      title: 'Ubicación',
+      description: salon.address || 'Consultanos por WhatsApp',
+    },
+    {
+      icon: Phone,
+      title: 'Línea directa',
+      description: salon.phone || 'Consultanos por WhatsApp',
+    },
+  ];
+
   return (
     <section className="bg-background py-8 border-y">
       <div className="container mx-auto px-4">
