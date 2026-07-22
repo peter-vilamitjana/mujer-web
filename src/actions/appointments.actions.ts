@@ -6,6 +6,7 @@ import { syncAppointmentToCalendar, cancelCalendarEvent } from './calendar.actio
 import { requireRole, requireAuthSession } from '@/lib/auth-guards';
 import { buildSlotLockId, isSlotLockExpired } from '@/lib/booking-utils';
 import type { Appointment, PaymentSplit, Staff } from '@/lib/schema';
+import { firestoreRestBase } from '@/lib/firebase-rest-base';
 
 type ActionResult = { success: true; id?: string } | { success: false; error: string };
 
@@ -63,7 +64,7 @@ export async function getAppointmentsForPeriod(
 // ─── Client-facing reads (Firestore REST — no Firebase Auth required) ─────────
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'mujer-app';
-const FIRESTORE_BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
+const FIRESTORE_BASE = firestoreRestBase(PROJECT_ID);
 
 function parseFirestoreValue(value: any): any {
   if (!value) return null;

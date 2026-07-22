@@ -10,6 +10,14 @@ import { withSentryConfig } from '@sentry/nextjs';
 // y frame-ancestors 'none'. Nonces por ruta es el siguiente paso de hardening.
 const isDev = process.env.NODE_ENV === 'development';
 
+// Emuladores de Firebase (solo activos en e2e/CI vía `firebase emulators:exec`,
+// que exporta estas dos vars sin prefijo). Se reenvían al cliente bajo
+// NEXT_PUBLIC_* para que lib/firebase.ts pueda conectar el SDK del browser
+// al emulador — sin esto, el navegador seguiría hablando con Firestore real.
+const firestoreEmulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
+const authEmulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
+const emulatorsActive = Boolean(firestoreEmulatorHost || authEmulatorHost);
+
 const cspDirectives = [
   "default-src 'self'",
   // Next.js necesita 'unsafe-inline' para scripts de hidratación del cliente.
@@ -33,6 +41,9 @@ const cspDirectives = [
     "https://*.cloudfunctions.net",
     "https://*.ingest.sentry.io",
     "https://api.mercadopago.com",
+    // Solo en e2e/CI: permite que el SDK del browser hable con los
+    // emuladores de Firestore/Auth corriendo en localhost.
+    ...(emulatorsActive ? ["http://127.0.0.1:*", "ws://127.0.0.1:*"] : []),
   ].join(' '),
   // Google OAuth necesita abrir accounts.google.com en un frame/popup
   "frame-src https://accounts.google.com",
@@ -98,6 +109,8 @@ const nextConfig: NextConfig = {
   env: {
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    NEXT_PUBLIC_FIRESTORE_EMULATOR_HOST: firestoreEmulatorHost,
+    NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST: authEmulatorHost,
   },
   async headers() {
     return [

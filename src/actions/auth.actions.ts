@@ -2,6 +2,7 @@
 
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { identityToolkitRestBase } from '@/lib/firebase-rest-base';
 
 const FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
 
@@ -65,7 +66,7 @@ export async function registerCustomer(data: {
 
     // 1. Crear usuario en Firebase Auth via REST API
     const authRes = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`,
+      `${identityToolkitRestBase()}/accounts:signUp?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

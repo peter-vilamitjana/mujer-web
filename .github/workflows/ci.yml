@@ -74,8 +74,15 @@ jobs:
           cache: 'npm'
           cache-dependency-path: package-lock.json
       - run: npm install
-      - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test --reporter=list
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      # Los emuladores de Firestore/Auth aíslan el seed de e2e del proyecto
+      # real (mujer-app) — build y test corren dentro del wrapper para que
+      # el bundle cliente también quede compilado apuntando al emulador
+      # (ver next.config.ts).
+      - run: npx firebase emulators:exec --project mujer-app --only auth,firestore "npm run build && npx playwright test --reporter=list"
         env:
           CI: true

@@ -1,7 +1,7 @@
 import "@/lib/shim-storage";
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { initializeFirestore, memoryLocalCache } from "firebase/firestore";
-import { getAuth, Auth } from "firebase/auth";
+import { initializeFirestore, memoryLocalCache, connectFirestoreEmulator } from "firebase/firestore";
+import { getAuth, Auth, connectAuthEmulator } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -23,6 +23,16 @@ const db = initializeFirestore(app, {
   localCache: memoryLocalCache(),
   ignoreUndefinedProperties: true,
 });
+
+// Emulador de Firestore — solo activo en e2e/CI (ver next.config.ts, que
+// reenvía FIRESTORE_EMULATOR_HOST al cliente bajo este nombre). Sin esto el
+// SDK del browser (hooks como useStaff/useBranches/useMetrics) seguiría
+// leyendo el Firestore real en vez de los datos sembrados para el test.
+const firestoreEmulatorHost = process.env.NEXT_PUBLIC_FIRESTORE_EMULATOR_HOST;
+if (firestoreEmulatorHost) {
+  const [host, port] = firestoreEmulatorHost.split(':');
+  connectFirestoreEmulator(db, host, Number(port));
+}
 
 let storage: ReturnType<typeof getStorage>;
 try {
@@ -50,6 +60,18 @@ try {
     auth = getAuth(app);
   } catch (e2) {
     auth = {} as any;
+  }
+}
+
+// Emulador de Auth — misma lógica que Firestore arriba. auth.ts usa este
+// `auth` server-side (signInWithEmailAndPassword) para el login por
+// credenciales, así que también debe apuntar al emulador en e2e/CI.
+const authEmulatorHost = process.env.NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST;
+if (authEmulatorHost) {
+  try {
+    connectAuthEmulator(auth, `http://${authEmulatorHost}`, { disableWarnings: true });
+  } catch {
+    // Ya conectado (posible en HMR) — seguro ignorar.
   }
 }
 

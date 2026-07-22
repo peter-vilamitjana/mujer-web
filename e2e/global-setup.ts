@@ -1,24 +1,50 @@
 /**
- * Playwright global setup — crea usuarios de prueba en Firebase Auth si no existen,
- * semilla e2e-test-salon en Firestore, y genera storageState para reutilizar en tests.
+ * Playwright global setup — crea usuarios de prueba en el emulador de Firebase
+ * Auth, siembra e2e-test-salon en el emulador de Firestore vía Admin SDK, y
+ * genera storageState para reutilizar en tests.
+ *
+ * Corre siempre contra los emuladores (ver package.json: `firebase
+ * emulators:exec` exporta FIRESTORE_EMULATOR_HOST / FIREBASE_AUTH_EMULATOR_HOST
+ * antes de invocar Playwright), nunca contra el proyecto de Firebase real.
+ *
+ * El seed usa Admin SDK en vez de REST con idToken de usuario porque
+ * firestore.rules bloquea toda escritura a memberships (`allow write: if
+ * false`) y el doc raíz de tenants exige rol admin — que depende de esa
+ * misma membership. Un usuario recién creado nunca puede sembrar sus propios
+ * datos por REST; Admin SDK bypasa las reglas como lo hacen las Server
+ * Actions de la app en producción.
  */
 import { chromium, FullConfig } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+import { initializeApp, getApps } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 
-const FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY!;
-const FIREBASE_PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!;
+const FIREBASE_PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? 'mujer-app';
+const FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? 'e2e-emulator-key';
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
+
+const AUTH_EMULATOR_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST;
+const IDENTITY_TOOLKIT_BASE = AUTH_EMULATOR_HOST
+  ? `http://${AUTH_EMULATOR_HOST}/identitytoolkit.googleapis.com/v1`
+  : 'https://identitytoolkit.googleapis.com/v1';
 
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? 'e2e-admin@mujerapp.test';
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? 'E2eTest2026!';
 const CUSTOMER_EMAIL = process.env.E2E_CUSTOMER_EMAIL ?? 'e2e-clienta@mujerapp.test';
 const CUSTOMER_PASSWORD = process.env.E2E_CUSTOMER_PASSWORD ?? 'E2eTest2026!';
 
+function getAdminApp() {
+  if (getApps().length > 0) return getApps()[0];
+  return initializeApp({ projectId: FIREBASE_PROJECT_ID });
+}
+
+const adminDb = getFirestore(getAdminApp());
+
 /** Crea un usuario en Firebase Auth. Ignora EMAIL_EXISTS. */
 async function firebaseSignUp(email: string, password: string): Promise<void> {
   const res = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`,
+    `${IDENTITY_TOOLKIT_BASE}/accounts:signUp?key=${FIREBASE_API_KEY}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -36,7 +62,7 @@ async function firebaseSignUp(email: string, password: string): Promise<void> {
 /** Firma en Firebase Auth y devuelve { idToken, localId }. */
 async function firebaseSignIn(email: string, password: string): Promise<{ idToken: string; localId: string }> {
   const res = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
+    `${IDENTITY_TOOLKIT_BASE}/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -48,67 +74,19 @@ async function firebaseSignIn(email: string, password: string): Promise<{ idToke
   return { idToken: data.idToken, localId: data.localId };
 }
 
-/** Escribe un documento en Firestore vía REST API. Ignora errores de permisos (reglas estrictas). */
-async function firestoreSet(
-  idToken: string,
-  docPath: string,
-  fields: Record<string, unknown>
-): Promise<void> {
-  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/${docPath}`;
-
-  // Convertir valores JS a Firestore field values
-  function toFirestoreValue(v: unknown): unknown {
-    if (typeof v === 'string') return { stringValue: v };
-    if (typeof v === 'number') return { integerValue: String(v) };
-    if (typeof v === 'boolean') return { booleanValue: v };
-    if (v === null || v === undefined) return { nullValue: null };
-    if (Array.isArray(v)) return { arrayValue: { values: v.map(toFirestoreValue) } };
-    if (typeof v === 'object') {
-      const mapFields: Record<string, unknown> = {};
-      for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
-        mapFields[k] = toFirestoreValue(val);
-      }
-      return { mapValue: { fields: mapFields } };
-    }
-    return { nullValue: null };
-  }
-
-  const firestoreFields: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(fields)) {
-    firestoreFields[k] = toFirestoreValue(v);
-  }
-
-  const res = await fetch(url, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${idToken}`,
-    },
-    body: JSON.stringify({ fields: firestoreFields }),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    const code = err?.error?.code;
-    // 403 = PERMISSION_DENIED (reglas estrictas) — no lanzar error, continuar
-    if (code !== 403) {
-      console.warn(`[e2e setup] Firestore PATCH ${docPath}: ${err?.error?.message ?? res.status}`);
-    }
-  }
-}
-
-/** Siembra e2e-test-salon en Firestore y asigna rol admin al usuario. */
-async function seedDemoSalon(idToken: string, adminUid: string): Promise<void> {
+/** Siembra e2e-test-salon en Firestore (Admin SDK) y asigna rol admin al usuario. */
+async function seedDemoSalon(adminUid: string): Promise<void> {
   // Tenant dedicado exclusivamente a E2E — nunca debe coincidir con el ID de un
-  // salón real (el PATCH de firestoreSet reemplaza el documento entero).
+  // salón real (el .set() reemplaza el documento entero).
   const TENANT = process.env.E2E_TEST_SALON_SLUG ?? 'e2e-test-salon';
 
   // Tenant raíz
-  await firestoreSet(idToken, `tenants/${TENANT}`, {
+  await adminDb.doc(`tenants/${TENANT}`).set({
     id: TENANT,
     name: 'Ouleeh | Estilismo y Belleza',
     slug: TENANT,
     isActivePublicly: true,
-  });
+  }, { merge: true });
 
   // Servicios
   const services = [
@@ -118,7 +96,7 @@ async function seedDemoSalon(idToken: string, adminUid: string): Promise<void> {
   ];
   for (const s of services) {
     const { id, ...fields } = s;
-    await firestoreSet(idToken, `tenants/${TENANT}/services/${id}`, fields);
+    await adminDb.doc(`tenants/${TENANT}/services/${id}`).set(fields, { merge: true });
   }
 
   // Staff
@@ -128,15 +106,15 @@ async function seedDemoSalon(idToken: string, adminUid: string): Promise<void> {
   ];
   for (const s of staff) {
     const { id, ...fields } = s;
-    await firestoreSet(idToken, `tenants/${TENANT}/staff/${id}`, fields);
+    await adminDb.doc(`tenants/${TENANT}/staff/${id}`).set(fields, { merge: true });
   }
 
   // Membership admin
-  await firestoreSet(idToken, `users/${adminUid}/memberships/${TENANT}`, {
+  await adminDb.doc(`users/${adminUid}/memberships/${TENANT}`).set({
     role: 'admin',
     tenantId: TENANT,
     tenantName: 'Ouleeh | Estilismo y Belleza',
-  });
+  }, { merge: true });
 }
 
 async function loginAndSaveSession(
@@ -153,7 +131,9 @@ async function loginAndSaveSession(
   await page.locator('#l-pass').fill(password);
   await page.getByRole('button', { name: /entrar al atelier/i }).click();
 
-  await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 20_000 });
+  await page.waitForURL((url) => !url.pathname.includes('/login'), {
+    timeout: process.env.CI ? 45_000 : 20_000,
+  });
 
   await context.storageState({ path: storageStatePath });
   await browser.close();
@@ -168,7 +148,8 @@ export default async function globalSetup(config: FullConfig) {
 
   // ── Firebase Auth: create test users ────────────────────────────────────────
   // Wrapped in try/catch so public tests (registro.spec.ts) still run even if
-  // Firebase Auth is unreachable or NEXT_PUBLIC_FIREBASE_API_KEY is not set.
+  // el emulador de Auth no está corriendo (p.ej. `playwright test` sin
+  // `firebase emulators:exec`).
   let firebaseReady = false;
   try {
     console.log('[e2e setup] Creando usuarios de prueba en Firebase Auth...');
@@ -181,11 +162,11 @@ export default async function globalSetup(config: FullConfig) {
 
   // ── Firestore seed ───────────────────────────────────────────────────────────
   if (firebaseReady) {
-    console.log('[e2e setup] Sembrando e2e-test-salon en Firestore...');
+    console.log('[e2e setup] Sembrando e2e-test-salon en Firestore (Admin SDK)...');
     try {
-      const { idToken, localId } = await firebaseSignIn(ADMIN_EMAIL, ADMIN_PASSWORD);
-      await seedDemoSalon(idToken, localId);
-      console.log('[e2e setup] Firestore seed completado (o ignorado por reglas)');
+      const { localId } = await firebaseSignIn(ADMIN_EMAIL, ADMIN_PASSWORD);
+      await seedDemoSalon(localId);
+      console.log('[e2e setup] Firestore seed completado');
     } catch (err) {
       console.warn('[e2e setup] Firestore seed falló (se continúa):', (err as Error).message);
     }

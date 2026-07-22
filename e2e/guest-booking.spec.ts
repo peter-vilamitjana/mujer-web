@@ -54,7 +54,10 @@ test.describe('Guest Booking — sin autenticación', () => {
       test.skip(true, 'Sin servicios en e2e-test-salon — seed requerido');
     }
 
-    await serviceCards.first().click();
+    // "Corte & Estilo" no requiere selección de largo — a diferencia de
+    // Coloración/Keratina, que bloquean el avance sin esa elección y pueden
+    // aparecer primero (orden de Firestore sin orderBy explícito).
+    await serviceCards.filter({ hasText: 'Corte & Estilo' }).first().click();
     await page.getByRole('button', { name: /Continuar a Profesional/i }).click();
     await expect(page.getByText(/Elige a tu profesional/i)).toBeVisible({ timeout: 5_000 });
     await ctx.close();
@@ -72,7 +75,7 @@ test.describe('Guest Booking — sin autenticación', () => {
       test.skip(true, 'Sin servicios en e2e-test-salon — seed requerido');
     }
 
-    await serviceCards.first().click();
+    await serviceCards.filter({ hasText: 'Corte & Estilo' }).first().click();
     await page.getByRole('button', { name: /Continuar a Profesional/i }).click();
     await expect(page.getByText(/Elige a tu profesional/i)).toBeVisible({ timeout: 5_000 });
 

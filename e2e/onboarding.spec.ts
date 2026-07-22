@@ -12,11 +12,15 @@ test.describe('Onboarding Wizard — /business/register', () => {
   });
 
   test('la página carga y muestra los 5 pasos del wizard', async ({ page }) => {
-    await expect(page.getByText('Tu salón')).toBeVisible();
-    await expect(page.getByText('Servicios')).toBeVisible();
-    await expect(page.getByText('Horarios')).toBeVisible();
-    await expect(page.getByText('Equipo')).toBeVisible();
-    await expect(page.getByText('Listo')).toBeVisible();
+    // El h1 "Configurá tu salón" contiene el substring "Tu salón", por eso
+    // se acota al título de la card del paso activo (heading level 3).
+    await expect(page.getByRole('heading', { level: 3, name: 'Tu salón', exact: true })).toBeVisible();
+    // Los labels de paso son "hidden sm:block" — ocultos a propósito en mobile
+    // (solo iconos), por eso se verifica presencia en el DOM y no visibilidad.
+    await expect(page.getByText('Servicios')).toHaveCount(1);
+    await expect(page.getByText('Horarios')).toHaveCount(1);
+    await expect(page.getByText('Equipo')).toHaveCount(1);
+    await expect(page.getByText('Listo')).toHaveCount(1);
   });
 
   test('paso 1 está activo por defecto (Tu salón)', async ({ page }) => {
@@ -48,9 +52,11 @@ test.describe('Onboarding Wizard — /business/register', () => {
     const continueBtn = page.getByRole('button', { name: /continuar|siguiente/i }).last();
     await continueBtn.click({ timeout: 8_000 });
 
-    // Paso 2 debe mostrar el formulario de servicios
+    // Paso 2 debe mostrar el formulario de servicios. .last() en vez de
+    // .first() porque el label oculto "Servicios" del step-indicator (DOM
+    // anterior al contenido del paso) también matchea la regex.
     await expect(
-      page.getByText(/servicio|corte|precio|duración/i).first()
+      page.getByText(/servicio|corte|precio|duración/i).last()
     ).toBeVisible({ timeout: 5_000 });
   });
 
@@ -93,24 +99,15 @@ test.describe('Onboarding Wizard — /business/register', () => {
   });
 
   test('la barra de progreso avanza al ir al paso 2', async ({ page }) => {
-    // Capturar progreso inicial
-    const progressEl = page.locator('[role="progressbar"]').first();
-    const initialStyle = await progressEl
-      .evaluate((el) => el.getAttribute('aria-valuenow') ?? el.getAttribute('style') ?? '')
-      .catch(() => '');
+    // La página muestra "Paso X de 5" — señal visible y estable, en vez de
+    // leer atributos ARIA internos del componente Progress de Radix.
+    await expect(page.getByText('Paso 1 de 5')).toBeVisible();
 
-    // Navegar al paso 2
     await page.getByLabel(/nombre del salón/i).fill('Salon Test E2E');
     await page.waitForTimeout(500);
     await page.getByRole('button', { name: /continuar|siguiente/i }).last().click({ timeout: 8_000 });
-    await page.waitForTimeout(300);
 
-    const updatedStyle = await progressEl
-      .evaluate((el) => el.getAttribute('aria-valuenow') ?? el.getAttribute('style') ?? '')
-      .catch(() => '');
-
-    // El progreso debe haber cambiado
-    expect(updatedStyle).not.toBe(initialStyle);
+    await expect(page.getByText('Paso 2 de 5')).toBeVisible({ timeout: 5_000 });
   });
 
   test('los pasos completados quedan marcados visualmente', async ({ page }) => {
@@ -119,11 +116,9 @@ test.describe('Onboarding Wizard — /business/register', () => {
     await page.getByRole('button', { name: /continuar|siguiente/i }).last().click({ timeout: 8_000 });
     await page.waitForTimeout(300);
 
-    // El paso 1 debe tener un indicador de completado (check icon o clase activa)
-    const stepIndicators = page.locator('[class*="step"], [class*="Step"]').or(
-      page.locator('li').filter({ hasText: 'Tu salón' })
-    );
-    // El DOM del paso 1 debe haber cambiado (completado)
-    await expect(stepIndicators.first()).toBeVisible();
+    // El indicador circular del paso 1 pasa a la variante "completado"
+    // (bg-primary) — ver src/app/business/register/page.tsx.
+    const firstStepCircle = page.locator('div.rounded-full.border-2').first();
+    await expect(firstStepCircle).toHaveClass(/bg-primary/);
   });
 });

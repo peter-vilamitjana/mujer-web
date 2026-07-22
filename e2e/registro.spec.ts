@@ -31,15 +31,16 @@ test.describe('Registro de Clienta B2C — /registro', () => {
     await page.getByPlaceholder(/mínimo 8 caracteres/i).fill('E2eTest2026!');
     await page.getByPlaceholder(/9 11 XXXX/i).fill('91145678901');
     await page.getByRole('button', { name: /crear mi cuenta/i }).click();
-    // El app muestra: "ESTE EMAIL YA TIENE UNA CUENTA"
-    await expect(page.getByText(/este email ya tiene una cuenta/i)).toBeVisible({ timeout: 8_000 });
+    // El app muestra: "Ya existe una cuenta con ese email."
+    await expect(page.getByText(/ya existe una cuenta con ese email/i)).toBeVisible({ timeout: 8_000 });
   });
 
   test('tiene enlace de retorno al login', async ({ page }) => {
     await page.goto('/registro');
-    const loginLink = page.getByRole('link', { name: /iniciar sesión|ya tenés cuenta|login/i }).or(
-      page.getByText(/iniciar sesión|ya tenés cuenta/i).first()
-    );
+    // El footer del form ("¿Ya tenés cuenta? Iniciar sesión") es el enlace de
+    // retorno; el header también tiene un botón "Iniciar sesión" (abre otro
+    // flujo), por eso se acota a un <a> dentro del párrafo del footer.
+    const loginLink = page.getByRole('link', { name: /iniciar sesión/i });
     await expect(loginLink).toBeVisible();
   });
 });

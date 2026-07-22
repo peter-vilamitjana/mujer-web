@@ -13,6 +13,10 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? 'github' : [['html', { open: 'never' }]],
   globalSetup: './e2e/global-setup.ts',
+  timeout: process.env.CI ? 60_000 : 30_000,
+  expect: {
+    timeout: process.env.CI ? 15_000 : 5_000,
+  },
   use: {
     baseURL: BASE_URL,
     trace: 'on-first-retry',

@@ -7,9 +7,10 @@
  */
 
 import type { Tenant, Service, Staff } from '@/lib/schema';
+import { firestoreRestBase } from '@/lib/firebase-rest-base';
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'mujer-app';
-const FIRESTORE_BASE = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
+const FIRESTORE_BASE = firestoreRestBase(PROJECT_ID);
 
 /**
  * Convierte un valor de Firestore REST API al tipo JS correspondiente.

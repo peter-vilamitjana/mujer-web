@@ -33,15 +33,18 @@ test.describe('Booking Flow — autenticado', () => {
   });
 
   test('paso 1 → paso 2: navegar a profesional', async ({ page }) => {
-    await page.locator('div.rounded-xl.cursor-pointer').first().click();
+    // "Corte & Estilo" no requiere selección de largo — a diferencia de
+    // Coloración/Keratina, que bloquean el avance sin esa elección y
+    // pueden aparecer primero (Firestore devuelve por orden alfabético de ID).
+    await page.locator('div.rounded-xl.cursor-pointer').filter({ hasText: 'Corte & Estilo' }).first().click();
     await page.getByRole('button', { name: /Continuar a Profesional/i }).click();
     // UI shows "Paso 2: Elige a tu profesional" (imperative, not past tense)
     await expect(page.getByText(/Elige a tu profesional/i)).toBeVisible();
   });
 
   test('paso 2 → paso 3: navegar a fecha y hora', async ({ page }) => {
-    // Paso 1: seleccionar servicio
-    await page.locator('div.rounded-xl.cursor-pointer').first().click();
+    // Paso 1: seleccionar servicio ("Corte & Estilo" no requiere largo)
+    await page.locator('div.rounded-xl.cursor-pointer').filter({ hasText: 'Corte & Estilo' }).first().click();
     await page.getByRole('button', { name: /Continuar a Profesional/i }).click();
     await expect(page.getByText(/Elige a tu profesional/i)).toBeVisible({ timeout: 5_000 });
 
@@ -66,7 +69,7 @@ test.describe('Booking Flow — autenticado', () => {
   });
 
   test('volver al paso anterior funciona', async ({ page }) => {
-    await page.locator('div.rounded-xl.cursor-pointer').first().click();
+    await page.locator('div.rounded-xl.cursor-pointer').filter({ hasText: 'Corte & Estilo' }).first().click();
     await page.getByRole('button', { name: /Continuar a Profesional/i }).click();
     await expect(page.getByText(/Elige a tu profesional/i)).toBeVisible({ timeout: 5_000 });
 

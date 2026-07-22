@@ -6,11 +6,17 @@ function getAdminApp() {
 
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (!raw) {
-    console.warn(
-      '[firebase-admin] FIREBASE_SERVICE_ACCOUNT env var is not set. ' +
-      'Initializing with a dummy project. Database calls will fail.'
-    );
-    return initializeApp({ projectId: 'dummy-project' });
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'dummy-project';
+    // El Admin SDK detecta FIRESTORE_EMULATOR_HOST automáticamente y no
+    // necesita credenciales reales contra el emulador — solo advertir si
+    // realmente vamos a intentar hablar con Firestore de producción.
+    if (!process.env.FIRESTORE_EMULATOR_HOST) {
+      console.warn(
+        '[firebase-admin] FIREBASE_SERVICE_ACCOUNT env var is not set. ' +
+        'Initializing with a dummy project. Database calls will fail.'
+      );
+    }
+    return initializeApp({ projectId });
   }
 
   const serviceAccount = JSON.parse(raw);
