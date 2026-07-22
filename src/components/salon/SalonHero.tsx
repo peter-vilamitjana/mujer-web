@@ -65,8 +65,8 @@ export default function SalonHero({ tenantSlug, salonName, coverImageUrl }: Salo
             <ScrollReveal delay={0.4} direction="up" className="w-full">
               <div className="w-full max-w-[320px] mx-auto">
                 <Link href={`/salones/${tenantSlug}/book`} className="w-full">
-                  <Button size="lg" className="w-full bg-primary hover:bg-primary-dark text-surface rounded-full py-6 text-sm font-sans font-bold uppercase tracking-widest shadow-card-glow transition-all duration-300 active:scale-95 flex items-center justify-center gap-3">
-                    RESERVAR TURNO
+                  <Button size="lg" className="w-full border border-primary/50 text-primary bg-transparent hover:bg-primary/10 rounded-full px-8 py-3 font-sans uppercase tracking-widest text-xs font-medium transition-colors flex items-center justify-center gap-3">
+                    Reservar turno
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -84,9 +84,9 @@ export default function SalonHero({ tenantSlug, salonName, coverImageUrl }: Salo
             </ScrollReveal>
             <ScrollReveal delay={0.4} direction="up">
               <Link href={`/salones/${tenantSlug}/book`}>
-                <Button size="lg" className="group bg-primary text-surface hover:bg-primary-dark rounded-full px-10 py-7 text-lg font-sans font-bold uppercase tracking-wider shadow-card-glow transition-all duration-500 hover:scale-105 active:scale-95">
-                  Reservar Turno
-                  <ArrowRight className="ml-3 h-6 w-6 transition-transform group-hover:translate-x-2" />
+                <Button size="lg" className="group border border-primary/50 text-primary bg-transparent hover:bg-primary/10 rounded-full px-10 py-4 font-sans uppercase tracking-widest text-xs font-medium transition-colors">
+                  Reservar turno
+                  <ArrowRight className="ml-3 h-4 w-4 transition-transform group-hover:translate-x-2" />
                 </Button>
               </Link>
             </ScrollReveal>

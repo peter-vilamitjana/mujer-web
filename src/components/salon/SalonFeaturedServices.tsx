@@ -193,17 +193,17 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
                 {services.map((service) => (
                   <CarouselItem key={service.id} className="pl-6 md:basis-1/2 lg:basis-1/3">
                     <div data-reveal="service-card" className="h-full pb-8">
-                      <div className="group relative flex h-full flex-col overflow-hidden rounded-[2.5rem] transition-all duration-500 p-8 bg-surface-card border border-outline-subtle hover:border-outline">
-                        <div className="relative mb-8 flex-shrink-0">
-                          <div className="overflow-hidden rounded-[1.5rem] transition-all duration-500">
+                      <div className="group relative flex h-full flex-col overflow-hidden rounded-[2.5rem] transition-all duration-500 p-6 bg-surface-card border border-outline-subtle hover:border-outline">
+                        <div className="relative mb-6 flex-shrink-0">
+                          <div className="overflow-hidden rounded-[1.5rem] aspect-video">
                             {service.image ? (
                               <img
                                 src={service.image}
                                 alt={service.name}
-                                className="object-cover w-full h-80 group-hover:scale-105 transition-transform duration-700"
+                                className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
                               />
                             ) : (
-                              <div className="w-full h-80 bg-surface-hover group-hover:scale-105 transition-transform duration-700" />
+                              <div className="w-full h-full bg-surface-hover group-hover:scale-105 transition-transform duration-700" />
                             )}
                           </div>
                           {service.badge && (

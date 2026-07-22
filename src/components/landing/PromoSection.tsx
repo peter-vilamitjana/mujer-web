@@ -121,30 +121,32 @@ export default function PromoSection({ tenantSlug }: { tenantSlug: string }) {
                     {promoData.map((promo, index) => (
                         <div key={promo.id} data-reveal="promo-card">
                             <Card className="relative flex flex-col rounded-[2.5rem] p-10 h-full bg-surface-card border border-outline-subtle hover:border-outline transition-all duration-500 group">
-                                {promo.badge && (
-                                    <div className="absolute top-8 right-8">
-                                        <div className="bg-surface text-on-surface px-4 py-2 rounded-full border border-outline-subtle flex items-center gap-2">
-                                            <Sparkles className="h-3 w-3 text-primary" />
-                                            <span className="font-sans text-[9px] font-bold uppercase tracking-[0.3em]">{promo.badge}</span>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <CardContent className="p-0 flex flex-col flex-grow relative z-10 pt-2">
+                                <CardContent className="p-0 flex flex-col flex-grow relative z-10">
                                     <div className="flex-grow">
-                                        <p className="font-sans text-[9px] tracking-[0.5em] uppercase text-on-surface-secondary font-bold mb-4">Combo • 0{index + 1}</p>
+                                        {/* Label y badge en el mismo flujo — nunca se superponen, sea cual sea el largo del texto */}
+                                        <div className="flex items-center justify-between gap-3 mb-6">
+                                            <p className="font-sans text-[9px] tracking-[0.5em] uppercase text-on-surface-secondary font-bold">Combo • 0{index + 1}</p>
+                                            {promo.badge && (
+                                                <div className="shrink-0 bg-surface text-on-surface px-3 py-1.5 rounded-full border border-outline-subtle flex items-center gap-1.5">
+                                                    <Sparkles className="h-3 w-3 text-primary shrink-0" />
+                                                    <span className="font-sans text-[9px] font-bold uppercase tracking-[0.2em] whitespace-nowrap">{promo.badge}</span>
+                                                </div>
+                                            )}
+                                        </div>
+
                                         <h4 className="font-vogue text-3xl mb-8 italic text-on-surface">{promo.subtitle}</h4>
 
-                                        <div className="my-8 font-vogue text-5xl flex items-baseline gap-2 text-on-surface">
-                                            <span className="font-sans text-2xl font-light opacity-50">{formatPriceParts(promo.price).symbol}</span>
+                                        {/* El precio es el protagonista de la tarjeta */}
+                                        <div className="my-8 font-vogue text-4xl flex items-baseline gap-2 text-on-surface">
+                                            <span className="font-sans text-xl font-light opacity-50">{formatPriceParts(promo.price).symbol}</span>
                                             <span>{formatPriceParts(promo.price).value}</span>
                                         </div>
 
-                                        <ul className="space-y-4 text-left my-10 border-t border-outline-subtle pt-8">
+                                        <ul className="space-y-2 text-left my-10 border-t border-outline-subtle pt-8">
                                             {promo.services.map((service, idx) => (
-                                                <li key={idx} className="flex items-center gap-4">
-                                                    <div className="h-[2px] w-[2px] bg-on-surface/80 flex-shrink-0" />
-                                                    <span className="font-sans text-[10px] uppercase font-bold tracking-[0.2em] text-on-surface-secondary">{service}</span>
+                                                <li key={idx} className="flex items-center gap-3">
+                                                    <div className="h-[3px] w-[3px] rounded-full bg-on-surface-secondary/60 flex-shrink-0" />
+                                                    <span className="font-sans text-sm text-on-surface-secondary">{service}</span>
                                                 </li>
                                             ))}
                                         </ul>
@@ -153,9 +155,9 @@ export default function PromoSection({ tenantSlug }: { tenantSlug: string }) {
                                         <Link href={`/salones/${tenantSlug}/book`} className="w-full">
                                             <Button
                                                 size="lg"
-                                                className="w-full bg-surface border border-outline-subtle hover:bg-primary text-on-surface hover:text-surface uppercase tracking-[0.3em] rounded-full py-7 h-auto text-[10px] font-sans font-black transition-all duration-300 group-hover:bg-primary group-hover:text-surface"
+                                                className="w-full border border-primary/50 text-primary bg-transparent hover:bg-primary/10 rounded-full px-8 py-3 font-sans uppercase tracking-widest text-xs font-medium transition-colors"
                                             >
-                                                SELECCIONAR
+                                                Seleccionar
                                             </Button>
                                         </Link>
                                     </div>

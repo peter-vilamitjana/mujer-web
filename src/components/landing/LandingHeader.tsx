@@ -98,7 +98,7 @@ export default function LandingHeader() {
             'backdrop-blur-xl [-webkit-backdrop-filter:blur(24px)_saturate(180%)] [backdrop-filter:blur(24px)_saturate(180%)]',
             'transition-all duration-500',
             overHero
-              ? 'bg-white/8 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.18)]'
+              ? 'bg-transparent border-transparent shadow-none'
               : 'bg-white/70 border border-white/40 shadow-[0_4px_24px_rgba(0,0,0,0.08)] dark:bg-black/40 dark:border-white/10'
           )}
         >
