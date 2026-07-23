@@ -2,16 +2,27 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getSalonBySlug, getSalonServices, getSalonStaff } from '@/lib/services/marketplace.service';
 import { notFound } from 'next/navigation';
-import BookingFlowClient from './BookingFlowClient';
+import BookingFlowClient from '../book/BookingFlowClient';
 
 interface Props {
   params: Promise<{ tenantSlug: string }>;
 }
 
-export default async function BookPage({ params }: Props) {
+export async function generateMetadata({ params }: Props) {
+  const { tenantSlug } = await params;
+  const salon = await getSalonBySlug(tenantSlug);
+  if (!salon) return { title: 'Salón no encontrado' };
+
+  return {
+    title: `Reservar Turno | ${salon.name}`,
+    description: `Agendá tu turno online en ${salon.name}. Seleccioná servicios, profesional y horario de forma simple y rápida.`,
+  };
+}
+
+export default async function TurnosPage({ params }: Props) {
   const { tenantSlug } = await params;
 
-  // Sesión opcional — no redirigir si no hay (guest checkout habilitado)
+  // Sesión opcional — guest checkout habilitado
   const session = await getServerSession(authOptions);
 
   const salon = await getSalonBySlug(tenantSlug);

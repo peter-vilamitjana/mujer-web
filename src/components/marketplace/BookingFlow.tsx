@@ -39,14 +39,14 @@ interface Props {
 type SelectedServiceWithLargo = Service & { largo?: LargoPelo };
 
 const LengthPopoverContent = () => (
-  <PopoverContent className="w-64 text-sm" onClick={(e) => e.stopPropagation()}>
-    <h4 className="font-bold mb-2">Cómo definimos el largo</h4>
-    <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-      <li><span className="font-semibold text-foreground">Corto:</span> hasta el mentón</li>
-      <li><span className="font-semibold text-foreground">Mediano:</span> hasta los hombros</li>
-      <li><span className="font-semibold text-foreground">Largo:</span> por debajo de los hombros</li>
+  <PopoverContent className="w-64 bg-surface-card border-outline-subtle font-sans text-sm" onClick={(e) => e.stopPropagation()}>
+    <h4 className="font-bold text-on-surface mb-2">Cómo definimos el largo</h4>
+    <ul className="list-disc list-inside space-y-1 text-on-surface-secondary">
+      <li><span className="font-semibold text-on-surface">Corto:</span> hasta el mentón</li>
+      <li><span className="font-semibold text-on-surface">Mediano:</span> hasta los hombros</li>
+      <li><span className="font-semibold text-on-surface">Largo:</span> por debajo de los hombros</li>
     </ul>
-    <p className="mt-4 text-xs text-muted-foreground">
+    <p className="mt-4 text-xs text-on-surface-secondary">
       <span className="font-bold">Nota:</span> El precio mostrado es a partir de según diagnóstico al llegar.
     </p>
   </PopoverContent>
@@ -56,12 +56,12 @@ const LengthPopoverTrigger = ({ asChild = false }: { asChild?: boolean }) => (
   <Popover>
     <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
       {asChild ? (
-        <button className="text-xs text-muted-foreground underline hover:text-primary">
+        <button className="font-sans text-xs text-on-surface-secondary underline hover:text-primary">
           Ver cómo definimos el largo
         </button>
       ) : (
         <button
-          className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-300 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-4 w-4 text-muted-foreground ml-1"
+          className="inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50 hover:bg-surface-hover h-4 w-4 text-on-surface-secondary ml-1"
           aria-label="Información sobre largo"
         >
           <Info className="h-4 w-4" />
@@ -334,16 +334,16 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
 
   return (
     <div className="space-y-6 mx-auto w-full">
-      <div className="p-2 bg-muted rounded-full flex items-center justify-between shadow-inner">
+      <div className="p-2 bg-surface-card border border-outline-subtle rounded-full flex items-center justify-between">
         {stepsInfo.map(s => (
           <button
             key={s.id}
             onClick={() => { if (step > s.id) setStep(s.id) }}
             disabled={step < s.id}
             className={cn(
-              "flex-1 flex items-center justify-center gap-2 py-2 px-2 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300",
-              step === s.id ? "bg-primary text-primary-foreground shadow" : "text-muted-foreground",
-              step > s.id && "hover:bg-primary/5"
+              "flex-1 flex items-center justify-center gap-2 py-2 px-2 rounded-full font-sans text-xs sm:text-sm font-semibold transition-colors duration-300",
+              step === s.id ? "bg-primary text-surface" : step > s.id ? "text-primary" : "text-on-surface-variant",
+              step > s.id && "hover:bg-primary/10"
             )}
           >
             <s.icon className="h-4 w-4" />
@@ -353,10 +353,10 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
       </div>
 
       {step === 1 && (
-        <Card className="rounded-2xl border bg-card text-card-foreground shadow-sm">
+        <Card className="rounded-[1.5rem] border border-outline-subtle bg-surface-card text-on-surface shadow-none">
           <CardHeader>
-            <CardTitle>Paso 1: Elige tus servicios</CardTitle>
-            <CardDescription>Selecciona uno o más tratamientos.</CardDescription>
+            <CardTitle className="font-vogue text-2xl text-on-surface">Paso 1: Elige tus servicios</CardTitle>
+            <CardDescription className="font-sans text-on-surface-secondary">Selecciona uno o más tratamientos.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -368,20 +368,20 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
                     <div
                       onClick={() => handleServiceToggle(service)}
                       className={cn(
-                        "p-4 border rounded-xl cursor-pointer transition-all flex flex-col h-full",
-                        isSelected ? "border-primary ring-2 ring-primary/20 shadow-lg bg-primary/5" : "hover:border-primary/50 dark:border-border/50 bg-background",
+                        "p-4 border rounded-[1.5rem] cursor-pointer transition-colors flex flex-col h-full",
+                        isSelected ? "border-primary bg-primary/5" : "border-outline-subtle hover:border-primary/50 bg-surface",
                       )}
                     >
                       <div className='flex justify-between items-start'>
                         <div className="flex-grow pr-2">
                           <div className="flex justify-between items-baseline mb-1">
-                            <h4 className="font-semibold">{service.name}</h4>
+                            <h4 className="font-vogue text-on-surface">{service.name}</h4>
                             {typeof service.price === 'object' && selectedData?.largo && isSelected ?
-                              <p className="text-primary font-bold text-sm bg-background px-1.5 rounded-sm">≈ {formatPrice(getServicePrice(selectedData).from)}</p> :
-                              typeof service.price === 'number' && <p className="text-primary font-bold text-sm">{formatPrice(service.price)}</p>
+                              <p className="font-sans text-primary font-bold text-sm bg-surface px-1.5 rounded-sm">≈ {formatPrice(getServicePrice(selectedData).from)}</p> :
+                              typeof service.price === 'number' && <p className="font-sans text-primary font-bold text-sm">{formatPrice(service.price)}</p>
                             }
                           </div>
-                          <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
+                          <div className="font-sans text-xs text-on-surface-secondary flex items-center gap-1.5 mt-1">
                             <Clock className="h-3 w-3" />
                             <span>{formatDuration(service.durationMinutes)}</span>
                           </div>
@@ -391,7 +391,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
 
                       <div className="mt-4 flex-grow flex flex-col justify-end">
                         {isSelected && service.requiresLengthSelection && (
-                          <div className="mt-4 pt-4 border-t border-dashed border-border/60">
+                          <div className="mt-4 pt-4 border-t border-dashed border-outline-subtle">
                             <div className="grid grid-cols-3 gap-2">
                               {(['corto', 'mediano', 'largo'] as LargoPelo[]).map(largo => (
                                 <Button
@@ -402,21 +402,26 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
                                     e.stopPropagation();
                                     handleLargoChange(service.id, largo)
                                   }}
-                                  className="capitalize flex-col h-auto py-1 shadow-sm text-xs"
+                                  className={cn(
+                                    "capitalize flex-col h-auto py-1 font-sans text-xs",
+                                    selectedData?.largo === largo
+                                      ? "bg-primary text-surface hover:bg-primary-dark"
+                                      : "border-outline-subtle text-on-surface hover:bg-surface-hover"
+                                  )}
                                 >
                                   {largo}
                                 </Button>
                               ))}
                             </div>
-                            <div className="text-xs text-muted-foreground text-center mt-3 flex items-center justify-center bg-background/50 rounded-md py-1">
+                            <div className="font-sans text-xs text-on-surface-secondary text-center mt-3 flex items-center justify-center bg-surface rounded-full py-1">
                               Precio desde. Se confirma en el local.
                               <LengthPopoverTrigger />
                             </div>
-                            {showLengthError && !selectedData?.largo && <p className="text-xs text-red-500 font-semibold text-center mt-2 animate-pulse">Elegí un largo para continuar.</p>}
+                            {showLengthError && !selectedData?.largo && <p className="font-sans text-xs text-danger font-semibold text-center mt-2 animate-pulse">Elegí un largo para continuar.</p>}
                           </div>
                         )}
                         {isSelected && (
-                          <div className="pt-3 text-center text-primary text-xs tracking-wider uppercase font-bold mt-auto flex items-center justify-center gap-1.5">
+                          <div className="pt-3 text-center text-primary text-xs tracking-wider uppercase font-sans font-bold mt-auto flex items-center justify-center gap-1.5">
                             <CheckCircle className="h-4 w-4" /> Seleccionado
                           </div>
                         )}
@@ -427,31 +432,31 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
               })}
             </div>
           </CardContent>
-          <CardFooter className="flex-col items-stretch gap-4 md:flex-row md:justify-between border-t bg-muted/20 p-6 rounded-b-2xl">
+          <CardFooter className="flex-col items-stretch gap-4 md:flex-row md:justify-between border-t border-outline-subtle bg-surface p-6 rounded-b-[1.5rem]">
             {selectedServices.length > 0 ? (
-              <div className='text-sm w-full space-y-1.5 bg-background p-4 rounded-xl shadow-sm border'>
-                <p className="flex justify-between items-center"><span className="font-semibold text-muted-foreground">Total estimado:</span> <span className="font-bold text-base">{canGoNextFromStep1 ? (hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)) : '--'}</span></p>
-                <p className="flex justify-between items-center"><span className="font-semibold text-muted-foreground">Tiempo total:</span> <span>{canGoNextFromStep1 ? formatDuration(totalDuration) : '--'}</span></p>
-                <p className="truncate text-muted-foreground text-xs"><span className="font-semibold">Items:</span> {servicesSummary}</p>
-                <p className="text-[10px] text-muted-foreground/80 mt-1 italic">Estimación sujeta a diagnóstico en caja local.</p>
+              <div className='font-sans text-sm w-full space-y-1.5 bg-surface-card p-4 rounded-[1.5rem] border border-outline-subtle'>
+                <p className="flex justify-between items-center"><span className="font-semibold text-on-surface-secondary">Total estimado:</span> <span className="font-bold text-base text-on-surface">{canGoNextFromStep1 ? (hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)) : '--'}</span></p>
+                <p className="flex justify-between items-center"><span className="font-semibold text-on-surface-secondary">Tiempo total:</span> <span className="text-on-surface">{canGoNextFromStep1 ? formatDuration(totalDuration) : '--'}</span></p>
+                <p className="truncate text-on-surface-secondary text-xs"><span className="font-semibold">Items:</span> {servicesSummary}</p>
+                <p className="text-[10px] text-on-surface-variant mt-1 italic">Estimación sujeta a diagnóstico en caja local.</p>
               </div>
             ) : (
-              <div className='p-4 border border-dashed rounded-xl bg-muted/30 text-sm text-center text-muted-foreground w-full'>
+              <div className='p-4 border border-dashed border-outline-subtle rounded-[1.5rem] bg-surface-card font-sans text-sm text-center text-on-surface-secondary w-full'>
                 Aún no has seleccionado ningún servicio.
               </div>
             )}
             <div className='flex items-center justify-end w-full md:w-auto mt-2 md:mt-0'>
-              <Button size="lg" className="w-full md:w-auto shadow-md hover:shadow-lg transition-shadow" onClick={() => { if (canGoNextFromStep1) { posthog?.capture('booking_step_completed', { step: 1, step_name: 'services', tenant_slug: tenantSlug, services_count: selectedServices.length }); setStep(2); } else { setShowLengthError(true); } }} disabled={selectedServices.length === 0}> Continuar a Profesional </Button>
+              <Button size="lg" className="w-full md:w-auto bg-primary text-surface hover:bg-primary-dark rounded-full font-sans uppercase tracking-widest text-xs font-semibold shadow-card-glow transition-all duration-300 hover:-translate-y-0.5 active:scale-95" onClick={() => { if (canGoNextFromStep1) { posthog?.capture('booking_step_completed', { step: 1, step_name: 'services', tenant_slug: tenantSlug, services_count: selectedServices.length }); setStep(2); } else { setShowLengthError(true); } }} disabled={selectedServices.length === 0}> Continuar a Profesional </Button>
             </div>
           </CardFooter>
         </Card>
       )}
 
       {step === 2 && (
-        <Card className="rounded-2xl border bg-card text-card-foreground shadow-sm">
+        <Card className="rounded-[1.5rem] border border-outline-subtle bg-surface-card text-on-surface shadow-none">
           <CardHeader>
-            <CardTitle>Paso 2: Elige a tu profesional</CardTitle>
-            <CardDescription>Nuestras expertas están listas para atenderte.</CardDescription>
+            <CardTitle className="font-vogue text-2xl text-on-surface">Paso 2: Elige a tu profesional</CardTitle>
+            <CardDescription className="font-sans text-on-surface-secondary">Nuestras expertas están listas para atenderte.</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {staff.map(prof => (
@@ -462,36 +467,36 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
                 aria-pressed={selectedStaff?.id === prof.id}
                 onClick={() => handleStaffSelect(prof)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleStaffSelect(prof); } }}
-                className={cn("p-4 border rounded-xl cursor-pointer transition-all flex flex-col items-center gap-3 text-center bg-background",
-                  selectedStaff?.id === prof.id ? "border-primary ring-2 ring-primary/20 shadow-md bg-primary/5" : "hover:border-primary/50 dark:border-border/50"
+                className={cn("p-4 border rounded-[1.5rem] cursor-pointer transition-colors flex flex-col items-center gap-3 text-center bg-surface",
+                  selectedStaff?.id === prof.id ? "border-primary bg-primary/5" : "border-outline-subtle hover:border-primary/50"
                 )}>
-                <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-muted overflow-hidden flex items-center justify-center shadow-sm">
+                <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-surface-hover overflow-hidden flex items-center justify-center border border-outline-subtle">
                   {prof.avatarUrl ? (
                      <Image src={prof.avatarUrl} alt={prof.name} fill className="object-cover object-top aspect-square" />
-                  ) : <User className="h-8 w-8 text-muted-foreground/50"/>}
+                  ) : <User className="h-8 w-8 text-on-surface-variant"/>}
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm line-clamp-1">{prof.name}</h4>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">{prof.role}</p>
+                  <h4 className="font-vogue text-on-surface text-sm line-clamp-1">{prof.name}</h4>
+                  <p className="font-sans text-[10px] sm:text-xs text-primary uppercase tracking-wider">{prof.role}</p>
                 </div>
               </div>
             ))}
           </CardContent>
-          <CardFooter className="flex justify-between border-t bg-muted/20 p-6 rounded-b-2xl">
-            <Button variant="outline" onClick={() => setStep(1)}>Volver a Servicios</Button>
-            <Button onClick={() => { posthog?.capture('booking_step_completed', { step: 2, step_name: 'staff', tenant_slug: tenantSlug, staff_id: selectedStaff?.id }); setStep(3); }} disabled={!selectedStaff}>Siguiente Paso</Button>
+          <CardFooter className="flex justify-between border-t border-outline-subtle bg-surface p-6 rounded-b-[1.5rem]">
+            <Button variant="outline" className="rounded-full border-outline-subtle text-on-surface hover:bg-surface-hover font-sans" onClick={() => setStep(1)}>Volver a Servicios</Button>
+            <Button className="rounded-full bg-primary text-surface hover:bg-primary-dark font-sans uppercase tracking-widest text-xs font-semibold shadow-card-glow transition-all duration-300 hover:-translate-y-0.5 active:scale-95" onClick={() => { posthog?.capture('booking_step_completed', { step: 2, step_name: 'staff', tenant_slug: tenantSlug, staff_id: selectedStaff?.id }); setStep(3); }} disabled={!selectedStaff}>Siguiente Paso</Button>
           </CardFooter>
         </Card>
       )}
 
       {step === 3 && (
-        <Card className="rounded-2xl border bg-card text-card-foreground shadow-sm">
+        <Card className="rounded-[1.5rem] border border-outline-subtle bg-surface-card text-on-surface shadow-none">
           <CardHeader>
-            <CardTitle>Paso 3: Elige fecha y hora</CardTitle>
-            <CardDescription>Selecciona el día de tu cita e infórmate de los horarios disponibles con {selectedStaff?.name.split(' ')[0]}.</CardDescription>
+            <CardTitle className="font-vogue text-2xl text-on-surface">Paso 3: Elige fecha y hora</CardTitle>
+            <CardDescription className="font-sans text-on-surface-secondary">Selecciona el día de tu cita e infórmate de los horarios disponibles con {selectedStaff?.name.split(' ')[0]}.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col md:flex-row gap-8 md:p-6 items-center md:items-start px-4 py-2">
-            <div className="flex justify-center w-full max-w-xs bg-muted/20 rounded-xl p-2 md:p-4 border shadow-inner">
+            <div className="flex justify-center w-full max-w-xs bg-surface rounded-[1.5rem] p-2 md:p-4 border border-outline-subtle">
               <Calendar
                 mode="single"
                 selected={selectedDate}
@@ -501,27 +506,33 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
                 locale={es}
               />
             </div>
-            <div className="bg-background rounded-xl p-4 flex-1 w-full border border-dashed text-center min-h-[300px] flex flex-col justify-center">
+            <div className="bg-surface rounded-[1.5rem] p-4 flex-1 w-full border border-dashed border-outline-subtle text-center min-h-[300px] flex flex-col justify-center">
               {loadingSlots ? (
                 <div className="col-span-full flex flex-col items-center justify-center py-12 gap-4">
                   <Loader2 className="animate-spin h-8 w-8 text-primary" />
-                  <p className="text-sm text-muted-foreground">Consultando disponibilidad en tiempo real...</p>
+                  <p className="font-sans text-sm text-on-surface-secondary">Consultando disponibilidad en tiempo real...</p>
                 </div>
               ) : !selectedDate ? (
-                   <p className="text-muted-foreground text-sm flex items-center justify-center gap-2 py-10"><CalendarIcon className="w-5 h-5 opacity-50"/>Toca un día en el calendario para ver los horarios disponibles.</p>
+                   <p className="font-sans text-on-surface-secondary text-sm flex items-center justify-center gap-2 py-10"><CalendarIcon className="w-5 h-5 opacity-50"/>Toca un día en el calendario para ver los horarios disponibles.</p>
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-80 overflow-y-auto p-1.5 w-full styling-scrollbar items-start content-start">
                    {ALL_TIME_SLOTS.map(time => {
                      const isOccupied = occupiedSlots.includes(time);
+                     const isSelected = selectedTime === time;
                      return (
                       <Button
                         key={time}
-                        variant={selectedTime === time ? "default" : "outline"}
                         disabled={isOccupied}
                         onClick={() => setSelectedTime(time)}
-                        className={cn("h-10 text-xs shadow-sm transition-all", isOccupied && "opacity-30 cursor-not-allowed line-through bg-muted")}
+                        className={cn(
+                          "h-10 rounded-xl font-sans text-xs transition-colors",
+                          isSelected
+                            ? "bg-primary text-surface hover:bg-primary-dark"
+                            : "border border-outline-subtle bg-surface-card text-on-surface hover:bg-surface-hover",
+                          isOccupied && "opacity-30 cursor-not-allowed line-through bg-surface-hover"
+                        )}
                       >
-                        {time} {selectedTime === time && "✓"}
+                        {time} {isSelected && <CheckCircle className="h-3 w-3 ml-1" />}
                       </Button>
                      )
                    })}
@@ -529,30 +540,30 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
               )}
             </div>
           </CardContent>
-          <CardFooter className="flex justify-between border-t bg-muted/20 p-6 rounded-b-2xl">
-            <Button variant="outline" onClick={() => setStep(2)}>Atrás</Button>
-            <Button onClick={() => { posthog?.capture('booking_step_completed', { step: 3, step_name: 'datetime', tenant_slug: tenantSlug }); setStep(4); }} disabled={!selectedDate || !selectedTime}>Ver Resumen Final</Button>
+          <CardFooter className="flex justify-between border-t border-outline-subtle bg-surface p-6 rounded-b-[1.5rem]">
+            <Button variant="outline" className="rounded-full border-outline-subtle text-on-surface hover:bg-surface-hover font-sans" onClick={() => setStep(2)}>Atrás</Button>
+            <Button className="rounded-full bg-primary text-surface hover:bg-primary-dark font-sans uppercase tracking-widest text-xs font-semibold shadow-card-glow transition-all duration-300 hover:-translate-y-0.5 active:scale-95" onClick={() => { posthog?.capture('booking_step_completed', { step: 3, step_name: 'datetime', tenant_slug: tenantSlug }); setStep(4); }} disabled={!selectedDate || !selectedTime}>Ver Resumen Final</Button>
           </CardFooter>
         </Card>
       )}
 
       {step === 4 && (
-       <Card className="rounded-2xl border bg-card text-card-foreground shadow-sm">
+       <Card className="rounded-[1.5rem] border border-outline-subtle bg-surface-card text-on-surface shadow-none">
        <CardHeader className="text-center md:text-left">
-         <CardTitle className="text-2xl">Paso 4: Resumen y seña final</CardTitle>
-         <CardDescription>Estás a un paso de confirmar tu cita mágicamente.</CardDescription>
+         <CardTitle className="font-vogue text-2xl text-on-surface">Paso 4: Resumen y seña final</CardTitle>
+         <CardDescription className="font-sans text-on-surface-secondary">Estás a un paso de confirmar tu cita mágicamente.</CardDescription>
        </CardHeader>
        <CardContent className="space-y-6 md:p-6 p-4">
-         <div className="p-5 border dark:border-border/50 rounded-2xl bg-muted/50 dark:bg-muted/10 space-y-4 text-sm shadow-inner relative overflow-hidden">
-           <div className="absolute top-0 left-0 w-1.5 h-full bg-primary rounded-l-2xl opacity-80" />
-           <p className="flex items-center gap-3"><User className="h-4 w-4 text-primary shrink-0" /> <span className="text-muted-foreground min-w-[100px]">Clienta:</span> <span className="font-semibold">{clientName}</span></p>
-           <p className="flex items-center gap-3"><Users className="h-4 w-4 text-primary shrink-0" /> <span className="text-muted-foreground min-w-[100px]">Profesional:</span> <span className="font-semibold">{selectedStaff?.name}</span></p>
-           <p className="flex items-center gap-3"><CalendarIcon className="h-4 w-4 text-primary shrink-0" /> <span className="text-muted-foreground min-w-[100px]">Fecha:</span> <span className="font-semibold capitalize">{selectedDate && format(selectedDate, "EEEE d 'de' MMMM, yyyy", { locale: es })}</span></p>
-           <p className="flex items-center gap-3"><Clock className="h-4 w-4 text-primary shrink-0" /> <span className="text-muted-foreground min-w-[100px]">Horario:</span> <span className="font-semibold">{selectedTime} hs</span></p>
-           <div className="border-t dark:border-border/50 py-4 mt-4 text-xs font-mono bg-background px-4 rounded-xl shadow-xs">
-             <p className="flex justify-between uppercase tracking-wider text-muted-foreground/80 font-bold mb-3 border-b pb-2"><span>Tus Servicios Seleccionados</span> <span>Est. {formatDuration(totalDuration)}</span></p>
+         <div className="p-5 border border-outline-subtle rounded-[1.5rem] bg-surface space-y-4 font-sans text-sm relative overflow-hidden">
+           <div className="absolute top-0 left-0 w-1.5 h-full bg-primary rounded-l-[1.5rem] opacity-80" />
+           <p className="flex items-center gap-3"><User className="h-4 w-4 text-primary shrink-0" /> <span className="text-on-surface-secondary min-w-[100px]">Clienta:</span> <span className="font-semibold text-on-surface">{clientName}</span></p>
+           <p className="flex items-center gap-3"><Users className="h-4 w-4 text-primary shrink-0" /> <span className="text-on-surface-secondary min-w-[100px]">Profesional:</span> <span className="font-semibold text-on-surface">{selectedStaff?.name}</span></p>
+           <p className="flex items-center gap-3"><CalendarIcon className="h-4 w-4 text-primary shrink-0" /> <span className="text-on-surface-secondary min-w-[100px]">Fecha:</span> <span className="font-semibold capitalize text-on-surface">{selectedDate && format(selectedDate, "EEEE d 'de' MMMM, yyyy", { locale: es })}</span></p>
+           <p className="flex items-center gap-3"><Clock className="h-4 w-4 text-primary shrink-0" /> <span className="text-on-surface-secondary min-w-[100px]">Horario:</span> <span className="font-semibold text-on-surface">{selectedTime} hs</span></p>
+           <div className="border-t border-outline-subtle py-4 mt-4 text-xs font-mono bg-surface-card px-4 rounded-[1.5rem]">
+             <p className="flex justify-between uppercase tracking-wider text-on-surface-variant font-bold mb-3 border-b border-outline-subtle pb-2"><span>Tus Servicios Seleccionados</span> <span>Est. {formatDuration(totalDuration)}</span></p>
              <ul className="space-y-2">
-               {selectedServices.map(s => <li key={s.id} className="flex justify-between items-center"><span className="text-foreground tracking-tight">{s.name}{s.largo ? ` (${s.largo})` : ''}</span></li>)}
+               {selectedServices.map(s => <li key={s.id} className="flex justify-between items-center"><span className="text-on-surface tracking-tight">{s.name}{s.largo ? ` (${s.largo})` : ''}</span></li>)}
              </ul>
            </div>
          </div>
@@ -560,50 +571,50 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
           <div className="space-y-4">
             {/* ── Guest: datos de contacto ───────────────────────────── */}
             {!isAuthenticated && (
-              <div className="space-y-3 border border-border rounded-xl p-4">
-                <p className="text-sm font-medium">Tus datos de contacto</p>
+              <div className="space-y-3 border border-outline-subtle rounded-[1.5rem] p-4">
+                <p className="font-sans text-sm font-medium text-on-surface">Tus datos de contacto</p>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1.5 block">Nombre completo</label>
+                  <label className="font-sans text-xs text-on-surface-secondary mb-1.5 block">Nombre completo</label>
                   <input
                     type="text"
                     placeholder="Tu nombre"
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
-                    className="w-full rounded-xl px-4 py-3 text-sm bg-background border border-border focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="w-full rounded-xl px-4 py-3 font-sans text-sm bg-surface text-on-surface placeholder:text-on-surface-variant border border-outline-subtle focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1.5 block">Email</label>
+                  <label className="font-sans text-xs text-on-surface-secondary mb-1.5 block">Email</label>
                   <input
                     type="email"
                     placeholder="tu@email.com"
                     value={guestEmail}
                     onChange={(e) => setGuestEmail(e.target.value)}
-                    className="w-full rounded-xl px-4 py-3 text-sm bg-background border border-border focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="w-full rounded-xl px-4 py-3 font-sans text-sm bg-surface text-on-surface placeholder:text-on-surface-variant border border-outline-subtle focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1.5 block">WhatsApp</label>
+                  <label className="font-sans text-xs text-on-surface-secondary mb-1.5 block">WhatsApp</label>
                   <input
                     type="tel"
                     placeholder="9 11 XXXX-XXXX"
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
-                    className="w-full rounded-xl px-4 py-3 text-sm bg-background border border-border focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="w-full rounded-xl px-4 py-3 font-sans text-sm bg-surface text-on-surface placeholder:text-on-surface-variant border border-outline-subtle focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                 </div>
               </div>
             )}
             <div className="space-y-3">
-              <label className="text-zinc-400 text-sm font-medium">Tu WhatsApp para la confirmación</label>
+              <label className="font-sans text-on-surface-secondary text-sm font-medium">Tu WhatsApp para la confirmación</label>
               <div className={cn(
-                "flex items-center bg-zinc-900 border transition-all duration-300 rounded-xl overflow-hidden px-4 py-2",
-                phoneTouched && !isPhoneValid ? "border-red-400/50 ring-1 ring-red-400/20" : 
-                isPhoneValid ? "border-emerald-400/50 ring-1 ring-emerald-400/20" : "border-white/10"
+                "flex items-center bg-surface border transition-colors duration-300 rounded-xl overflow-hidden px-4 py-2",
+                phoneTouched && !isPhoneValid ? "border-danger/50 ring-1 ring-danger/20" :
+                isPhoneValid ? "border-success/50 ring-1 ring-success/20" : "border-outline-subtle"
               )}>
-                <div className="flex items-center gap-2 pr-4 border-r border-white/10 text-zinc-500 font-medium select-none">
+                <div className="flex items-center gap-2 pr-4 border-r border-outline-subtle text-on-surface-variant font-medium select-none">
                   <img src="https://flagcdn.com/w20/ar.png" alt="AR" className="w-4 h-auto rounded-sm opacity-50" />
-                  <span className="text-sm">+54</span>
+                  <span className="font-sans text-sm">+54</span>
                 </div>
                 <input
                   type="tel"
@@ -615,46 +626,46 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
                   }}
                   onBlur={() => setPhoneTouched(true)}
                   placeholder="9 11 XXXX-XXXX"
-                  className="bg-transparent flex-1 px-4 py-1 text-white placeholder:text-zinc-600 focus:outline-none font-inter"
+                  className="bg-transparent flex-1 px-4 py-1 font-sans text-on-surface placeholder:text-on-surface-variant focus:outline-none"
                 />
-                <svg className={cn("w-5 h-5 transition-colors", isPhoneValid ? "text-emerald-400" : "text-zinc-700")} viewBox="0 0 24 24" fill="currentColor">
+                <svg className={cn("w-5 h-5 transition-colors", isPhoneValid ? "text-success" : "text-on-surface-variant")} viewBox="0 0 24 24" fill="currentColor">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
                 </svg>
               </div>
               <div className="flex justify-between items-center">
-                <p className={cn("text-xs transition-colors", isPhoneValid ? "text-emerald-400" : "text-zinc-500")}>
+                <p className={cn("font-sans text-xs transition-colors", isPhoneValid ? "text-success" : "text-on-surface-variant")}>
                   {(session?.user as any)?.phone && clientPhone === (session?.user as any)?.phone ? "Usamos el número de tu cuenta" : "Vas a recibir la confirmación por acá"}
                 </p>
                 {phoneTouched && !isPhoneValid && (
-                  <p className="text-red-400 text-[10px] font-semibold animate-pulse">Tu número es necesario para confirmar</p>
+                  <p className="font-sans text-danger text-[10px] font-semibold animate-pulse">Tu número es necesario para confirmar</p>
                 )}
               </div>
             </div>
           </div>
 
           <div className="space-y-6">
-           <div className="p-8 border rounded-2xl text-center bg-gradient-to-br from-background to-muted/40 shadow-sm relative overflow-hidden">
-             <div className="absolute top-3 right-3 opacity-10"><CheckCircle className="w-24 h-24"/></div>
-             <p className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-1">Seña para confirmar turno</p>
-             <p className="text-5xl font-extrabold text-primary my-2 drop-shadow-sm">{formatPrice(depositAmount)}</p>
-             <p className="text-xs text-muted-foreground/80 mt-4 max-w-sm mx-auto leading-relaxed">El remanente estimado de <span className="font-semibold text-foreground">{hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)}</span> se abona directo en el salón. Valores sujetos al diagnóstico en persona de {selectedStaff?.name.split(' ')[0]}.</p>
+           <div className="p-8 border border-outline-subtle rounded-[1.5rem] text-center bg-surface relative overflow-hidden">
+             <div className="absolute top-3 right-3 opacity-10"><CheckCircle className="w-24 h-24 text-primary"/></div>
+             <p className="font-sans text-sm font-semibold text-on-surface-secondary uppercase tracking-widest mb-1">Seña para confirmar turno</p>
+             <p className="font-vogue text-5xl text-primary my-2">{formatPrice(depositAmount)}</p>
+             <p className="font-sans text-xs text-on-surface-secondary mt-4 max-w-sm mx-auto leading-relaxed">El remanente estimado de <span className="font-semibold text-on-surface">{hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)}</span> se abona directo en el salón. Valores sujetos al diagnóstico en persona de {selectedStaff?.name.split(' ')[0]}.</p>
            </div>
-           <div className="items-top flex space-x-3 p-4 bg-muted/20 border rounded-xl hover:bg-muted/30 transition-colors">
+           <div className="items-top flex space-x-3 p-4 bg-surface border border-outline-subtle rounded-[1.5rem] hover:bg-surface-hover transition-colors">
              <Checkbox id="terms1" checked={finalConfirmation} onCheckedChange={(checked) => setFinalConfirmation(checked as boolean)} className="mt-0.5 data-[state=checked]:bg-primary"/>
              <div className="grid gap-1.5 leading-none">
                <label
                  htmlFor="terms1"
-                 className="text-sm font-medium leading-relaxed peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer text-muted-foreground cursor-pointer"
+                 className="font-sans text-sm font-medium leading-relaxed peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer text-on-surface-secondary"
                >
-                 Confirmo que mi cabello actual coincide cercanamente con el <span className="text-foreground font-semibold">largo declarado</span>, previniendo sorpresas de cobro adicional o carencia de tiempo técnico disponible hoy.
+                 Confirmo que mi cabello actual coincide cercanamente con el <span className="text-on-surface font-semibold">largo declarado</span>, previniendo sorpresas de cobro adicional o carencia de tiempo técnico disponible hoy.
                </label>
              </div>
            </div>
          </div>
        </CardContent>
-       <CardFooter className="flex flex-col sm:flex-row justify-between border-t bg-muted/10 p-4 sm:p-6 rounded-b-2xl gap-3">
-         <Button variant="outline" className="w-full sm:w-auto" onClick={() => setStep(3)}>Modificar Detalles</Button>
-         <Button size="lg" className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-shadow text-base tracking-wide" onClick={handleSubmit} disabled={isPending || !finalConfirmation}>
+       <CardFooter className="flex flex-col sm:flex-row justify-between border-t border-outline-subtle bg-surface p-4 sm:p-6 rounded-b-[1.5rem] gap-3">
+         <Button variant="outline" className="w-full sm:w-auto rounded-full border-outline-subtle text-on-surface hover:bg-surface-hover font-sans" onClick={() => setStep(3)}>Modificar Detalles</Button>
+         <Button size="lg" className="w-full sm:w-auto rounded-full bg-primary text-surface hover:bg-primary-dark font-sans uppercase tracking-widest text-xs font-semibold shadow-card-glow transition-all duration-300 hover:-translate-y-0.5 active:scale-95" onClick={handleSubmit} disabled={isPending || !finalConfirmation}>
            {isPending ? <Loader2 className="animate-spin w-5 h-5 mr-2" /> : 'Confirmar Cita Exacta'}
          </Button>
        </CardFooter>
