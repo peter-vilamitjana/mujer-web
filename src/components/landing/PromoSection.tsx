@@ -155,7 +155,7 @@ export default function PromoSection({ tenantSlug }: { tenantSlug: string }) {
                                         <Link href={`/salones/${tenantSlug}/book`} className="w-full">
                                             <Button
                                                 size="lg"
-                                                className="w-full border border-primary/50 text-primary bg-transparent hover:bg-primary/10 rounded-full px-8 py-3 font-sans uppercase tracking-widest text-xs font-medium transition-colors"
+                                                className="w-full bg-primary text-surface hover:bg-primary-dark rounded-full px-8 py-3 font-sans uppercase tracking-widest text-xs font-semibold shadow-card-glow transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
                                             >
                                                 Seleccionar
                                             </Button>

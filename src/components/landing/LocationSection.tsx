@@ -67,7 +67,7 @@ export default function LocationSection({ salon }: LocationSectionProps) {
                 )}
                 {directionsUrl && (
                   <Link href={directionsUrl} target="_blank" className="w-full inline-block">
-                    <Button className="w-full border border-primary/50 text-primary bg-transparent hover:bg-primary/10 rounded-full px-8 py-3 font-sans uppercase tracking-widest text-xs font-medium transition-colors flex items-center justify-center gap-3">
+                    <Button className="w-full bg-primary text-surface hover:bg-primary-dark rounded-full px-8 py-3 font-sans uppercase tracking-widest text-xs font-semibold shadow-card-glow transition-all duration-300 hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-3">
                       <Navigation className="h-4 w-4" />
                       Cómo llegar
                     </Button>
@@ -131,7 +131,7 @@ export default function LocationSection({ salon }: LocationSectionProps) {
                 </div>
                 {directionsUrl && (
                   <Link href={directionsUrl} target="_blank" className="shrink-0">
-                    <Button className="border border-primary/50 text-primary bg-transparent hover:bg-primary/10 rounded-full px-8 py-3 font-sans uppercase tracking-widest text-xs font-medium transition-colors flex items-center justify-center gap-3">
+                    <Button className="bg-primary text-surface hover:bg-primary-dark rounded-full px-8 py-3 font-sans uppercase tracking-widest text-xs font-semibold shadow-card-glow transition-all duration-300 hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-3">
                       <Navigation className="h-4 w-4" />
                       Cómo llegar
                     </Button>
