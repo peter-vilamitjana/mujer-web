@@ -71,6 +71,10 @@ service cloud.firestore {
         allow read: if true;
         allow write: if hasRole(tenantId, 'admin');
       }
+      match /portfolio/{doc} {
+        allow read: if true;
+        allow write: if hasRole(tenantId, 'admin');
+      }
 
       // -- Dato privado: acceso solo para staff del tenant --
       match /content/{doc} {
