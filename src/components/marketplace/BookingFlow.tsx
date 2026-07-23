@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useRef, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { usePostHog } from 'posthog-js/react';
@@ -25,6 +25,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
+
+// Feedback táctil de un tap — se salta solo si el usuario prefiere menos movimiento.
+const pulsePress = (el: HTMLElement | null) => {
+  if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  gsap.fromTo(el, { scale: 1 }, { scale: 0.97, duration: 0.1, yoyo: true, repeat: 1, ease: 'power1.inOut' });
+};
 
 const MONTO_SEÑA_PORCENTAJE = 0.15;
 
@@ -157,6 +165,53 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
     if (names.length > limit) summary += ` +${names.length - limit} más`;
     return summary;
   }, [selectedServices]);
+
+  const stepContentRef = useRef<HTMLDivElement>(null);
+  const stepIndicatorRef = useRef<HTMLDivElement>(null);
+  const slotsContainerRef = useRef<HTMLDivElement>(null);
+
+  // Transición entre pasos: la card entrante hace un fade+slide corto en vez
+  // de aparecer de golpe con el salto seco del re-render condicional.
+  useGSAP(() => {
+    if (!stepContentRef.current) return;
+    const mm = gsap.matchMedia();
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.fromTo(
+        stepContentRef.current,
+        { autoAlpha: 0, x: 16 },
+        { autoAlpha: 1, x: 0, duration: 0.35, ease: 'power2.out' }
+      );
+    });
+    return () => mm.revert();
+  }, [step]);
+
+  // Pill que se desliza detrás del paso activo del stepper — antes el único
+  // feedback de progreso era un cambio de color, ahora hay un movimiento que
+  // comunica "avanzaste" en vez de "cambió un color".
+  useGSAP(() => {
+    if (!stepIndicatorRef.current) return;
+    const mm = gsap.matchMedia();
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.to(stepIndicatorRef.current, { xPercent: (step - 1) * 100, duration: 0.4, ease: 'power2.out' });
+    });
+    mm.add('(prefers-reduced-motion: reduce)', () => {
+      gsap.set(stepIndicatorRef.current, { xPercent: (step - 1) * 100 });
+    });
+    return () => mm.revert();
+  }, [step]);
+
+  // Horarios disponibles: entran en cascada apenas resuelve la consulta de
+  // disponibilidad, en vez de aparecer todos de golpe.
+  useGSAP(() => {
+    if (loadingSlots || !selectedDate || !slotsContainerRef.current) return;
+    const buttons = slotsContainerRef.current.querySelectorAll('button');
+    if (buttons.length === 0) return;
+    const mm = gsap.matchMedia();
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      gsap.fromTo(buttons, { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.35, stagger: 0.02, ease: 'power2.out' });
+    });
+    return () => mm.revert();
+  }, [loadingSlots, selectedDate, occupiedSlots]);
 
   // Early returns after all hooks — safe per Rules of Hooks
   if (status === 'loading') {
@@ -334,15 +389,21 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
 
   return (
     <div className="space-y-6 mx-auto w-full">
-      <div className="p-2 bg-surface-card border border-outline-subtle rounded-full flex items-center justify-between">
+      <div className="relative p-2 bg-surface-card border border-outline-subtle rounded-full flex items-center justify-between">
+        <div
+          ref={stepIndicatorRef}
+          aria-hidden="true"
+          className="absolute top-2 bottom-2 left-2 rounded-full bg-primary"
+          style={{ width: 'calc((100% - 16px) / 4)' }}
+        />
         {stepsInfo.map(s => (
           <button
             key={s.id}
             onClick={() => { if (step > s.id) setStep(s.id) }}
             disabled={step < s.id}
             className={cn(
-              "flex-1 flex items-center justify-center gap-2 py-2 px-2 rounded-full font-sans text-xs sm:text-sm font-semibold transition-colors duration-300",
-              step === s.id ? "bg-primary text-surface" : step > s.id ? "text-primary" : "text-on-surface-variant",
+              "relative z-10 flex-1 flex items-center justify-center gap-2 py-2 px-2 rounded-full font-sans text-xs sm:text-sm font-semibold transition-colors duration-300",
+              step === s.id ? "text-surface" : step > s.id ? "text-primary" : "text-on-surface-variant",
               step > s.id && "hover:bg-primary/10"
             )}
           >
@@ -352,6 +413,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
         ))}
       </div>
 
+      <div ref={stepContentRef}>
       {step === 1 && (
         <Card className="rounded-[1.5rem] border border-outline-subtle bg-surface-card text-on-surface shadow-none">
           <CardHeader>
@@ -366,9 +428,9 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
                 return (
                   <div key={service.id} className="h-full">
                     <div
-                      onClick={() => handleServiceToggle(service)}
+                      onClick={(e) => { pulsePress(e.currentTarget); handleServiceToggle(service); }}
                       className={cn(
-                        "p-4 border rounded-[1.5rem] cursor-pointer transition-colors flex flex-col h-full",
+                        "p-6 border rounded-[1.5rem] cursor-pointer transition-colors flex flex-col h-full",
                         isSelected ? "border-primary bg-primary/5" : "border-outline-subtle hover:border-primary/50 bg-surface",
                       )}
                     >
@@ -465,14 +527,14 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
                 role="button"
                 tabIndex={0}
                 aria-pressed={selectedStaff?.id === prof.id}
-                onClick={() => handleStaffSelect(prof)}
+                onClick={(e) => { pulsePress(e.currentTarget); handleStaffSelect(prof); }}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleStaffSelect(prof); } }}
-                className={cn("p-4 border rounded-[1.5rem] cursor-pointer transition-colors flex flex-col items-center gap-3 text-center bg-surface",
+                className={cn("p-3 border rounded-[1.5rem] cursor-pointer transition-colors flex flex-col items-center gap-3 text-center bg-surface",
                   selectedStaff?.id === prof.id ? "border-primary bg-primary/5" : "border-outline-subtle hover:border-primary/50"
                 )}>
-                <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-surface-hover overflow-hidden flex items-center justify-center border border-outline-subtle">
+                <div className="relative w-full aspect-[3/4] rounded-xl bg-surface-hover overflow-hidden flex items-center justify-center border border-outline-subtle">
                   {prof.avatarUrl ? (
-                     <Image src={prof.avatarUrl} alt={prof.name} fill className="object-cover object-top aspect-square" />
+                     <Image src={prof.avatarUrl} alt={prof.name} fill className="object-cover" />
                   ) : <User className="h-8 w-8 text-on-surface-variant"/>}
                 </div>
                 <div>
@@ -515,7 +577,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
               ) : !selectedDate ? (
                    <p className="font-sans text-on-surface-secondary text-sm flex items-center justify-center gap-2 py-10"><CalendarIcon className="w-5 h-5 opacity-50"/>Toca un día en el calendario para ver los horarios disponibles.</p>
               ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-80 overflow-y-auto p-1.5 w-full styling-scrollbar items-start content-start">
+                <div ref={slotsContainerRef} className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-80 overflow-y-auto p-1.5 w-full styling-scrollbar items-start content-start">
                    {ALL_TIME_SLOTS.map(time => {
                      const isOccupied = occupiedSlots.includes(time);
                      const isSelected = selectedTime === time;
@@ -554,7 +616,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
          <CardDescription className="font-sans text-on-surface-secondary">Estás a un paso de confirmar tu cita mágicamente.</CardDescription>
        </CardHeader>
        <CardContent className="space-y-6 md:p-6 p-4">
-         <div className="p-5 border border-outline-subtle rounded-[1.5rem] bg-surface space-y-4 font-sans text-sm relative overflow-hidden">
+         <div className="p-8 border border-outline-subtle rounded-[1.5rem] bg-surface space-y-4 font-sans text-sm relative overflow-hidden">
            <div className="absolute top-0 left-0 w-1.5 h-full bg-primary rounded-l-[1.5rem] opacity-80" />
            <p className="flex items-center gap-3"><User className="h-4 w-4 text-primary shrink-0" /> <span className="text-on-surface-secondary min-w-[100px]">Clienta:</span> <span className="font-semibold text-on-surface">{clientName}</span></p>
            <p className="flex items-center gap-3"><Users className="h-4 w-4 text-primary shrink-0" /> <span className="text-on-surface-secondary min-w-[100px]">Profesional:</span> <span className="font-semibold text-on-surface">{selectedStaff?.name}</span></p>
@@ -568,10 +630,10 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
            </div>
          </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 max-w-md mx-auto">
             {/* ── Guest: datos de contacto ───────────────────────────── */}
             {!isAuthenticated && (
-              <div className="space-y-3 border border-outline-subtle rounded-[1.5rem] p-4">
+              <div className="space-y-3 border border-outline-subtle rounded-[1.5rem] p-6">
                 <p className="font-sans text-sm font-medium text-on-surface">Tus datos de contacto</p>
                 <div>
                   <label className="font-sans text-xs text-on-surface-secondary mb-1.5 block">Nombre completo</label>
@@ -671,6 +733,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
        </CardFooter>
      </Card>
       )}
+      </div>
     </div>
   );
 }
