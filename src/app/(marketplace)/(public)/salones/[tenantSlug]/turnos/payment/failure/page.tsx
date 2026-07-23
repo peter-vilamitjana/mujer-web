@@ -10,18 +10,18 @@ export default async function PaymentFailurePage({ params }: Props) {
   const { tenantSlug } = await params;
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-surface flex items-center justify-center px-4">
       <div className="text-center max-w-md space-y-6">
-        <XCircle className="w-20 h-20 text-red-400 mx-auto" />
-        <h1 className="font-playfair text-4xl text-white">El pago no se completó</h1>
-        <p className="text-zinc-400 text-lg leading-relaxed">
+        <XCircle className="w-20 h-20 text-danger mx-auto" />
+        <h1 className="font-vogue text-4xl text-on-surface">El pago no se completó</h1>
+        <p className="font-sans text-on-surface-secondary text-lg leading-relaxed">
           No se procesó ningún cobro. Tu turno quedó pendiente de seña. Podés intentar de nuevo cuando quieras.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button asChild variant="default" size="lg">
+          <Button asChild size="lg" className="bg-primary text-surface hover:bg-primary-dark rounded-full font-sans uppercase tracking-widest text-xs font-semibold shadow-card-glow transition-all duration-300 hover:-translate-y-0.5 active:scale-95">
             <Link href={`/salones/${tenantSlug}/turnos`}>Volver al turno</Link>
           </Button>
-          <Button asChild variant="outline" size="lg">
+          <Button asChild variant="outline" size="lg" className="rounded-full border-outline-subtle text-on-surface hover:bg-surface-hover font-sans uppercase tracking-widest text-xs font-semibold">
             <Link href={`/salones/${tenantSlug}/dashboard`}>Ver mis turnos</Link>
           </Button>
         </div>
