@@ -206,7 +206,7 @@ export default function PerfilClient({
         time: suggestion.slot.time,
         isGuest: 'false',
       });
-      router.push(`/salones/${suggestion.pattern.tenantSlug}/book/confirmation/${result.appointmentId}?${params.toString()}`);
+      router.push(`/salones/${suggestion.pattern.tenantSlug}/turnos/confirmation/${result.appointmentId}?${params.toString()}`);
       return;
     }
     setBooking(false);

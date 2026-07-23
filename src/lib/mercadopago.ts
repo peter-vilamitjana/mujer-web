@@ -61,9 +61,9 @@ export async function createCheckoutPreference(
       name: payload.payerName,
     },
     back_urls: {
-      success: `${base}/salones/${payload.tenantSlug}/book/payment/success?appointmentId=${payload.appointmentId}`,
-      failure: `${base}/salones/${payload.tenantSlug}/book/payment/failure?appointmentId=${payload.appointmentId}`,
-      pending: `${base}/salones/${payload.tenantSlug}/book/payment/pending?appointmentId=${payload.appointmentId}`,
+      success: `${base}/salones/${payload.tenantSlug}/turnos/payment/success?appointmentId=${payload.appointmentId}`,
+      failure: `${base}/salones/${payload.tenantSlug}/turnos/payment/failure?appointmentId=${payload.appointmentId}`,
+      pending: `${base}/salones/${payload.tenantSlug}/turnos/payment/pending?appointmentId=${payload.appointmentId}`,
     },
     auto_return: 'approved',
     notification_url: `${base}/api/mercadopago/webhook`,

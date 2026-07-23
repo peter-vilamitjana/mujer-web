@@ -240,7 +240,7 @@ export function CustomerDashboardView({
             Revisá tus próximos turnos y tu historial de visitas en {salonName}.
           </p>
         </div>
-        <Link href={`/salones/${tenantSlug}/book`}>
+        <Link href={`/salones/${tenantSlug}/turnos`}>
           <Button>
             <Plus className="mr-2 h-4 w-4" /> Agendar Turno
           </Button>
@@ -277,7 +277,7 @@ export function CustomerDashboardView({
               experiencia Ouleeh.
             </p>
             <Button asChild className="mt-6">
-              <Link href={`/salones/${tenantSlug}/book`}>Agendar un turno</Link>
+              <Link href={`/salones/${tenantSlug}/turnos`}>Agendar un turno</Link>
             </Button>
           </CardContent>
         </Card>

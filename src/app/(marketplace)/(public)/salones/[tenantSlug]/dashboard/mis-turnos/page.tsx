@@ -200,7 +200,7 @@ export default function MisTurnosPage() {
             Revisá tus próximos turnos y tu historial de visitas.
           </p>
         </div>
-        <Link href={`/salones/${tenantSlug}/book`}>
+        <Link href={`/salones/${tenantSlug}/turnos`}>
           <Button><Plus className="mr-2 h-4 w-4" /> Agendar Turno</Button>
         </Link>
       </div>
@@ -230,7 +230,7 @@ export default function MisTurnosPage() {
               ¿Lista para tu próxima transformación? Animate a reservar tu cita y viví la experiencia Ouleeh.
             </p>
             <Button asChild className="mt-6">
-              <Link href={`/salones/${tenantSlug}/book`}>Agendar un turno</Link>
+              <Link href={`/salones/${tenantSlug}/turnos`}>Agendar un turno</Link>
             </Button>
           </CardContent>
         </Card>

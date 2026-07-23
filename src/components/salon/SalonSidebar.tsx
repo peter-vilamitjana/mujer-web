@@ -21,7 +21,7 @@ export default function SalonSidebar({ isOpen, onClose, tenantSlug }: SalonSideb
 
   const navItems = [
     { href: `/salones/${tenantSlug}/dashboard/mis-turnos`, label: 'Mis Turnos', icon: Home },
-    { href: `/salones/${tenantSlug}/book`, label: 'Agendar Turno', icon: Calendar },
+    { href: `/salones/${tenantSlug}/turnos`, label: 'Agendar Turno', icon: Calendar },
   ];
 
   const handleLogout = async () => {

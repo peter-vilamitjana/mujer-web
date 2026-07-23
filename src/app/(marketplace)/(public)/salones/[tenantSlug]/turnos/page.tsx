@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getSalonBySlug, getSalonServices, getSalonStaff } from '@/lib/services/marketplace.service';
 import { notFound } from 'next/navigation';
-import BookingFlowClient from '../book/BookingFlowClient';
+import BookingFlowClient from './BookingFlowClient';
 
 interface Props {
   params: Promise<{ tenantSlug: string }>;

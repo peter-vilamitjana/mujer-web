@@ -373,7 +373,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
         services_count: selectedServices.length,
         has_deposit: depositAmount > 0,
       });
-      router.push(`/salones/${tenantSlug}/book/confirmation/${appointmentId}?${params.toString()}`);
+      router.push(`/salones/${tenantSlug}/turnos/confirmation/${appointmentId}?${params.toString()}`);
     });
   };
 

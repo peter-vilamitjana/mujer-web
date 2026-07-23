@@ -121,7 +121,6 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
           <h2 className="font-vogue text-3xl font-bold tracking-tight text-on-surface">
             Servicios
           </h2>
-          {/* CAMBIO 3: /servicios → /salones/{tenantSlug}/book */}
           <Link href={`/salones/${tenantSlug}/turnos`} className="font-sans text-[10px] font-bold uppercase tracking-widest text-primary">
             RESERVAR
           </Link>

@@ -75,7 +75,7 @@ export default function LandingHeader() {
   const textWhite = (mounted && theme === 'dark') || overHero;
 
   const navLinks = salon
-    ? [{ label: 'Reservar turno', href: `/salones/${salon.slug}/book` }]
+    ? [{ label: 'Reservar turno', href: `/salones/${salon.slug}/turnos` }]
     : [
         { label: 'Reservar turno', href: '/explore' },
         { label: 'Sumá tu salón', href: '/business' },
