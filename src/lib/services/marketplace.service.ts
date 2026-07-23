@@ -6,7 +6,7 @@
  * Para colecciones públicas (allow read: if true) no se necesita token de auth.
  */
 
-import type { Tenant, Service, Staff } from '@/lib/schema';
+import type { Tenant, Service, Staff, PortfolioItem } from '@/lib/schema';
 import { firestoreRestBase } from '@/lib/firebase-rest-base';
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'mujer-app';
@@ -177,4 +177,19 @@ export async function getSalonStaff(tenantId: string): Promise<Staff[]> {
     [{ field: 'active', op: 'EQUAL', value: true }]
   );
   return docs.map(d => ({ ...d, id: d._id } as unknown as Staff));
+}
+
+/**
+ * Retorna el portfolio de trabajos activo de un tenant, ordenado por
+ * curación manual (order). Colección chica — se ordena en memoria en vez
+ * de extender firestoreQuery con orderBy.
+ */
+export async function getSalonPortfolio(tenantId: string): Promise<PortfolioItem[]> {
+  const docs = await firestoreQuery(
+    `tenants/${tenantId}/portfolio`,
+    [{ field: 'active', op: 'EQUAL', value: true }]
+  );
+  return docs
+    .map(d => ({ ...d, id: d._id } as unknown as PortfolioItem))
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
