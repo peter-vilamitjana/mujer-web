@@ -14,7 +14,28 @@ export async function getServices(
   let ref = adminDb.collection('tenants').doc(tenantId).collection('services').orderBy('name', 'asc');
   if (onlyActive) ref = ref.where('active', '==', true) as typeof ref;
   const snap = await ref.get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }) as Service);
+  // Whitelist explícito de los campos de Service — esta action cruza la
+  // frontera Server→Client (se llama desde un componente cliente), y un
+  // spread de d.data() a ciegas deja pasar cualquier campo legacy que sea
+  // una instancia de clase (ej. un Timestamp de una migración vieja),
+  // que React no puede serializar y rompe el render entero.
+  return snap.docs.map(d => {
+    const data = d.data();
+    return {
+      id: d.id,
+      name: data.name,
+      description: data.description,
+      categoryId: data.categoryId,
+      durationMinutes: data.durationMinutes,
+      price: data.price,
+      priceHasta: data.priceHasta,
+      requiresLengthSelection: data.requiresLengthSelection,
+      variablePrice: data.variablePrice,
+      active: data.active,
+      image: data.image,
+      badge: data.badge,
+    } as Service;
+  });
 }
 
 export async function createService(
