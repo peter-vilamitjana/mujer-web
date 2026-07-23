@@ -111,7 +111,7 @@ export default function PromoSection({ tenantSlug }: { tenantSlug: string }) {
                         </h3>
                         <p className="font-sans text-on-surface-variant text-[11px] tracking-[0.5em] uppercase font-bold">Un manifiesto de exclusividad y rigor estético.</p>
                     </div>
-                    <Link href={`/salones/${tenantSlug}/book`} className="font-sans text-[10px] font-black tracking-[0.4em] uppercase border-b-2 border-on-surface pb-1 hover:opacity-50 transition-all mt-10 md:mt-0 text-on-surface">
+                    <Link href={`/salones/${tenantSlug}/turnos`} className="font-sans text-[10px] font-black tracking-[0.4em] uppercase border-b-2 border-on-surface pb-1 hover:opacity-50 transition-all mt-10 md:mt-0 text-on-surface">
                         VER TODO
                     </Link>
                 </div>
@@ -152,14 +152,11 @@ export default function PromoSection({ tenantSlug }: { tenantSlug: string }) {
                                         </ul>
                                     </div>
                                     <div className="mt-8">
-                                        <Link href={`/salones/${tenantSlug}/book`} className="w-full">
-                                            <Button
-                                                size="lg"
-                                                className="w-full bg-primary text-surface hover:bg-primary-dark rounded-full px-8 py-3 font-sans uppercase tracking-widest text-xs font-semibold shadow-card-glow transition-all duration-300 hover:-translate-y-0.5 active:scale-95"
-                                            >
+                                        <Button asChild size="lg" className="w-full bg-primary text-surface hover:bg-primary-dark rounded-full px-8 py-3 font-sans uppercase tracking-widest text-xs font-semibold shadow-card-glow transition-all duration-300 hover:-translate-y-0.5 active:scale-95">
+                                            <Link href={`/salones/${tenantSlug}/turnos`}>
                                                 Seleccionar
-                                            </Button>
-                                        </Link>
+                                            </Link>
+                                        </Button>
                                     </div>
                                 </CardContent>
                             </Card>

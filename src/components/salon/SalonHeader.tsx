@@ -100,15 +100,15 @@ export default function SalonHeader({ tenantSlug, salonName }: SalonHeaderProps)
               Acceder
             </Button>
           </Link>
-          <Link href={`/salones/${tenantSlug}/book`}>
-            <Button className={cn(
-              "transition-all duration-500",
-              isDarkTheme && "bg-white text-primary hover:bg-white/90 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
-            )}>
+          <Button asChild className={cn(
+            "transition-all duration-500",
+            isDarkTheme && "bg-white text-primary hover:bg-white/90 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+          )}>
+            <Link href={`/salones/${tenantSlug}/turnos`}>
               <Calendar className="mr-2 h-4 w-4" />
               Reservar Turno
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
     </header>

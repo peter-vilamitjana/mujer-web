@@ -122,7 +122,7 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
             Servicios
           </h2>
           {/* CAMBIO 3: /servicios → /salones/{tenantSlug}/book */}
-          <Link href={`/salones/${tenantSlug}/book`} className="font-sans text-[10px] font-bold uppercase tracking-widest text-primary">
+          <Link href={`/salones/${tenantSlug}/turnos`} className="font-sans text-[10px] font-bold uppercase tracking-widest text-primary">
             RESERVAR
           </Link>
         </div>
@@ -172,12 +172,11 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
                     <p className="font-sans text-xs text-on-surface-secondary line-clamp-2 leading-relaxed">
                       Asesoramiento personalizado de nuestros expertos styling final para un look moderno renovado.
                     </p>
-                    {/* CAMBIO 3: /login → /salones/{tenantSlug}/book */}
-                    <Link href={`/salones/${tenantSlug}/book`} className="inline-block pt-2">
-                      <Button variant="outline" className="rounded-full px-6 py-5 font-sans text-[10px] font-bold uppercase tracking-widest border-outline-subtle hover:bg-surface-hover transition-all text-on-surface">
+                    <Button asChild variant="outline" className="rounded-full px-6 py-5 font-sans text-[10px] font-bold uppercase tracking-widest border-outline-subtle hover:bg-surface-hover transition-all text-on-surface">
+                      <Link href={`/salones/${tenantSlug}/turnos`} className="inline-block pt-2">
                         Ver más detalles
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -219,12 +218,11 @@ export default function SalonFeaturedServices({ tenantId, tenantSlug }: SalonFea
                             <p className="font-vogue text-4xl font-bold text-primary">{formatPrice(service.price || 0)}</p>
                           </div>
                           <div className="mt-8">
-                            {/* CAMBIO 3: /login → /salones/{tenantSlug}/book */}
-                            <Link href={`/salones/${tenantSlug}/book`} className="w-full">
-                              <Button variant="secondary" className="w-full rounded-full py-7 bg-surface-hover hover:bg-surface-active text-on-surface font-sans font-medium text-sm transition-all duration-300">
+                            <Button asChild variant="secondary" className="w-full rounded-full py-7 bg-surface-hover hover:bg-surface-active text-on-surface font-sans font-medium text-sm transition-all duration-300">
+                              <Link href={`/salones/${tenantSlug}/turnos`}>
                                 Ver más
-                              </Button>
-                            </Link>
+                              </Link>
+                            </Button>
                           </div>
                         </div>
                       </div>

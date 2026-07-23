@@ -17,7 +17,7 @@ export default function Footer({ tenantSlug, salon }: FooterProps) {
     { label: 'Servicios', href: '#servicios' },
     { label: 'Combos', href: '#promotions' },
     { label: 'Reseñas', href: '#reviews' },
-    { label: 'Reservar Turno', href: `/salones/${tenantSlug}/book` },
+    { label: 'Reservar Turno', href: `/salones/${tenantSlug}/turnos` },
     { label: 'Mi Cuenta', href: `/salones/${tenantSlug}/login` },
   ];
 
