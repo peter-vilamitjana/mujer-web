@@ -130,6 +130,18 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
     return `${h}h ${m}min`;
   };
 
+  const getServiceImage = (service: Service): string => {
+    if (service.image) return service.image;
+    const lower = (service.name || '').toLowerCase();
+    if (lower.includes('alisad') || lower.includes('lacio') || lower.includes('desriz')) return '/images/services/alisado.png';
+    if (lower.includes('balayage') || lower.includes('mecha') || lower.includes('reflejo') || lower.includes('ilumin')) return '/images/services/balayage.png';
+    if (lower.includes('color') || lower.includes('tint') || lower.includes('tono') || lower.includes('raiz') || lower.includes('raíz')) return '/images/services/coloracion.png';
+    if (lower.includes('corte') || lower.includes('flequillo') || lower.includes('peinado') || lower.includes('brashing') || lower.includes('brushing')) return '/images/services/corte.png';
+    if (lower.includes('keratin') || lower.includes('botox') || lower.includes('bótox') || lower.includes('baño') || lower.includes('bano') || lower.includes('crema') || lower.includes('tratamiento') || lower.includes('lavado') || lower.includes('nutric')) return '/images/services/keratina.png';
+    if (lower.includes('permanente') || lower.includes('ond')) return '/images/services/permanente.png';
+    return '/hero-salon.png';
+  };
+
   // All useMemo hooks must come before any early return to satisfy Rules of Hooks
   const { totalFrom, totalTo, hasRange } = useMemo(() => {
     let from = 0, to = 0, range = false;
@@ -425,68 +437,100 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
               {services.map(service => {
                 const isSelected = selectedServices.some(s => s.id === service.id);
                 const selectedData = selectedServices.find(s => s.id === service.id);
+                const serviceImg = getServiceImage(service);
+
                 return (
                   <div key={service.id} className="h-full">
                     <div
                       onClick={(e) => { pulsePress(e.currentTarget); handleServiceToggle(service); }}
                       className={cn(
-                        "p-6 border rounded-[1.5rem] cursor-pointer transition-colors flex flex-col h-full",
-                        isSelected ? "border-primary bg-primary/5" : "border-outline-subtle hover:border-primary/50 bg-surface",
+                        "relative overflow-hidden p-6 border rounded-[1.5rem] cursor-pointer transition-all duration-300 flex flex-col h-full group",
+                        isSelected
+                          ? "border-primary bg-primary/10 shadow-[0_0_25px_rgba(241,201,125,0.12)]"
+                          : "border-outline-subtle hover:border-primary/50 bg-surface hover:bg-surface-hover"
                       )}
                     >
-                      <div className='flex justify-between items-start'>
-                        <div className="flex-grow pr-2">
-                          <div className="flex justify-between items-baseline mb-1">
-                            <h4 className="font-vogue text-on-surface">{service.name}</h4>
-                            {typeof service.price === 'object' && selectedData?.largo && isSelected ?
-                              <p className="font-sans text-primary font-bold text-sm bg-surface px-1.5 rounded-sm">≈ {formatPrice(getServicePrice(selectedData).from)}</p> :
-                              typeof service.price === 'number' && <p className="font-sans text-primary font-bold text-sm">{formatPrice(service.price)}</p>
-                            }
-                          </div>
-                          <div className="font-sans text-xs text-on-surface-secondary flex items-center gap-1.5 mt-1">
-                            <Clock className="h-3 w-3" />
-                            <span>{formatDuration(service.durationMinutes)}</span>
-                          </div>
+                      {/* Imagen de fondo de costado faded */}
+                      {serviceImg && (
+                        <div className="absolute right-0 top-0 bottom-0 w-7/12 pointer-events-none overflow-hidden rounded-r-[1.5rem] z-0">
+                          <img
+                            src={serviceImg}
+                            alt=""
+                            aria-hidden="true"
+                            className="w-full h-full object-cover object-center opacity-25 group-hover:opacity-40 group-hover:scale-105 transition-all duration-500"
+                          />
+                          {/* Gradientes de desvanecido hacia el fondo del card */}
+                          <div className={cn(
+                            "absolute inset-0 bg-gradient-to-r via-transparent to-transparent transition-colors duration-300",
+                            isSelected
+                              ? "from-[#181611] via-[#181611]/80"
+                              : "from-surface via-surface/85 group-hover:from-surface-hover group-hover:via-surface-hover/85"
+                          )} />
+                          <div className={cn(
+                            "absolute inset-0 bg-gradient-to-t via-transparent to-transparent opacity-90 transition-colors duration-300",
+                            isSelected
+                              ? "from-[#181611]"
+                              : "from-surface group-hover:from-surface-hover"
+                          )} />
                         </div>
-                        <Checkbox checked={isSelected} className="rounded-full h-5 w-5 pointer-events-none data-[state=checked]:bg-primary" />
-                      </div>
+                      )}
 
-                      <div className="mt-4 flex-grow flex flex-col justify-end">
-                        {isSelected && service.requiresLengthSelection && (
-                          <div className="mt-4 pt-4 border-t border-dashed border-outline-subtle">
-                            <div className="grid grid-cols-3 gap-2">
-                              {(['corto', 'mediano', 'largo'] as LargoPelo[]).map(largo => (
-                                <Button
-                                  key={largo}
-                                  variant={selectedData?.largo === largo ? 'default' : 'outline'}
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleLargoChange(service.id, largo)
-                                  }}
-                                  className={cn(
-                                    "capitalize flex-col h-auto py-1 font-sans text-xs",
-                                    selectedData?.largo === largo
-                                      ? "bg-primary text-surface hover:bg-primary-dark"
-                                      : "border-outline-subtle text-on-surface hover:bg-surface-hover"
-                                  )}
-                                >
-                                  {largo}
-                                </Button>
-                              ))}
+                      {/* Contenido interactivo en capa superior */}
+                      <div className="relative z-10 flex flex-col h-full flex-grow">
+                        <div className='flex justify-between items-start'>
+                          <div className="flex-grow pr-2">
+                            <div className="flex justify-between items-baseline mb-1">
+                              <h4 className="font-vogue text-on-surface text-lg font-bold">{service.name}</h4>
+                              {typeof service.price === 'object' && selectedData?.largo && isSelected ?
+                                <p className="font-sans text-primary font-bold text-sm bg-surface/90 backdrop-blur-sm px-2 py-0.5 rounded-md border border-primary/20">≈ {formatPrice(getServicePrice(selectedData).from)}</p> :
+                                typeof service.price === 'number' && <p className="font-sans text-primary font-bold text-sm bg-surface/80 backdrop-blur-sm px-2 py-0.5 rounded-md border border-outline-subtle">{formatPrice(service.price)}</p>
+                              }
                             </div>
-                            <div className="font-sans text-xs text-on-surface-secondary text-center mt-3 flex items-center justify-center bg-surface rounded-full py-1">
-                              Precio desde. Se confirma en el local.
-                              <LengthPopoverTrigger />
+                            <div className="font-sans text-xs text-on-surface-secondary flex items-center gap-1.5 mt-1">
+                              <Clock className="h-3 w-3 text-primary" />
+                              <span>{formatDuration(service.durationMinutes)}</span>
                             </div>
-                            {showLengthError && !selectedData?.largo && <p className="font-sans text-xs text-danger font-semibold text-center mt-2 animate-pulse">Elegí un largo para continuar.</p>}
                           </div>
-                        )}
-                        {isSelected && (
-                          <div className="pt-3 text-center text-primary text-xs tracking-wider uppercase font-sans font-bold mt-auto flex items-center justify-center gap-1.5">
-                            <CheckCircle className="h-4 w-4" /> Seleccionado
-                          </div>
-                        )}
+                          <Checkbox checked={isSelected} className="rounded-full h-5 w-5 pointer-events-none data-[state=checked]:bg-primary shrink-0 ml-2" />
+                        </div>
+
+                        <div className="mt-4 flex-grow flex flex-col justify-end">
+                          {isSelected && service.requiresLengthSelection && (
+                            <div className="mt-4 pt-4 border-t border-dashed border-outline-subtle">
+                              <div className="grid grid-cols-3 gap-2">
+                                {(['corto', 'mediano', 'largo'] as LargoPelo[]).map(largo => (
+                                  <Button
+                                    key={largo}
+                                    variant={selectedData?.largo === largo ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleLargoChange(service.id, largo)
+                                    }}
+                                    className={cn(
+                                      "capitalize flex-col h-auto py-1 font-sans text-xs",
+                                      selectedData?.largo === largo
+                                        ? "bg-primary text-surface hover:bg-primary-dark"
+                                        : "border-outline-subtle text-on-surface hover:bg-surface-hover"
+                                    )}
+                                  >
+                                    {largo}
+                                  </Button>
+                                ))}
+                              </div>
+                              <div className="font-sans text-xs text-on-surface-secondary text-center mt-3 flex items-center justify-center bg-surface/90 backdrop-blur-sm rounded-full py-1">
+                                Precio desde. Se confirma en el local.
+                                <LengthPopoverTrigger />
+                              </div>
+                              {showLengthError && !selectedData?.largo && <p className="font-sans text-xs text-danger font-semibold text-center mt-2 animate-pulse">Elegí un largo para continuar.</p>}
+                            </div>
+                          )}
+                          {isSelected && (
+                            <div className="pt-3 text-center text-primary text-xs tracking-wider uppercase font-sans font-bold mt-auto flex items-center justify-center gap-1.5">
+                              <CheckCircle className="h-4 w-4" /> Seleccionado
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
