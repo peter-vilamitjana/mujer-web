@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation';
-import { getSalonBySlug } from '@/lib/services/marketplace.service';
+import { getSalonBySlug, getSalonStaff } from '@/lib/services/marketplace.service';
 
 export const revalidate = 1800;
 import { getSalonReviews, getSalonRatingStats } from '@/actions/reviews.actions';
 import SalonHero from '@/components/salon/SalonHero';
 import SalonFeaturedServices from '@/components/salon/SalonFeaturedServices';
+import SalonStaff from '@/components/salon/SalonStaff';
 import SalonReviews from '@/components/salon/SalonReviews';
 import InfoBar from '@/components/landing/InfoBar';
 import PromoSection from '@/components/landing/PromoSection';
@@ -56,9 +57,10 @@ export default async function SalonPage({ params }: Props) {
   const salon = await getSalonBySlug(tenantSlug);
   if (!salon) notFound();
 
-  const [salonReviews, salonStats] = await Promise.all([
+  const [salonReviews, salonStats, salonStaff] = await Promise.all([
     getSalonReviews(salon.id, 20),
     getSalonRatingStats(salon.id),
+    getSalonStaff(salon.id),
   ]);
 
   return (
@@ -73,6 +75,7 @@ export default async function SalonPage({ params }: Props) {
         tenantId={salon.id}
         tenantSlug={tenantSlug}
       />
+      <SalonStaff staff={salonStaff} />
       <PromoSection tenantSlug={tenantSlug} />
       <SalonReviews
         tenantSlug={tenantSlug}
