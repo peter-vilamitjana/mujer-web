@@ -87,26 +87,23 @@ def generate_image(prompt_file: str):
     print(f" Proporción: {aspect_ratio}")
     print(f" Prompt: {full_prompt[:100]}...")
 
-    # Llamada a la API de Gemini Imagen
+    # Llamada a la API de Gemini — Imagen 4 (predict) fue discontinuado para
+    # cuentas nuevas (se apaga del todo el 17/08/2026). Usamos gemini-2.5-flash-image
+    # ("Nano Banana") vía generateContent, que es el reemplazo recomendado por Google.
     try:
         import urllib.request
         import urllib.error
 
-        # Imagen 4 via predict endpoint (requiere plan de pago en Google AI Studio)
-        # Alternativa: gemini-2.5-flash-image via generateContent (mismo requisito)
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key={api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key={api_key}"
+
+        # generateContent no tiene un parámetro formal de aspect ratio como el
+        # predict de Imagen — se pide como instrucción de texto dentro del prompt.
+        prompt_with_ratio = f"{full_prompt}\n\nImage aspect ratio: {aspect_ratio}."
 
         payload = {
-            "instances": [
-                {"prompt": full_prompt}
-            ],
-            "parameters": {
-                "sampleCount": 1,
-                "aspectRatio": aspect_ratio,
-                "personGeneration": "allow_adult",
-                "safetySetting": "block_low_and_above",
-                "includeRaiReason": True
-            }
+            "contents": [
+                {"parts": [{"text": prompt_with_ratio}]}
+            ]
         }
 
         data = json.dumps(payload).encode("utf-8")
@@ -120,19 +117,28 @@ def generate_image(prompt_file: str):
         with urllib.request.urlopen(req) as response:
             result = json.loads(response.read().decode("utf-8"))
 
-        # Extraer la imagen del response (formato predict de Imagen)
-        predictions = result.get("predictions", [])
-        if not predictions:
+        # Extraer la imagen del response (formato generateContent: candidates[].content.parts[].inlineData)
+        candidates = result.get("candidates", [])
+        if not candidates:
             print("Error: La API no devolvió ninguna imagen")
             print("Response:", json.dumps(result, indent=2))
             sys.exit(1)
 
-        image_b64 = predictions[0].get("bytesBase64Encoded")
+        image_b64 = None
+        mime_type = "image/png"
+        for part in candidates[0].get("content", {}).get("parts", []):
+            inline_data = part.get("inlineData")
+            if inline_data and inline_data.get("data"):
+                image_b64 = inline_data["data"]
+                mime_type = inline_data.get("mimeType", mime_type)
+                break
+
         if not image_b64:
             print("Error: No se encontró la imagen en el response")
+            print("Response:", json.dumps(result, indent=2))
             sys.exit(1)
 
-        ext = "png"
+        ext = mime_type.split("/")[-1] if "/" in mime_type else "png"
 
         # Guardar la imagen
         output_dir = Path(__file__).parent.parent.parent / "images" / category
