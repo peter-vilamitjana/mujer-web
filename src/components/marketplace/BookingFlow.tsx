@@ -450,28 +450,21 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
                           : "border-outline-subtle hover:border-primary/50 bg-surface hover:bg-surface-hover"
                       )}
                     >
-                      {/* Imagen de fondo de costado faded */}
+                      {/* Imagen de fondo de costado faded sin bordes duros */}
                       {serviceImg && (
-                        <div className="absolute right-0 top-0 bottom-0 w-7/12 pointer-events-none overflow-hidden rounded-r-[1.5rem] z-0">
+                        <div
+                          className="absolute right-0 top-0 bottom-0 w-3/4 pointer-events-none overflow-hidden rounded-[1.5rem] z-0"
+                          style={{
+                            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.15) 25%, rgba(0,0,0,0.85) 65%, black 100%)',
+                            maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.15) 25%, rgba(0,0,0,0.85) 65%, black 100%)',
+                          }}
+                        >
                           <img
                             src={serviceImg}
                             alt=""
                             aria-hidden="true"
-                            className="w-full h-full object-cover object-center opacity-25 group-hover:opacity-40 group-hover:scale-105 transition-all duration-500"
+                            className="w-full h-full object-cover object-center opacity-30 group-hover:opacity-45 group-hover:scale-105 transition-all duration-500"
                           />
-                          {/* Gradientes de desvanecido hacia el fondo del card */}
-                          <div className={cn(
-                            "absolute inset-0 bg-gradient-to-r via-transparent to-transparent transition-colors duration-300",
-                            isSelected
-                              ? "from-[#181611] via-[#181611]/80"
-                              : "from-surface via-surface/85 group-hover:from-surface-hover group-hover:via-surface-hover/85"
-                          )} />
-                          <div className={cn(
-                            "absolute inset-0 bg-gradient-to-t via-transparent to-transparent opacity-90 transition-colors duration-300",
-                            isSelected
-                              ? "from-[#181611]"
-                              : "from-surface group-hover:from-surface-hover"
-                          )} />
                         </div>
                       )}
 
