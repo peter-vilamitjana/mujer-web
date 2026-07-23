@@ -489,33 +489,46 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
 
                         <div className="mt-4 flex-grow flex flex-col justify-end">
                           {isSelected && service.requiresLengthSelection && (
-                            <div className="mt-4 pt-4 border-t border-dashed border-outline-subtle">
-                              <div className="grid grid-cols-3 gap-2">
-                                {(['corto', 'mediano', 'largo'] as LargoPelo[]).map(largo => (
-                                  <Button
-                                    key={largo}
-                                    variant={selectedData?.largo === largo ? 'default' : 'outline'}
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleLargoChange(service.id, largo)
-                                    }}
-                                    className={cn(
-                                      "capitalize flex-col h-auto py-1 font-sans text-xs",
-                                      selectedData?.largo === largo
-                                        ? "bg-primary text-surface hover:bg-primary-dark"
-                                        : "border-outline-subtle text-on-surface hover:bg-surface-hover"
-                                    )}
-                                  >
-                                    {largo}
-                                  </Button>
-                                ))}
+                            <div className="mt-4 pt-4 border-t border-dashed border-outline-subtle space-y-3">
+                              <div className="text-[10px] font-sans uppercase tracking-[0.15em] font-semibold text-primary/80 flex items-center justify-between">
+                                <span>Largo del cabello</span>
                               </div>
-                              <div className="font-sans text-xs text-on-surface-secondary text-center mt-3 flex items-center justify-center bg-surface/90 backdrop-blur-sm rounded-full py-1">
-                                Precio desde. Se confirma en el local.
+
+                              {/* Segment Control Frosted Glass */}
+                              <div className="p-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 grid grid-cols-3 gap-1 shadow-inner">
+                                {(['corto', 'mediano', 'largo'] as LargoPelo[]).map(largo => {
+                                  const active = selectedData?.largo === largo;
+                                  return (
+                                    <button
+                                      key={largo}
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleLargoChange(service.id, largo);
+                                      }}
+                                      className={cn(
+                                        "py-1.5 px-3 rounded-full font-sans text-xs capitalize transition-all duration-300 font-medium cursor-pointer text-center",
+                                        active
+                                          ? "bg-primary text-surface font-bold shadow-[0_0_15px_rgba(241,201,125,0.35)] scale-[1.02]"
+                                          : "text-on-surface-secondary hover:text-on-surface hover:bg-white/10"
+                                      )}
+                                    >
+                                      {largo}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Pill Informativo Frosted Glass */}
+                              <div className="font-sans text-[11px] text-on-surface-secondary/80 text-center flex items-center justify-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/10 rounded-full py-1.5 px-3">
+                                <span>Precio desde. Se confirma en el local.</span>
                                 <LengthPopoverTrigger />
                               </div>
-                              {showLengthError && !selectedData?.largo && <p className="font-sans text-xs text-danger font-semibold text-center mt-2 animate-pulse">Elegí un largo para continuar.</p>}
+                              {showLengthError && !selectedData?.largo && (
+                                <p className="font-sans text-xs text-danger font-semibold text-center animate-pulse">
+                                  Elegí un largo para continuar.
+                                </p>
+                              )}
                             </div>
                           )}
                           {isSelected && (
