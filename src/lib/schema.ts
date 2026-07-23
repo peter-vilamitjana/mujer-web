@@ -138,6 +138,7 @@ export interface Staff {
     name: string;
     avatarUrl?: string;
     role: string; // Display role (e.g. "Estilista Senior")
+    bio?: string; // Línea editorial corta para la vitrina (ej. "Especialista en balayage y color contemporáneo") — no es un CV, es una frase
     assignedBranchIds: string[];
     active: boolean;
     email?: string;
@@ -147,6 +148,17 @@ export interface Staff {
         [day: string]: { start: string; end: string; available: boolean };
     }; // day: "monday", "tuesday", etc.
     commissions?: StaffCommissions; // commission rules for this staff member
+}
+
+// tenants/{tenantId}/portfolio/{itemId} — galería editorial de trabajos reales
+// del salón (no es lo mismo que Service.image, que es una foto de categoría/stock).
+export interface PortfolioItem {
+    id: string; // Doc ID
+    imageUrl: string;
+    caption?: string;
+    order: number; // curación manual — orden de aparición en la grilla
+    active: boolean;
+    createdAt: Timestamp;
 }
 
 export type AppointmentStatus =
