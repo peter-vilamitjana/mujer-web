@@ -22,6 +22,10 @@ export default function LandingHeader() {
   const { theme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
+
+  if (pathname?.includes('/turnos')) {
+    return null;
+  }
   const headerRef = useRef<HTMLElement>(null);
 
   const salonSlug = useMemo(() => {
