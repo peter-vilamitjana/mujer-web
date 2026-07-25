@@ -53,13 +53,13 @@ export default async function TurnosPage({ params }: Props) {
             alt={salon.name}
             fill
             priority
-            className="object-cover object-center filter brightness-[0.35] contrast-[1.1] saturate-[0.85]"
+            className="object-cover object-center filter brightness-[0.7] contrast-[1.05] saturate-[0.95]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#050504] via-[#050504]/75 to-[#050504]/50" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050504]/90 via-[#050504]/40 to-[#050504]/30" />
           <div
             className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[400px] pointer-events-none -z-10"
             style={{
-              background: 'radial-gradient(circle, rgba(241,201,125,0.1) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(241,201,125,0.12) 0%, transparent 70%)',
               filter: 'blur(80px)',
             }}
           />
