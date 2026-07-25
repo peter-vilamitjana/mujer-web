@@ -491,7 +491,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
                         {/* Top Header: Nombre + Duración + Precio + Checkbox con simetría perfecta */}
                         <div className="flex items-start justify-between gap-2.5 min-h-[3.25rem]">
                           <div className="flex-1 min-w-0 pr-1">
-                            <h4 className="font-vogue text-on-surface text-lg font-bold leading-tight tracking-tight line-clamp-2">
+                            <h4 className="font-vogue text-on-surface text-lg font-bold leading-tight tracking-tight">
                               {service.name}
                             </h4>
                             <div className="font-sans text-xs text-on-surface-secondary flex items-center gap-1.5 mt-1.5">

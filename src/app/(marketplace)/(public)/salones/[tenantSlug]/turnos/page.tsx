@@ -67,7 +67,7 @@ export default async function TurnosPage({ params }: Props) {
       <div className="relative z-10 flex flex-col min-h-screen">
         
         {/* Main Booking Container */}
-        <main className="flex-1 container mx-auto max-w-4xl px-4 pt-28 md:pt-36 pb-20">
+        <main className="flex-1 container mx-auto max-w-6xl px-4 pt-28 md:pt-36 pb-20">
           
           {/* Back to Salon Link Pill */}
           <div className="mb-8 flex items-center justify-between">
