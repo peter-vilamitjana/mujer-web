@@ -269,6 +269,11 @@
     letter-spacing: -0.04em;
   }
 
+  .font-outfit {
+    font-family: var(--font-outfit), var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: -0.025em;
+  }
+
   /* Hero title — tamaño exacto del HTML de Stitch */
   .hero-title {
     font-size: clamp(3.5rem, 12vw, 9rem);

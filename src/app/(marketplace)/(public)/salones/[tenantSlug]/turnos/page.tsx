@@ -87,14 +87,14 @@ export default async function TurnosPage({ params }: Props) {
 
         {/* Zona Central: Tagline Editorial */}
         <div className="relative z-10 my-8 lg:my-auto space-y-3 max-w-sm">
-          <div className="inline-flex items-center gap-2 text-primary text-xs uppercase font-sans tracking-[0.2em] font-semibold mb-1">
-            <Sparkles className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-2 text-primary/90 text-[10.5px] uppercase font-outfit tracking-[0.25em] font-semibold mb-1">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
             <span>Reserva Online</span>
           </div>
-          <h2 className="font-vogue text-3xl sm:text-4xl lg:text-4xl text-primary font-bold tracking-tight leading-none">
-            Reserva tu momento.
+          <h2 className="font-outfit text-3xl sm:text-4xl lg:text-[40px] text-on-surface font-extrabold tracking-tight leading-[1.1]">
+            Reserva tu <span className="font-vogue italic font-normal text-transparent bg-clip-text bg-gradient-to-r from-[#f1c97d] via-[#fff0cf] to-[#e4b562] drop-shadow-sm pr-1">momento.</span>
           </h2>
-          <p className="font-sans text-sm text-on-surface-secondary/90 leading-relaxed font-normal">
+          <p className="font-sans text-sm text-on-surface-secondary/85 leading-relaxed font-normal">
             Descubre nuestra selección de servicios premium y elige el tratamiento perfecto para ti.
           </p>
         </div>
