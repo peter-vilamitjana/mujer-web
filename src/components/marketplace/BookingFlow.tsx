@@ -443,10 +443,10 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
 
       <div ref={stepContentRef}>
       {step === 1 && (
-        <Card className="rounded-[1.5rem] border border-outline-subtle bg-surface-card text-on-surface shadow-none">
-          <CardHeader>
-            <CardTitle className="font-vogue text-2xl text-on-surface">Paso 1: Elige tus servicios</CardTitle>
-            <CardDescription className="font-sans text-on-surface-secondary">Selecciona uno o más tratamientos.</CardDescription>
+        <Card className="rounded-[2.5rem] border border-outline-subtle bg-surface-card text-on-surface shadow-none overflow-hidden">
+          <CardHeader className="pb-4">
+            <CardTitle className="font-outfit text-2xl font-bold tracking-tight text-on-surface">Paso 1: Elige tus servicios</CardTitle>
+            <CardDescription className="font-sans text-xs text-on-surface-secondary/80">Selecciona uno o más tratamientos.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -589,47 +589,84 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
       )}
 
       {step === 2 && (
-        <Card className="rounded-[1.5rem] border border-outline-subtle bg-surface-card text-on-surface shadow-none">
-          <CardHeader>
-            <CardTitle className="font-vogue text-2xl text-on-surface">Paso 2: Elige a tu profesional</CardTitle>
-            <CardDescription className="font-sans text-on-surface-secondary">Nuestras expertas están listas para atenderte.</CardDescription>
+        <Card className="rounded-[2.5rem] border border-outline-subtle bg-surface-card text-on-surface shadow-none overflow-hidden">
+          <CardHeader className="pb-4">
+            <CardTitle className="font-outfit text-2xl font-bold tracking-tight text-on-surface">Paso 2: Elige a tu profesional</CardTitle>
+            <CardDescription className="font-sans text-xs text-on-surface-secondary/80">Nuestras expertas están listas para atenderte.</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {staff.map(prof => (
-              <div
-                key={prof.id}
-                role="button"
-                tabIndex={0}
-                aria-pressed={selectedStaff?.id === prof.id}
-                onClick={(e) => { pulsePress(e.currentTarget); handleStaffSelect(prof); }}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleStaffSelect(prof); } }}
-                className={cn("p-3 border rounded-[1.5rem] cursor-pointer transition-colors flex flex-col items-center gap-3 text-center bg-surface",
-                  selectedStaff?.id === prof.id ? "border-primary bg-primary/5" : "border-outline-subtle hover:border-primary/50"
-                )}>
-                <div className="relative w-full aspect-[3/4] rounded-xl bg-surface-hover overflow-hidden flex items-center justify-center border border-outline-subtle">
-                  {prof.avatarUrl ? (
-                     <Image src={prof.avatarUrl} alt={prof.name} fill className="object-cover" />
-                  ) : <User className="h-8 w-8 text-on-surface-variant"/>}
-                </div>
-                <div>
-                  <h4 className="font-vogue text-on-surface text-sm line-clamp-1">{prof.name}</h4>
-                  <p className="font-sans text-[10px] sm:text-xs text-primary uppercase tracking-wider">{prof.role}</p>
-                </div>
-              </div>
-            ))}
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6">
+              {staff.map(prof => {
+                const isSelected = selectedStaff?.id === prof.id;
+                return (
+                  <div
+                    key={prof.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={isSelected}
+                    onClick={(e) => { pulsePress(e.currentTarget); handleStaffSelect(prof); }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleStaffSelect(prof); } }}
+                    className={cn(
+                      "relative overflow-hidden p-4 sm:p-5 rounded-[2rem] cursor-pointer transition-all duration-300 flex flex-col items-center gap-3 text-center group select-none",
+                      isSelected
+                        ? "border-2 border-primary bg-primary/10 shadow-[0_0_30px_rgba(241,201,125,0.25)] scale-[1.02]"
+                        : "border border-white/10 hover:border-primary/40 bg-black/40 hover:bg-black/60 backdrop-blur-xl"
+                    )}
+                  >
+                    {/* Badge de Selección con Checkmark estilo Apple */}
+                    <div className={cn(
+                      "absolute top-3 right-3 z-10 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300",
+                      isSelected
+                        ? "bg-primary text-surface shadow-md scale-100"
+                        : "bg-black/40 border border-white/20 text-transparent opacity-0 group-hover:opacity-100 scale-90"
+                    )}>
+                      <CheckCircle className="w-4 h-4 fill-current" />
+                    </div>
+
+                    {/* Marco de Foto Retrato (Aspecto 4/5 Redondeado) */}
+                    <div className="relative w-full aspect-[4/5] rounded-[1.5rem] overflow-hidden bg-black/60 border border-white/10 shadow-inner transition-all duration-300">
+                      {prof.avatarUrl ? (
+                        <Image
+                          src={prof.avatarUrl}
+                          alt={prof.name}
+                          fill
+                          className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-white/5">
+                          <User className="h-10 w-10 text-on-surface-secondary/60" />
+                        </div>
+                      )}
+                      {/* Gradiente sutil de viñeta en la base de la imagen */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+                    </div>
+
+                    {/* Nombre y Rol con Tipografía Apple OS */}
+                    <div className="space-y-1 w-full px-1">
+                      <h4 className="font-outfit text-on-surface text-base font-semibold tracking-tight truncate">
+                        {prof.name}
+                      </h4>
+                      <span className="inline-block font-sans text-[10px] uppercase tracking-[0.18em] font-semibold text-primary/90 bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full">
+                        {prof.role}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </CardContent>
-          <CardFooter className="flex justify-between border-t border-outline-subtle bg-surface p-6 rounded-b-[1.5rem]">
-            <Button variant="outline" className="rounded-full border-outline-subtle text-on-surface hover:bg-surface-hover font-sans" onClick={() => setStep(1)}>Volver a Servicios</Button>
+          <CardFooter className="flex justify-between border-t border-outline-subtle bg-surface p-6 rounded-b-[2.5rem]">
+            <Button variant="outline" className="rounded-full border-white/10 text-on-surface hover:bg-white/10 font-sans text-xs" onClick={() => setStep(1)}>Volver a Servicios</Button>
             <Button className="rounded-full bg-primary text-surface hover:bg-primary-dark font-sans uppercase tracking-widest text-xs font-semibold shadow-card-glow transition-all duration-300 hover:-translate-y-0.5 active:scale-95" onClick={() => { posthog?.capture('booking_step_completed', { step: 2, step_name: 'staff', tenant_slug: tenantSlug, staff_id: selectedStaff?.id }); setStep(3); }} disabled={!selectedStaff}>Siguiente Paso</Button>
           </CardFooter>
         </Card>
       )}
 
       {step === 3 && (
-        <Card className="rounded-[1.5rem] border border-outline-subtle bg-surface-card text-on-surface shadow-none">
-          <CardHeader>
-            <CardTitle className="font-vogue text-2xl text-on-surface">Paso 3: Elige fecha y hora</CardTitle>
-            <CardDescription className="font-sans text-on-surface-secondary">Selecciona el día de tu cita e infórmate de los horarios disponibles con {selectedStaff?.name.split(' ')[0]}.</CardDescription>
+        <Card className="rounded-[2.5rem] border border-outline-subtle bg-surface-card text-on-surface shadow-none overflow-hidden">
+          <CardHeader className="pb-4">
+            <CardTitle className="font-outfit text-2xl font-bold tracking-tight text-on-surface">Paso 3: Elige fecha y hora</CardTitle>
+            <CardDescription className="font-sans text-xs text-on-surface-secondary/80">Selecciona el día de tu cita e infórmate de los horarios disponibles con {selectedStaff?.name.split(' ')[0]}.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col md:flex-row gap-8 md:p-6 items-center md:items-start px-4 py-2">
             <div className="flex justify-center w-full max-w-xs bg-surface rounded-[1.5rem] p-2 md:p-4 border border-outline-subtle">
@@ -684,10 +721,10 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
       )}
 
       {step === 4 && (
-       <Card className="rounded-[1.5rem] border border-outline-subtle bg-surface-card text-on-surface shadow-none">
-       <CardHeader className="text-center md:text-left">
-         <CardTitle className="font-vogue text-2xl text-on-surface">Paso 4: Resumen y seña final</CardTitle>
-         <CardDescription className="font-sans text-on-surface-secondary">Estás a un paso de confirmar tu cita mágicamente.</CardDescription>
+       <Card className="rounded-[2.5rem] border border-outline-subtle bg-surface-card text-on-surface shadow-none overflow-hidden">
+       <CardHeader className="text-center md:text-left pb-4">
+         <CardTitle className="font-outfit text-2xl font-bold tracking-tight text-on-surface">Paso 4: Resumen y seña final</CardTitle>
+         <CardDescription className="font-sans text-xs text-on-surface-secondary/80">Estás a un paso de confirmar tu cita mágicamente.</CardDescription>
        </CardHeader>
        <CardContent className="space-y-6 md:p-6 p-4">
          <div className="p-8 border border-outline-subtle rounded-[1.5rem] bg-surface space-y-4 font-sans text-sm relative overflow-hidden">
