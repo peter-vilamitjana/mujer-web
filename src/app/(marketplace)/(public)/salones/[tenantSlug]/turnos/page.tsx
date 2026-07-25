@@ -3,11 +3,9 @@ import { authOptions } from '@/lib/auth';
 import { getSalonBySlug, getSalonServices, getSalonStaff } from '@/lib/services/marketplace.service';
 import { notFound } from 'next/navigation';
 import BookingFlowClient from './BookingFlowClient';
-import InfoBar from '@/components/landing/InfoBar';
-import Footer from '@/components/landing/Footer';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, Sparkles, Store } from 'lucide-react';
+import { ArrowLeft, MapPin, Sparkles, User } from 'lucide-react';
 
 interface Props {
   params: Promise<{ tenantSlug: string }>;
@@ -41,81 +39,137 @@ export default async function TurnosPage({ params }: Props) {
   const coverBg = salon.coverImageUrl || '/hero-salon.png';
 
   return (
-    <div className="min-h-screen bg-surface relative overflow-x-hidden">
-      {/* ── Background Atmospheric Imagery ──────────────────────── */}
-      <div className="fixed inset-0 z-0 pointer-events-none select-none">
-        <Image
-          src={coverBg}
-          alt={salon.name}
-          fill
-          priority
-          className="object-cover object-center filter brightness-[0.22] contrast-[1.1] saturate-[0.85]"
-        />
-        {/* Ambient Dark Overlay Gradients */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#050504]/90 via-[#050504]/80 to-[#050504]" />
-        {/* Gold Ambient Spotlight Orb */}
-        <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] pointer-events-none -z-10"
-          style={{
-            background: 'radial-gradient(circle, rgba(241,201,125,0.08) 0%, transparent 70%)',
-            filter: 'blur(90px)',
-          }}
-        />
-      </div>
+    <div className="min-h-screen bg-[#050504] text-on-surface flex flex-col lg:flex-row overflow-x-hidden">
 
-      {/* ── Page Content ────────────────────────────────────────────── */}
-      <div className="relative z-10 flex flex-col min-h-screen">
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* COLUMNA IZQUIERDA (Inmersiva / Sticky en Desktop)                */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      <aside className="relative lg:w-[34%] xl:w-[30%] shrink-0 lg:h-screen lg:sticky lg:top-0 flex flex-col justify-between p-6 sm:p-10 lg:p-12 overflow-hidden border-b lg:border-b-0 lg:border-r border-white/10 select-none">
         
-        {/* Main Booking Container */}
-        <main className="flex-1 container mx-auto max-w-6xl px-4 pt-28 md:pt-36 pb-20">
-          
-          {/* Back to Salon Link Pill */}
-          <div className="mb-8 flex items-center justify-between">
+        {/* Foto Hero del Salón con Gradiente de Degradado */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src={coverBg}
+            alt={salon.name}
+            fill
+            priority
+            className="object-cover object-center filter brightness-[0.35] contrast-[1.1] saturate-[0.85]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050504] via-[#050504]/75 to-[#050504]/50" />
+          <div
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[400px] pointer-events-none -z-10"
+            style={{
+              background: 'radial-gradient(circle, rgba(241,201,125,0.1) 0%, transparent 70%)',
+              filter: 'blur(80px)',
+            }}
+          />
+        </div>
+
+        {/* Zona Superior: Marca + Botón Volver */}
+        <div className="relative z-10 space-y-4">
+          <div className="flex items-center justify-between">
             <Link
               href={`/salones/${tenantSlug}`}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-sans font-medium text-on-surface-secondary hover:text-primary transition-all duration-300 backdrop-blur-md group"
+              className="font-vogue text-2xl font-bold tracking-wider text-on-surface uppercase hover:text-primary transition-colors"
             >
-              <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
-              <span>Volver a {salon.name}</span>
+              {salon.name}
             </Link>
+            
+            <Link
+              href={`/salones/${tenantSlug}`}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.06] hover:bg-white/[0.12] border border-white/10 text-xs font-sans text-on-surface-secondary hover:text-primary transition-all backdrop-blur-md group"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+              <span>Volver</span>
+            </Link>
+          </div>
+        </div>
 
-            <div className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-sans uppercase tracking-widest text-primary font-semibold backdrop-blur-md">
-              <Sparkles className="w-3 h-3 text-primary" />
-              <span>Reserva Directa</span>
+        {/* Zona Central: Tagline Editorial */}
+        <div className="relative z-10 my-8 lg:my-auto space-y-3 max-w-sm">
+          <div className="inline-flex items-center gap-2 text-primary text-xs uppercase font-sans tracking-[0.2em] font-semibold mb-1">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Reserva Online</span>
+          </div>
+          <h2 className="font-vogue text-3xl sm:text-4xl lg:text-4xl text-primary font-bold tracking-tight leading-none">
+            Reserva tu momento.
+          </h2>
+          <p className="font-sans text-sm text-on-surface-secondary/90 leading-relaxed font-normal">
+            Descubre nuestra selección de servicios premium y elige el tratamiento perfecto para ti.
+          </p>
+        </div>
+
+        {/* Zona Inferior: Tarjeta de Ubicación / Sede */}
+        <div className="relative z-10 pt-4">
+          <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-lg">
+            <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary shrink-0 mt-0.5">
+              <MapPin className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="font-sans text-xs uppercase tracking-widest font-bold text-on-surface">
+                SEDE CENTRAL
+              </p>
+              <p className="font-sans text-xs text-on-surface-secondary/80 truncate mt-0.5">
+                {salon.address || 'Guillermo Rawson 3688, B1636 La Lucila'}
+              </p>
             </div>
           </div>
+        </div>
+      </aside>
 
-          {/* Page Header */}
-          <div className="mb-10 text-center">
-            <div className="inline-flex items-center gap-2 text-primary text-xs uppercase font-sans tracking-[0.25em] font-semibold mb-3">
-              <Store className="w-3.5 h-3.5" />
-              <span>{salon.name}</span>
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* COLUMNA DERECHA (Flujo de Reserva Scrollable)                    */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      <main className="flex-1 min-h-screen flex flex-col justify-between bg-[#070706] relative z-10">
+
+        {/* Header superior de navegación / usuario */}
+        <div className="px-6 py-5 md:px-10 lg:px-12 flex items-center justify-between border-b border-white/[0.06]">
+          <div className="flex items-center gap-2 text-xs font-sans text-on-surface-secondary">
+            <span className="font-semibold text-on-surface">{salon.name}</span>
+            <span>/</span>
+            <span className="text-primary font-medium">Turnos</span>
+          </div>
+
+          {session ? (
+            <div className="flex items-center gap-2 text-xs font-sans text-on-surface-secondary">
+              <span>Hola, <strong className="text-on-surface">{session.user?.name || 'Cliente'}</strong></span>
             </div>
-            <h1 className="font-vogue text-4xl md:text-5xl text-on-surface tracking-tight uppercase mb-3">
-              Reservar Turno
-            </h1>
-            <p className="font-sans text-sm text-on-surface-secondary max-w-md mx-auto leading-relaxed">
-              Seleccioná tus tratamientos preferidos, tu estilista de confianza y el horario que mejor se adapte a vos.
-            </p>
-          </div>
+          ) : (
+            <Link
+              href={`/login?redirect=/salones/${tenantSlug}/turnos`}
+              className="inline-flex items-center gap-2 text-xs font-sans text-on-surface-secondary hover:text-primary transition-colors font-medium"
+            >
+              <User className="w-3.5 h-3.5" />
+              <span className="tracking-wider uppercase">INICIAR SESIÓN</span>
+            </Link>
+          )}
+        </div>
 
-          {/* Elevated Floating Booking Card Container */}
-          <div className="relative rounded-[2.5rem] p-4 sm:p-8 bg-[#0a0a09]/85 border border-[#f1c97d]/20 backdrop-blur-2xl shadow-[0_25px_80px_rgba(0,0,0,0.85)]">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-[2px] bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
-            <BookingFlowClient
-              tenantId={salon.id}
-              tenantSlug={tenantSlug}
-              services={services}
-              staff={staff}
-              isAuthenticated={!!session}
-            />
-          </div>
-        </main>
+        {/* Área del formulario actual */}
+        <div className="p-6 md:p-10 lg:p-12 flex-1 max-w-5xl w-full mx-auto">
+          <BookingFlowClient
+            tenantId={salon.id}
+            tenantSlug={tenantSlug}
+            services={services}
+            staff={staff}
+            isAuthenticated={!!session}
+          />
+        </div>
 
-        {/* ── InfoBar & Footer ──────────────────────────────────────── */}
-        <InfoBar salon={salon} />
-        <Footer tenantSlug={tenantSlug} salon={salon} />
-      </div>
+        {/* Pie de página minimalista */}
+        <footer className="px-6 py-6 md:px-12 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-sans text-on-surface-secondary/70">
+          <div className="flex items-center gap-4">
+            <span className="font-vogue text-sm font-bold text-on-surface uppercase tracking-wider">{salon.name}</span>
+            <span>© {new Date().getFullYear()} MUJER. Todos los derechos reservados.</span>
+          </div>
+          <div className="flex items-center gap-6 text-[11px]">
+            <Link href={`/salones/${tenantSlug}`} className="hover:text-primary transition-colors">Vitrina</Link>
+            <span className="hover:text-primary transition-colors cursor-pointer">Términos</span>
+            <span className="hover:text-primary transition-colors cursor-pointer">Privacidad</span>
+          </div>
+        </footer>
+
+      </main>
     </div>
   );
 }
