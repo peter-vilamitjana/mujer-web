@@ -64,15 +64,15 @@ const LengthPopoverTrigger = ({ asChild = false }: { asChild?: boolean }) => (
   <Popover>
     <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
       {asChild ? (
-        <button className="font-sans text-xs text-on-surface-secondary underline hover:text-primary">
+        <button className="font-sans text-xs text-on-surface-secondary underline hover:text-primary cursor-pointer outline-none">
           Ver cómo definimos el largo
         </button>
       ) : (
         <button
-          className="inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:pointer-events-none disabled:opacity-50 hover:bg-surface-hover h-4 w-4 text-on-surface-secondary ml-1"
+          className="inline-flex items-center justify-center rounded-full transition-colors focus:outline-none focus-visible:outline-none hover:bg-white/10 h-4 w-4 text-primary/80 shrink-0 cursor-pointer outline-none"
           aria-label="Información sobre largo"
         >
-          <Info className="h-4 w-4" />
+          <Info className="h-3.5 w-3.5 shrink-0" />
         </button>
       )}
     </PopoverTrigger>
@@ -544,8 +544,8 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
                               </div>
 
                               {/* Pill Informativo Frosted Glass sin desbordes */}
-                              <div className="font-sans text-[10.5px] leading-tight text-on-surface-secondary/90 text-center flex items-center justify-center gap-1.5 bg-black/50 backdrop-blur-md border border-white/10 rounded-full py-1.5 px-3 select-none">
-                                <span className="whitespace-nowrap">Precio desde. Se confirma en el local.</span>
+                              <div className="font-sans text-[10px] sm:text-[10.5px] leading-tight text-on-surface-secondary/90 flex items-center justify-between gap-1 bg-black/60 backdrop-blur-md border border-white/10 rounded-full py-1.5 px-3.5 select-none w-full max-w-full overflow-hidden">
+                                <span className="truncate">Precio desde. Se confirma en el local.</span>
                                 <LengthPopoverTrigger />
                               </div>
                               {showLengthError && !selectedData?.largo && (
