@@ -121,6 +121,22 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(price);
 
+  const getFormattedPriceBadge = (service: Service, isSelected: boolean, selectedData?: SelectedServiceWithLargo): string => {
+    if (typeof service.price === 'number') {
+      return formatPrice(service.price);
+    }
+    if (typeof service.price === 'object') {
+      const priceObj = service.price as ServicePriceByLength;
+      if (isSelected && selectedData?.largo && priceObj[selectedData.largo]) {
+        return `≈ ${formatPrice(priceObj[selectedData.largo])}`;
+      }
+      if (priceObj.corto) {
+        return `Desde ${formatPrice(priceObj.corto)}`;
+      }
+    }
+    return '';
+  };
+
   const formatDuration = (minutes: number) => {
     if (!minutes || minutes <= 0) return '0min';
     const h = Math.floor(minutes / 60);
@@ -438,13 +454,14 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
                 const isSelected = selectedServices.some(s => s.id === service.id);
                 const selectedData = selectedServices.find(s => s.id === service.id);
                 const serviceImg = getServiceImage(service);
+                const priceBadge = getFormattedPriceBadge(service, isSelected, selectedData);
 
                 return (
                   <div key={service.id} className="h-full">
                     <div
                       onClick={(e) => { pulsePress(e.currentTarget); handleServiceToggle(service); }}
                       className={cn(
-                        "relative overflow-hidden p-6 border rounded-[1.5rem] cursor-pointer transition-all duration-300 flex flex-col h-full group",
+                        "relative overflow-hidden p-5 sm:p-6 border rounded-[1.5rem] cursor-pointer transition-all duration-300 flex flex-col h-full group select-none",
                         isSelected
                           ? "border-primary bg-primary/10 shadow-[0_0_25px_rgba(241,201,125,0.12)]"
                           : "border-outline-subtle hover:border-primary/50 bg-surface hover:bg-surface-hover"
@@ -470,32 +487,39 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
 
                       {/* Contenido interactivo en capa superior */}
                       <div className="relative z-10 flex flex-col h-full flex-grow">
-                        <div className='flex justify-between items-start'>
-                          <div className="flex-grow pr-2">
-                            <div className="flex justify-between items-baseline mb-1">
-                              <h4 className="font-vogue text-on-surface text-lg font-bold">{service.name}</h4>
-                              {typeof service.price === 'object' && selectedData?.largo && isSelected ?
-                                <p className="font-sans text-primary font-bold text-sm bg-surface/90 backdrop-blur-sm px-2 py-0.5 rounded-md border border-primary/20">≈ {formatPrice(getServicePrice(selectedData).from)}</p> :
-                                typeof service.price === 'number' && <p className="font-sans text-primary font-bold text-sm bg-surface/80 backdrop-blur-sm px-2 py-0.5 rounded-md border border-outline-subtle">{formatPrice(service.price)}</p>
-                              }
-                            </div>
-                            <div className="font-sans text-xs text-on-surface-secondary flex items-center gap-1.5 mt-1">
-                              <Clock className="h-3 w-3 text-primary" />
+
+                        {/* Top Header: Nombre + Duración + Precio + Checkbox con simetría perfecta */}
+                        <div className="flex items-start justify-between gap-2.5 min-h-[3.25rem]">
+                          <div className="flex-1 min-w-0 pr-1">
+                            <h4 className="font-vogue text-on-surface text-lg font-bold leading-tight tracking-tight line-clamp-2">
+                              {service.name}
+                            </h4>
+                            <div className="font-sans text-xs text-on-surface-secondary flex items-center gap-1.5 mt-1.5">
+                              <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
                               <span>{formatDuration(service.durationMinutes)}</span>
                             </div>
                           </div>
-                          <Checkbox checked={isSelected} className="rounded-full h-5 w-5 pointer-events-none data-[state=checked]:bg-primary shrink-0 ml-2" />
+
+                          <div className="flex items-center gap-2 shrink-0 pt-0.5">
+                            {priceBadge && (
+                              <span className="whitespace-nowrap font-sans text-primary font-bold text-xs bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-primary/30 shadow-sm select-none">
+                                {priceBadge}
+                              </span>
+                            )}
+                            <Checkbox checked={isSelected} className="rounded-full h-5 w-5 pointer-events-none data-[state=checked]:bg-primary shrink-0" />
+                          </div>
                         </div>
 
+                        {/* Sección inferior y selección de largo */}
                         <div className="mt-4 flex-grow flex flex-col justify-end">
                           {isSelected && service.requiresLengthSelection && (
-                            <div className="mt-4 pt-4 border-t border-dashed border-outline-subtle space-y-3">
+                            <div className="mt-4 pt-4 border-t border-dashed border-outline-subtle/70 space-y-3">
                               <div className="text-[10px] font-sans uppercase tracking-[0.15em] font-semibold text-primary/80 flex items-center justify-between">
                                 <span>Largo del cabello</span>
                               </div>
 
                               {/* Segment Control Frosted Glass */}
-                              <div className="p-1 rounded-full bg-black/40 backdrop-blur-md border border-white/10 grid grid-cols-3 gap-1 shadow-inner">
+                              <div className="p-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 grid grid-cols-3 gap-1 shadow-inner">
                                 {(['corto', 'mediano', 'largo'] as LargoPelo[]).map(largo => {
                                   const active = selectedData?.largo === largo;
                                   return (
@@ -507,9 +531,9 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
                                         handleLargoChange(service.id, largo);
                                       }}
                                       className={cn(
-                                        "py-1.5 px-3 rounded-full font-sans text-xs capitalize transition-all duration-300 font-medium cursor-pointer text-center",
+                                        "py-1.5 px-2 rounded-full font-sans text-xs capitalize transition-all duration-300 font-medium cursor-pointer text-center outline-none select-none focus:outline-none focus:ring-0 focus-visible:outline-none active:outline-none",
                                         active
-                                          ? "bg-primary text-surface font-bold shadow-[0_0_15px_rgba(241,201,125,0.35)] scale-[1.02]"
+                                          ? "bg-primary text-surface font-bold shadow-[0_0_15px_rgba(241,201,125,0.4)] scale-[1.02]"
                                           : "text-on-surface-secondary hover:text-on-surface hover:bg-white/10"
                                       )}
                                     >
@@ -519,9 +543,9 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
                                 })}
                               </div>
 
-                              {/* Pill Informativo Frosted Glass */}
-                              <div className="font-sans text-[11px] text-on-surface-secondary/80 text-center flex items-center justify-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/10 rounded-full py-1.5 px-3">
-                                <span>Precio desde. Se confirma en el local.</span>
+                              {/* Pill Informativo Frosted Glass sin desbordes */}
+                              <div className="font-sans text-[10.5px] leading-tight text-on-surface-secondary/90 text-center flex items-center justify-center gap-1.5 bg-black/50 backdrop-blur-md border border-white/10 rounded-full py-1.5 px-3 select-none">
+                                <span className="whitespace-nowrap">Precio desde. Se confirma en el local.</span>
                                 <LengthPopoverTrigger />
                               </div>
                               {showLengthError && !selectedData?.largo && (
