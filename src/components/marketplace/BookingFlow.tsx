@@ -491,7 +491,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
                         {/* Top Header: Nombre + Duración + Precio + Checkbox con simetría perfecta */}
                         <div className="flex items-start justify-between gap-2.5 min-h-[3.25rem]">
                           <div className="flex-1 min-w-0 pr-1">
-                            <h4 className="font-vogue text-on-surface text-lg font-bold leading-tight tracking-tight">
+                            <h4 className="font-outfit text-on-surface text-lg font-bold leading-tight tracking-tight">
                               {service.name}
                             </h4>
                             <div className="font-sans text-xs text-on-surface-secondary flex items-center gap-1.5 mt-1.5">
@@ -889,7 +889,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
                <p className="font-sans text-[10.5px] font-semibold text-primary/90 uppercase tracking-[0.2em]">
                  Seña para congelar turno
                </p>
-               <div className="font-vogue text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#f1c97d] via-[#fff0cf] to-[#e4b562] drop-shadow-sm pt-1">
+               <div className="font-outfit text-4xl sm:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#f1c97d] via-[#fff0cf] to-[#e4b562] drop-shadow-sm pt-1">
                  {formatPrice(depositAmount)}
                </div>
              </div>
