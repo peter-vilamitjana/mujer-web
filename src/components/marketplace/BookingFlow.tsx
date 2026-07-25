@@ -724,120 +724,197 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
        <Card className="rounded-[2.5rem] border border-outline-subtle bg-surface-card text-on-surface shadow-none overflow-hidden">
        <CardHeader className="text-center md:text-left pb-4">
          <CardTitle className="font-outfit text-2xl font-bold tracking-tight text-on-surface">Paso 4: Resumen y seña final</CardTitle>
-         <CardDescription className="font-sans text-xs text-on-surface-secondary/80">Estás a un paso de confirmar tu cita mágicamente.</CardDescription>
+         <CardDescription className="font-sans text-xs text-on-surface-secondary/80">Estás a un paso de confirmar tu cita de forma simple y segura.</CardDescription>
        </CardHeader>
        <CardContent className="space-y-6 md:p-6 p-4">
-         <div className="p-8 border border-outline-subtle rounded-[1.5rem] bg-surface space-y-4 font-sans text-sm relative overflow-hidden">
-           <div className="absolute top-0 left-0 w-1.5 h-full bg-primary rounded-l-[1.5rem] opacity-80" />
-           <p className="flex items-center gap-3"><User className="h-4 w-4 text-primary shrink-0" /> <span className="text-on-surface-secondary min-w-[100px]">Clienta:</span> <span className="font-semibold text-on-surface">{clientName}</span></p>
-           <p className="flex items-center gap-3"><Users className="h-4 w-4 text-primary shrink-0" /> <span className="text-on-surface-secondary min-w-[100px]">Profesional:</span> <span className="font-semibold text-on-surface">{selectedStaff?.name}</span></p>
-           <p className="flex items-center gap-3"><CalendarIcon className="h-4 w-4 text-primary shrink-0" /> <span className="text-on-surface-secondary min-w-[100px]">Fecha:</span> <span className="font-semibold capitalize text-on-surface">{selectedDate && format(selectedDate, "EEEE d 'de' MMMM, yyyy", { locale: es })}</span></p>
-           <p className="flex items-center gap-3"><Clock className="h-4 w-4 text-primary shrink-0" /> <span className="text-on-surface-secondary min-w-[100px]">Horario:</span> <span className="font-semibold text-on-surface">{selectedTime} hs</span></p>
-           <div className="border-t border-outline-subtle py-4 mt-4 text-xs font-mono bg-surface-card px-4 rounded-[1.5rem]">
-             <p className="flex justify-between uppercase tracking-wider text-on-surface-variant font-bold mb-3 border-b border-outline-subtle pb-2"><span>Tus Servicios Seleccionados</span> <span>Est. {formatDuration(totalDuration)}</span></p>
-             <ul className="space-y-2">
-               {selectedServices.map(s => <li key={s.id} className="flex justify-between items-center"><span className="text-on-surface tracking-tight">{s.name}{s.largo ? ` (${s.largo})` : ''}</span></li>)}
-             </ul>
+         
+         {/* ── Ticket Resumen de la Cita (Estilo Apple Wallet) ───────────────── */}
+         <div className="p-6 sm:p-8 rounded-[2rem] bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)] space-y-5 select-none">
+           <div className="flex items-center justify-between border-b border-white/10 pb-4">
+             <div className="flex items-center gap-2">
+               <Sparkles className="w-4 h-4 text-primary" />
+               <span className="font-outfit text-base font-bold text-on-surface">Resumen de tu Cita</span>
+             </div>
+             <span className="font-sans text-xs text-primary font-semibold uppercase tracking-wider bg-primary/10 border border-primary/20 px-3 py-1 rounded-full">
+               {selectedTime} hs
+             </span>
            </div>
-         </div>
 
-          <div className="space-y-4 max-w-md mx-auto">
-            {/* ── Guest: datos de contacto ───────────────────────────── */}
-            {!isAuthenticated && (
-              <div className="space-y-3 border border-outline-subtle rounded-[1.5rem] p-6">
-                <p className="font-sans text-sm font-medium text-on-surface">Tus datos de contacto</p>
-                <div>
-                  <label className="font-sans text-xs text-on-surface-secondary mb-1.5 block">Nombre completo</label>
-                  <input
-                    type="text"
-                    placeholder="Tu nombre"
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    className="w-full rounded-xl px-4 py-3 font-sans text-sm bg-surface text-on-surface placeholder:text-on-surface-variant border border-outline-subtle focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-                <div>
-                  <label className="font-sans text-xs text-on-surface-secondary mb-1.5 block">Email</label>
-                  <input
-                    type="email"
-                    placeholder="tu@email.com"
-                    value={guestEmail}
-                    onChange={(e) => setGuestEmail(e.target.value)}
-                    className="w-full rounded-xl px-4 py-3 font-sans text-sm bg-surface text-on-surface placeholder:text-on-surface-variant border border-outline-subtle focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-                <div>
-                  <label className="font-sans text-xs text-on-surface-secondary mb-1.5 block">WhatsApp</label>
-                  <input
-                    type="tel"
-                    placeholder="9 11 XXXX-XXXX"
-                    value={guestPhone}
-                    onChange={(e) => setGuestPhone(e.target.value)}
-                    className="w-full rounded-xl px-4 py-3 font-sans text-sm bg-surface text-on-surface placeholder:text-on-surface-variant border border-outline-subtle focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-              </div>
-            )}
-            <div className="space-y-3">
-              <label className="font-sans text-on-surface-secondary text-sm font-medium">Tu WhatsApp para la confirmación</label>
-              <div className={cn(
-                "flex items-center bg-surface border transition-colors duration-300 rounded-xl overflow-hidden px-4 py-2",
-                phoneTouched && !isPhoneValid ? "border-danger/50 ring-1 ring-danger/20" :
-                isPhoneValid ? "border-success/50 ring-1 ring-success/20" : "border-outline-subtle"
-              )}>
-                <div className="flex items-center gap-2 pr-4 border-r border-outline-subtle text-on-surface-variant font-medium select-none">
-                  <img src="https://flagcdn.com/w20/ar.png" alt="AR" className="w-4 h-auto rounded-sm opacity-50" />
-                  <span className="font-sans text-sm">+54</span>
-                </div>
-                <input
-                  type="tel"
-                  value={clientPhone}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/[^\d]/g, '');
-                    setClientPhone(val);
-                    if (!phoneTouched) setPhoneTouched(true);
-                  }}
-                  onBlur={() => setPhoneTouched(true)}
-                  placeholder="9 11 XXXX-XXXX"
-                  className="bg-transparent flex-1 px-4 py-1 font-sans text-on-surface placeholder:text-on-surface-variant focus:outline-none"
-                />
-                <svg className={cn("w-5 h-5 transition-colors", isPhoneValid ? "text-success" : "text-on-surface-variant")} viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                </svg>
-              </div>
-              <div className="flex justify-between items-center">
-                <p className={cn("font-sans text-xs transition-colors", isPhoneValid ? "text-success" : "text-on-surface-variant")}>
-                  {(session?.user as any)?.phone && clientPhone === (session?.user as any)?.phone ? "Usamos el número de tu cuenta" : "Vas a recibir la confirmación por acá"}
-                </p>
-                {phoneTouched && !isPhoneValid && (
-                  <p className="font-sans text-danger text-[10px] font-semibold animate-pulse">Tu número es necesario para confirmar</p>
-                )}
-              </div>
-            </div>
-          </div>
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm font-sans">
+             <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
+               <User className="h-4 w-4 text-primary shrink-0" />
+               <div className="min-w-0">
+                 <p className="text-[10px] text-on-surface-secondary/70 uppercase tracking-widest font-semibold">Clienta</p>
+                 <p className="font-semibold text-on-surface truncate">{clientName}</p>
+               </div>
+             </div>
 
-          <div className="space-y-6">
-           <div className="p-8 border border-outline-subtle rounded-[1.5rem] text-center bg-surface relative overflow-hidden">
-             <div className="absolute top-3 right-3 opacity-10"><CheckCircle className="w-24 h-24 text-primary"/></div>
-             <p className="font-sans text-sm font-semibold text-on-surface-secondary uppercase tracking-widest mb-1">Seña para confirmar turno</p>
-             <p className="font-vogue text-5xl text-primary my-2">{formatPrice(depositAmount)}</p>
-             <p className="font-sans text-xs text-on-surface-secondary mt-4 max-w-sm mx-auto leading-relaxed">El remanente estimado de <span className="font-semibold text-on-surface">{hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)}</span> se abona directo en el salón. Valores sujetos al diagnóstico en persona de {selectedStaff?.name.split(' ')[0]}.</p>
+             <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/[0.03] border border-white/5">
+               <Users className="h-4 w-4 text-primary shrink-0" />
+               <div className="min-w-0">
+                 <p className="text-[10px] text-on-surface-secondary/70 uppercase tracking-widest font-semibold">Profesional</p>
+                 <p className="font-semibold text-on-surface truncate">{selectedStaff?.name}</p>
+               </div>
+             </div>
+
+             <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 sm:col-span-2">
+               <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
+               <div className="min-w-0">
+                 <p className="text-[10px] text-on-surface-secondary/70 uppercase tracking-widest font-semibold">Fecha Reservada</p>
+                 <p className="font-semibold capitalize text-on-surface">
+                   {selectedDate && format(selectedDate, "EEEE d 'de' MMMM, yyyy", { locale: es })}
+                 </p>
+               </div>
+             </div>
            </div>
-           <div className="items-top flex space-x-3 p-4 bg-surface border border-outline-subtle rounded-[1.5rem] hover:bg-surface-hover transition-colors">
-             <Checkbox id="terms1" checked={finalConfirmation} onCheckedChange={(checked) => setFinalConfirmation(checked as boolean)} className="mt-0.5 data-[state=checked]:bg-primary"/>
-             <div className="grid gap-1.5 leading-none">
-               <label
-                 htmlFor="terms1"
-                 className="font-sans text-sm font-medium leading-relaxed peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer text-on-surface-secondary"
-               >
-                 Confirmo que mi cabello actual coincide cercanamente con el <span className="text-on-surface font-semibold">largo declarado</span>, previniendo sorpresas de cobro adicional o carencia de tiempo técnico disponible hoy.
-               </label>
+
+           {/* Lista de Servicios Seleccionados */}
+           <div className="pt-1">
+             <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-3">
+               <div className="flex items-center justify-between text-xs font-sans text-on-surface-secondary uppercase tracking-wider border-b border-white/5 pb-2">
+                 <span className="font-semibold">Servicios Seleccionados ({selectedServices.length})</span>
+                 <span className="font-semibold text-primary">Duración: {formatDuration(totalDuration)}</span>
+               </div>
+               <ul className="space-y-2">
+                 {selectedServices.map(s => (
+                   <li key={s.id} className="flex justify-between items-center text-sm font-sans">
+                     <span className="font-medium text-on-surface">{s.name}{s.largo ? <span className="text-primary/90 text-xs ml-1 font-sans">({s.largo})</span> : ''}</span>
+                     <span className="text-xs text-on-surface-secondary font-sans">{formatDuration(s.durationMinutes)}</span>
+                   </li>
+                 ))}
+               </ul>
              </div>
            </div>
          </div>
+
+         {/* ── Formulario de Contacto (Único / Sin duplicados) ───────────── */}
+         <div className="space-y-4 max-w-lg mx-auto">
+           {!isAuthenticated ? (
+             <div className="p-6 sm:p-8 rounded-[2rem] bg-black/40 backdrop-blur-xl border border-white/10 space-y-4">
+               <div className="space-y-1">
+                 <h4 className="font-outfit text-base font-bold text-on-surface">Datos de contacto para tu reserva</h4>
+                 <p className="font-sans text-xs text-on-surface-secondary/80">Necesarios para enviar tu confirmación y comprobante.</p>
+               </div>
+
+               <div className="space-y-3.5 pt-1">
+                 <div>
+                   <label className="font-sans text-xs text-on-surface-secondary/90 mb-1.5 block font-medium">Nombre completo</label>
+                   <input
+                     type="text"
+                     placeholder="Ej: María González"
+                     value={guestName}
+                     onChange={(e) => setGuestName(e.target.value)}
+                     className="w-full rounded-2xl px-4 py-3 font-sans text-sm bg-white/[0.04] text-on-surface placeholder:text-on-surface-secondary/40 border border-white/10 focus:outline-none focus:border-primary/50 focus:bg-white/[0.06] transition-all"
+                   />
+                 </div>
+
+                 <div>
+                   <label className="font-sans text-xs text-on-surface-secondary/90 mb-1.5 block font-medium">Email (comprobante)</label>
+                   <input
+                     type="email"
+                     placeholder="tu@email.com"
+                     value={guestEmail}
+                     onChange={(e) => setGuestEmail(e.target.value)}
+                     className="w-full rounded-2xl px-4 py-3 font-sans text-sm bg-white/[0.04] text-on-surface placeholder:text-on-surface-secondary/40 border border-white/10 focus:outline-none focus:border-primary/50 focus:bg-white/[0.06] transition-all"
+                   />
+                 </div>
+
+                 <div>
+                   <label className="font-sans text-xs text-on-surface-secondary/90 mb-1.5 block font-medium">WhatsApp (confirmación directa)</label>
+                   <div className={cn(
+                     "flex items-center bg-white/[0.04] border transition-all duration-300 rounded-2xl overflow-hidden px-4 py-2.5",
+                     phoneTouched && !isPhoneValid ? "border-danger/50 ring-1 ring-danger/20" :
+                     isPhoneValid ? "border-success/50 ring-1 ring-success/20" : "border-white/10 focus-within:border-primary/50"
+                   )}>
+                     <div className="flex items-center gap-2 pr-3.5 border-r border-white/10 text-on-surface-secondary font-medium select-none shrink-0">
+                       <img src="https://flagcdn.com/w20/ar.png" alt="AR" className="w-4 h-auto rounded-sm opacity-80" />
+                       <span className="font-sans text-sm">+54</span>
+                     </div>
+                     <input
+                       type="tel"
+                       value={clientPhone}
+                       onChange={(e) => {
+                         const val = e.target.value.replace(/[^\d]/g, '');
+                         setClientPhone(val);
+                         setGuestPhone(val);
+                         if (!phoneTouched) setPhoneTouched(true);
+                       }}
+                       onBlur={() => setPhoneTouched(true)}
+                       placeholder="9 11 XXXX-XXXX"
+                       className="bg-transparent flex-1 px-3.5 py-0.5 font-sans text-sm text-on-surface placeholder:text-on-surface-secondary/40 focus:outline-none"
+                     />
+                     {isPhoneValid && <CheckCircle className="w-4 h-4 text-success shrink-0 ml-1" />}
+                   </div>
+                   {phoneTouched && !isPhoneValid && (
+                     <p className="font-sans text-danger text-[10px] font-semibold mt-1 ml-1 animate-pulse">Tu WhatsApp es necesario para enviarte los detalles del turno.</p>
+                   )}
+                 </div>
+               </div>
+             </div>
+           ) : (
+             <div className="p-6 rounded-[2rem] bg-black/40 backdrop-blur-xl border border-white/10 space-y-3">
+               <div className="flex items-center justify-between">
+                 <span className="font-outfit text-sm font-semibold text-on-surface">Confirmación vía WhatsApp</span>
+                 <span className="text-xs text-success font-sans font-medium flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" /> Verificado</span>
+               </div>
+               <div className={cn(
+                 "flex items-center bg-white/[0.04] border transition-all duration-300 rounded-2xl overflow-hidden px-4 py-2.5",
+                 isPhoneValid ? "border-success/50" : "border-white/10"
+               )}>
+                 <div className="flex items-center gap-2 pr-3.5 border-r border-white/10 text-on-surface-secondary font-medium select-none shrink-0">
+                   <img src="https://flagcdn.com/w20/ar.png" alt="AR" className="w-4 h-auto rounded-sm opacity-80" />
+                   <span className="font-sans text-sm">+54</span>
+                 </div>
+                 <input
+                   type="tel"
+                   value={clientPhone}
+                   onChange={(e) => {
+                     const val = e.target.value.replace(/[^\d]/g, '');
+                     setClientPhone(val);
+                     if (!phoneTouched) setPhoneTouched(true);
+                   }}
+                   onBlur={() => setPhoneTouched(true)}
+                   placeholder="9 11 XXXX-XXXX"
+                   className="bg-transparent flex-1 px-3.5 py-0.5 font-sans text-sm text-on-surface placeholder:text-on-surface-secondary/40 focus:outline-none"
+                 />
+               </div>
+             </div>
+           )}
+
+           {/* ── Badge de Seña e Información de Pago ────────────────────── */}
+           <div className="p-8 border border-primary/30 rounded-[2.5rem] text-center bg-gradient-to-b from-[#181510] to-[#0d0c0a] relative overflow-hidden shadow-[0_0_40px_rgba(241,201,125,0.15)] space-y-4">
+             <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+             
+             <div className="space-y-1">
+               <p className="font-sans text-[10.5px] font-semibold text-primary/90 uppercase tracking-[0.2em]">
+                 Seña para congelar turno
+               </p>
+               <div className="font-vogue text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#f1c97d] via-[#fff0cf] to-[#e4b562] drop-shadow-sm pt-1">
+                 {formatPrice(depositAmount)}
+               </div>
+             </div>
+
+             <div className="pt-3 border-t border-white/10 text-xs font-sans text-on-surface-secondary/90 max-w-sm mx-auto leading-relaxed space-y-1">
+               <p>
+                 Remanente estimado en salón: <strong className="text-on-surface font-semibold">{hasRange ? `${formatPrice(totalFrom)} - ${formatPrice(totalTo)}` : formatPrice(totalFrom)}</strong>
+               </p>
+               <p className="text-[11px] opacity-75">
+                 Valores sujetos a diagnóstico final en persona con {selectedStaff?.name.split(' ')[0]}.
+               </p>
+             </div>
+           </div>
+
+           {/* Checkbox de acuerdo en vidrio esmerilado */}
+           <div className="flex items-start space-x-3 p-4 bg-black/40 border border-white/10 rounded-2xl hover:bg-black/60 transition-colors select-none cursor-pointer" onClick={() => setFinalConfirmation(!finalConfirmation)}>
+             <Checkbox id="terms1" checked={finalConfirmation} onCheckedChange={(checked) => setFinalConfirmation(checked as boolean)} className="mt-0.5 data-[state=checked]:bg-primary shrink-0" />
+             <label htmlFor="terms1" className="font-sans text-xs text-on-surface-secondary/90 leading-relaxed cursor-pointer select-none">
+               Confirmo que mi cabello actual coincide cercanamente con el <strong className="text-on-surface font-semibold">largo declarado</strong>, previniendo sorpresas de cobro adicional o carencia de tiempo técnico disponible hoy.
+             </label>
+           </div>
+         </div>
        </CardContent>
-       <CardFooter className="flex flex-col sm:flex-row justify-between border-t border-outline-subtle bg-surface p-4 sm:p-6 rounded-b-[1.5rem] gap-3">
-         <Button variant="outline" className="w-full sm:w-auto rounded-full border-outline-subtle text-on-surface hover:bg-surface-hover font-sans" onClick={() => setStep(3)}>Modificar Detalles</Button>
+       <CardFooter className="flex flex-col sm:flex-row justify-between border-t border-outline-subtle bg-surface p-4 sm:p-6 rounded-b-[2.5rem] gap-3">
+         <Button variant="outline" className="w-full sm:w-auto rounded-full border-white/10 text-on-surface hover:bg-white/10 font-sans text-xs" onClick={() => setStep(3)}>Modificar Detalles</Button>
          <Button size="lg" className="w-full sm:w-auto rounded-full bg-primary text-surface hover:bg-primary-dark font-sans uppercase tracking-widest text-xs font-semibold shadow-card-glow transition-all duration-300 hover:-translate-y-0.5 active:scale-95" onClick={handleSubmit} disabled={isPending || !finalConfirmation}>
            {isPending ? <Loader2 className="animate-spin w-5 h-5 mr-2" /> : 'Confirmar Cita Exacta'}
          </Button>
