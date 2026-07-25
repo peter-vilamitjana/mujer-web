@@ -94,53 +94,83 @@ export async function updateMyProfile(
 
 // ── Historial cross-tenant ────────────────────────────────────────────────────
 
-export async function getMyHistorial(): Promise<HistorialGroup[]> {
-  let uid: string; let tenantIds: string[];
-  try { ({ uid, tenantIds } = await requireAuthSession()); } catch { return []; }
-  if (tenantIds.length === 0) return [];
+/**
+ * Turnos de la usuaria en TODOS los salones donde reservó.
+ *
+ * Se consulta por collectionGroup y no iterando `tenantIds` de la sesión:
+ * `tenantIds` sale de `users/{uid}/memberships`, que modela la pertenencia
+ * a un salón (staff/clienta registrada), no dónde la usuaria efectivamente
+ * reservó. Una clienta B2C que reserva desde el marketplace no tiene
+ * membership, así que iterar `tenantIds` devolvía [] y sus turnos quedaban
+ * invisibles en el perfil aunque existieran en Firestore.
+ *
+ * El orden es siempre `date asc` porque es el único índice COLLECTION_GROUP
+ * desplegado para `clientId`; el orden final se resuelve en memoria.
+ */
+async function fetchMyAppointmentEntries(uid: string): Promise<HistorialEntry[]> {
+  const snap = await adminDb
+    .collectionGroup('appointments')
+    .where('clientId', '==', uid)
+    .orderBy('date', 'asc')
+    .limit(300)
+    .get();
+
+  if (snap.empty) return [];
+
+  // Un solo read por salón, no uno por turno.
+  const tenantIds = [...new Set(snap.docs.map((d) => d.ref.path.split('/')[1]).filter(Boolean))];
+  const tenantSnaps = await Promise.all(
+    tenantIds.map((id) => adminDb.collection('tenants').doc(id).get()),
+  );
+  const tenantMeta = new Map(
+    tenantSnaps.map((t) => [
+      t.id,
+      {
+        name: (t.data()?.name as string) ?? 'Salón',
+        slug: (t.data()?.slug as string) ?? t.id,
+        coverImageUrl: (t.data()?.coverImageUrl as string) || (t.data()?.logoUrl as string) || (t.data()?.image as string) || '/hero-salon.png',
+      },
+    ]),
+  );
 
   const entries: HistorialEntry[] = [];
+  for (const d of snap.docs) {
+    const tenantId = d.ref.path.split('/')[1];
+    if (!tenantId) continue;
 
-  await Promise.all(
-    tenantIds.map(async (tenantId) => {
-      try {
-        const tenantSnap = await adminDb.collection('tenants').doc(tenantId).get();
-        if (!tenantSnap.exists) return;
-        const tenantData = tenantSnap.data()!;
-        const salonName: string = tenantData.name ?? 'Salón';
-        const salonSlug: string = tenantData.slug ?? tenantId;
+    const data = d.data();
+    const ts = data.date as Timestamp | undefined;
+    const dateMs: number = ts?.toMillis?.() ?? (ts?.seconds ? ts.seconds * 1000 : 0);
+    if (!dateMs) continue;
 
-        const snap = await adminDb
-          .collection('tenants').doc(tenantId)
-          .collection('appointments')
-          .where('clientId', '==', uid)
-          .orderBy('date', 'desc')
-          .limit(100)
-          .get();
+    const meta = tenantMeta.get(tenantId);
+    entries.push({
+      id: d.id,
+      tenantId,
+      salonName: meta?.name ?? 'Salón',
+      salonSlug: meta?.slug ?? tenantId,
+      salonCoverImage: meta?.coverImageUrl ?? '/hero-salon.png',
+      service: data.serviceNames ?? '',
+      staffName: data.staffName ?? '',
+      dateMs,
+      status: data.status ?? 'pending',
+      price: data.priceEstimated ?? 0,
+    });
+  }
+  return entries;
+}
 
-        for (const d of snap.docs) {
-          const data = d.data();
-          const ts = data.date as Timestamp | undefined;
-          const dateMs: number = ts?.toMillis?.() ?? (ts?.seconds ? ts.seconds * 1000 : 0);
-          if (!dateMs) continue;
+export async function getMyHistorial(): Promise<HistorialGroup[]> {
+  let uid: string;
+  try { ({ uid } = await requireAuthSession()); } catch { return []; }
 
-          entries.push({
-            id: d.id,
-            tenantId,
-            salonName,
-            salonSlug,
-            service: data.serviceNames ?? '',
-            staffName: data.staffName ?? '',
-            dateMs,
-            status: data.status ?? 'pending',
-            price: data.priceEstimated ?? 0,
-          });
-        }
-      } catch (err) {
-        console.error(`[getMyHistorial] tenant ${tenantId}:`, err);
-      }
-    }),
-  );
+  let entries: HistorialEntry[];
+  try {
+    entries = await fetchMyAppointmentEntries(uid);
+  } catch (err) {
+    console.error('[getMyHistorial]', err);
+    return [];
+  }
 
   entries.sort((a, b) => b.dateMs - a.dateMs);
 
@@ -158,59 +188,24 @@ export async function getMyHistorial(): Promise<HistorialGroup[]> {
 }
 
 export async function getMyUpcomingAppointments(): Promise<HistorialEntry[]> {
-  let uid: string; let tenantIds: string[];
-  try { ({ uid, tenantIds } = await requireAuthSession()); } catch { return []; }
-  if (tenantIds.length === 0) return [];
+  let uid: string;
+  try { ({ uid } = await requireAuthSession()); } catch { return []; }
+
+  let entries: HistorialEntry[];
+  try {
+    entries = await fetchMyAppointmentEntries(uid);
+  } catch (err) {
+    console.error('[getMyUpcomingAppointments]', err);
+    return [];
+  }
 
   const nowMs = Date.now();
-  const entries: HistorialEntry[] = [];
-
-  await Promise.all(
-    tenantIds.map(async (tenantId) => {
-      try {
-        const tenantSnap = await adminDb.collection('tenants').doc(tenantId).get();
-        if (!tenantSnap.exists) return;
-        const tenantData = tenantSnap.data()!;
-        const salonName: string = tenantData.name ?? 'Salón';
-        const salonSlug: string = tenantData.slug ?? tenantId;
-
-        const snap = await adminDb
-          .collection('tenants').doc(tenantId)
-          .collection('appointments')
-          .where('clientId', '==', uid)
-          .orderBy('date', 'asc')
-          .limit(20)
-          .get();
-
-        for (const d of snap.docs) {
-          const data = d.data();
-          const status: AppointmentStatus = data.status ?? 'pending';
-          if (status === 'cancelled' || status === 'no_show') continue;
-
-          const ts = data.date as Timestamp | undefined;
-          const dateMs: number = ts?.toMillis?.() ?? (ts?.seconds ? ts.seconds * 1000 : 0);
-          if (!dateMs || dateMs < nowMs) continue;
-
-          entries.push({
-            id: d.id,
-            tenantId,
-            salonName,
-            salonSlug,
-            service: data.serviceNames ?? '',
-            staffName: data.staffName ?? '',
-            dateMs,
-            status,
-            price: data.priceEstimated ?? 0,
-          });
-        }
-      } catch (err) {
-        console.error(`[getMyUpcomingAppointments] tenant ${tenantId}:`, err);
-      }
-    }),
-  );
-
-  entries.sort((a, b) => a.dateMs - b.dateMs);
-  return entries;
+  return entries
+    .filter((e) => {
+      const status = e.status as AppointmentStatus;
+      return status !== 'cancelled' && status !== 'no_show' && e.dateMs >= nowMs;
+    })
+    .sort((a, b) => a.dateMs - b.dateMs);
 }
 
 // ── Hair Profile ──────────────────────────────────────────────────────────────
@@ -596,11 +591,12 @@ export async function bookSuggestedAppointment(
   date: string,
   time: string,
 ): Promise<{ success: boolean; appointmentId?: string; error?: string }> {
-  let uid: string; let userName: string | null | undefined;
+  let uid: string; let userName: string | null | undefined; let userEmail: string | null | undefined;
   try {
     const auth = await requireAuthSession();
     uid = auth.uid;
     userName = auth.name;
+    userEmail = auth.email;
   } catch {
     return { success: false, error: 'Iniciá sesión para reservar.' };
   }
@@ -661,7 +657,7 @@ export async function bookSuggestedAppointment(
           tenantId,
           branchId,
           clientId: uid,
-          clientName: (userName ?? 'Cliente').slice(0, 100),
+          clientName: (userName || userEmail?.split('@')[0] || 'Usuario').slice(0, 100),
           staffId,
           staffName: pattern.staffName.slice(0, 100),
           serviceIds: pattern.serviceIds,

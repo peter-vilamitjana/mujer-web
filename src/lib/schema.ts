@@ -286,6 +286,7 @@ export interface HistorialEntry {
     tenantId: string;
     salonName: string;
     salonSlug: string;
+    salonCoverImage?: string;
     service: string;
     staffName: string;
     dateMs: number;

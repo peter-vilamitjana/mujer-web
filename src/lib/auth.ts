@@ -83,10 +83,24 @@ export const authOptions: NextAuthOptions = {
                         credentials.password
                     );
                     const firebaseUser = userCredential.user;
+
+                    let displayName = firebaseUser.displayName;
+                    if (!displayName) {
+                        try {
+                            const userDoc = await adminDb.collection('users').doc(firebaseUser.uid).get();
+                            if (userDoc.exists) {
+                                const d = userDoc.data();
+                                displayName = d?.displayName || d?.fullName || d?.name || null;
+                            }
+                        } catch {
+                            // ignore fallback error
+                        }
+                    }
+
                     return {
                         id: firebaseUser.uid,
                         email: firebaseUser.email,
-                        name: firebaseUser.displayName,
+                        name: displayName,
                         image: firebaseUser.photoURL,
                     };
                 } catch (error) {
@@ -106,7 +120,12 @@ export const authOptions: NextAuthOptions = {
             if (trigger === 'update' && token.uid) {
                 try {
                     const userDoc = await adminDb.collection('users').doc(token.uid as string).get();
-                    if (userDoc.data()?.role === 'superadmin') {
+                    const userData = userDoc.data();
+                    const dbName = userData?.displayName || userData?.fullName || userData?.name;
+                    if (dbName && token.user) {
+                        (token.user as any).name = dbName;
+                    }
+                    if (userData?.role === 'superadmin') {
                         token.role = 'superadmin';
                         token.tenantIds = [];
                         return token;
@@ -136,11 +155,43 @@ export const authOptions: NextAuthOptions = {
                 token.user = user;
                 token.uid = user.id; // UID explícito en el token
 
-                // Leer memberships + phone UNA SOLA VEZ, al momento del login (Admin SDK)
+                // Leer memberships + phone + name UNA SOLA VEZ, al momento del login (Admin SDK)
                 try {
+                    const userRef = adminDb.collection('users').doc(user.id);
+                    const userDoc = await userRef.get();
+
+                    // Autocuración del doc de perfil. Ningún proveedor lo garantizaba:
+                    // Google nunca lo creó (este callback solo leía), y el callback
+                    // `session` escribe users/{uid}/integrations/google, dejando un
+                    // "padre fantasma" — el UID aparece en listDocuments() pero con
+                    // .exists === false. Sin users/{uid} la usuaria queda sin perfil,
+                    // sin memberships y con tenantIds vacío.
+                    //
+                    // Va acá y no en `signIn` para reutilizar el get() de arriba y
+                    // para cubrir a todos los proveedores por igual: también repara
+                    // cuentas credentials viejas que quedaron huérfanas.
+                    let userData = userDoc.data();
+                    if (!userDoc.exists) {
+                        const seed = {
+                            id: user.id,
+                            displayName: user.name ?? '',
+                            email: user.email ?? '',
+                            photoURL: user.image ?? null,
+                            role: 'customer',
+                            createdAt: FieldValue.serverTimestamp(),
+                        };
+                        // merge: idempotente si dos logins concurrentes entran acá.
+                        await userRef.set(seed, { merge: true });
+                        userData = seed;
+                    }
+
+                    const dbName = userData?.displayName || userData?.fullName || userData?.name;
+                    if (dbName && token.user) {
+                        (token.user as any).name = dbName;
+                    }
+
                     // Superadmin: detectar antes de leer memberships
-                    const userDoc = await adminDb.collection('users').doc(user.id).get();
-                    if (userDoc.data()?.role === 'superadmin') {
+                    if (userData?.role === 'superadmin') {
                         token.role = 'superadmin';
                         token.tenantIds = [];
                         return token;
@@ -161,18 +212,12 @@ export const authOptions: NextAuthOptions = {
                             token.salonSlug = tenantSnap.data()!.slug;
                         }
                     }
+
+                    if (userData?.phone) token.phone = userData.phone;
                 } catch (err) {
                     console.error('Error fetching memberships or tenant slug:', err);
                     token.tenantIds = [];
                     token.role = 'customer';
-                }
-
-                try {
-                    const userSnap = await adminDb.collection('users').doc(user.id).get();
-                    const phone = userSnap.data()?.phone;
-                    if (phone) token.phone = phone;
-                } catch {
-                    // phone es opcional, no fallar
                 }
 
                 return token;

@@ -131,8 +131,22 @@ export default async function TurnosPage({ params }: Props) {
           </div>
 
           {session ? (
-            <div className="flex items-center gap-2 text-xs font-sans text-on-surface-secondary">
-              <span>Hola, <strong className="text-on-surface">{session.user?.name || 'Cliente'}</strong></span>
+            <div className="flex items-center gap-3.5 p-2 sm:px-4 sm:py-2.5 rounded-[1.5rem] bg-white/[0.04] backdrop-blur-2xl border border-white/[0.12] shadow-[0_10px_30px_rgba(0,0,0,0.4)] select-none">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-white/20 via-white/10 to-white/5 border border-white/20 flex items-center justify-center text-white font-outfit font-extrabold text-base shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] shrink-0 overflow-hidden">
+                {session.user?.image ? (
+                  <img src={session.user.image} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span>{(session.user?.name || session.user?.email || 'U')[0].toUpperCase()}</span>
+                )}
+              </div>
+              <div className="flex flex-col justify-center leading-tight">
+                <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] font-semibold text-white/50">
+                  Bienvenida
+                </span>
+                <span className="text-lg sm:text-xl font-extrabold font-outfit text-white tracking-tight capitalize">
+                  {session.user?.name || session.user?.email?.split('@')[0] || 'Usuario'}
+                </span>
+              </div>
             </div>
           ) : (
             <Link

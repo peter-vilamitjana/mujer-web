@@ -53,9 +53,27 @@ interface Props {
   initialPhone?: string;
 }
 
-function fmtDay(ms: number) { return new Date(ms).toLocaleDateString('es-AR', { day: '2-digit' }); }
-function fmtMonth(ms: number) { return new Date(ms).toLocaleDateString('es-AR', { month: 'long' }).toUpperCase(); }
-function fmtTime(ms: number) { return new Date(ms).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: true }); }
+const MONTHS_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+function fmtDay(ms: number) {
+  if (!ms) return '';
+  const d = new Date(ms);
+  return String(d.getDate()).padStart(2, '0');
+}
+function fmtMonth(ms: number) {
+  if (!ms) return '';
+  const d = new Date(ms);
+  return (MONTHS_ES[d.getMonth()] || '').toUpperCase();
+}
+function fmtTime(ms: number) {
+  if (!ms) return '';
+  const d = new Date(ms);
+  const h = d.getHours();
+  const m = String(d.getMinutes()).padStart(2, '0');
+  const ampm = h >= 12 ? 'p. m.' : 'a. m.';
+  const hour12 = h % 12 || 12;
+  return `${hour12}:${m} ${ampm}`;
+}
 
 export default function PerfilClient({
   initialAppointments,
@@ -354,10 +372,19 @@ export default function PerfilClient({
                     {nextAppointment ? (
                       <div className="relative isolate z-0 overflow-hidden rounded-[2rem] p-0 flex flex-row w-full transition-all duration-700 hover:scale-[1.01] hover:bg-white/[0.02] border border-white/10 group" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
                         <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20" />
+                        {/* Imagen de portada del salón integrada en el fondo sin cortes ni costuras */}
+                        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none -z-10">
+                          <img
+                            src={nextAppointment.salonCoverImage || '/hero-salon.png'}
+                            alt={nextAppointment.salonName}
+                            className="w-full h-full object-cover object-right filter brightness-[0.85] contrast-[1.05] group-hover:scale-105 transition-transform duration-700"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-r from-[#0c0b0a] via-[#0c0b0a]/90 via-45% to-transparent" />
+                        </div>
                         <div className="flex flex-col items-center justify-center w-[150px] shrink-0 border-r border-dashed border-white/10 px-6 py-8 relative z-10">
-                          <span className="text-5xl font-headline text-[#f1c97d] leading-none" style={{ textShadow: '0 0 30px rgba(241,201,125,0.3)' }}>{fmtDay(nextAppointment.dateMs)}</span>
-                          <span className="text-[10px] font-headline italic tracking-[0.1em] text-[#7a766e] mt-2 lowercase">{fmtMonth(nextAppointment.dateMs)}</span>
-                          <span className="text-sm font-headline italic text-[#f5f0e8] mt-3">{fmtTime(nextAppointment.dateMs)}</span>
+                          <span suppressHydrationWarning className="text-5xl font-headline text-[#f1c97d] leading-none" style={{ textShadow: '0 0 30px rgba(241,201,125,0.3)' }}>{fmtDay(nextAppointment.dateMs)}</span>
+                          <span suppressHydrationWarning className="text-[10px] font-headline italic tracking-[0.1em] text-[#7a766e] mt-2 lowercase">{fmtMonth(nextAppointment.dateMs)}</span>
+                          <span suppressHydrationWarning className="text-sm font-headline italic text-[#f5f0e8] mt-3">{fmtTime(nextAppointment.dateMs)}</span>
                         </div>
                         <div className="flex-1 px-8 py-6 flex flex-col justify-center relative z-10">
                           <div className="flex items-center gap-2.5 mb-2">
@@ -615,53 +642,86 @@ export default function PerfilClient({
               ) : (
                 <div className="space-y-5">
                   {upcomingAppointments.map((appt) => (
-                    <div key={appt.id} className="relative group overflow-hidden liquid-glass-rich rounded-[1.5rem] flex min-h-[120px] transition-all duration-700 hover:scale-[1.02] hover:bg-white/[0.05]" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
-                      <div className="relative z-10 flex flex-col items-center justify-center min-w-[90px] px-5 py-4">
-                        <span className="text-4xl font-headline text-[#f1c97d]" style={{ textShadow: '0 0 30px rgba(241,201,125,0.3)' }}>{fmtDay(appt.dateMs)}</span>
-                        <span className="text-[9px] font-label uppercase tracking-[0.3em] text-[#7a766e] mt-0.5">{fmtMonth(appt.dateMs)}</span>
-                        <span className="text-[10px] font-headline italic text-[#f5f0e8] mt-1">{fmtTime(appt.dateMs)}</span>
+                    <div
+                      key={appt.id}
+                      className="relative isolate z-0 overflow-hidden rounded-[2rem] p-0 flex flex-row w-full transition-all duration-700 hover:scale-[1.01] hover:bg-white/[0.02] border border-white/10 group"
+                      style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
+                    >
+                      <div className="absolute inset-0 liquid-glass-rich pointer-events-none rounded-[inherit] -z-20" />
+
+                      {/* Imagen del salón integrada en el fondo sin cortes ni costuras */}
+                      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none -z-10">
+                        <img
+                          src={appt.salonCoverImage || '/hero-salon.png'}
+                          alt={appt.salonName}
+                          className="w-full h-full object-cover object-right filter brightness-[0.85] contrast-[1.05] group-hover:scale-105 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#0c0b0a] via-[#0c0b0a]/90 via-45% to-transparent" />
                       </div>
-                      <div className="relative z-10" style={{ width: '1px', alignSelf: 'stretch', margin: '12px 0', background: 'linear-gradient(to bottom, transparent, rgba(241,201,125,0.3), transparent)' }} />
-                      <div className="relative z-10 flex-grow px-7 py-4 flex flex-col justify-center">
-                        <div className="flex items-center gap-3.5 mb-1.5">
-                          <h2 className="text-2xl font-body font-light tracking-wide">{appt.salonName}</h2>
+
+                      {/* Columna Fecha & Hora (Izquierda) */}
+                      <div className="flex flex-col items-center justify-center w-[140px] sm:w-[150px] shrink-0 border-r border-dashed border-white/10 px-6 py-8 relative z-10">
+                        <span suppressHydrationWarning className="text-5xl font-headline text-[#f1c97d] leading-none" style={{ textShadow: '0 0 30px rgba(241,201,125,0.3)' }}>
+                          {fmtDay(appt.dateMs)}
+                        </span>
+                        <span suppressHydrationWarning className="text-[10px] font-headline italic tracking-[0.1em] text-[#7a766e] mt-2 lowercase">
+                          {fmtMonth(appt.dateMs)}
+                        </span>
+                        <span suppressHydrationWarning className="text-sm font-headline italic text-[#f5f0e8] mt-3">
+                          {fmtTime(appt.dateMs)}
+                        </span>
+                      </div>
+
+                      {/* Columna Detalles del Turno (Centro & Derecha) */}
+                      <div className="flex-1 px-8 py-6 flex flex-col justify-center relative z-10">
+                        <div className="flex items-center gap-2.5 mb-2 flex-wrap">
+                          <p className="text-[10px] font-label uppercase tracking-[0.2em] text-[#f1c97d] font-bold">
+                            {appt.salonName}
+                          </p>
                           {(appt.status === 'confirmed' || appt.status === 'pending') && (
-                            <span className="bg-emerald-500/10 text-emerald-400 text-[8px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-widest border border-emerald-500/20">
+                            <span className="bg-emerald-500/10 text-emerald-400 text-[8px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-widest border border-emerald-500/20 backdrop-blur-md">
                               {appt.status === 'confirmed' ? 'Confirmado' : 'Pendiente'}
                             </span>
                           )}
                           {appt.status === 'cancelled' && (
-                            <span className="bg-red-500/10 text-red-400 text-[8px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-widest border border-red-500/20">Cancelado</span>
+                            <span className="bg-red-500/10 text-red-400 text-[8px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-widest border border-red-500/20 backdrop-blur-md">
+                              Cancelado
+                            </span>
                           )}
                         </div>
-                        <p className="text-[#7a766e] text-base font-headline italic mb-2.5">{appt.service}</p>
+
+                        <h2 className="text-2xl sm:text-3xl font-headline italic text-[#f5f0e8] mb-1 leading-tight">
+                          {appt.service}
+                        </h2>
+
                         {appt.staffName && (
-                          <div className="flex items-center gap-2.5">
-                            <span className="material-symbols-outlined text-[#f1c97d]/60 text-[18px]">person</span>
-                            <div>
-                              <p className="text-[7px] text-[#7a766e] uppercase tracking-widest">Profesional</p>
-                              <p className="text-[10px] uppercase tracking-wider font-medium">{appt.staffName}</p>
-                            </div>
-                          </div>
+                          <p className="text-[11px] text-[#7a766e] mt-1 font-sans">
+                            con {appt.staffName}
+                          </p>
                         )}
-                      </div>
-                      <div className="relative z-10 flex-shrink-0 flex flex-col items-center justify-center gap-3 border-l border-dashed border-white/15 px-5">
-                        <Link href={`/salones/${appt.salonSlug}`} className="text-[9px] text-[#f1c97d] uppercase tracking-widest font-label hover:opacity-70 transition-opacity flex items-center gap-1">
-                          Ver salón <span className="material-symbols-outlined text-[13px]">chevron_right</span>
-                        </Link>
-                        {(appt.status === 'confirmed' || appt.status === 'pending') && (
-                          <button
-                            onClick={() => handleCancelAppointment(appt)}
-                            disabled={cancellingId === appt.id}
-                            className="text-[9px] text-red-400/60 uppercase tracking-widest font-label hover:text-red-400 transition-colors flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+
+                        <div className="flex flex-wrap items-center gap-3 mt-4">
+                          <Link
+                            href={`/salones/${appt.salonSlug}`}
+                            className="h-8 px-4 rounded-full border border-white/10 hover:border-[#f1c97d]/30 hover:bg-[#f1c97d]/5 transition-all text-[10px] uppercase tracking-[0.1em] font-label text-[#7a766e] hover:text-[#f1c97d] flex items-center gap-2"
                           >
-                            {cancellingId === appt.id ? (
-                              <span className="animate-pulse">Cancelando...</span>
-                            ) : (
-                              <>Cancelar <span className="material-symbols-outlined text-[13px]">close</span></>
-                            )}
-                          </button>
-                        )}
+                            <span className="material-symbols-outlined text-[14px]">storefront</span> Ver salón
+                          </Link>
+
+                          {(appt.status === 'confirmed' || appt.status === 'pending') && (
+                            <button
+                              onClick={() => handleCancelAppointment(appt)}
+                              disabled={cancellingId === appt.id}
+                              className="h-8 px-4 rounded-full border border-red-500/20 hover:border-red-500/40 hover:bg-red-500/10 transition-all text-[10px] uppercase tracking-[0.1em] font-label text-red-400/80 hover:text-red-400 flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                            >
+                              {cancellingId === appt.id ? (
+                                <span className="animate-pulse">Cancelando...</span>
+                              ) : (
+                                <>Cancelar <span className="material-symbols-outlined text-[13px]">close</span></>
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -691,7 +751,7 @@ export default function PerfilClient({
                           {session?.user?.image ? (
                             <img src={session.user.image} alt={userName} className="w-full h-full rounded-full object-cover grayscale brightness-90 group-hover:grayscale-0 transition-all duration-700" />
                           ) : (
-                            <span className="text-3xl font-vogue text-[#f1c97d]">{userInitial}</span>
+                            <span suppressHydrationWarning className="text-3xl font-vogue text-[#f1c97d]">{userInitial}</span>
                           )}
                         </div>
                       </div>

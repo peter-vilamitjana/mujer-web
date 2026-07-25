@@ -115,14 +115,19 @@ export async function getMyAppointments(): Promise<ClientAppointment[]> {
   }
 
   try {
+    // orderBy asc: es el único índice COLLECTION_GROUP desplegado para
+    // clientId. Con 'desc' la query tira FAILED_PRECONDITION y el catch de
+    // abajo devolvía [] en silencio. El orden descendente se aplica en memoria.
     const snap = await adminDb
       .collectionGroup('appointments')
       .where('clientId', '==', uid)
-      .orderBy('date', 'desc')
-      .limit(100)
+      .orderBy('date', 'asc')
+      .limit(300)
       .get();
 
-    return snap.docs.map(doc => {
+    const docs = snap.docs.slice().reverse().slice(0, 100);
+
+    return docs.map(doc => {
       const d = doc.data();
       const nameSegments = doc.ref.path.split('/');
       const tenantId = nameSegments[1] ?? '';

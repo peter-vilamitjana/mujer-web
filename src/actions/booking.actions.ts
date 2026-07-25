@@ -98,7 +98,7 @@ export async function createBooking(
     const auth = await requireAuthSession();
     uid      = auth.uid;
     userName  = auth.name;
-    userEmail = null; // email se lee de la sesión directamente abajo
+    userEmail = auth.email;
   } catch {
     return { success: false, error: 'No autenticado. Por favor iniciá sesión.' };
   }
@@ -168,7 +168,7 @@ export async function createBooking(
           tenantId:        payload.tenantId,
           branchId,
           clientId:        uid,
-          clientName:      (userName ?? 'Cliente').slice(0, 100),
+          clientName:      (userName || userEmail?.split('@')[0] || 'Usuario').slice(0, 100),
           staffId:         payload.staffId,
           staffName:       payload.staffName.trim().slice(0, 100),
           serviceIds:      payload.serviceIds,
@@ -198,7 +198,7 @@ export async function createBooking(
 
     const customerData: Record<string, unknown> = {
       userId:    uid,
-      fullName:  (userName ?? 'Cliente').slice(0, 100),
+      fullName:  (userName || userEmail?.split('@')[0] || 'Usuario').slice(0, 100),
       createdAt: FieldValue.serverTimestamp(),
     };
     if (clientPhone) {
@@ -227,7 +227,7 @@ export async function createBooking(
     if (clientPhone) {
       sendWhatsAppMessage(
         buildConfirmationMessage({
-          clientName:  (userName ?? 'Cliente').slice(0, 100),
+          clientName:  (userName || userEmail?.split('@')[0] || 'Usuario').slice(0, 100),
           salonName:   tenantName,
           date: appointmentDateTime.toLocaleDateString('es-AR', {
             weekday: 'long', day: 'numeric', month: 'long',

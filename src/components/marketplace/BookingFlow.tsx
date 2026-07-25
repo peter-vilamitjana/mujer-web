@@ -413,7 +413,7 @@ export default function BookingFlow({ tenantId, tenantSlug, services, staff, isA
   ];
 
   const currentStepConfig = stepsInfo.find(s => s.id === step);
-  const clientName = isAuthenticated ? (session?.user?.name || 'Cliente') : (guestName || 'Invitada');
+  const clientName = isAuthenticated ? (session?.user?.name || session?.user?.email?.split('@')[0] || session?.user?.email || 'Usuario') : (guestName || 'Invitada');
 
   return (
     <div className="space-y-6 mx-auto w-full">

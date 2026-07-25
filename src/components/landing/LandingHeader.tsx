@@ -22,10 +22,6 @@ export default function LandingHeader() {
   const { theme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
-
-  if (pathname?.includes('/turnos')) {
-    return null;
-  }
   const headerRef = useRef<HTMLElement>(null);
 
   const salonSlug = useMemo(() => {
@@ -75,6 +71,10 @@ export default function LandingHeader() {
       cancelled = true;
     };
   }, [salonSlug]);
+
+  if (pathname?.includes('/turnos')) {
+    return null;
+  }
 
   const textWhite = (mounted && theme === 'dark') || overHero;
 
