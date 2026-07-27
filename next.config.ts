@@ -106,9 +106,14 @@ const nextConfig: NextConfig = {
   // Solo NEXT_PUBLIC_* deben ir aquí. Los secretos del servidor
   // (GOOGLE_CLIENT_SECRET, NEXTAUTH_SECRET) los lee Next.js directamente
   // del entorno — no necesitan declararse en este bloque.
+  //
+  // GOOGLE_CLIENT_ID y NEXTAUTH_URL se sacaron a propósito: declararlas acá
+  // hace que Next.js las reemplace textualmente en build time, horneando la
+  // URL de producción en cada deploy. En Vercel eso rompe el login en los
+  // previews (el callback de OAuth apuntaría al dominio de prod). Ambas se
+  // usan solo desde el servidor, así que Next.js las lee del entorno en
+  // runtime sin necesidad de declararlas.
   env: {
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     NEXT_PUBLIC_FIRESTORE_EMULATOR_HOST: firestoreEmulatorHost,
     NEXT_PUBLIC_FIREBASE_AUTH_EMULATOR_HOST: authEmulatorHost,
   },
