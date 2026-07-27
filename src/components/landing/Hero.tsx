@@ -7,7 +7,7 @@ export default function Hero() {
     <section className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-brand-bg pb-32">
       <div className="absolute inset-0 z-0">
         <Image 
-          src="/hero-salon.png" 
+          src="/hero-salon-new.png" 
           alt="Luxury Salon Interior" 
           fill 
           priority 
