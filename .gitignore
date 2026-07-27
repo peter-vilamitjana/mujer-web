@@ -12,6 +12,9 @@
 
 # testing
 /coverage
+/playwright-report
+/test-results
+/e2e/.auth
 
 # next.js
 /.next/
@@ -39,6 +42,7 @@ next-env.d.ts
 
 .genkit/*
 .env*
+!.env.example
 
 # firebase
 firebase-debug.log
@@ -59,3 +63,38 @@ debug_admin.js
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+*-adminsdk-*.json
+*service-account*.json
+
+# local agents
+.agents/
+.claude/
+CLAUDE.md
+
+# Imágenes generadas por IA — no subir al repo
+images/infographics/*
+images/miscellaneous/*
+images/people/*
+images/photography/*
+images/products/*
+images/salon/*
+images/marketing/*
+!images/**/.gitkeep
+
+# Prompts JSON de imágenes generadas
+prompts/infographics/*
+prompts/miscellaneous/*
+prompts/people/*
+prompts/photography/*
+prompts/products/*
+prompts/salon/*
+prompts/marketing/*
+!prompts/**/.gitkeep
+
+# Frames extraídos del video — son pesados, no subir al repo
+public/frames/
+public/videos/
+
+# Superpowers temporary files
+.superpowers/

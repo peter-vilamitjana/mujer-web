@@ -41,6 +41,22 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
+    // Liquid Glass Injection for default variant
+    if (variant === "default" && !asChild) {
+      return (
+        <button
+          className={cn(buttonVariants({ variant, size, className }), "btn-liquid transition-transform duration-300 ease-out relative isolate overflow-hidden")}
+          ref={ref}
+          {...props}
+        >
+          <span className="liquid-glass-lens absolute inset-0 -z-10 rounded-[inherit] pointer-events-none" />
+          <span className="liquid-glass-text relative z-10 w-full flex items-center justify-center gap-[inherit]">
+            {props.children}
+          </span>
+        </button>
+      )
+    }
+
     const Comp = asChild ? Slot : "button"
     return (
       <Comp

@@ -1,33 +1,64 @@
+import Image from 'next/image';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { Search, MapPin } from 'lucide-react';
 
 export default function Hero() {
   return (
-    <section className="relative h-[80vh] min-h-[500px] flex items-center justify-center text-center text-white">
-       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat z-0"
-        style={{ backgroundImage: "url('https://cdn.thumbor.leadformance.com/media/clients/5e15eee0ec40d1c7741dd946/501bd8ef-356a-4e1d-97e4-1f2456c30390-loreal-professionnel-6.jpg')" }}
-      >
-        <div className="absolute inset-0 bg-black/50" />
+    <section className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-brand-bg pb-32">
+      <div className="absolute inset-0 z-0">
+        <Image 
+          src="/hero-salon.png" 
+          alt="Luxury Salon Interior" 
+          fill 
+          priority 
+          className="object-cover" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/20 to-black/95 z-10"></div>
+      </div>
+      
+      <div className="relative z-10 text-center max-w-7xl px-6">
+        <p className="text-[9px] uppercase tracking-[1.2em] mb-10 opacity-70 font-medium text-white/90">
+          Innovation Meets High Aesthetic
+        </p>
+        <h2 className="font-vogue hero-title italic text-white text-center transition-colors duration-500">
+          Tu Próximo <br/>
+          <span className="not-italic text-white transition-colors duration-500">Salón</span>
+        </h2>
+        <div className="mt-12 flex flex-col items-center">
+          <p className="text-white/60 text-[10px] md:text-[11px] font-light tracking-[0.5em] uppercase max-w-md leading-relaxed">
+            Redefiniendo el santuario del bienestar moderno con precisión absoluta.
+          </p>
+        </div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white">
-            Estilo, Belleza y Cuidado
-          </h1>
-          <p className="mt-6 text-lg md:text-xl text-gray-200">
-            Registrate y gestioná tu turno fácil y rápido.
-          </p>
-          <div className="mt-10">
-            <Link href="/login">
-              <Button size="lg" className="group bg-white text-primary hover:bg-white/90">
-                Reservar Turno
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </Link>
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-[900px] px-6 z-20">
+        <div className="liquid-glass rounded-full p-2 flex flex-col md:flex-row items-center theme-transition">
+          <div className="flex-[1.2] flex items-center px-8 py-4 w-full">
+            <Search className="text-brand-primary/30 mr-4 w-5 h-5 font-light" />
+            <input 
+              className="w-full bg-transparent border-none text-brand-primary placeholder-brand-primary/20 text-[10px] tracking-[0.3em] uppercase no-ring p-0 font-medium focus:ring-0" 
+              placeholder="QUÉ BUSCAS" 
+              type="text"
+            />
           </div>
+          <div className="hidden md:block w-px h-10 bg-glass-border"></div>
+          <div className="flex-1 flex items-center px-8 py-4 w-full">
+            <MapPin className="text-brand-primary/30 mr-4 w-5 h-5 font-light" />
+            <input 
+              className="w-full bg-transparent border-none text-brand-primary placeholder-brand-primary/20 text-[10px] tracking-[0.3em] uppercase no-ring p-0 font-medium focus:ring-0 transition-colors theme-transition" 
+              placeholder="UBICACIÓN" 
+              type="text"
+            />
+          </div>
+          <Link 
+            href="/login" 
+            className="w-full md:w-auto text-center 
+                       bg-white text-black hover:bg-zinc-200
+                       dark:bg-white dark:text-black dark:hover:bg-zinc-200
+                       px-12 py-5 rounded-full text-[10px] font-black tracking-[0.3em] uppercase transition-all duration-500 font-inter theme-transition"
+          >
+            RESERVAR
+          </Link>
         </div>
       </div>
     </section>

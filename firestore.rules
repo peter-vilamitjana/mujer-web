@@ -1,0 +1,178 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // --- Helper Functions ---
+    // Check if user has a specific role in the tenant
+    function hasRole(tenantId, role) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)/memberships/$(tenantId)).data.role == role;
+    }
+    
+    // Check if user is a member of the tenant (any role)
+    function isTenantMember(tenantId) {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)/memberships/$(tenantId));
+    }
+
+    // --- 1. Global User Data (New Source of Truth) ---
+    match /users/{userId} {
+      // Lectura del propio perfil
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Creación del propio perfil (registro): el campo role no puede estar presente.
+      // auth.service.ts nunca lo incluye — esta regla cierra la escalada de privilegios.
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && !('role' in request.resource.data);
+
+      // Actualización del propio perfil: permitida, pero el campo role no puede cambiar.
+      // Bloquea el vector de autoescalada a superadmin vía Firebase client SDK.
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']);
+      
+      // Memberships: User can read their own.
+      match /memberships/{tenantId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if false; // Revertido para asegurar sistema de roles 
+      }
+      
+      // Integrations (e.g., Google Calendar Tokens) - Private
+      match /integrations/{integrationId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Preferences: solo el propio usuario
+      match /preferences/{prefId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Favorites: solo el propio usuario
+      match /favorites/{favId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // --- 2. Tenant Data (Multi-tenant Isolation) ---
+    match /tenants/{tenantId} {
+      // Documento raíz: público para lectura (branding, nombre, slug, settings)
+      allow read: if true;
+      allow write: if hasRole(tenantId, 'admin');
+
+      // -- Catálogo público (visible en la vitrina del marketplace) --
+      match /services/{doc} {
+        allow read: if true;
+        allow write: if hasRole(tenantId, 'admin');
+      }
+      match /staff/{doc} {
+        allow read: if true;
+        allow write: if hasRole(tenantId, 'admin');
+      }
+      match /promotions/{doc} {
+        allow read: if true;
+        allow write: if hasRole(tenantId, 'admin');
+      }
+      match /portfolio/{doc} {
+        allow read: if true;
+        allow write: if hasRole(tenantId, 'admin');
+      }
+
+      // -- Dato privado: acceso solo para staff del tenant --
+      match /content/{doc} {
+        allow read: if isTenantMember(tenantId);
+        allow write: if hasRole(tenantId, 'admin');
+      }
+      match /branches/{doc} {
+        allow read: if isTenantMember(tenantId);
+        allow write: if hasRole(tenantId, 'admin');
+      }
+
+      // -- CRM privado: customers es el registro local del salón --
+      // Se pobla automáticamente cuando un usuario global reserva por primera vez.
+      // Nunca es visible públicamente.
+      match /customers/{customerId} {
+        allow read: if hasRole(tenantId, 'admin')
+            || hasRole(tenantId, 'employee')
+            || (request.auth != null && request.auth.uid == customerId);
+        allow write: if hasRole(tenantId, 'admin') || hasRole(tenantId, 'employee');
+        allow create: if request.auth != null && request.auth.uid == customerId;
+      }
+
+      // -- Reseñas: lectura pública, escritura autenticada --
+      match /reviews/{doc} {
+        allow read: if true;
+        allow create: if request.auth != null;
+      }
+
+      // -- Turnos: privados con acceso al cliente dueño --
+      match /appointments/{apptId} {
+        allow read: if hasRole(tenantId, 'admin')
+            || hasRole(tenantId, 'employee')
+            || (request.auth != null && resource.data.clientId == request.auth.uid);
+        allow create: if request.auth != null && (
+            isTenantMember(tenantId) ||
+            request.resource.data.clientId == request.auth.uid
+        );
+        allow update: if hasRole(tenantId, 'admin')
+            || hasRole(tenantId, 'employee')
+            || (request.auth != null
+                && resource.data.clientId == request.auth.uid
+                && request.resource.data.status == 'cancelled');
+      }
+    }
+
+    // --- 3. SuperAdmin Collections (Admin SDK only — client blocked) ---
+    // Todas las mutaciones van por Server Actions con Admin SDK (bypasa estas reglas).
+    // El bloqueo explícito protege contra acceso directo desde el cliente.
+    match /subscriptions/{subId} {
+      allow read, write: if false;
+    }
+    match /auditLogs/{logId} {
+      allow read, write: if false;
+    }
+    // El token de invitación vive como doc ID — si se pudiera listar la
+    // colección, se filtrarían todos los tokens activos.
+    match /invitations/{token} {
+      allow read, write: if false;
+    }
+
+    // --- 4. LEGACY Compatibility (Phase 4: READ-ONLY ARCHIVE) ---
+    // Migración completada. Todas las colecciones legacy son inaccesibles vía cliente.
+    // Acceso solo posible via Firebase Admin SDK (Server Actions / scripts de migración).
+
+    match /usuarios/{userId} {
+      allow read, write: if false;
+    }
+
+    match /calendarTokens/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+    }
+
+    match /turnos/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /clientes/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /servicios/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /orgs/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /salons/{document=**} {
+      allow read, write: if false;
+    }
+    
+    // --- 4. Collection Group: appointments (para vista B2C cross-tenant) ---
+    // Permite al cliente B2C ver SUS turnos en cualquier tenant
+    match /{path=**}/appointments/{apptId} {
+      allow read: if request.auth != null 
+        && resource.data.clientId == request.auth.uid;
+    }
+  }
+}

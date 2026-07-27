@@ -1,90 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Inter:wght@300;400;500&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  /* ─── LIGHT MODE (default :root) ───────────────────────────────
+     Fuente de verdad: HTML Stitch light mode
+  */
   :root {
-    --background: 240 5% 96%; /* Gris muy claro (casi blanco) - bg.light: #F9FAFB */
-    --foreground: 225 25% 9%; /* Negro azulado - text.light: #111827 */
-    
-    --card: 0 0% 100%; /* Blanco puro - surface.light: #FFFFFF */
+    /* Tokens del design system editorial */
+    --color-primary: #1A1A1A;
+    --color-accent: #C5A059;
+    --color-bg: #FFFFFF;
+    --color-surface: #F9F9F9;
+    --color-glass: rgba(255, 255, 255, 0.25);
+    --color-glass-border: rgba(0, 0, 0, 0.12);
+    --glass-blur: 8px;
+
+    /* Tokens shadcn — necesarios para el admin, NO tocar */
+    --background: 240 5% 96%;
+    --foreground: 225 25% 9%;
+    --card: 0 0% 100%;
     --card-foreground: 225 25% 9%;
-    
     --popover: 0 0% 100%;
     --popover-foreground: 225 25% 9%;
-    
-    --primary: 258 98% 71%; /* #9D6EFE */
+    --primary: 258 98% 71%;
     --primary-foreground: 0 0% 100%;
-    
     --secondary: 220 13% 91%;
     --secondary-foreground: 225 25% 9%;
-    
     --muted: 220 13% 91%;
     --muted-foreground: 220 9% 46%;
-    
-    --accent: 258 98% 97%; /* Un lavanda muy pálido para acentos sutiles */
+    --accent: 258 98% 97%;
     --accent-foreground: 258 82% 57%;
-    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    
     --border: 220 13% 88%;
     --input: 220 13% 94%;
     --ring: 258 82% 57%;
-    
     --radius: 1.25rem;
+    
+    /* Pricing Section Tokens */
+    --gradient-color: #8350e8;
+    --sparkles-color: #8350e8;
   }
 
+  /* ─── DARK MODE (.dark class en <html>) ────────────────────────
+     Fuente de verdad: HTML Stitch dark mode
+  */
   .dark {
-    --background: 240 4% 8%; /* #121214 */
-    --foreground: 0 0% 90%; /* #E5E5EA */
+    /* Tokens del design system editorial */
+    --color-primary: #FFFFFF;
+    --color-accent: #8E8E93;
+    --color-bg: #050505;
+    --color-surface: #0F0F0F;
+    --color-glass: rgba(255, 255, 255, 0.10);
+    --color-glass-border: rgba(255, 255, 255, 0.18);
+    --glass-blur: 32px;
 
-    --card: 240 2% 12%; /* #1C1C1E */
-    --card-foreground: 0 0% 90%; /* #E5E5EA */
-
-    --popover: 240 2% 12%;
-    --popover-foreground: 0 0% 90%;
-
-    --primary: 258 98% 71%; /* #9D6EFE - Acento violeta más brillante */
+    /* Tokens shadcn — dark overrides (Rich Dark Vogue x Apple) */
+    --background: 240 10% 4%; /* zinc-950 */
+    --foreground: 0 0% 100%; /* text-white */
+    --card: 240 10% 4%; /* zinc-950 */
+    --card-foreground: 0 0% 100%;
+    --popover: 240 10% 4%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 258 98% 71%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 240 2% 18%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 240 2% 18%; /* Gris para fondos sutiles */
-    --muted-foreground: 240 1% 56%; /* #8E8E93 - Texto secundario */
-
-    --accent: 258 98% 71%;
-    --accent-foreground: 0 0% 98%;
-
+    --secondary: 240 6% 10%; /* zinc-900 */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 240 6% 10%; /* zinc-900 */
+    --muted-foreground: 240 5% 65%; /* zinc-400 */
+    --accent: 240 6% 10%; /* hover states => zinc-900 */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    
-    --border: 240 2% 22%; /* #2C2C2E */
-    --input: 240 2% 18%;
+    --border: 240 4% 16%; /* zinc-800 */
+    --input: 240 6% 10%; /* zinc-900 */
     --ring: 258 98% 71%;
+    
+    /* Pricing Section Tokens */
+    --gradient-color: #8350e8;
+    --sparkles-color: #ffffff;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
   body {
-    @apply bg-background text-foreground;
+    background: 
+      radial-gradient(circle at 15% 20%, #1a150a 0%, #050504 45%),
+      radial-gradient(circle at 85% 80%, #120f08 0%, #050504 45%);
+    background-attachment: fixed;
+    color: #f5f0e8;
+    font-family: var(--font-inter), 'Inter', sans-serif;
+    overflow-x: clip; /* clip ≠ hidden: no crea scroll container, no rompe position:sticky */
+    letter-spacing: -0.01em;
+    transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
+
   html {
     @apply scroll-smooth;
+    scroll-padding-top: 5rem;
+    overflow-x: clip; /* clip: no crea scroll container, preserva position:sticky */
+    transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
+  .theme-transition {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 @keyframes scroll-waveform {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* DolorSection — vertical marquee keyframes */
+@keyframes pain-scroll-down {
+  from { transform: translateY(0%); }
+  to   { transform: translateY(-33.333%); }
+}
+@keyframes pain-scroll-up {
+  from { transform: translateY(-33.333%); }
+  to   { transform: translateY(0%); }
 }
 
 .waveform-container {
@@ -108,12 +145,280 @@
 }
 
 .bg-grid-pattern {
-    background-image: 
-        linear-gradient(to right, hsl(var(--border) / 0.5) 1px, transparent 1px),
-        linear-gradient(to bottom, hsl(var(--border) / 0.5) 1px, transparent 1px);
-    background-size: 20px 20px;
+  background-image:
+    linear-gradient(to right, hsl(var(--border) / 0.5) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.5) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 .progress-gradient {
-    background-image: linear-gradient(to right, #7B61FF, #A78BFA);
+  background-image: linear-gradient(to right, #7B61FF, #A78BFA);
+}
+
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.tonal-transition {
+  background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(243,244,245,0.5) 100%);
+}
+
+/* ─── Material Symbols (admin) ──────────────────────────────── */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ─── Utilidades del admin ──────────────────────────────────── */
+.glass-effect {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.ambient-shadow {
+  box-shadow: 0 32px 64px -12px rgba(25, 28, 29, 0.04);
+}
+
+/* ─── SuperAdmin utilities ───────────────────────────────────── */
+.chart-grid {
+  background-image:
+    linear-gradient(to right,  rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.glass-hover {
+  transition: background 0.15s ease;
+}
+.status-glow-emerald {
+  box-shadow: 0 0 15px rgba(52, 211, 153, 0.12);
+}
+.refractive-edge {
+  box-shadow: inset 0 0 0 0.5px rgba(255,255,255,0.05);
+}
+
+/* ─── Dark Elegance — variantes glass para dashboard B2C ────── */
+/* Fuera de @layer utilities para evitar conflictos con PostCSS  */
+
+.liquid-glass-rich {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6),
+              inset 0 1px 0 rgba(255, 255, 255, 0.20);
+}
+
+.liquid-glass-floating {
+  background: rgba(17, 16, 14, 0.75);
+  backdrop-filter: blur(25px) saturate(150%);
+  -webkit-backdrop-filter: blur(25px) saturate(150%);
+  border: 1px solid rgba(241, 201, 125, 0.08);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.6),
+    inset 0 1px 1px rgba(241, 201, 125, 0.06);
+  /* Chrome GPU composite layer fix */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, backdrop-filter;
+}
+
+.ticket-mask {
+  border-radius: 2rem;
+}
+
+.specular-highlight {
+  position: relative;
+}
+.specular-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 5%;
+  right: 5%;
+  height: 1px;
+  background: linear-gradient(
+    90deg, 
+    transparent, 
+    rgba(241, 201, 125, 0.35), 
+    transparent
+  );
+  z-index: 10;
+}
+
+.mesh-glow {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  background: 
+    radial-gradient(circle at 20% 30%, 
+      rgba(241, 201, 125, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, 
+      rgba(193, 154, 107, 0.04) 0%, transparent 40%);
+}
+
+/* ─── Design System Editorial — Capa 1 ─────────────────────── */
+@layer utilities {
+
+  /* Tipografía editorial */
+  .font-vogue {
+    font-family: var(--font-playfair), 'Playfair Display', serif;
+    letter-spacing: -0.04em;
+  }
+
+  .font-outfit {
+    font-family: var(--font-outfit), var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: -0.025em;
+  }
+
+  /* Hero title — tamaño exacto del HTML de Stitch */
+  .hero-title {
+    font-size: clamp(3.5rem, 12vw, 9rem);
+    line-height: 0.85;
+    font-weight: 900;
+  }
+
+  .liquid-glass {
+    background: rgba(255, 248, 235, 0.03);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid rgba(241, 201, 125, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+    /* Chrome GPU composite layer fix */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform, backdrop-filter;
+  }
+
+  /* Input sin outline — usado en el buscador del hero */
+  .no-ring {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-color: transparent !important;
+  }
+
+  /* Contenedor de imágenes editoriales */
+  /* Light: fondo surface (#F9F9F9) | Dark: fondo #111 */
+  .editorial-image-container {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-surface);
+  }
+
+  .dark .editorial-image-container {
+    background: #111;
+  }
+
+  /* Filtros de imagen — light: natural | dark: dramático */
+  .editorial-image {
+    filter: contrast(1.05) brightness(1.02);
+    transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), filter 0.8s ease;
+    will-change: transform;
+  }
+
+  .dark .editorial-image {
+    filter: contrast(1.15) brightness(0.7) grayscale(0.2);
+  }
+
+  .editorial-image:hover {
+    transform: scale(1.04);
+  }
+
+  .dark .editorial-image:hover {
+    filter: contrast(1.2) brightness(0.9) grayscale(0);
+  }
+
+  /* Línea vertical decorativa */
+  .vogue-line-vertical {
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.2), transparent);
+  }
+
+  /* Nav links del header editorial */
+  .nav-link {
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    font-weight: 500;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+  }
+
+  .nav-link:hover {
+    opacity: 1;
+  }
+}
+
+@layer utilities {
+  .liquid-glass-lens {
+    background-color: oklch(from var(--foreground) l c h / 5%);
+    backdrop-filter: blur(8px) url(#liquid-glass-global) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    box-shadow: 
+      inset 0 0 0 1px color-mix(in srgb, white 10%, transparent),
+      inset 1.8px 3px 0px -2px color-mix(in srgb, white 90%, transparent), 
+      inset -2px -2px 0px -2px color-mix(in srgb, white 80%, transparent), 
+      inset -3px -8px 1px -6px color-mix(in srgb, white 60%, transparent), 
+      inset -0.3px -1px 4px 0px color-mix(in srgb, black 12%, transparent), 
+      inset -1.5px 2.5px 0px -2px color-mix(in srgb, black 20%, transparent), 
+      inset 0px 3px 4px -2px color-mix(in srgb, black 20%, transparent), 
+      inset 2px -6.5px 1px -4px color-mix(in srgb, black 10%, transparent), 
+      0px 1px 5px 0px color-mix(in srgb, black 10%, transparent), 
+      0px 6px 16px 0px color-mix(in srgb, black 8%, transparent);
+  }
+
+  /* Navbar / panel glass — uses the userSpaceOnUse filter so scale stays ~22px fixed */
+  .liquid-glass-nav-lens {
+    background-color: oklch(from var(--foreground) l c h / 6%);
+    backdrop-filter: blur(16px) url(#liquid-glass-nav) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, white 12%, transparent),
+      inset 1.8px 3px 0px -2px color-mix(in srgb, white 90%, transparent),
+      inset -2px -2px 0px -2px color-mix(in srgb, white 80%, transparent),
+      inset -3px -8px 1px -6px color-mix(in srgb, white 60%, transparent),
+      inset -0.3px -1px 4px 0px color-mix(in srgb, black 12%, transparent),
+      inset -1.5px 2.5px 0px -2px color-mix(in srgb, black 20%, transparent),
+      inset 0px 3px 4px -2px color-mix(in srgb, black 20%, transparent),
+      inset 2px -6.5px 1px -4px color-mix(in srgb, black 10%, transparent),
+      0px 1px 5px 0px color-mix(in srgb, black 12%, transparent),
+      0px 8px 24px 0px color-mix(in srgb, black 10%, transparent);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .liquid-glass-text {
+    text-shadow: 0 1px 2px oklch(from var(--background) l c h / 30%);
+  }
+
+  .btn-liquid {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: oklch(from var(--foreground) l c h / 95%);
+    --glass-reflex-light: 1;
+    --glass-reflex-dark: 1;
+  }
+
+  .btn-liquid .liquid-glass-lens {
+    transition: background-color 400ms cubic-bezier(1, 0.0, 0.4, 1), box-shadow 400ms cubic-bezier(1, 0.0, 0.4, 1);
+  }
+
+  .btn-liquid .liquid-glass-text {
+    transition: color 400ms cubic-bezier(1, 0.0, 0.4, 1);
+  }
+
+  @media (hover: hover) {
+    .btn-liquid:not(:disabled):hover {
+      transform: scale(1.03);
+    }
+  }
+
+  .btn-liquid:not(:disabled):active {
+    transform: scale(0.96);
+  }
 }
