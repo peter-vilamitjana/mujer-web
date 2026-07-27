@@ -8,8 +8,8 @@ import { test, expect, TEST_SALON_SLUG } from './fixtures/auth';
 test.describe('Booking Flow — autenticado', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(`/salones/${TEST_SALON_SLUG}/book`);
-    // Esperar a que la página cargue (heading del salón visible)
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15_000 });
+    // Esperar a que el wizard (client-only) monte y muestre el paso 1
+    await expect(page.getByRole('heading', { level: 3, name: /Elige tus servicios/i })).toBeVisible({ timeout: 15_000 });
   });
 
   test('muestra los 4 pasos del wizard', async ({ page }) => {
@@ -27,7 +27,7 @@ test.describe('Booking Flow — autenticado', () => {
 
   test('paso 1: seleccionar servicio habilita el botón continuar', async ({ page }) => {
     // Los servicios son divs clickeables (no botones con "Agregar")
-    await page.locator('div.rounded-xl.cursor-pointer').first().click();
+    await page.locator('div.cursor-pointer').first().click();
     const btn = page.getByRole('button', { name: /Continuar a Profesional/i });
     await expect(btn).toBeEnabled();
   });
@@ -36,7 +36,7 @@ test.describe('Booking Flow — autenticado', () => {
     // "Corte & Estilo" no requiere selección de largo — a diferencia de
     // Coloración/Keratina, que bloquean el avance sin esa elección y
     // pueden aparecer primero (Firestore devuelve por orden alfabético de ID).
-    await page.locator('div.rounded-xl.cursor-pointer').filter({ hasText: 'Corte & Estilo' }).first().click();
+    await page.locator('div.cursor-pointer').filter({ hasText: 'Corte & Estilo' }).first().click();
     await page.getByRole('button', { name: /Continuar a Profesional/i }).click();
     // UI shows "Paso 2: Elige a tu profesional" (imperative, not past tense)
     await expect(page.getByText(/Elige a tu profesional/i)).toBeVisible();
@@ -44,12 +44,12 @@ test.describe('Booking Flow — autenticado', () => {
 
   test('paso 2 → paso 3: navegar a fecha y hora', async ({ page }) => {
     // Paso 1: seleccionar servicio ("Corte & Estilo" no requiere largo)
-    await page.locator('div.rounded-xl.cursor-pointer').filter({ hasText: 'Corte & Estilo' }).first().click();
+    await page.locator('div.cursor-pointer').filter({ hasText: 'Corte & Estilo' }).first().click();
     await page.getByRole('button', { name: /Continuar a Profesional/i }).click();
     await expect(page.getByText(/Elige a tu profesional/i)).toBeVisible({ timeout: 5_000 });
 
     // Paso 2: seleccionar profesional (primer card disponible)
-    const staffCards = page.locator('div.rounded-xl.cursor-pointer');
+    const staffCards = page.locator('div.cursor-pointer');
     const staffCount = await staffCards.count();
     if (staffCount === 0) {
       test.skip(true, 'Sin staff en e2e-test-salon — seed requerido');
@@ -69,7 +69,7 @@ test.describe('Booking Flow — autenticado', () => {
   });
 
   test('volver al paso anterior funciona', async ({ page }) => {
-    await page.locator('div.rounded-xl.cursor-pointer').filter({ hasText: 'Corte & Estilo' }).first().click();
+    await page.locator('div.cursor-pointer').filter({ hasText: 'Corte & Estilo' }).first().click();
     await page.getByRole('button', { name: /Continuar a Profesional/i }).click();
     await expect(page.getByText(/Elige a tu profesional/i)).toBeVisible({ timeout: 5_000 });
 
@@ -90,7 +90,7 @@ test.describe('Booking Flow — sin autenticación', () => {
     await page.goto(`/salones/${TEST_SALON_SLUG}/book`);
     // BookingFlow allows guest bookings — the page loads and shows the wizard,
     // it does NOT redirect to /login. Guest data is collected at step 4 (Resumen).
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { level: 3, name: /Elige tus servicios/i })).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText('Tus servicios').first()).toBeVisible();
     await context.close();
   });

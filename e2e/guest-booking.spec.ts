@@ -11,7 +11,7 @@ test.describe('Guest Booking — sin autenticación', () => {
     const page = await ctx.newPage();
 
     await page.goto(`/salones/${TEST_SALON_SLUG}/book`);
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { level: 3, name: /Elige tus servicios/i })).toBeVisible({ timeout: 15_000 });
 
     // Verificar que no hay redirección a /login
     await expect(page).not.toHaveURL(/\/login/);
@@ -25,13 +25,13 @@ test.describe('Guest Booking — sin autenticación', () => {
     const page = await ctx.newPage();
 
     await page.goto(`/salones/${TEST_SALON_SLUG}/book`);
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { level: 3, name: /Elige tus servicios/i })).toBeVisible({ timeout: 15_000 });
 
     // Verificar que el botón está deshabilitado sin selección
     const btn = page.getByRole('button', { name: /Continuar a Profesional/i });
     await expect(btn).toBeDisabled();
 
-    const serviceCards = page.locator('div.rounded-xl.cursor-pointer');
+    const serviceCards = page.locator('div.cursor-pointer');
     const cardCount = await serviceCards.count();
     if (cardCount === 0) {
       test.skip(true, 'Sin servicios en e2e-test-salon — seed requerido');
@@ -47,9 +47,9 @@ test.describe('Guest Booking — sin autenticación', () => {
     const page = await ctx.newPage();
 
     await page.goto(`/salones/${TEST_SALON_SLUG}/book`);
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { level: 3, name: /Elige tus servicios/i })).toBeVisible({ timeout: 15_000 });
 
-    const serviceCards = page.locator('div.rounded-xl.cursor-pointer');
+    const serviceCards = page.locator('div.cursor-pointer');
     if (await serviceCards.count() === 0) {
       test.skip(true, 'Sin servicios en e2e-test-salon — seed requerido');
     }
@@ -68,9 +68,9 @@ test.describe('Guest Booking — sin autenticación', () => {
     const page = await ctx.newPage();
 
     await page.goto(`/salones/${TEST_SALON_SLUG}/book`);
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { level: 3, name: /Elige tus servicios/i })).toBeVisible({ timeout: 15_000 });
 
-    const serviceCards = page.locator('div.rounded-xl.cursor-pointer');
+    const serviceCards = page.locator('div.cursor-pointer');
     if (await serviceCards.count() === 0) {
       test.skip(true, 'Sin servicios en e2e-test-salon — seed requerido');
     }
@@ -83,7 +83,7 @@ test.describe('Guest Booking — sin autenticación', () => {
     const staffCards = page.locator('[class*="cursor-pointer"]').filter({ hasText: /min|$/ });
     const anyStaff = page.getByRole('button', { name: /Continuar a Fecha/i });
     // Si hay profesional clicable, avanzar; sino skip
-    const staffClickable = page.locator('div.rounded-xl.cursor-pointer');
+    const staffClickable = page.locator('div.cursor-pointer');
     const staffCount = await staffClickable.count();
     if (staffCount === 0) {
       test.skip(true, 'Sin staff en e2e-test-salon — seed requerido');

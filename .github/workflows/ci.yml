@@ -11,8 +11,8 @@ jobs:
     name: TypeScript
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
@@ -24,8 +24,8 @@ jobs:
     name: ESLint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
@@ -44,8 +44,8 @@ jobs:
       GOOGLE_CLIENT_SECRET: placeholder
       NEXT_PUBLIC_FIREBASE_PROJECT_ID: mujer-app
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
@@ -67,15 +67,15 @@ jobs:
       # Required by global-setup.ts to create e2e test users in Firebase Auth.
       NEXT_PUBLIC_FIREBASE_API_KEY: AIzaSyCcU9HP6ELT0SKyhVXyxMPebE4c5KqTi7g
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: package-lock.json
       - run: npm install
       - run: npx playwright install --with-deps chromium
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
