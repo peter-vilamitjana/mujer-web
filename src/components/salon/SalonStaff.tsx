@@ -72,32 +72,26 @@ export default function SalonStaff({ staff }: SalonStaffProps) {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="flex flex-wrap justify-center gap-x-8 gap-y-12 max-w-5xl mx-auto px-4">
           {staff.map((person) => (
-            <div key={person.id} data-reveal="staff-card" className="group">
-              <div className="relative aspect-[3/4] rounded-[1.5rem] overflow-hidden border border-outline-subtle">
+            <div key={person.id} data-reveal="staff-card" className="group flex flex-col items-center text-center w-[160px] sm:w-[180px] md:w-[220px]">
+              <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden mb-6 bg-[#050504] border border-white/[0.04] shadow-2xl">
                 {person.avatarUrl ? (
                   <Image
                     src={person.avatarUrl}
                     alt={person.name}
                     fill
-                    className="object-cover transition-all duration-700 group-hover:scale-105 group-hover:brightness-105"
-                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    className="object-cover grayscale contrast-[1.15] brightness-90 transition-all duration-700 group-hover:scale-105 group-hover:brightness-100"
+                    sizes="(min-width: 768px) 220px, 180px"
                   />
                 ) : (
-                  <div className="w-full h-full bg-surface-hover flex items-center justify-center">
-                    <span className="font-vogue text-5xl text-on-surface-variant">{person.name.charAt(0)}</span>
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="font-vogue text-3xl text-on-surface-variant">{person.name.charAt(0)}</span>
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-surface/90 via-surface/10 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 p-6 transition-transform duration-500 group-hover:-translate-y-2">
-                  <h3 className="font-vogue text-xl text-on-surface">{person.name}</h3>
-                  <p className="font-sans text-[10px] uppercase tracking-widest text-primary mt-1">{person.role}</p>
-                  {person.bio && (
-                    <p className="font-sans text-xs text-on-surface-secondary mt-2 leading-relaxed">{person.bio}</p>
-                  )}
-                </div>
               </div>
+              <h3 className="font-vogue text-xl font-normal text-on-surface tracking-wide">{person.name}</h3>
+              <p className="font-sans text-[8.5px] uppercase tracking-[0.25em] font-medium text-on-surface-secondary/70 mt-2">{person.role}</p>
             </div>
           ))}
         </div>
