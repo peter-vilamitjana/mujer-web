@@ -189,7 +189,7 @@ export default function CTABusiness() {
                     </span>
                   </Link>
                   <Link
-                    href="/explore"
+                    href="/business"
                     className="border border-white/5 text-[#7a766e] px-8 h-11 flex items-center justify-center rounded-full text-[10px] font-bold uppercase tracking-widest hover:border-[#f1c97d]/30 hover:text-[#f1c97d] hover:bg-[#f1c97d]/5 transition-all duration-300 font-body"
                   >
                     Ver la plataforma

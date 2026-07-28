@@ -8,6 +8,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import { useGSAP } from '@gsap/react';
+import { Sparkles as SparklesComp } from "@/components/ui/sparkles";
 
 gsap.registerPlugin(ScrollTrigger, SplitText, useGSAP);
 
@@ -21,6 +22,8 @@ export default function CTAFinalSection() {
 
     const titleEl = sectionRef.current?.querySelector<HTMLElement>('.cta-title');
     if (!titleEl) return;
+    
+    gsap.set(titleEl, { opacity: 1 });
 
     const split = new SplitText(titleEl, { type: 'words,chars' });
 
@@ -41,13 +44,6 @@ export default function CTAFinalSection() {
       },
       onComplete: () => split.revert(),
     });
-
-    // 1 — ambient glow blooms from a point
-    tl.fromTo(
-      '.cta-glow',
-      { scale: 0.3, opacity: 0 },
-      { scale: 1, opacity: 1, duration: 1.5, ease: 'power2.out' },
-    );
 
     // 2 — headline chars come up from below with blur clearing
     tl.fromTo(
@@ -94,43 +90,46 @@ export default function CTAFinalSection() {
       ref={sectionRef}
       className="cta-final relative z-10 bg-[#09090b] overflow-hidden"
     >
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" aria-hidden="true" />
-
       {/* Ambient background glows */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        {/* Main glow — starts opacity:0, GSAP blooms it in step 1 */}
+      <div 
+        className="pointer-events-none absolute inset-0 overflow-hidden" 
+        aria-hidden="true"
+        style={{
+          maskImage: 'linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)',
+          WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)',
+        }}
+      >
+        <div className="absolute top-0 h-[600px] w-full overflow-hidden [mask-image:radial-gradient(50%_50%,white,transparent)]">
+          <div className="absolute bottom-0 left-0 right-0 top-0 bg-[linear-gradient(to_right,#ffffff2c_1px,transparent_1px),linear-gradient(to_bottom,#3a3a3a01_1px,transparent_1px)] bg-[size:70px_80px]" />
+          <SparklesComp
+            density={400}
+            direction="bottom"
+            speed={1}
+            color="#FFFFFF"
+            className="absolute inset-x-0 bottom-0 h-full w-full [mask-image:radial-gradient(50%_50%,white,transparent_85%)]"
+          />
+        </div>
+        
+        <div className="absolute left-0 top-[-114px] w-full h-[113.625vh] flex flex-col items-start justify-start content-start flex-none flex-nowrap gap-2.5 overflow-hidden p-0 z-0">
+          <div className="w-full relative">
+            <div
+              className="absolute left-[-568px] right-[-568px] top-0 h-[2053px] flex-none rounded-full will-change-transform"
+              style={{
+                border: "200px solid #8350e8",
+                filter: "blur(92px)",
+                WebkitFilter: "blur(92px)",
+              }}
+            />
+          </div>
+        </div>
+
         <div
-          className="cta-glow absolute inset-x-0 bottom-0 h-[120%]"
+          className="absolute top-0 left-[10%] right-[10%] w-[80%] h-full z-0"
           style={{
-            background: 'radial-gradient(ellipse 70% 60% at 50% 100%, rgba(168,85,247,0.14) 0%, rgba(52,211,153,0.06) 40%, transparent 70%)',
-            opacity: 0,
+            backgroundImage: "radial-gradient(circle at center, #8350e8 0%, transparent 70%)",
+            opacity: 0.6,
           }}
         />
-        {/* Continuous pulse overlay — FM loop, independent of entrance */}
-        {!shouldReduce && (
-          <motion.div
-            className="absolute inset-x-0 bottom-0 h-[120%]"
-            style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 100%, rgba(168,85,247,0.06) 0%, transparent 70%)' }}
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        )}
-        {!shouldReduce && (
-          <motion.div
-            className="absolute -left-40 top-1/4 w-[400px] h-[400px] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.10) 0%, transparent 70%)' }}
-            animate={{ x: [0, 20, 0], y: [0, -15, 0] }}
-            transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        )}
-        {!shouldReduce && (
-          <motion.div
-            className="absolute -right-40 top-1/3 w-[350px] h-[350px] rounded-full"
-            style={{ background: 'radial-gradient(circle, rgba(52,211,153,0.09) 0%, transparent 70%)' }}
-            animate={{ x: [0, -20, 0], y: [0, 15, 0] }}
-            transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 3 }}
-          />
-        )}
       </div>
 
       <div className="relative z-10 py-36 px-6 text-center max-w-3xl mx-auto">
@@ -141,12 +140,14 @@ export default function CTAFinalSection() {
 
         {/* Headline — SplitText splits chars, GSAP reveals them in step 2 */}
         <h2
-          className="cta-title font-playfair text-[clamp(2.6rem,7vw,5.5rem)] leading-[1.05] tracking-[-0.02em] mb-8"
-          aria-label="Tu salón merece una herramienta mejor."
-          style={shouldReduce ? undefined : { opacity: 0 }}
+          className="cta-title font-semibold text-[clamp(3.5rem,8vw,6rem)] leading-[1.05] tracking-tight mb-8"
+          aria-label="Ouleeh"
+          style={{
+            ...(shouldReduce ? {} : { opacity: 0 }),
+            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"'
+          }}
         >
-          Tu salón merece{' '}
-          <em className="not-italic italic text-purple-400">una herramienta mejor.</em>
+          Ouleeh
         </h2>
 
         {/* Body — GSAP step 3 */}
